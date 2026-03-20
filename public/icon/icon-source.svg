@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Background squircle -->
+  <rect width="128" height="128" rx="26" fill="#0d1117"/>
+
+  <!-- Row 1: y=23..45, center_y=34 -->
+  <rect x="18" y="23" width="92" height="22" rx="4" fill="#2f81f7" opacity="0.10"/>
+  <rect x="24" y="27" width="14" height="14" rx="3.5" fill="#2f81f7"/>
+  <polyline points="27.5,34 30.5,37 36.5,30" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="45" y="32" width="54" height="5" rx="2.5" fill="#c9d1d9" opacity="0.65"/>
+
+  <!-- Row 2: y=53..75, center_y=64 -->
+  <rect x="18" y="53" width="92" height="22" rx="4" fill="#2f81f7" opacity="0.10"/>
+  <rect x="24" y="57" width="14" height="14" rx="3.5" fill="#2f81f7"/>
+  <polyline points="27.5,64 30.5,67 36.5,60" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="45" y="62" width="40" height="5" rx="2.5" fill="#c9d1d9" opacity="0.65"/>
+
+  <!-- Row 3: y=83..105, center_y=94 -->
+  <rect x="18" y="83" width="92" height="22" rx="4" fill="#2f81f7" opacity="0.10"/>
+  <rect x="24" y="87" width="14" height="14" rx="3.5" fill="#2f81f7"/>
+  <polyline points="27.5,94 30.5,97 36.5,90" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="45" y="92" width="48" height="5" rx="2.5" fill="#c9d1d9" opacity="0.65"/>
+</svg>

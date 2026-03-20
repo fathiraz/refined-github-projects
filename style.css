@@ -1,0 +1,140 @@
+:root {
+    --color-bg-base: #09090B;
+    --color-bg-surface: #18181B;
+    --color-bg-hover: #27272A;
+
+    --color-primary: #0D9488;
+    --color-primary-hover: #0F766E;
+
+    --color-cta: #F97316;
+
+    --color-text-main: #FAFAFA;
+    --color-text-muted: #A1A1AA;
+
+    --color-border: #27272A;
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+
+    --border-width: 1px;
+}
+
+body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Typography styles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--color-text-main);
+}
+
+p,
+span,
+div {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Shared Classes */
+.rgp-surface {
+    background: var(--color-bg-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.rgp-btn-primary {
+    background: var(--color-primary);
+    color: #FAFAFA;
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.rgp-btn-primary:hover {
+    background: var(--color-primary-hover);
+}
+
+.rgp-btn-secondary {
+    background: transparent;
+    color: var(--color-text-main);
+    padding: 8px 16px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 150ms ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.rgp-btn-secondary:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-text-muted);
+}
+
+.rgp-input {
+    background: var(--color-bg-base);
+    color: var(--color-text-main);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 150ms ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.rgp-input:focus {
+    border-color: var(--color-primary);
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.rgp-spin {
+    animation: spin 1s linear infinite;
+}

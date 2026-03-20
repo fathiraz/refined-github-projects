@@ -1,0 +1,234 @@
+import { draggable, dropTargetForElements, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
+import { selectionStore } from '../../lib/selectionStore'
+import { sendMessage } from '../../lib/messages'
+
+const HANDLE_ATTR = 'data-rgp-dnd'
+
+// Registry of cleanup fns keyed by row element
+const cleanupMap = new WeakMap<Element, () => void>()
+
+// Drop indicator overlay (singleton, appended to document.body)
+let dropLine: HTMLDivElement | null = null
+
+function getOrCreateDropLine(): HTMLDivElement {
+  if (dropLine) return dropLine
+  dropLine = document.createElement('div')
+  Object.assign(dropLine.style, {
+    position: 'fixed',
+    height: '2px',
+    background: '#0969da',
+    pointerEvents: 'none',
+    zIndex: '10000',
+    borderRadius: '1px',
+    display: 'none',
+    boxShadow: '0 0 0 1px rgba(9,105,218,0.3)',
+    transition: 'top 60ms ease',
+  })
+  document.body.appendChild(dropLine)
+  return dropLine
+}
+
+function extractNonce(): string {
+  const fromGithubFetch = document.querySelector<HTMLMetaElement>('meta[name="github-fetch-nonce"]')?.content
+  if (fromGithubFetch) return fromGithubFetch
+  const fromXFetch = document.querySelector<HTMLMetaElement>('meta[name="x-fetch-nonce"]')?.content
+  if (fromXFetch) return fromXFetch
+  const metas = document.querySelectorAll<HTMLMetaElement>('meta[content]')
+  for (const meta of metas) {
+    if (/^v2:[0-9a-f-]{36}$/.test(meta.content)) return meta.content
+  }
+  return ''
+}
+
+function getAllSortedRows(): Element[] {
+  return Array.from(document.querySelectorAll('[data-rgp-cb]'))
+}
+
+export function injectDragHandles() {
+  const rows = document.querySelectorAll<HTMLElement>('[role="row"][data-rgp-cb]:not([data-rgp-dnd])')
+
+  for (const row of rows) {
+    const domId = row.getAttribute('data-rgp-cb')!
+    const cbCell = row.querySelector<HTMLElement>('.rgp-cb-cell')
+    if (!cbCell) continue
+
+    // Inject handle icon into the cb cell
+    const handle = document.createElement('div')
+    handle.className = 'rgp-dnd-handle'
+    handle.setAttribute('aria-label', 'Drag to reorder')
+    handle.title = 'Drag to reorder (only works in unsorted view)'
+    handle.innerHTML = `<svg width="12" height="16" viewBox="0 0 12 16" fill="none" style="display:block">
+      <circle cx="4" cy="4" r="1.2" fill="currentColor"/>
+      <circle cx="4" cy="8" r="1.2" fill="currentColor"/>
+      <circle cx="4" cy="12" r="1.2" fill="currentColor"/>
+      <circle cx="8" cy="4" r="1.2" fill="currentColor"/>
+      <circle cx="8" cy="8" r="1.2" fill="currentColor"/>
+      <circle cx="8" cy="12" r="1.2" fill="currentColor"/>
+    </svg>`
+    Object.assign(handle.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '16px',
+      height: '100%',
+      cursor: 'grab',
+      color: '#57606a',
+      opacity: '0',
+      transition: 'opacity 120ms ease',
+      flexShrink: '0',
+      marginRight: '2px',
+    })
+    cbCell.insertBefore(handle, cbCell.firstChild)
+
+    // Show handle on row hover
+    row.addEventListener('mouseenter', () => { handle.style.opacity = '0.6' })
+    row.addEventListener('mouseleave', () => { handle.style.opacity = '0' })
+
+    // --- Draggable ---
+    const cleanupDraggable = draggable({
+      element: row,
+      dragHandle: handle,
+      getInitialData: () => ({ domId }),
+      onDragStart() {
+        const selected = selectionStore.getAll()
+        const isMulti = selected.includes(domId) && selected.length > 1
+        if (isMulti) {
+          for (const selId of selected) {
+            if (selId === domId) continue
+            const el = document.querySelector<HTMLElement>(`[data-rgp-cb="${selId}"]`)
+            if (el) el.style.opacity = '0.35'
+          }
+        }
+      },
+      onDrop() {
+        for (const el of document.querySelectorAll<HTMLElement>('[data-rgp-cb]')) {
+          el.style.opacity = ''
+        }
+        const line = getOrCreateDropLine()
+        line.style.display = 'none'
+      },
+      onGenerateDragPreview({ nativeSetDragImage }) {
+        const selected = selectionStore.getAll()
+        const count = selected.includes(domId) ? selected.length : 1
+        const pill = document.createElement('div')
+        pill.textContent = `Moving ${count} item${count !== 1 ? 's' : ''}`
+        Object.assign(pill.style, {
+          background: '#0969da',
+          color: '#fff',
+          fontSize: '12px',
+          fontWeight: '600',
+          padding: '4px 10px',
+          borderRadius: '20px',
+          whiteSpace: 'nowrap',
+          position: 'fixed',
+          top: '-200px',
+          left: '-200px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        })
+        document.body.appendChild(pill)
+        nativeSetDragImage?.(pill, -8, pill.offsetHeight / 2)
+        requestAnimationFrame(() => document.body.removeChild(pill))
+      },
+    })
+
+    // --- Drop target ---
+    const cleanupDrop = dropTargetForElements({
+      element: row,
+      getData({ input, element }) {
+        return attachClosestEdge({ domId }, { input, element, allowedEdges: ['top', 'bottom'] })
+      },
+      onDrag({ self }) {
+        const edge = extractClosestEdge(self.data)
+        const rect = row.getBoundingClientRect()
+        const line = getOrCreateDropLine()
+        const top = edge === 'top' ? rect.top : rect.bottom
+        Object.assign(line.style, {
+          display: 'block',
+          top: `${top - 1}px`,
+          left: `${rect.left}px`,
+          width: `${rect.width}px`,
+        })
+      },
+      onDragLeave() {
+        const line = getOrCreateDropLine()
+        line.style.display = 'none'
+      },
+    })
+
+    row.setAttribute(HANDLE_ATTR, '1')
+    cleanupMap.set(row, () => { cleanupDraggable(); cleanupDrop() })
+  }
+}
+
+// Global drop monitor — fires when any drop completes on our drop targets
+let monitorCleanup: (() => void) | null = null
+
+export function initDragAndDrop(
+  projectId: string,
+  owner: string,
+  number: number,
+  isOrg: boolean,
+) {
+  if (monitorCleanup) monitorCleanup()
+
+  monitorCleanup = monitorForElements({
+    onDrop({ source, location }) {
+      const line = getOrCreateDropLine()
+      line.style.display = 'none'
+
+      const target = location.current.dropTargets[0]
+      if (!target) return
+
+      const draggedDomId = source.data.domId as string
+      const targetDomId = target.data.domId as string
+      const edge = extractClosestEdge(target.data)
+
+      if (!draggedDomId || !targetDomId || draggedDomId === targetDomId) return
+
+      const selected = selectionStore.getAll()
+      const selectedDomIds = selected.includes(draggedDomId) && selected.length > 1
+        ? selected
+        : [draggedDomId]
+
+      const allRows = getAllSortedRows()
+      const targetIdx = allRows.findIndex(r => r.getAttribute('data-rgp-cb') === targetDomId)
+
+      let insertAfterDomId: string
+      if (edge === 'top') {
+        if (targetIdx === 0) {
+          insertAfterDomId = ''
+        } else {
+          const above = allRows[targetIdx - 1]
+          insertAfterDomId = above.getAttribute('data-rgp-cb') ?? ''
+        }
+      } else {
+        insertAfterDomId = targetDomId
+      }
+
+      // Skip if dropping within same position
+      if (selectedDomIds.includes(insertAfterDomId)) return
+
+      const nonce = extractNonce()
+      const count = selectedDomIds.length
+
+      sendMessage('bulkReorderByPosition', {
+        selectedDomIds,
+        insertAfterDomId,
+        projectId,
+        owner,
+        number,
+        isOrg,
+        nonce,
+        label: `Move · ${count} item${count !== 1 ? 's' : ''}`,
+      })
+    },
+  })
+}
+
+export function cleanupDragHandles() {
+  monitorCleanup?.()
+  monitorCleanup = null
+  dropLine?.remove()
+  dropLine = null
+}
