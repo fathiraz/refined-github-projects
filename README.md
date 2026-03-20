@@ -79,41 +79,77 @@ GitHub Projects V2 is powerful, but managing dozens or hundreds of items is pain
 
 ---
 
+## Installation
+
+### For Humans
+
+1. Go to [Releases](https://github.com/fathiraz/refined-github-projects/releases) and download the latest release (or a specific version).
+2. Download the browser build package (not the source code archive), then extract it on your machine.
+3. Open your browser extensions page:
+   - Chrome / Edge: `chrome://extensions`
+   - Firefox: `about:debugging#/runtime/this-firefox`
+4. Load the extension:
+   - Chrome / Edge: enable **Developer mode**, click **Load unpacked**, then select the extracted folder.
+   - Firefox: click **Load Temporary Add-on**, then select the extension manifest from the extracted folder.
+5. Click the extension icon, paste your GitHub PAT, and save.
+
+Done: the extension is loaded and ready to use.
+
+### For Agents
+
+Paste this prompt into your coding agent (Cursor, Claude Code, Codex, etc.):
+
+```text
+Install Refined GitHub Projects from the latest (or specified) GitHub release.
+Then load it as an unpacked browser extension and finish PAT setup.
+
+Repository: https://github.com/fathiraz/refined-github-projects
+Release page: https://github.com/fathiraz/refined-github-projects/releases
+```
+
+Or run this and follow the `## Installation` section directly:
+
+```bash
+curl -sL https://raw.githubusercontent.com/fathiraz/refined-github-projects/main/README.md
+```
+
+---
+
 ### Bulk Actions Bar
 
 ![Bulk Actions Bar](assets/images/screenshot-1.png)
 
-*Select multiple items and perform bulk operations directly from the table view.*
+*Select multiple items and run bulk actions directly from the table view.*
 
-### Queue Tracker
+### Bulk Edit Wizard
 
-![Queue Tracker](assets/images/screenshot-2.png)
+![Bulk Edit Wizard](assets/images/screenshot-2.png)
 
-*Monitor live progress of ongoing bulk operations with the queue tracker widget.*
+*Pick fields, set new values, and apply updates across selected items in a guided 3-step flow.*
 
-### Sprint Management
+### Deep Duplicate Modal
 
-![Sprint Management](assets/images/screenshot-3.png)
+![Deep Duplicate Modal](assets/images/screenshot-3.png)
 
-*End sprints with one click — incomplete items auto-assign to the next iteration.*
+*Clone items with project fields, assignees, labels, body, and sub-issue links preserved before you confirm.*
 
-### Task Completion Tracker
+### Review & Queue Tracker
 
-![Task Completion Tracker](assets/images/screenshot-4.png)
+![Review & Queue Tracker](assets/images/screenshot-4.png)
 
-*Real-time task completion counters appear directly in sprint group headers.*
+*Review every change before applying, then monitor live queue progress with rate-limit-safe execution.*
 
-### Deep Duplicate
+### Feature Comparison
 
-![Deep Duplicate](assets/images/screenshot-5.png)
+![Feature Comparison](assets/images/screenshot-5.png)
 
-*Clone items with all fields, assignees, labels, and sub-issues preserved.*
+*Compare native GitHub Projects vs Refined GitHub Projects and see what bulk superpowers are added.*
 
 ### Extension Popup
 
 ![Extension Popup](assets/images/screenshot-6.png)
 
-*Configure your GitHub PAT and manage settings from the extension popup.*
+*Add your GitHub PAT once to unlock all features, stored locally in your browser.*
 
 ---
 
@@ -164,9 +200,10 @@ GitHub Projects V2 is powerful, but managing dozens or hundreds of items is pain
 
 - Node.js 18+
 - pnpm
-- A GitHub Personal Access Token with `repo` and `project` scopes
 
-### Installation
+For extension installation, see [`Installation`](#installation).
+
+### Development Setup
 
 ```bash
 # Clone the repository
@@ -175,26 +212,15 @@ cd refined-github-projects
 
 # Install dependencies
 pnpm install
-```
 
-### Load the Extension (Development)
-
-```bash
 # Start dev server with hot reload
 pnpm dev
 
-# Or build for Chrome
+# Or build production bundles
 pnpm build
 ```
 
-Then in Chrome:
-1. Navigate to `chrome://extensions`
-2. Enable **Developer mode** (toggle, top right)
-3. Click **Load unpacked**
-4. Select the `.output/chrome-mv3` folder
-5. Click the extension icon and paste in your GitHub PAT
-
-> **Other browsers:** Use `pnpm build --browser firefox` for Firefox, then load via `about:debugging → This Firefox → Load Temporary Add-on`.
+After build/dev output is generated, load `.output/chrome-mv3` in your browser extension manager (`chrome://extensions` -> **Load unpacked**). For Firefox development builds, use the Firefox output and `about:debugging`.
 
 ---
 
