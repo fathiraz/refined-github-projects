@@ -126,6 +126,7 @@ export const GET_PROJECT_ITEMS_FOR_RESOLUTION = `
           nodes {
             id
             content {
+              __typename
               ... on Issue { id databaseId repository { owner { login } name } }
               ... on PullRequest { id databaseId repository { owner { login } name } }
             }
@@ -348,6 +349,14 @@ export const GET_PROJECT_ITEMS_FOR_REORDER = `
           }
         }
       }
+    }
+  }
+`
+
+export const UPDATE_PROJECT_ITEM_POSITION = `
+  mutation UpdateProjectV2ItemPosition($input: UpdateProjectV2ItemPositionInput!) {
+    updateProjectV2ItemPosition(input: $input) {
+      clientMutationId
     }
   }
 `

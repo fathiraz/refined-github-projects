@@ -20,8 +20,11 @@ import {
   DELETE_PROJECT_ITEM,
   UPDATE_ISSUE_TITLE,
   UPDATE_PR_TITLE,
+  UPDATE_ISSUE_BODY,
+  UPDATE_PR_BODY,
+  ADD_COMMENT,
 } from '../lib/graphql/mutations'
-import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, SEARCH_VIEWER_REPOS, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER } from '../lib/graphql/queries'
+import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, SEARCH_VIEWER_REPOS, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '../lib/graphql/queries'
 import { processQueue, cancelQueue, sleep } from '../lib/queue'
 import { patStorage, usernameStorage, allSprintSettingsStorage } from '../lib/storage'
 import { GET_PROJECT_ITEMS_WITH_FIELDS } from '../lib/graphql/queries'
@@ -348,7 +351,7 @@ export default defineBackground(() => {
 
       const tasks: import('../lib/queue').QueueTask[] = []
 
-      for (const { domId, projectItemId, issueNodeId } of resolvedItems) {
+      for (const { domId, projectItemId, issueNodeId, typename } of resolvedItems) {
         for (const update of data.updates) {
           const { dataType, singleSelectOptionId, iterationId, array } = update.value as any
 
@@ -403,6 +406,41 @@ export default defineBackground(() => {
                     issueId: issueNodeId,
                     issueTypeId,
                   })
+                  await sleep(1000)
+                }
+                return
+              }
+
+              if (dataType === 'TITLE') {
+                const { text } = update.value as any
+                if (text?.trim()) {
+                  if (typename === 'PullRequest') {
+                    await gql(UPDATE_PR_TITLE, { prId: issueNodeId, title: text.trim() })
+                  } else {
+                    await gql(UPDATE_ISSUE_TITLE, { issueId: issueNodeId, title: text.trim() })
+                  }
+                  await sleep(1000)
+                }
+                return
+              }
+
+              if (dataType === 'BODY') {
+                const { text } = update.value as any
+                if (text !== undefined) {
+                  if (typename === 'PullRequest') {
+                    await gql(UPDATE_PR_BODY, { prId: issueNodeId, body: text })
+                  } else {
+                    await gql(UPDATE_ISSUE_BODY, { issueId: issueNodeId, body: text })
+                  }
+                  await sleep(1000)
+                }
+                return
+              }
+
+              if (dataType === 'COMMENT') {
+                const { text } = update.value as any
+                if (text?.trim()) {
+                  await gql(ADD_COMMENT, { subjectId: issueNodeId, body: text.trim() })
                   await sleep(1000)
                 }
                 return
@@ -775,7 +813,6 @@ export default defineBackground(() => {
     logger.log('[rgp:bg] getReorderContext received', { itemCount: data.itemIds.length })
     const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
     if (!project) throw new Error('Project not found')
-    const projectDatabaseId = project.databaseId
 
     // Build map from content databaseId → domId for selected items
     const selectedDbIdMap = new Map<number, string>()
@@ -798,8 +835,10 @@ export default defineBackground(() => {
       } | null
     }
 
-    const allOrderedItems: Array<{ memexItemId: number; title: string }> = []
-    const selectedItems: Array<{ domId: string; memexItemId: number; title: string }> = []
+    const allOrderedItems: Array<{ memexItemId: number; nodeId: string; title: string }> = []
+    const selectedItems: Array<{ domId: string; memexItemId: number; nodeId: string; title: string }> = []
+    // Track contentDbId → entry for DOM-order re-sorting
+    const contentDbIdToEntry = new Map<number, { memexItemId: number; nodeId: string; title: string }>()
     let cursor: string | null = null
 
     while (true) {
@@ -811,11 +850,15 @@ export default defineBackground(() => {
 
       for (const item of items.nodes) {
         const memexItemId = item.databaseId
+        const nodeId = item.id
         const title = item.content?.title ?? ''
-        allOrderedItems.push({ memexItemId, title })
         const contentDbId = item.content?.databaseId
-        if (contentDbId != null && selectedDbIdMap.has(contentDbId)) {
-          selectedItems.push({ domId: selectedDbIdMap.get(contentDbId)!, memexItemId, title })
+        allOrderedItems.push({ memexItemId, nodeId, title })
+        if (contentDbId != null) {
+          contentDbIdToEntry.set(contentDbId, { memexItemId, nodeId, title })
+          if (selectedDbIdMap.has(contentDbId)) {
+            selectedItems.push({ domId: selectedDbIdMap.get(contentDbId)!, memexItemId, nodeId, title })
+          }
         }
       }
 
@@ -824,7 +867,23 @@ export default defineBackground(() => {
       await sleep(500)
     }
 
-    return { projectDatabaseId, allOrderedItems, selectedItems }
+    // Re-sort allOrderedItems to match DOM visual order when provided
+    if (data.allDomIds?.length) {
+      const sorted: Array<{ memexItemId: number; nodeId: string; title: string }> = []
+      for (const domId of data.allDomIds) {
+        const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
+        if (!m) continue
+        const entry = contentDbIdToEntry.get(parseInt(m[1], 10))
+        if (entry) sorted.push(entry)
+      }
+      // Append items not visible in the DOM (filtered/hidden) at the end
+      const sortedSet = new Set(sorted.map(i => i.memexItemId))
+      const rest = allOrderedItems.filter(i => !sortedSet.has(i.memexItemId))
+      allOrderedItems.length = 0
+      allOrderedItems.push(...sorted, ...rest)
+    }
+
+    return { projectId: project.id, allOrderedItems, selectedItems }
   })
 
   onMessage('bulkReorder', async ({ data, sender }) => {
@@ -841,44 +900,16 @@ export default defineBackground(() => {
     const tabId = sender.tab?.id
 
     try {
-      // Read session cookies for same-origin auth
-      const cookies = await (browser.cookies as any).getAll({ url: 'https://github.com' })
-      const cookieHeader = (cookies as Array<{ name: string; value: string }>)
-        .map(c => `${c.name}=${c.value}`)
-        .join('; ')
-
       const tasks: import('../lib/queue').QueueTask[] = data.reorderOps.map((op, i) => ({
         id: `reorder-${i}`,
         run: async () => {
-          const res = await fetch(
-            `https://github.com/memexes/${data.projectDatabaseId}/items`,
-            {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Cookie': cookieHeader,
-                'x-fetch-nonce': data.nonce,
-                'x-requested-with': 'XMLHttpRequest',
-                'github-verified-fetch': 'true',
-              },
-              body: JSON.stringify({
-                memexProjectItemId: op.memexItemId,
-                previousMemexProjectItemId: op.previousMemexItemId,
-                fieldIds: [],
-                memexProjectColumnValues: [],
-              }),
-            }
-          )
-          if (res.status === 403 || res.status === 429) {
-            const retryAfter = parseInt(res.headers.get('Retry-After') ?? '60', 10)
-            const err = new Error('Rate limited') as Error & { retryAfter?: number; status?: number }
-            err.retryAfter = retryAfter
-            err.status = res.status
-            throw err
-          }
-          if (!res.ok) throw new Error(`Reorder failed: ${res.status}`)
-          await sleep(500)
+          await gql(UPDATE_PROJECT_ITEM_POSITION, {
+            input: {
+              projectId: data.projectId,
+              itemId: op.nodeId,
+              afterId: op.previousNodeId ?? undefined,
+            },
+          })
         },
       }))
 
@@ -921,7 +952,6 @@ export default defineBackground(() => {
     try {
       const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
       if (!project) throw new Error('Project not found')
-      const projectDatabaseId = project.databaseId
 
       interface PosItemsResult {
         node: {
@@ -932,7 +962,7 @@ export default defineBackground(() => {
         } | null
       }
 
-      const allItems: Array<{ memexItemId: number; contentDbId: number }> = []
+      const allItems: Array<{ memexItemId: number; nodeId: string; contentDbId: number }> = []
       let cursor: string | null = null
       while (true) {
         const page = await withRateLimitRetry(() =>
@@ -942,7 +972,7 @@ export default defineBackground(() => {
         if (!items) break
         for (const item of items.nodes) {
           if (item.content?.databaseId) {
-            allItems.push({ memexItemId: item.databaseId, contentDbId: item.content.databaseId })
+            allItems.push({ memexItemId: item.databaseId, nodeId: item.id, contentDbId: item.content.databaseId })
           }
         }
         if (!items.pageInfo.hasNextPage) break
@@ -951,6 +981,7 @@ export default defineBackground(() => {
       }
 
       const contentDbToMemex = new Map(allItems.map(i => [i.contentDbId, i.memexItemId]))
+      const contentDbToNode = new Map(allItems.map(i => [i.contentDbId, i.nodeId]))
 
       function parseContentDbId(domId: string): number | null {
         const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
@@ -966,11 +997,31 @@ export default defineBackground(() => {
         ? (contentDbToMemex.get(insertAfterContentDbId) ?? '')
         : ''
 
-      const selectedSet = new Set(selectedMemexIds)
-      const nonSelected = allItems.filter(i => !selectedSet.has(i.memexItemId))
-      const selected = allItems.filter(i => selectedSet.has(i.memexItemId))
+      // Use DOM order as the base ordering when provided (avoids GraphQL insertion-order mismatch)
+      let orderedItems: typeof allItems
+      if (data.allDomIds?.length) {
+        orderedItems = []
+        for (const domId of data.allDomIds) {
+          const contentDbId = parseContentDbId(domId)
+          if (contentDbId == null) continue
+          const memexItemId = contentDbToMemex.get(contentDbId)
+          const nodeId = contentDbToNode.get(contentDbId)
+          if (memexItemId != null && nodeId != null) orderedItems.push({ memexItemId, nodeId, contentDbId })
+        }
+        // Append items not in DOM (hidden/filtered) at the end
+        const inDomSet = new Set(orderedItems.map(i => i.memexItemId))
+        for (const item of allItems) {
+          if (!inDomSet.has(item.memexItemId)) orderedItems.push(item)
+        }
+      } else {
+        orderedItems = allItems
+      }
 
-      let newOrder: typeof allItems
+      const selectedSet = new Set(selectedMemexIds)
+      const nonSelected = orderedItems.filter(i => !selectedSet.has(i.memexItemId))
+      const selected = orderedItems.filter(i => selectedSet.has(i.memexItemId))
+
+      let newOrder: typeof orderedItems
       if (insertAfterMemexId === '') {
         newOrder = [...selected, ...nonSelected]
       } else {
@@ -986,47 +1037,26 @@ export default defineBackground(() => {
         }
       }
 
-      const reorderOps = newOrder
-        .reduce<Array<{ memexItemId: number; previousMemexItemId: number | '' }>>((acc, item, i) => {
-          if (!selectedSet.has(item.memexItemId)) return acc
-          const prev = newOrder[i - 1]
-          acc.push({ memexItemId: item.memexItemId, previousMemexItemId: prev?.memexItemId ?? null })
-          return acc
-        }, [])
-
-      const cookies = await (browser.cookies as any).getAll({ url: 'https://github.com' })
-      const cookieHeader = (cookies as Array<{ name: string; value: string }>)
-        .map(c => `${c.name}=${c.value}`).join('; ')
+      const reorderOps = newOrder.reduce<Array<{ nodeId: string; previousNodeId: string | null }>>((acc, item, i) => {
+        if (!selectedSet.has(item.memexItemId)) return acc
+        const prev = newOrder[i - 1]
+        acc.push({
+          nodeId: item.nodeId,
+          previousNodeId: prev?.nodeId ?? null,
+        })
+        return acc
+      }, [])
 
       const tasks: import('../lib/queue').QueueTask[] = reorderOps.map((op, i) => ({
         id: `reorder-pos-${i}`,
         run: async () => {
-          const res = await fetch(`https://github.com/memexes/${projectDatabaseId}/items`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Cookie': cookieHeader,
-              'x-fetch-nonce': data.nonce,
-              'x-requested-with': 'XMLHttpRequest',
-              'github-verified-fetch': 'true',
+          await gql(UPDATE_PROJECT_ITEM_POSITION, {
+            input: {
+              projectId: project.id,
+              itemId: op.nodeId,
+              afterId: op.previousNodeId ?? undefined,
             },
-            body: JSON.stringify({
-              memexProjectItemId: op.memexItemId,
-              previousMemexProjectItemId: op.previousMemexItemId,
-              fieldIds: [],
-              memexProjectColumnValues: [],
-            }),
           })
-          if (res.status === 403 || res.status === 429) {
-            const retryAfter = parseInt(res.headers.get('Retry-After') ?? '60', 10)
-            const err = new Error('Rate limited') as Error & { retryAfter?: number; status?: number }
-            err.retryAfter = retryAfter
-            err.status = res.status
-            throw err
-          }
-          if (!res.ok) throw new Error(`Reorder failed: ${res.status}`)
-          await sleep(500)
         },
       }))
 
@@ -1578,6 +1608,7 @@ interface ResolvedItem {
   projectItemId: string
   repoOwner: string
   repoName: string
+  typename?: 'Issue' | 'PullRequest'
 }
 
 async function getRepositoryId(owner: string, name: string): Promise<string> {
@@ -1621,6 +1652,7 @@ async function resolveProjectItemIds(domIds: string[], projectId: string, tabId?
         nodes: {
           id: string
           content: {
+            __typename?: string
             id: string
             databaseId: number
             repository?: { owner: { login: string }; name: string }
@@ -1662,6 +1694,7 @@ async function resolveProjectItemIds(domIds: string[], projectId: string, tabId?
           projectItemId: item.id,
           repoOwner: item.content.repository?.owner?.login || '',
           repoName: item.content.repository?.name || '',
+          typename: (item.content as any).__typename as 'Issue' | 'PullRequest' | undefined,
         })
         remaining.delete(dbId)
         logger.log('[rgp:bg] resolved', domId, '->', item.id, 'issueNodeId:', item.content.id)

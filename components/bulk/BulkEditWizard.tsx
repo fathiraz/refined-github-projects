@@ -1,10 +1,11 @@
 import React from 'react'
 import { Box, Button, Flash, Heading, Text } from '@primer/react'
 import { AutocompleteInput } from '../ui/AutocompleteInput'
+import { MarkdownTextarea } from '../ui/MarkdownTextarea'
 import {
   AlertIcon, CheckIcon, XIcon, StepIndicator,
   PersonIcon, TagIcon, ShieldIcon, HashIcon, CalendarIcon,
-  TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon,
+  TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon, PencilIcon,
 } from '../ui/primitives'
 
 export interface ProjectField {
@@ -55,6 +56,9 @@ const FIELD_COLORS: Record<string, string> = {
   NUMBER:        'var(--color-accent-fg, #0969da)',
   DATE:          'var(--color-danger-fg, #cf222e)',
   TEXT:          'var(--fgColor-muted, #8b949e)',
+  TITLE:         'var(--color-accent-fg, #0969da)',
+  BODY:          'var(--fgColor-muted, #8b949e)',
+  COMMENT:       'var(--color-success-fg, #1a7f37)',
 }
 
 function getFieldIcon(dataType: string): React.ReactNode {
@@ -68,6 +72,9 @@ function getFieldIcon(dataType: string): React.ReactNode {
     case 'NUMBER':        return <HashIcon color={c} />
     case 'DATE':          return <CalendarIcon color={c} />
     case 'TEXT':          return <TextLineIcon color={c} />
+    case 'TITLE':         return <PencilIcon color={c} />
+    case 'BODY':          return <TextLineIcon color={c} />
+    case 'COMMENT':       return <TextLineIcon color={c} />
     default:              return null
   }
 }
@@ -176,8 +183,11 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
     )
   }
 
-  const defaultDataTypeKeys = ['ASSIGNEES', 'LABELS', 'ISSUE_TYPE', 'TRACKS']
-  const defaultFields = projectData.fields.filter(f => defaultDataTypeKeys.includes(f.dataType) || f.name.toLowerCase() === 'type')
+  const defaultDataTypeKeys = ['ASSIGNEES', 'LABELS', 'ISSUE_TYPE', 'TRACKS', 'TITLE', 'BODY', 'COMMENT']
+  const FIELD_ORDER: Record<string, number> = { TITLE: 0, BODY: 1, COMMENT: 2, ASSIGNEES: 3, LABELS: 4, ISSUE_TYPE: 5, TRACKS: 6 }
+  const defaultFields = projectData.fields
+    .filter(f => defaultDataTypeKeys.includes(f.dataType) || f.name.toLowerCase() === 'type')
+    .sort((a, b) => (FIELD_ORDER[a.dataType] ?? 99) - (FIELD_ORDER[b.dataType] ?? 99))
   const customFields = projectData.fields.filter(f => !defaultFields.includes(f))
   const eligibleCustomFields = customFields.filter(f => ['SINGLE_SELECT', 'ITERATION', 'TEXT', 'NUMBER', 'DATE'].includes(f.dataType))
   const allEligibleFields = [...defaultFields, ...eligibleCustomFields]
@@ -421,6 +431,34 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
                 onBlur={e => { e.target.style.borderColor = 'var(--borderColor-default)' }}
               />
             )
+          } else if (field.dataType === 'TITLE') {
+            inputContent = (
+              <input
+                type="text"
+                placeholder="New title for all selected items..."
+                value={(value.text as string) || ''}
+                onChange={e => onUpdateFieldValue(field.id, { text: e.target.value })}
+                style={{ ...inputCss, width: '100%' }}
+                onFocus={e => { e.target.style.borderColor = 'var(--color-accent-emphasis, #0969da)' }}
+                onBlur={e => { e.target.style.borderColor = 'var(--borderColor-default)' }}
+              />
+            )
+          } else if (field.dataType === 'BODY') {
+            inputContent = (
+              <MarkdownTextarea
+                value={(value.text as string) || ''}
+                onChange={text => onUpdateFieldValue(field.id, { text })}
+                placeholder="Set description for all selected items (replaces existing)..."
+              />
+            )
+          } else if (field.dataType === 'COMMENT') {
+            inputContent = (
+              <MarkdownTextarea
+                value={(value.text as string) || ''}
+                onChange={text => onUpdateFieldValue(field.id, { text })}
+                placeholder="Comment to add to all selected items..."
+              />
+            )
           } else {
             inputContent = (
               <input
@@ -541,11 +579,15 @@ export function BulkEditWizard({
   onClose, onToggleField, onUpdateFieldValue, onSetSelectedFields, onGoToStep, onApply, onOpenOptions,
 }: WizardProps) {
   return (
-    <Box sx={{
-      position: 'fixed', inset: 0,
-      bg: 'rgba(27,31,36,0.5)', zIndex: 10000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+    <Box
+      sx={{
+        position: 'fixed', inset: 0,
+        bg: 'rgba(27,31,36,0.5)', zIndex: 10000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+      onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
+      onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
+    >
       <Box sx={{
         bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
         borderRadius: 2, width: 'min(640px, 90vw)', maxHeight: '80vh',

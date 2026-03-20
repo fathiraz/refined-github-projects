@@ -116,37 +116,71 @@ export function injectSelectAllCheckbox() {
 export function injectCheckboxStyles() {
   const style = document.createElement('style')
   style.textContent = `
-    /* ── Checkbox cell — separate sibling between drag-handle and title ── */
+    /* ── Checkbox cell — centered, compact, minimal ── */
     .rgp-cb-cell {
       display: inline-flex;
       align-items: center;
-      justify-content: flex-start;
-      gap: 4px;
+      justify-content: center;
+      gap: 2px;
       box-sizing: border-box;
       position: relative;
       overflow: visible;
-      width: 46px;
-      min-width: 46px;
-      max-width: 46px;
+      width: 44px;
+      min-width: 44px;
+      max-width: 44px;
       height: var(--table-cell-height, 37px);
       flex-shrink: 0;
       vertical-align: top;
-      padding: 0 4px;
-      opacity: 0;
-      transition: opacity 150ms ease;
-      border-bottom: var(--borderWidth-thin) solid var(--borderColor-muted);
-      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted);
+      padding: 2px;
+      opacity: 1;
+      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted, #d0d7de);
+    }
+    /* Persistent bottom divider — always visible regardless of hover */
+    .rgp-cb-cell::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--borderWidth-thin, 1px);
+      background: var(--borderColor-muted, #d0d7de);
+      pointer-events: none;
+      z-index: 1;
     }
 
-    /* ── Drag handle ── */
+    /* ── Drag handle — minimal, centered ── */
     .rgp-dnd-handle {
-      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 18px;
+      border-radius: 4px;
       flex-shrink: 0;
-      transition: opacity 120ms ease, background-color 80ms ease;
+      cursor: grab;
+      color: var(--fgColor-muted, var(--color-fg-muted, #57606a));
+      opacity: 0;
+      transition: opacity 160ms ease, background-color 120ms ease, transform 150ms ease;
+    }
+    /* Show drag handle on row hover or when row is checked */
+    [role="row"]:hover > .rgp-cb-cell .rgp-dnd-handle,
+    .rgp-cb-cell:has(.rgp-selection-control[data-state="checked"]) .rgp-dnd-handle {
+      opacity: 0.6;
+    }
+    [role="row"]:hover > .rgp-cb-cell .rgp-dnd-handle:hover,
+    .rgp-cb-cell:has(.rgp-selection-control[data-state="checked"]) .rgp-dnd-handle:hover {
+      opacity: 1;
+    }
+    .rgp-dnd-handle:active {
+      cursor: grabbing;
     }
     .rgp-dnd-handle:hover {
       background-color: var(--bgColor-neutral-muted, var(--color-neutral-subtle, rgba(175,184,193,0.2)));
-      opacity: 1 !important;
+      opacity: 0.65 !important;
+    }
+    .rgp-dnd-handle:focus-visible {
+      outline: 2px solid var(--color-accent-emphasis, #0969da);
+      outline-offset: 2px;
     }
     .rgp-dnd-handle::after {
       content: attr(data-tooltip);
@@ -171,13 +205,40 @@ export function injectCheckboxStyles() {
     }
 
     .rgp-cb-cell--header {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      min-width: 44px;
+      max-width: 44px;
       height: 34px;
+      padding: 2px;
       opacity: 1;
+      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted, #d0d7de);
+    }
+    /* Persistent bottom divider for header — always visible */
+    .rgp-cb-cell--header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--borderWidth-thin, 1px);
+      background: var(--borderColor-muted, #d0d7de);
+      pointer-events: none;
+      z-index: 1;
     }
 
-    /* Show checkbox on row hover or when checked */
-    [role="row"]:hover > .rgp-cb-cell,
-    .rgp-cb-cell:has(.rgp-selection-control[data-state="checked"]) {
+    /* Show checkbox control on row hover or when checked */
+    .rgp-cb-cell .rgp-selection-control {
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+    [role="row"]:hover > .rgp-cb-cell .rgp-selection-control,
+    .rgp-cb-cell:has(.rgp-selection-control[data-state="checked"]) .rgp-selection-control {
+      opacity: 1;
+    }
+    .rgp-cb-cell--header .rgp-selection-control {
       opacity: 1;
     }
 

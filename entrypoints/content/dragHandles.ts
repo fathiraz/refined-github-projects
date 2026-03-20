@@ -11,6 +11,10 @@ const cleanupMap = new WeakMap<Element, () => void>()
 // Drop indicator overlay (singleton, appended to document.body)
 let dropLine: HTMLDivElement | null = null
 
+// Debounce state for drop-line hide (prevents flicker on cross-cell transitions)
+let activeDropRowId: string | null = null
+let hideLineTimer: ReturnType<typeof setTimeout> | null = null
+
 function getOrCreateDropLine(): HTMLDivElement {
   if (dropLine) return dropLine
   dropLine = document.createElement('div')
@@ -29,21 +33,11 @@ function getOrCreateDropLine(): HTMLDivElement {
   return dropLine
 }
 
-function extractNonce(): string {
-  const fromGithubFetch = document.querySelector<HTMLMetaElement>('meta[name="github-fetch-nonce"]')?.content
-  if (fromGithubFetch) return fromGithubFetch
-  const fromXFetch = document.querySelector<HTMLMetaElement>('meta[name="x-fetch-nonce"]')?.content
-  if (fromXFetch) return fromXFetch
-  const metas = document.querySelectorAll<HTMLMetaElement>('meta[content]')
-  for (const meta of metas) {
-    if (/^v2:[0-9a-f-]{36}$/.test(meta.content)) return meta.content
-  }
-  return ''
-}
 
 function getAllSortedRows(): Element[] {
   return Array.from(document.querySelectorAll('[data-rgp-cb]'))
 }
+
 
 export function injectDragHandles() {
   const rows = document.querySelectorAll<HTMLElement>('[role="row"][data-rgp-cb]:not([data-rgp-dnd])')
@@ -68,21 +62,16 @@ export function injectDragHandles() {
       <circle cx="8" cy="12" r="1.2" fill="currentColor"/>
     </svg>`
     Object.assign(handle.style, {
-      display: 'flex',
+      display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      width: '14px',
-      height: '100%',
+      width: '16px',
+      height: '18px',
       cursor: 'grab',
       color: 'var(--fgColor-muted, var(--color-fg-muted, #57606a))',
-      opacity: '0',
       flexShrink: '0',
     })
     cbCell.insertBefore(handle, cbCell.firstChild)
-
-    // Show handle on row hover
-    row.addEventListener('mouseenter', () => { handle.style.opacity = '0.6' })
-    row.addEventListener('mouseleave', () => { handle.style.opacity = '0' })
 
     // --- Draggable ---
     const cleanupDraggable = draggable({
@@ -131,29 +120,50 @@ export function injectDragHandles() {
       },
     })
 
-    // --- Drop target ---
-    const cleanupDrop = dropTargetForElements({
-      element: row,
-      getData({ input, element }) {
-        return attachClosestEdge({ domId }, { input, element, allowedEdges: ['top', 'bottom'] })
-      },
-      onDrag({ self }) {
-        const edge = extractClosestEdge(self.data)
-        const rect = row.getBoundingClientRect()
-        const line = getOrCreateDropLine()
-        const top = edge === 'top' ? rect.top : rect.bottom
-        Object.assign(line.style, {
-          display: 'block',
-          top: `${top - 1}px`,
-          left: `${rect.left}px`,
-          width: `${rect.width}px`,
-        })
-      },
-      onDragLeave() {
-        const line = getOrCreateDropLine()
-        line.style.display = 'none'
-      },
-    })
+    // --- Drop targets (all gridcells cover the full row width) ---
+    // GitHub Projects rows use display:contents — no bounding rect on the row itself.
+    // Register on ALL gridcells so the entire visible row width is droppable.
+    const gridcells = Array.from(row.querySelectorAll<HTMLElement>('[role="gridcell"]'))
+    const dropEls = gridcells.length > 0 ? gridcells : [row]
+
+    const cleanupDrops = dropEls.map(dropEl =>
+      dropTargetForElements({
+        element: dropEl,
+        getData({ input, element }) {
+          return attachClosestEdge({ domId }, { input, element, allowedEdges: ['top', 'bottom'] })
+        },
+        onDrag({ self }) {
+          // Cancel any pending hide from a cross-cell transition within the same row
+          if (hideLineTimer) { clearTimeout(hideLineTimer); hideLineTimer = null }
+          activeDropRowId = domId
+
+          const edge = extractClosestEdge(self.data)
+          const firstCell = dropEls[0]
+          const rect = firstCell.getBoundingClientRect()
+          const container = row.closest<HTMLElement>('[role="grid"], [role="rowgroup"]')
+          const lineWidth = container ? container.getBoundingClientRect().width : rect.width
+          const line = getOrCreateDropLine()
+          const top = edge === 'top' ? rect.top : rect.bottom
+          Object.assign(line.style, {
+            display: 'block',
+            top: `${top - 1}px`,
+            left: `${container?.getBoundingClientRect().left ?? rect.left}px`,
+            width: `${lineWidth}px`,
+          })
+        },
+        onDragLeave() {
+          // Debounce: only hide if cursor truly left the row, not just crossed a cell boundary
+          hideLineTimer = setTimeout(() => {
+            if (activeDropRowId === domId) {
+              activeDropRowId = null
+              getOrCreateDropLine().style.display = 'none'
+            }
+          }, 50)
+        },
+      })
+    )
+
+    const cleanupDrop = () => cleanupDrops.forEach(fn => fn())
 
     row.setAttribute(HANDLE_ATTR, '1')
     cleanupMap.set(row, () => { cleanupDraggable(); cleanupDrop() })
@@ -208,17 +218,19 @@ export function initDragAndDrop(
       // Skip if dropping within same position
       if (selectedDomIds.includes(insertAfterDomId)) return
 
-      const nonce = extractNonce()
       const count = selectedDomIds.length
+      const allDomIds = getAllSortedRows()
+        .map(r => r.getAttribute('data-rgp-cb') ?? '')
+        .filter(Boolean)
 
       sendMessage('bulkReorderByPosition', {
         selectedDomIds,
         insertAfterDomId,
+        allDomIds,
         projectId,
         owner,
         number,
         isOrg,
-        nonce,
         label: `Move · ${count} item${count !== 1 ? 's' : ''}`,
       })
     },
@@ -230,4 +242,6 @@ export function cleanupDragHandles() {
   monitorCleanup = null
   dropLine?.remove()
   dropLine = null
+  activeDropRowId = null
+  if (hideLineTimer) { clearTimeout(hideLineTimer); hideLineTimer = null }
 }

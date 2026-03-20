@@ -182,3 +182,27 @@ export const UPDATE_PR_TITLE = `
     }
   }
 `
+
+export const UPDATE_ISSUE_BODY = `
+  mutation UpdateIssueBody($issueId: ID!, $body: String!) {
+    updateIssue(input: { id: $issueId, body: $body }) {
+      issue { id }
+    }
+  }
+`
+
+export const UPDATE_PR_BODY = `
+  mutation UpdatePRBody($prId: ID!, $body: String!) {
+    updatePullRequest(input: { pullRequestId: $prId, body: $body }) {
+      pullRequest { id }
+    }
+  }
+`
+
+export const ADD_COMMENT = `
+  mutation AddComment($subjectId: ID!, $body: String!) {
+    addComment(input: { subjectId: $subjectId, body: $body }) {
+      commentEdge { node { id } }
+    }
+  }
+`

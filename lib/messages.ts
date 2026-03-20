@@ -157,19 +157,19 @@ interface ProtocolMap {
     owner: string
     number: number
     isOrg: boolean
+    allDomIds?: string[]
   }): {
-    projectDatabaseId: number
+    projectId: string
     /** All project items in current view order */
-    allOrderedItems: Array<{ memexItemId: number; title: string }>
+    allOrderedItems: Array<{ memexItemId: number; nodeId: string; title: string }>
     /** The selected items with their DOM IDs and resolved memex item IDs */
-    selectedItems: Array<{ domId: string; memexItemId: number; title: string }>
+    selectedItems: Array<{ domId: string; memexItemId: number; nodeId: string; title: string }>
   }
   bulkReorder(data: {
-    projectDatabaseId: number
-    nonce: string
+    projectId: string
     reorderOps: Array<{
-      memexItemId: number
-      previousMemexItemId: number | null
+      nodeId: string
+      previousNodeId: string | null
     }>
     label?: string
   }): void
@@ -180,8 +180,8 @@ interface ProtocolMap {
     owner: string
     number: number
     isOrg: boolean
-    nonce: string
     label?: string
+    allDomIds?: string[]
   }): void
   cancelProcess(data: { processId: string }): void
   queueStateUpdate(data: {

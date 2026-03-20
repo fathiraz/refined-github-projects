@@ -271,6 +271,13 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       getFields().then(data => {
         const existingTypes = data.fields.map(f => f.dataType)
         const defaultFields: ProjectField[] = []
+        if (!existingTypes.includes('TITLE')) {
+          defaultFields.unshift({ id: '__title__', name: 'Title', dataType: 'TITLE' })
+        }
+        defaultFields.unshift(
+          { id: '__body__', name: 'Description', dataType: 'BODY' },
+          { id: '__comment__', name: 'Add Comment', dataType: 'COMMENT' },
+        )
         if (!existingTypes.includes('ASSIGNEES')) {
           defaultFields.push({ id: '__assignees__', name: 'Assignees', dataType: 'ASSIGNEES' })
         }
@@ -280,6 +287,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         if (isOrg && !data.fields.some(f => f.dataType === 'ISSUE_TYPE' || f.name.toLowerCase() === 'type')) {
           defaultFields.push({ id: '__issue_type__', name: 'Type', dataType: 'ISSUE_TYPE' })
         }
+        
         setProjectData({ ...data, fields: [...defaultFields, ...data.fields] })
       }).catch(() => {})
     }
@@ -419,9 +427,9 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     setShowMoveModal(true)
   }
 
-  function handleConfirmReorder(ops: ReorderOp[], projectDatabaseId: number, nonce: string, label: string) {
+  function handleConfirmReorder(ops: ReorderOp[], resolvedProjectId: string, label: string) {
     setShowMoveModal(false)
-    sendMessage('bulkReorder', { projectDatabaseId, nonce, reorderOps: ops, label })
+    sendMessage('bulkReorder', { projectId: resolvedProjectId, reorderOps: ops, label })
     selectionStore.clear()
   }
 

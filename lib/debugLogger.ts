@@ -7,9 +7,12 @@ import { debugStorage } from './storage'
 
 let isDebugEnabled = false
 
-// Initialize debug state from storage
+// Initialize debug state from storage and watch for changes
 export async function initDebugLogger(): Promise<void> {
   isDebugEnabled = await debugStorage.getValue()
+  debugStorage.watch((newValue) => {
+    isDebugEnabled = newValue
+  })
 }
 
 // Check current debug state without async

@@ -8,12 +8,13 @@ type MoveAction = 'TOP' | 'BOTTOM' | 'BEFORE' | 'AFTER'
 
 interface OrderedItem {
   memexItemId: number
+  nodeId: string
   title: string
 }
 
 export interface ReorderOp {
-  memexItemId: number
-  previousMemexItemId: number | null
+  nodeId: string
+  previousNodeId: string | null
 }
 
 interface Props {
@@ -24,22 +25,9 @@ interface Props {
   number: number
   isOrg: boolean
   onClose: () => void
-  onConfirm: (ops: ReorderOp[], projectDatabaseId: number, nonce: string, label: string) => void
+  onConfirm: (ops: ReorderOp[], projectId: string, label: string) => void
 }
 
-function extractNonce(): string {
-  // GitHub embeds the CSRF nonce in a meta tag
-  const fromGithubFetch = document.querySelector<HTMLMetaElement>('meta[name="github-fetch-nonce"]')?.content
-  if (fromGithubFetch) return fromGithubFetch
-  const fromXFetch = document.querySelector<HTMLMetaElement>('meta[name="x-fetch-nonce"]')?.content
-  if (fromXFetch) return fromXFetch
-  // Scan all meta tags for content matching the nonce format v2:uuid
-  const metas = document.querySelectorAll<HTMLMetaElement>('meta[content]')
-  for (const meta of metas) {
-    if (/^v2:[0-9a-f-]{36}$/.test(meta.content)) return meta.content
-  }
-  return ''
-}
 
 function computeNewOrder(
   allItems: OrderedItem[],
@@ -75,16 +63,12 @@ function computeNewOrder(
 }
 
 function buildOps(newOrder: OrderedItem[], selectedMemexIds: Set<number>): ReorderOp[] {
-  return newOrder
-    .reduce<ReorderOp[]>((acc, item, i) => {
-      if (!selectedMemexIds.has(item.memexItemId)) return acc
-      const prev = newOrder[i - 1]
-      acc.push({
-        memexItemId: item.memexItemId,
-        previousMemexItemId: prev?.memexItemId ?? null,
-      })
-      return acc
-    }, [])
+  return newOrder.reduce<ReorderOp[]>((acc, item, i) => {
+    if (!selectedMemexIds.has(item.memexItemId)) return acc
+    const prev = newOrder[i - 1]
+    acc.push({ nodeId: item.nodeId, previousNodeId: prev?.nodeId ?? null })
+    return acc
+  }, [])
 }
 
 // ─── Preview list ──────────────────────────────────────────────────────────────
@@ -139,8 +123,7 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
   const [stage, setStage] = useState<Stage>('LOADING')
   const [allOrderedItems, setAllOrderedItems] = useState<OrderedItem[]>([])
   const [selectedMemexIds, setSelectedMemexIds] = useState<Set<number>>(new Set())
-  const [projectDatabaseId, setProjectDatabaseId] = useState(0)
-  const [nonce, setNonce] = useState('')
+  const [resolvedProjectId, setResolvedProjectId] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
   const [action, setAction] = useState<MoveAction>('TOP')
@@ -151,14 +134,15 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
 
   // Fetch data on mount
   useEffect(() => {
-    const foundNonce = extractNonce()
-    setNonce(foundNonce)
+    const allDomIds = Array.from(document.querySelectorAll('[data-rgp-cb]'))
+      .map(el => el.getAttribute('data-rgp-cb') ?? '')
+      .filter(Boolean)
 
-    sendMessage('getReorderContext', { itemIds, projectId, owner, number, isOrg })
+    sendMessage('getReorderContext', { itemIds, projectId, owner, number, isOrg, allDomIds })
       .then(result => {
         setAllOrderedItems(result.allOrderedItems)
         setSelectedMemexIds(new Set(result.selectedItems.map(s => s.memexItemId)))
-        setProjectDatabaseId(result.projectDatabaseId)
+        setResolvedProjectId(result.projectId)
         setStage('CONFIGURE')
       })
       .catch(err => {
@@ -192,7 +176,7 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
 
   function handleConfirm() {
     const label = `Move · ${count} item${count !== 1 ? 's' : ''}`
-    onConfirm(ops, projectDatabaseId, nonce, label)
+    onConfirm(ops, resolvedProjectId, label)
   }
 
   const overlayStyle = {
