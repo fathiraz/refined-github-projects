@@ -990,7 +990,7 @@ export default defineBackground(() => {
         .reduce<Array<{ memexItemId: number; previousMemexItemId: number | '' }>>((acc, item, i) => {
           if (!selectedSet.has(item.memexItemId)) return acc
           const prev = newOrder[i - 1]
-          acc.push({ memexItemId: item.memexItemId, previousMemexItemId: prev?.memexItemId ?? '' })
+          acc.push({ memexItemId: item.memexItemId, previousMemexItemId: prev?.memexItemId ?? null })
           return acc
         }, [])
 

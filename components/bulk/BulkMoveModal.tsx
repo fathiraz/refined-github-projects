@@ -13,7 +13,7 @@ interface OrderedItem {
 
 export interface ReorderOp {
   memexItemId: number
-  previousMemexItemId: number | ''
+  previousMemexItemId: number | null
 }
 
 interface Props {
@@ -81,7 +81,7 @@ function buildOps(newOrder: OrderedItem[], selectedMemexIds: Set<number>): Reord
       const prev = newOrder[i - 1]
       acc.push({
         memexItemId: item.memexItemId,
-        previousMemexItemId: prev?.memexItemId ?? '',
+        previousMemexItemId: prev?.memexItemId ?? null,
       })
       return acc
     }, [])

@@ -169,7 +169,7 @@ interface ProtocolMap {
     nonce: string
     reorderOps: Array<{
       memexItemId: number
-      previousMemexItemId: number | ''
+      previousMemexItemId: number | null
     }>
     label?: string
   }): void
