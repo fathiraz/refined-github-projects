@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Build Chrome
+        run: pnpm run publish:chrome
+
+      - name: Build Firefox
+        run: pnpm run publish:firefox
+
+      - name: Build Edge
+        run: pnpm run publish:edge
+
+      - name: Build Safari
+        run: pnpm run publish:safari
+
+      - name: Upload Chrome asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: .output/chrome-mv3.zip
+          asset_name: chrome-mv3.zip
+          asset_content_type: application/zip
+
+      - name: Upload Firefox asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: .output/firefox-mv2.zip
+          asset_name: firefox-mv2.zip
+          asset_content_type: application/zip
+
+      - name: Upload Edge asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: .output/edge-mv3.zip
+          asset_name: edge-mv3.zip
+          asset_content_type: application/zip
+
+      - name: Upload Safari asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: .output/safari-mv3.zip
+          asset_name: safari-mv3.zip
+          asset_content_type: application/zip
