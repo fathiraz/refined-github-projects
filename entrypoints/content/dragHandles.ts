@@ -57,7 +57,8 @@ export function injectDragHandles() {
     const handle = document.createElement('div')
     handle.className = 'rgp-dnd-handle'
     handle.setAttribute('aria-label', 'Drag to reorder')
-    handle.title = 'Drag to reorder (only works in unsorted view)'
+    handle.setAttribute('data-tooltip', 'Drag to reorder')
+    handle.title = 'Drag to reorder'
     handle.innerHTML = `<svg width="12" height="16" viewBox="0 0 12 16" fill="none" style="display:block">
       <circle cx="4" cy="4" r="1.2" fill="currentColor"/>
       <circle cx="4" cy="8" r="1.2" fill="currentColor"/>
@@ -70,14 +71,12 @@ export function injectDragHandles() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      width: '16px',
+      width: '14px',
       height: '100%',
       cursor: 'grab',
-      color: '#57606a',
+      color: 'var(--fgColor-muted, var(--color-fg-muted, #57606a))',
       opacity: '0',
-      transition: 'opacity 120ms ease',
       flexShrink: '0',
-      marginRight: '2px',
     })
     cbCell.insertBefore(handle, cbCell.firstChild)
 

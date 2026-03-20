@@ -120,18 +120,54 @@ export function injectCheckboxStyles() {
     .rgp-cb-cell {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      gap: 4px;
       box-sizing: border-box;
-      width: 28px;
-      min-width: 28px;
-      max-width: 28px;
+      position: relative;
+      overflow: visible;
+      width: 46px;
+      min-width: 46px;
+      max-width: 46px;
       height: var(--table-cell-height, 37px);
       flex-shrink: 0;
       vertical-align: top;
-      padding: 0;
+      padding: 0 4px;
       opacity: 0;
       transition: opacity 150ms ease;
       border-bottom: var(--borderWidth-thin) solid var(--borderColor-muted);
+      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted);
+    }
+
+    /* ── Drag handle ── */
+    .rgp-dnd-handle {
+      border-radius: 3px;
+      flex-shrink: 0;
+      transition: opacity 120ms ease, background-color 80ms ease;
+    }
+    .rgp-dnd-handle:hover {
+      background-color: var(--bgColor-neutral-muted, var(--color-neutral-subtle, rgba(175,184,193,0.2)));
+      opacity: 1 !important;
+    }
+    .rgp-dnd-handle::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bgColor-emphasis, #24292f);
+      color: var(--fgColor-onEmphasis, var(--color-fg-on-emphasis, #fff));
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 120ms ease 500ms;
+      z-index: 10001;
+    }
+    .rgp-dnd-handle:hover::after {
+      opacity: 1;
     }
 
     .rgp-cb-cell--header {
