@@ -133,59 +133,75 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
     <Box
       sx={{
         position: 'fixed',
-        top: '60px',
-        right: '16px',
-        zIndex: 9998,
-        width: 260,
-        bg: 'canvas.default',
-        border: '1px solid',
-        borderColor: 'border.default',
-        borderRadius: 2,
-        boxShadow: 'shadow.medium',
-        overflow: 'hidden',
+        inset: 0,
+        bg: 'rgba(27,31,36,0.5)',
+        zIndex: 10001,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
+      onClick={onClose}
     >
-      {/* Header */}
+      {/* Modal box */}
       <Box
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          px: 3,
-          py: 2,
-          borderBottom: '1px solid',
+          bg: 'canvas.default',
+          border: '1px solid',
           borderColor: 'border.default',
-          bg: 'canvas.subtle',
+          borderRadius: 12,
+          boxShadow: 'shadow.large',
+          overflow: 'hidden',
+          width: '100%',
+          maxWidth: 480,
         }}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          e.stopPropagation()
+          if (e.key === 'Escape') onClose()
+        }}
+        onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <SprintIcon size={14} color="var(--fgColor-accent, #0969da)" />
-          <Text sx={{ fontWeight: 'semibold', fontSize: 1, color: 'fg.default' }}>
-            Sprint
-          </Text>
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 4,
+            py: 3,
+            borderBottom: '1px solid',
+            borderColor: 'border.default',
+            bg: 'canvas.subtle',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <SprintIcon size={16} color="var(--fgColor-accent, #0969da)" />
+            <Text sx={{ fontWeight: 'semibold', fontSize: 2, color: 'fg.default' }}>
+              Sprint
+            </Text>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip text="Sprint settings" direction="sw">
+              <GhostAction
+                onClick={() => setShowSettings((v) => !v)}
+                icon={<SlidersIcon size={14} />}
+                aria-label="Sprint settings"
+                size="small"
+              />
+            </Tooltip>
+            <Tooltip text="Close sprint panel" direction="sw">
+              <GhostAction
+                onClick={onClose}
+                icon={<XIcon size={14} />}
+                aria-label="Close sprint panel"
+                size="small"
+              />
+            </Tooltip>
+          </Box>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip text="Sprint settings" direction="sw">
-            <GhostAction
-              onClick={() => setShowSettings((v) => !v)}
-              icon={<SlidersIcon size={14} />}
-              aria-label="Sprint settings"
-              size="small"
-            />
-          </Tooltip>
-          <Tooltip text="Close sprint panel" direction="sw">
-            <GhostAction
-              onClick={onClose}
-              icon={<XIcon size={14} />}
-              aria-label="Close sprint panel"
-              size="small"
-            />
-          </Tooltip>
-        </Box>
-      </Box>
 
-      {/* Body */}
-      <Box sx={{ p: 3 }}>
+        {/* Body */}
+        <Box sx={{ px: 4, py: 3, minHeight: 160 }}>
         {showSettings ? (
           <SprintSettingsDrawer
             projectId={projectId}
@@ -230,10 +246,10 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
 
             {state === 'not-configured' && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
+                <Text sx={{ fontSize: 2, color: 'fg.muted' }}>
                   Sprint tracking isn't set up for this project yet.
                 </Text>
-                <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
+                <Text sx={{ fontSize: 1, color: 'fg.subtle' }}>
                   Each GitHub project has its own sprint configuration.
                 </Text>
                 <PrimaryAction size="small" onClick={() => setShowSettings(true)}>
@@ -244,13 +260,13 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
 
             {state === 'no-active' && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Text sx={{ fontSize: 1, color: 'fg.muted', fontWeight: 'semibold' }}>
+                <Text sx={{ fontSize: 2, color: 'fg.muted', fontWeight: 'semibold' }}>
                   {status?.settings?.sprintFieldName ?? 'Sprint'}
                 </Text>
-                <Text sx={{ fontSize: 1, color: 'fg.muted' }}>No active sprint</Text>
+                <Text sx={{ fontSize: 2, color: 'fg.muted' }}>No active sprint</Text>
                 {status?.nearestUpcoming && (
                   <>
-                    <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+                    <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
                       Next: {status.nearestUpcoming.title} — starts{' '}
                       {formatDate(status.nearestUpcoming.startDate)}
                     </Text>
@@ -269,12 +285,12 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
             {state === 'acknowledged' && currentSprint && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.default' }}>
+                  <Text sx={{ fontSize: 2, fontWeight: 'semibold', color: 'fg.default' }}>
                     {currentSprint.title}
                   </Text>
                   <Box
                     sx={{
-                      fontSize: 0,
+                      fontSize: 1,
                       color: 'fg.muted',
                       bg: 'canvas.subtle',
                       border: '1px solid',
@@ -288,7 +304,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                     Upcoming
                   </Box>
                 </Box>
-                <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+                <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
                   starts {formatDate(currentSprint.startDate)} · {formatDate(currentSprint.startDate)} – {formatDate(currentSprint.endDate)}
                 </Text>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
@@ -301,17 +317,17 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
 
             {state === 'active' && currentSprint && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.default' }}>
+                <Text sx={{ fontSize: 2, fontWeight: 'semibold', color: 'fg.default' }}>
                   {currentSprint.title}
                 </Text>
-                <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+                <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
                   {formatDate(currentSprint.startDate)} – {formatDate(currentSprint.endDate)} ·{' '}
                   {daysLeft(currentSprint.endDate)} day{daysLeft(currentSprint.endDate) !== 1 ? 's' : ''} left
                 </Text>
                 {/* Progress bar */}
                 <Box
                   sx={{
-                    height: '4px',
+                    height: '6px',
                     borderRadius: '2px',
                     bg: 'neutral.muted',
                     overflow: 'hidden',
@@ -348,6 +364,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
             )}
           </>
         )}
+        </Box>
       </Box>
     </Box>
   )

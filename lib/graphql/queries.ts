@@ -146,11 +146,7 @@ export const GET_PROJECT_ITEMS_WITH_FIELDS = `
           pageInfo { hasNextPage endCursor }
           nodes {
             id
-            content {
-              ... on Issue { id state }
-              ... on PullRequest { id state }
-            }
-            fieldValues(first: 20) {
+            fieldValues(first: 50) {
               nodes {
                 ... on ProjectV2ItemFieldIterationValue {
                   iterationId

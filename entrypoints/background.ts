@@ -1196,7 +1196,6 @@ export default defineBackground(() => {
       // Paginate all project items matching the active sprint
       interface SprintItemNode {
         id: string
-        content: { id: string; state: string } | null
         fieldValues: {
           nodes: (
             | { iterationId: string; field: { id: string } }
@@ -1244,23 +1243,30 @@ export default defineBackground(() => {
       }
 
       // Classify done vs not-done
+      const excludeConditions = data.excludeConditions ?? []
       const notDoneItems = sprintItems.filter((item) => {
-        // Closed issues/PRs are always done
-        if (item.content?.state === 'CLOSED') return false
-
         // Check done field
         type SprintFv = { iterationId?: string; optionId?: string; text?: string; field: { id: string } | null }
-        const doneFieldValue = (item.fieldValues.nodes.filter(Boolean) as SprintFv[]).find(
-          (fv) => fv.field?.id === data.doneFieldId,
-        )
+        const fvNodes = item.fieldValues.nodes.filter(Boolean) as SprintFv[]
+        const doneFieldValue = fvNodes.find((fv) => fv.field?.id === data.doneFieldId)
         if (!doneFieldValue) return true // no done-field value → not done
 
         if (data.doneFieldType === 'SINGLE_SELECT' && 'optionId' in doneFieldValue) {
-          return doneFieldValue.optionId !== data.doneOptionId
+          if (doneFieldValue.optionId === data.doneOptionId) return false
+        } else if (data.doneFieldType === 'TEXT' && 'text' in doneFieldValue) {
+          if (doneFieldValue.text === data.doneOptionValue) return false
+        } else {
+          return true
         }
-        if (data.doneFieldType === 'TEXT' && 'text' in doneFieldValue) {
-          return doneFieldValue.text !== data.doneOptionValue
+
+        // Exclude conditions — item stays in current sprint if it matches any
+        for (const cond of excludeConditions) {
+          const fv = fvNodes.find((f) => f.field?.id === cond.fieldId)
+          if (!fv) continue
+          if (cond.fieldType === 'SINGLE_SELECT' && 'optionId' in fv && fv.optionId === cond.optionId) return false
+          if (cond.fieldType === 'TEXT' && 'text' in fv && fv.text === cond.optionName) return false
         }
+
         return true
       })
 

@@ -1,5 +1,5 @@
 import { defineExtensionMessaging } from '@webext-core/messaging'
-import type { SprintSettings } from './storage'
+import type { ExcludeCondition, SprintSettings } from './storage'
 
 export interface ItemPreviewData {
   resolvedItemId: string
@@ -141,6 +141,7 @@ interface ProtocolMap {
     doneFieldType: 'SINGLE_SELECT' | 'TEXT'
     doneOptionId: string
     doneOptionValue: string
+    excludeConditions: ExcludeCondition[]
   }): void
   getItemTitles(data: {
     itemIds: string[]
