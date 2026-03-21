@@ -79,6 +79,7 @@ export function EndSprintConfirmModal({
         doneFieldType: settings.doneFieldType,
         doneOptionId: settings.doneOptionId,
         doneOptionValue: settings.doneOptionName,
+        excludeConditions: settings.excludeConditions ?? [],
       })
       onComplete()
     } catch (e) {
@@ -121,7 +122,7 @@ export function EndSprintConfirmModal({
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Text
               as="label"
-              sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}
+              sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}
             >
               Open items will be moved to
             </Text>
@@ -154,7 +155,7 @@ export function EndSprintConfirmModal({
         </>
       )}
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+      <Box sx={{ display: 'flex', gap: 2, mt: 1, pt: 2, borderTop: '1px solid', borderColor: 'border.muted' }}>
         <SecondaryAction size="small" onClick={onClose}>
           Cancel
         </SecondaryAction>

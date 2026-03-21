@@ -6,6 +6,14 @@ export const usernameStorage = storage.defineItem<string>('local:username', {
   defaultValue: '',
 })
 
+export interface ExcludeCondition {
+  fieldId: string
+  fieldName: string
+  fieldType: 'SINGLE_SELECT' | 'TEXT'
+  optionId: string    // SINGLE_SELECT: option node ID; TEXT: empty string
+  optionName: string  // SINGLE_SELECT: display label; TEXT: exact text value to match
+}
+
 export interface SprintSettings {
   sprintFieldId: string
   sprintFieldName: string
@@ -15,6 +23,7 @@ export interface SprintSettings {
   doneOptionId: string
   doneOptionName: string
   acknowledgedSprintId?: string
+  excludeConditions?: ExcludeCondition[]
 }
 
 export const allSprintSettingsStorage = storage.defineItem<Record<string, SprintSettings>>(
