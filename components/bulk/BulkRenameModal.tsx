@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Heading, Spinner, Text } from '@primer/react'
+import { Box, Button, Spinner, Text } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
-import { PencilIcon, XIcon } from '../ui/primitives'
+import { PencilIcon } from '../ui/primitives'
+import { ModalStepHeader } from '../ui/ModalStepHeader'
 
 type Stage = 'LOADING' | 'CONFIGURE' | 'PREVIEW' | 'ERROR'
 type RenameTab = 'FIND_REPLACE' | 'PREFIX_SUFFIX'
@@ -103,15 +104,7 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
     return (
       <Box sx={overlayStyle} onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }} onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}>
         <Box sx={panelStyle}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <PencilIcon size={16} />
-              <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Rename Titles</Heading>
-            </Box>
-            <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-              <XIcon size={16} />
-            </Button>
-          </Box>
+          <ModalStepHeader title="Rename Titles" icon={<PencilIcon size={16} />} onClose={onClose} />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, py: 6 }}>
             <Spinner size="large" />
             <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Fetching item titles…</Text>
@@ -126,15 +119,7 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
     return (
       <Box sx={overlayStyle} onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }} onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}>
         <Box sx={panelStyle}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <PencilIcon size={16} />
-              <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Rename Titles</Heading>
-            </Box>
-            <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-              <XIcon size={16} />
-            </Button>
-          </Box>
+          <ModalStepHeader title="Rename Titles" icon={<PencilIcon size={16} />} onClose={onClose} />
           <Box sx={{ px: 4, py: 3 }}>
             <Box sx={{ p: 3, borderRadius: 2, bg: 'danger.subtle', border: '1px solid', borderColor: 'danger.muted', color: 'danger.fg', fontSize: 1 }}>
               {errorMsg || 'Failed to fetch item titles.'}
@@ -153,19 +138,14 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
     return (
       <Box sx={overlayStyle} onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }} onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}>
         <Box sx={panelStyle}>
-          {/* Header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <PencilIcon size={16} />
-              <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Rename Titles</Heading>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>Step 2 of 2</Text>
-              <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-                <XIcon size={16} />
-              </Button>
-            </Box>
-          </Box>
+          <ModalStepHeader
+            title="Rename Titles"
+            icon={<PencilIcon size={16} />}
+            step={2}
+            totalSteps={2}
+            onBack={() => setStage('CONFIGURE')}
+            onClose={onClose}
+          />
 
           {/* Frozen table */}
           <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3 }}>
@@ -173,8 +153,7 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
           </Box>
 
           {/* Footer */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
-            <Button variant="default" onClick={() => setStage('CONFIGURE')} sx={{ boxShadow: 'none' }}>← Back</Button>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
             <Button variant="primary" onClick={handleConfirm} sx={{ boxShadow: 'none' }}>
               Rename {changedCount} item{changedCount !== 1 ? 's' : ''}
             </Button>
@@ -188,19 +167,13 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
   return (
     <Box sx={overlayStyle}>
       <Box sx={panelStyle}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <PencilIcon size={16} />
-            <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Rename Titles</Heading>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>Step 1 of 2</Text>
-            <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-              <XIcon size={16} />
-            </Button>
-          </Box>
-        </Box>
+        <ModalStepHeader
+          title="Rename Titles"
+          icon={<PencilIcon size={16} />}
+          step={1}
+          totalSteps={2}
+          onClose={onClose}
+        />
 
         {/* Body */}
         <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
