@@ -75,9 +75,16 @@ export function injectDragHandles() {
 
     // --- Draggable ---
     const cleanupDraggable = draggable({
-      element: row,
+      element: cbCell,
       dragHandle: handle,
-      getInitialData: () => ({ domId }),
+      getInitialData: () => {
+        const sel = selectionStore.getAll()
+        return {
+          domId,
+          // Snapshot selection at drag-start so monitor.onDrop uses the same state
+          selectedIds: selectionStore.isSelected(domId) ? sel : [],
+        }
+      },
       onDragStart() {
         const selected = selectionStore.getAll()
         const isMulti = selected.includes(domId) && selected.length > 1
@@ -97,8 +104,7 @@ export function injectDragHandles() {
         line.style.display = 'none'
       },
       onGenerateDragPreview({ nativeSetDragImage }) {
-        const selected = selectionStore.getAll()
-        const count = selected.includes(domId) ? selected.length : 1
+        const count = selectionStore.isSelected(domId) ? selectionStore.count() : 1
         const pill = document.createElement('div')
         pill.textContent = `Moving ${count} item${count !== 1 ? 's' : ''}`
         Object.assign(pill.style, {
@@ -124,7 +130,7 @@ export function injectDragHandles() {
     // GitHub Projects rows use display:contents — no bounding rect on the row itself.
     // Register on ALL gridcells so the entire visible row width is droppable.
     const gridcells = Array.from(row.querySelectorAll<HTMLElement>('[role="gridcell"]'))
-    const dropEls = gridcells.length > 0 ? gridcells : [row]
+    const dropEls = [cbCell, ...gridcells]
 
     const cleanupDrops = dropEls.map(dropEl =>
       dropTargetForElements({
@@ -193,12 +199,13 @@ export function initDragAndDrop(
       const targetDomId = target.data.domId as string
       const edge = extractClosestEdge(target.data)
 
-      if (!draggedDomId || !targetDomId || draggedDomId === targetDomId) return
+      if (!draggedDomId || !targetDomId) return
 
-      const selected = selectionStore.getAll()
-      const selectedDomIds = selected.includes(draggedDomId) && selected.length > 1
-        ? selected
-        : [draggedDomId]
+      const snapshotIds = (source.data.selectedIds as string[] | undefined) ?? []
+      const selectedDomIds = snapshotIds.length > 1 ? snapshotIds : [draggedDomId]
+
+      // For single-item drag only: skip if target is the dragged item itself (no visual movement)
+      if (selectedDomIds.length === 1 && draggedDomId === targetDomId) return
 
       const allRows = getAllSortedRows()
       const targetIdx = allRows.findIndex(r => r.getAttribute('data-rgp-cb') === targetDomId)
@@ -215,8 +222,8 @@ export function initDragAndDrop(
         insertAfterDomId = targetDomId
       }
 
-      // Skip if dropping within same position
-      if (selectedDomIds.includes(insertAfterDomId)) return
+      // Skip true no-ops: single item dropped immediately after itself
+      if (selectedDomIds.length === 1 && selectedDomIds.includes(insertAfterDomId)) return
 
       const count = selectedDomIds.length
       const allDomIds = getAllSortedRows()
