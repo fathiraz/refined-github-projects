@@ -2,6 +2,12 @@ import path from 'path'
 import { defineConfig } from 'wxt'
 
 export default defineConfig({
+  // source code lives in src/, entries in src/entries/, output goes to dist/
+  srcDir: 'src',
+  modulesDir: 'wxt-modules',
+  outDir: 'dist',
+  publicDir: 'static',
+  entrypointsDir: 'entries',
   modules: ['@wxt-dev/module-react'],
   webExt: {
     startUrls: ['https://github.com/orgs/kitabisa/projects/58/views/8'],
@@ -18,7 +24,7 @@ export default defineConfig({
       alias: {
         // Stub out @primer/live-region-element to prevent customElements error in content scripts
         // Content scripts run in isolated world where customElements is null
-        '@primer/live-region-element': path.resolve(__dirname, 'lib/stubs/live-region-element.ts'),
+        '@primer/live-region-element': path.resolve(__dirname, 'src/lib/stubs/live-region-element.ts'),
       },
     },
   }),

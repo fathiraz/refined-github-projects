@@ -17,7 +17,7 @@
     "zip:firefox": "wxt zip --browser firefox",
     "zip:edge": "wxt zip --browser edge",
     "zip:safari": "wxt zip --browser safari",
-    "submit": "webstore upload --source .output/chrome-mv3.zip --auto-publish",
+    "submit": "webstore upload --source dist/chrome-mv3.zip --auto-publish",
     "publish:chrome": "wxt build --browser chrome && wxt zip --browser chrome",
     "publish:firefox": "wxt build --browser firefox && wxt zip --browser firefox",
     "publish:edge": "wxt build --browser edge && wxt zip --browser edge",

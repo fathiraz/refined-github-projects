@@ -1,6 +1,6 @@
 
 node_modules/
-.output/
+dist/
 .wxt/
 
 
@@ -11,6 +11,8 @@ node_modules/
 /.cursor/mcp.json.bak
 /.factory/mcp.json
 /.factory/mcp.json.bak
+/.gemini/settings.json
+/.gemini/settings.json.bak
 /.mcp.json
 /.mcp.json.bak
 /AGENTS.md
