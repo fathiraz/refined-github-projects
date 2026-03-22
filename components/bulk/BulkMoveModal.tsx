@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Box, Button, Heading, Spinner, Text } from '@primer/react'
+import { Box, Button, Spinner, Text } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
-import { MoveIcon, XIcon } from '../ui/primitives'
+import { MoveIcon } from '../ui/primitives'
+import { ModalStepHeader } from '../ui/ModalStepHeader'
 
 type Stage = 'LOADING' | 'CONFIGURE' | 'PREVIEW' | 'ERROR'
 type MoveAction = 'TOP' | 'BOTTOM' | 'BEFORE' | 'AFTER'

@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Box, Button, Flash, FormControl, Heading, Spinner, Text, TextInput } from '@primer/react'
-import { sendMessage, ItemPreviewData } from '../lib/messages'
-import { queueStore } from '../lib/queueStore'
-import { flyToTracker } from '../lib/flyAnimation'
-import { AutocompleteInput } from './ui/AutocompleteInput'
-import { MarkdownTextarea } from './ui/MarkdownTextarea'
-import { CopyIcon, XIcon } from './ui/primitives'
+import { sendMessage, ItemPreviewData } from '../../lib/messages'
+import { queueStore } from '../../lib/queueStore'
+import { flyToTracker } from '../../lib/flyAnimation'
+import { AutocompleteInput } from '../ui/AutocompleteInput'
+import { MarkdownTextarea } from '../ui/MarkdownTextarea'
+import { CopyIcon, XIcon } from '../ui/primitives'
 
 type Step = 'LOADING' | 'PREVIEW' | 'ERROR'
 

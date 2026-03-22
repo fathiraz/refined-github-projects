@@ -3,10 +3,11 @@ import { Box, Button, Checkbox, Flash, FormControl, Heading, Text, TextInput } f
 import { AutocompleteInput } from '../ui/AutocompleteInput'
 import { MarkdownTextarea } from '../ui/MarkdownTextarea'
 import {
-  AlertIcon, CheckIcon, XIcon, StepIndicator,
+  AlertIcon, CheckIcon,
   PersonIcon, TagIcon, ShieldIcon, HashIcon, CalendarIcon,
   TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon, PencilIcon,
 } from '../ui/primitives'
+import { ModalStepHeader } from '../ui/ModalStepHeader'
 
 export interface ProjectField {
   id: string
@@ -81,44 +82,6 @@ function getFieldIcon(dataType: string): React.ReactNode {
 
 // ── Step subcomponents ──────────────────────────────────────
 
-function WizardHeader({ step, title, subtitle, onBack, onClose }: {
-  step: 1 | 2 | 3
-  title: string
-  subtitle?: string
-  onBack?: () => void
-  onClose: () => void
-}) {
-  return (
-    <Box sx={{
-      display: 'flex', alignItems: 'flex-start', gap: 3,
-      px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default', flexShrink: 0,
-    }}>
-      {onBack && (
-        <Button variant="default" size="small" onClick={onBack} sx={{ mt: 1, boxShadow: 'none', px: 2, flexShrink: 0 }}>
-          ←
-        </Button>
-      )}
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-          <StepIndicator current={step} total={3} />
-          <Text sx={{ fontSize: 0, fontWeight: 'bold', color: 'accent.fg', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Step {step} of 3
-          </Text>
-        </Box>
-        <Heading as="h2" sx={{ m: 0, fontSize: 4, fontWeight: 'bold', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
-          {title}
-        </Heading>
-        {subtitle && (
-          <Text as="p" sx={{ m: 0, mt: 1, fontSize: 1, color: 'fg.muted' }}>{subtitle}</Text>
-        )}
-      </Box>
-      <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted', mt: 1, flexShrink: 0 }}>
-        <XIcon size={16} />
-      </Button>
-    </Box>
-  )
-}
-
 function TokenWarning({ onClose, onOpenOptions }: { onClose: () => void; onOpenOptions: () => void }) {
   return (
     <Box sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center' }}>
@@ -170,10 +133,11 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
 
   return (
     <>
-      <WizardHeader
-        step={1}
+      <ModalStepHeader
         title="Select Fields"
         subtitle={`Choose the fields to update on the ${count} selected item${count !== 1 ? 's' : ''}.`}
+        step={1}
+        totalSteps={3}
         onClose={onClose}
       />
       <Box sx={{ px: 4, pt: 2, pb: 1 }}>
@@ -290,10 +254,11 @@ interface ValuesStepProps {
 function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, onUpdateFieldValue, onClose, onBack, onNext }: ValuesStepProps) {
   return (
     <>
-      <WizardHeader
-        step={2}
+      <ModalStepHeader
         title="Set Values"
         subtitle={`Assign new values for the ${selectedFields.length} selected field${selectedFields.length !== 1 ? 's' : ''}.`}
+        step={2}
+        totalSteps={3}
         onBack={onBack}
         onClose={onClose}
       />
@@ -474,10 +439,11 @@ interface SummaryStepProps {
 function SummaryStep({ count, selectedFields, fieldValues, concurrentError, applyBtnRef, onClose, onBack, onApply }: SummaryStepProps) {
   return (
     <>
-      <WizardHeader
-        step={3}
+      <ModalStepHeader
         title="Review & Apply"
         subtitle={`You are updating ${count} item${count !== 1 ? 's' : ''}. Confirm the changes below.`}
+        step={3}
+        totalSteps={3}
         onBack={onBack}
         onClose={onClose}
       />
