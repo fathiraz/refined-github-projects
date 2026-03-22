@@ -2,6 +2,7 @@ import { logger } from './debugLogger'
 
 export interface QueueTask {
   id: string
+  detail?: string
   run: () => Promise<void>
 }
 
@@ -11,6 +12,7 @@ export interface QueueState {
   paused: boolean
   retryAfter?: number
   status?: string
+  detail?: string
 }
 
 type StateListener = (state: QueueState) => void
@@ -52,6 +54,7 @@ export async function processQueue(
   let localCompleted = 0
   let localPaused = false
   let localRetryAfter: number | undefined
+  let localDetail: string | undefined
 
   const notify = () => {
     onStateChange?.({
@@ -59,6 +62,7 @@ export async function processQueue(
       completed: localCompleted,
       paused: localPaused,
       retryAfter: localRetryAfter,
+      detail: localDetail,
     })
   }
 
@@ -77,8 +81,11 @@ export async function processQueue(
 
       while (attempts < MAX_ATTEMPTS) {
         try {
+          localDetail = task.detail
+          notify()
           await task.run()
           localCompleted++
+          localDetail = undefined
           notify()
           logger.log('[rgp:queue] task done', task.id)
           if (i < tasks.length - 1) {

@@ -68,7 +68,16 @@ interface ProtocolMap {
     firstItemId?: string
     projectId?: string
   }): { id: string; name: string; nameWithOwner: string; isPrivate: boolean; description: string | null }[]
-  bulkUpdate(data: { itemIds: string[]; projectId: string; updates: { fieldId: string; value: unknown }[] }): void
+  bulkUpdate(data: {
+    itemIds: string[]
+    projectId: string
+    updates: { fieldId: string; value: unknown }[]
+    fieldMeta?: Record<string, {
+      name: string
+      options?: { id: string; name: string }[]
+      iterations?: { id: string; title: string; startDate: string; duration: number }[]
+    }>
+  }): void
   bulkClose(data: {
     itemIds: string[]
     projectId: string
@@ -191,6 +200,7 @@ interface ProtocolMap {
     paused: boolean
     retryAfter?: number
     status?: string
+    detail?: string
     processId?: string
     label?: string
   }): void

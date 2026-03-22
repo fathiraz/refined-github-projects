@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Label, ProgressBar, Spinner, Text } from '@primer/react'
+import { Box, Button, Flash, ProgressBar, Spinner, Text, Tooltip } from '@primer/react'
 import { queueStore, type ProcessEntry } from '../lib/queueStore'
 import { sendMessage } from '../lib/messages'
-import { CheckIcon, ChevronDownIcon, XIcon } from './ui/primitives'
+import { CheckIcon, XIcon } from './ui/primitives'
 
 function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (processId: string, isDone: boolean) => void }) {
   const [countdown, setCountdown] = useState(0)
-  const [expanded, setExpanded] = useState(false)
+
+  const isDone = entry.done
+  const percent = entry.total === 0 ? 0 : Math.round((entry.completed / entry.total) * 100)
 
   useEffect(() => {
     if (!entry.paused || !entry.retryAfter) {
@@ -23,25 +25,20 @@ function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (pr
     return () => window.clearInterval(interval)
   }, [entry.paused, entry.retryAfter])
 
-  const isDone = entry.done
-  const percent = entry.total === 0 ? 0 : Math.round((entry.completed / entry.total) * 100)
-
   return (
     <Box sx={{
-      display: 'flex', alignItems: 'center', gap: 3, p: 3,
+      display: 'flex', alignItems: 'flex-start', gap: 3, p: 3,
       bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
     }}>
       {/* Status icon */}
-      <Box sx={{ flexShrink: 0 }}>
+      <Box sx={{ flexShrink: 0, pt: '2px' }}>
         {isDone ? (
           <Box sx={{ color: 'success.fg' }}>
             <CheckIcon size={20} />
           </Box>
         ) : entry.paused ? (
-          <Box sx={{ color: 'attention.fg' }}>
-            <Spinner size="small" sx={{ color: 'attention.fg' }} />
-          </Box>
+          <Spinner size="small" sx={{ color: 'attention.fg' }} />
         ) : (
           <Spinner size="small" />
         )}
@@ -49,59 +46,80 @@ function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (pr
 
       {/* Content */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
+        {/* Header row: label + count */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-          <Text sx={{ fontSize: 2, fontWeight: 'semibold', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: entry.paused ? 'attention.fg' : undefined }} title={entry.label}>
+          <Text sx={{
+            fontSize: 1, fontWeight: 'semibold', flex: 1, minWidth: 0,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            color: entry.paused ? 'attention.fg' : 'fg.default',
+          }} title={entry.label}>
             {entry.label}
           </Text>
-          <Text sx={{ fontSize: 1, color: 'fg.muted', flexShrink: 0 }}>
-            {entry.completed}/{entry.total}
-          </Text>
-          <Button
-            variant="invisible"
-            size="small"
-            onClick={() => setExpanded(v => !v)}
-            aria-label={expanded ? 'Collapse details' : 'Expand details'}
-            sx={{ p: '2px', minWidth: 'unset', color: 'fg.muted', flexShrink: 0 }}
-          >
-            <Box sx={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms', display: 'flex' }}>
-              <ChevronDownIcon size={16} />
-            </Box>
-          </Button>
+          {!isDone && (
+            <Text sx={{ fontSize: 0, color: 'fg.muted', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+              {entry.completed}/{entry.total}
+            </Text>
+          )}
         </Box>
 
-        <ProgressBar progress={percent} sx={{ borderRadius: 2, height: '6px', bg: 'canvas.subtle', '& > span': { bg: entry.paused ? 'attention.emphasis' : isDone ? 'success.emphasis' : 'accent.emphasis', transition: 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)', '@media (prefers-reduced-motion: reduce)': { transition: 'none' } } }} />
+        {/* Progress bar + percentage */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <ProgressBar progress={percent} sx={{
+            flex: 1, borderRadius: 2, height: '6px', bg: 'canvas.subtle',
+            '& > span': {
+              bg: entry.paused ? 'attention.emphasis' : isDone ? 'success.emphasis' : 'accent.emphasis',
+              transition: 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+            },
+          }} />
+          <Text sx={{ fontSize: 0, color: 'fg.muted', flexShrink: 0, minWidth: '28px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+            {percent}%
+          </Text>
+        </Box>
 
         {entry.paused && countdown > 0 && (
-          <Text sx={{ fontSize: 1, color: 'attention.fg', mt: 1, display: 'block' }}>
-            Rate limit hit. Retrying in {countdown}s…
-          </Text>
+          <Flash variant="warning" sx={{ mt: 1, py: 1, px: 2, fontSize: 1 }}>
+            Rate limited — retrying in {countdown}s
+          </Flash>
         )}
 
-        {expanded && (
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted', display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {entry.status && !isDone && (
-              <Text sx={{ fontSize: 0, color: 'fg.muted', fontFamily: 'mono', display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bg: entry.paused ? 'attention.emphasis' : 'accent.emphasis', flexShrink: 0 }} />
-                {entry.status}
-              </Text>
-            )}
-            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-              {entry.completed} of {entry.total} tasks · {percent}%
-            </Text>
+        {/* Live section: pulsing accent bar + detail (hero) + status (supporting) */}
+        {!isDone && (entry.status || entry.detail) && (
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted', display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+            {/* CSS-only pulsing accent bar */}
+            <Box sx={{
+              width: '2px', borderRadius: '2px', flexShrink: 0, alignSelf: 'stretch', minHeight: '16px',
+              bg: entry.paused ? 'attention.emphasis' : 'accent.emphasis',
+              animation: entry.paused ? 'none' : 'rgp-active-pulse 1.8s ease-in-out infinite',
+              '@keyframes rgp-active-pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.25 } },
+              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+            }} />
+
+            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {/* HERO: current item being processed */}
+              {/* SUPPORTING: operation phase */}
+              {entry.status && (
+                <Text sx={{ fontSize: 0, color: 'fg.muted', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {entry.status} {entry.detail ? `(${entry.detail})` : ''}
+                </Text>
+              )}
+            </Box>
           </Box>
         )}
       </Box>
 
-      {/* Dismiss */}
-      <Button
-        variant="invisible"
-        size="small"
-        onClick={() => onDismiss(entry.processId, isDone)}
-        aria-label="Dismiss"
-        sx={{ p: '2px', minWidth: 'unset', color: 'fg.muted', flexShrink: 0 }}
-      >
-        <XIcon size={16} />
-      </Button>
+      {/* Dismiss / Cancel */}
+      <Tooltip text={isDone ? 'Dismiss' : 'Cancel'} direction="w">
+        <Button
+          variant="invisible"
+          size="small"
+          onClick={() => onDismiss(entry.processId, isDone)}
+          aria-label={isDone ? 'Dismiss' : 'Cancel'}
+          sx={{ p: '2px', minWidth: 'unset', color: 'fg.muted', flexShrink: 0 }}
+        >
+          <XIcon size={16} />
+        </Button>
+      </Tooltip>
     </Box>
   )
 }

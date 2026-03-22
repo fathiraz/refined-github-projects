@@ -319,7 +319,17 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       fieldId: field.id,
       value: { ...(fieldValues[field.id] as Record<string, unknown> || {}), dataType: field.dataType },
     }))
-    sendMessage('bulkUpdate', { itemIds, projectId: projectData?.id || projectId, updates })
+    const fieldMeta = Object.fromEntries(
+      selectedFields.map(field => [
+        field.id,
+        {
+          name: field.name,
+          options: field.options,
+          iterations: field.configuration?.iterations,
+        },
+      ])
+    )
+    sendMessage('bulkUpdate', { itemIds, projectId: projectData?.id || projectId, updates, fieldMeta })
     setStep('CLOSED')
     selectionStore.clear()
     setSelectedFields([])

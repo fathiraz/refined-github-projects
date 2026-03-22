@@ -1,61 +1,55 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Text } from '@primer/react'
+import { Box, Button, Flash, Text } from '@primer/react'
 import { toastStore, type ToastEntry } from '../lib/toastStore'
 import { AlertIcon, CheckIcon, InfoIcon, XIcon } from './ui/primitives'
 
-// CSS var accent colors per type
-const ACCENT_VAR: Record<ToastEntry['type'], string> = {
-  success: 'var(--color-success-emphasis, #1a7f37)',
-  warning: 'var(--color-attention-emphasis, #9a6700)',
-  error:   'var(--color-danger-emphasis, #cf222e)',
-  info:    'var(--color-accent-emphasis, #0969da)',
+const FLASH_VARIANT: Record<ToastEntry['type'], 'success' | 'warning' | 'danger' | 'default'> = {
+  success: 'success',
+  warning: 'warning',
+  error:   'danger',
+  info:    'default',
+}
+
+// Used only for the auto-dismiss countdown bar fill color
+const ACCENT_CSS: Record<ToastEntry['type'], string> = {
+  success: 'var(--color-success-emphasis)',
+  warning: 'var(--color-attention-emphasis)',
+  error:   'var(--color-danger-emphasis)',
+  info:    'var(--color-accent-emphasis)',
 }
 
 function TypeIcon({ type }: { type: ToastEntry['type'] }) {
-  const color = ACCENT_VAR[type]
   switch (type) {
-    case 'success': return <CheckIcon size={14} color={color} />
-    case 'warning': return <AlertIcon size={14} color={color} />
-    case 'error':   return <XIcon size={14} color={color} />
-    default:        return <InfoIcon size={14} color={color} />
+    case 'success': return <CheckIcon size={14} />
+    case 'warning': return <AlertIcon size={14} />
+    case 'error':   return <XIcon size={14} />
+    default:        return <InfoIcon size={14} />
   }
 }
 
 function ToastCard({ toast }: { toast: ToastEntry }) {
-  const accent = ACCENT_VAR[toast.type]
-
   return (
-    <Box sx={{
-      display: 'flex', bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
-      borderRadius: 2, overflow: 'hidden', position: 'relative',
-    }}>
-      <style>{`
-        @keyframes rgp-toast-in {
-          from { transform: translateX(-12px); opacity: 0; }
-          to   { transform: translateX(0);     opacity: 1; }
-        }
-        @keyframes rgp-toast-bar {
-          from { width: 100%; }
-          to   { width: 0%; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .rgp-toast-card { animation: none !important; }
-          .rgp-toast-bar  { animation: none !important; }
-        }
-      `}</style>
-
-      {/* Left accent bar */}
-      <Box sx={{ width: '4px', flexShrink: 0 }} style={{ background: accent }} />
-
-      {/* Content */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, p: 2, flex: 1, minWidth: 0 }}>
+    <Flash
+      variant={FLASH_VARIANT[toast.type]}
+      sx={{
+        position: 'relative', overflow: 'hidden', p: 2,
+        animation: 'rgp-toast-in 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+        '@keyframes rgp-toast-in': {
+          from: { transform: 'translateX(-12px)', opacity: 0 },
+          to:   { transform: 'translateX(0)',     opacity: 1 },
+        },
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
         <Box sx={{ flexShrink: 0, mt: '2px' }}>
           <TypeIcon type={toast.type} />
         </Box>
         <Text sx={{
           flex: 1, fontSize: 1, lineHeight: 1.45, color: 'fg.default',
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-        } as object}>
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+          overflow: 'hidden',
+        }}>
           {toast.message}
         </Text>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
@@ -82,14 +76,21 @@ function ToastCard({ toast }: { toast: ToastEntry }) {
       </Box>
 
       {/* Auto-dismiss progress bar (drains over 5s) */}
-      <Box sx={{ position: 'absolute', bottom: 0, left: '4px', right: 0, height: '2px', bg: 'canvas.subtle' }}>
+      <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', bg: 'canvas.subtle' }}>
         <Box
-          className="rgp-toast-bar"
-          sx={{ height: '100%' }}
-          style={{ background: accent, animation: 'rgp-toast-bar 5s linear forwards' }}
+          sx={{
+            height: '100%',
+            animation: 'rgp-toast-bar 5s linear forwards',
+            '@keyframes rgp-toast-bar': {
+              from: { width: '100%' },
+              to:   { width: '0%' },
+            },
+            '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+          }}
+          style={{ background: ACCENT_CSS[toast.type] }}
         />
       </Box>
-    </Box>
+    </Flash>
   )
 }
 

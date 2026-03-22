@@ -325,6 +325,12 @@ export default defineBackground(() => {
     return response
   })
 
+  function formatDetailDate(iso: string): string {
+    const d = new Date(iso + 'T00:00:00')
+    if (isNaN(d.getTime())) return iso
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
   onMessage('bulkUpdate', async ({ data, sender }) => {
     logger.log('[rgp:bg] bulkUpdate received', { itemCount: data.itemIds.length, updatesCount: data.updates.length, projectId: data.projectId })
 
@@ -355,8 +361,53 @@ export default defineBackground(() => {
         for (const update of data.updates) {
           const { dataType, singleSelectOptionId, iterationId, array } = update.value as any
 
+          const meta = data.fieldMeta?.[update.fieldId]
+          const fieldLabel = meta?.name ?? 'Field'
+
+          let detail: string
+          if (dataType === 'ASSIGNEES') {
+            const logins: string[] = (array ?? []).map((a: any) => a.login).filter(Boolean)
+            detail = logins.length > 0 ? `Adding assignees: ${logins.map((l: string) => '@' + l).join(', ')}` : 'Adding assignees'
+          } else if (dataType === 'LABELS') {
+            const names: string[] = (array ?? []).map((l: any) => l.name).filter(Boolean)
+            detail = names.length > 0 ? `Adding labels: ${names.join(', ')}` : 'Adding labels'
+          } else if (dataType === 'MILESTONE') {
+            const milestoneName: string = (array as any)?.[0]?.title ?? (array as any)?.[0]?.name ?? ''
+            detail = milestoneName ? `Setting milestone → ${milestoneName}` : 'Setting milestone'
+          } else if (dataType === 'ISSUE_TYPE') {
+            const issueTypeName: string = (array as any)?.[0]?.name ?? ''
+            detail = issueTypeName ? `Setting issue type → ${issueTypeName}` : 'Setting issue type'
+          } else if (dataType === 'TITLE') {
+            const { text } = update.value as any
+            const trimmed: string = text?.trim() ?? ''
+            detail = trimmed ? `Changing title → "${trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed}"` : 'Updating title'
+          } else if (dataType === 'BODY') {
+            detail = 'Updating body'
+          } else if (dataType === 'COMMENT') {
+            detail = 'Adding comment'
+          } else if (dataType === 'SINGLE_SELECT') {
+            const optName = meta?.options?.find((o: { id: string; name: string }) => o.id === singleSelectOptionId)?.name
+            detail = optName ? `${fieldLabel} → ${optName}` : `${fieldLabel} → (option)`
+          } else if (dataType === 'ITERATION') {
+            const iterTitle = meta?.iterations?.find((i: { id: string; title: string }) => i.id === iterationId)?.title
+            detail = iterTitle ? `${fieldLabel} → ${iterTitle}` : `${fieldLabel} → (iteration)`
+          } else {
+            const { text, date, number: num } = update.value as any
+            if (text !== undefined) {
+              const preview: string = (text as string).length > 30 ? (text as string).slice(0, 30) + '…' : text
+              detail = `${fieldLabel} → "${preview}"`
+            } else if (num !== undefined && num !== null) {
+              detail = `${fieldLabel} → ${num}`
+            } else if (date !== undefined) {
+              detail = `${fieldLabel} → ${formatDetailDate(date as string)}`
+            } else {
+              detail = `Updating ${fieldLabel}`
+            }
+          }
+
           tasks.push({
             id: `bulk-${domId}-${update.fieldId}`,
+            detail,
             run: async () => {
               // Handle Issue-level updates for default fields
               if (dataType === 'ASSIGNEES') {
@@ -476,6 +527,7 @@ export default defineBackground(() => {
           paused: state.paused,
           retryAfter: state.retryAfter,
           status: `Updating ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}...`,
+          detail: state.detail,
           processId,
           label,
         }, tabId)
@@ -1803,6 +1855,7 @@ async function broadcastQueue(
     paused: boolean
     retryAfter?: number
     status?: string
+    detail?: string
     processId?: string
     label?: string
   },

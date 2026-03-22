@@ -9,6 +9,7 @@ export interface ProcessEntry {
   paused: boolean
   retryAfter?: number
   status?: string
+  detail?: string
   done: boolean
 }
 
@@ -93,6 +94,7 @@ onMessage('queueStateUpdate', ({ data }) => {
     paused: data.paused,
     retryAfter: data.retryAfter,
     status: data.status,
+    detail: data.detail,
     done: false,
   })
   notify()
