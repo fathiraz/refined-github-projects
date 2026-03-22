@@ -192,24 +192,12 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
     display: 'flex', flexDirection: 'column' as const, overflow: 'hidden',
   }
 
-  const headerContent = (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-      <MoveIcon size={16} />
-      <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Move Items</Heading>
-    </Box>
-  )
-
   // ── LOADING ─────────────────────────────────────────────────────────────────
   if (stage === 'LOADING') {
     return (
       <Box sx={overlayStyle}>
         <Box sx={panelStyle}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-            {headerContent}
-            <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-              <XIcon size={16} />
-            </Button>
-          </Box>
+          <ModalStepHeader title="Move Items" icon={<MoveIcon size={16} />} onClose={onClose} />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, py: 6 }}>
             <Spinner size="large" />
             <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Fetching project items…</Text>
@@ -224,12 +212,7 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
     return (
       <Box sx={overlayStyle}>
         <Box sx={panelStyle}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-            {headerContent}
-            <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-              <XIcon size={16} />
-            </Button>
-          </Box>
+          <ModalStepHeader title="Move Items" icon={<MoveIcon size={16} />} onClose={onClose} />
           <Box sx={{ px: 4, py: 3 }}>
             <Box sx={{ p: 3, borderRadius: 2, bg: 'danger.subtle', border: '1px solid', borderColor: 'danger.muted', color: 'danger.fg', fontSize: 1 }}>
               {errorMsg || 'Failed to fetch project items.'}
@@ -248,15 +231,14 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
     return (
       <Box sx={overlayStyle}>
         <Box sx={panelStyle}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-            {headerContent}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>Step 2 of 2</Text>
-              <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-                <XIcon size={16} />
-              </Button>
-            </Box>
-          </Box>
+          <ModalStepHeader
+            title="Move Items"
+            icon={<MoveIcon size={16} />}
+            step={2}
+            totalSteps={2}
+            onBack={() => setStage('CONFIGURE')}
+            onClose={onClose}
+          />
 
           <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3 }}>
             <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 1, overflow: 'hidden' }}>
@@ -264,8 +246,7 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
-            <Button variant="default" onClick={() => setStage('CONFIGURE')} sx={{ boxShadow: 'none' }}>← Back</Button>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
             <Button variant="primary" onClick={handleConfirm} sx={{ boxShadow: 'none' }}>
               Move {count} item{count !== 1 ? 's' : ''}
             </Button>
@@ -288,16 +269,13 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
   return (
     <Box sx={overlayStyle}>
       <Box sx={panelStyle}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-          {headerContent}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>Step 1 of 2</Text>
-            <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-              <XIcon size={16} />
-            </Button>
-          </Box>
-        </Box>
+        <ModalStepHeader
+          title="Move Items"
+          icon={<MoveIcon size={16} />}
+          step={1}
+          totalSteps={2}
+          onClose={onClose}
+        />
 
         {/* Body */}
         <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
