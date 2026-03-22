@@ -1,15 +1,7 @@
 import React from 'react'
-import { Box, FormControl, Heading, Link, Spinner, Text, TextInput } from '@primer/react'
+import { Box, Button, Flash, FormControl, Heading, Link, Spinner, Text, TextInput } from '@primer/react'
 import { useTokenSetup } from '../lib/useTokenSetup'
-import {
-  CheckIcon,
-  GearIcon,
-  PanelCard,
-  PrimaryAction,
-  SecondaryAction,
-  SectionHeader,
-  StatusBanner,
-} from './ui/primitives'
+import { CheckIcon, GearIcon, XIcon } from './ui/primitives'
 
 type Mode = 'compact' | 'full'
 
@@ -20,42 +12,79 @@ interface TokenSetupCardProps {
 
 const requiredScopes = ['project', 'read:org', 'repo']
 
+const cardSx = {
+  border: '1px solid',
+  borderColor: 'border.default',
+  borderRadius: 2,
+  bg: 'canvas.overlay',
+}
+
 export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardProps) {
   const { token, setToken, loading, validating, error, setError, saved, savedLogin, hasToken, saveToken } = useTokenSetup()
 
   if (loading) {
     return (
-      <PanelCard variant="elevated" padding="large">
+      <Box sx={cardSx}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: mode === 'compact' ? 3 : 5 }}>
           <Spinner size="small" />
         </Box>
-      </PanelCard>
+      </Box>
     )
   }
 
   return (
-    <PanelCard variant="elevated" padding={mode === 'compact' ? 'medium' : 'large'}>
-      <SectionHeader
-        title={mode === 'compact' ? 'GitHub access' : 'Connect your GitHub token'}
-        subtitle={
-          mode === 'compact'
-            ? 'Validated once, works across the popup, options, and in-page toolbar.'
-            : 'Save once and all features — bulk edits, deep duplicate, field search — share the same token.'
-        }
-        icon={<GearIcon size={18} />}
-      />
+    <Box sx={cardSx}>
+      <Box
+        sx={{
+          px: mode === 'compact' ? 3 : 4,
+          py: 3,
+          borderBottom: '1px solid',
+          borderColor: 'border.default',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 2,
+        }}
+      >
+        <Box sx={{ color: 'fg.muted', mt: '2px', flexShrink: 0 }}>
+          <GearIcon size={16} />
+        </Box>
+        <Box>
+          <Heading as="h2" sx={{ fontSize: 2, fontWeight: 'semibold', m: 0, color: 'fg.default' }}>
+            {mode === 'compact' ? 'GitHub access' : 'Connect your GitHub token'}
+          </Heading>
+          <Text as="p" sx={{ m: 0, mt: '2px', color: 'fg.muted', fontSize: 1 }}>
+            {mode === 'compact'
+              ? 'Validated once, works across the popup, options, and in-page toolbar.'
+              : 'Save once and all features — bulk edits, deep duplicate, field search — share the same token.'}
+          </Text>
+        </Box>
+      </Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box sx={{ p: mode === 'compact' ? 3 : 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
         {saved && (
-          <StatusBanner variant="success" title="Token saved">
-            {savedLogin ? `Authenticated as @${savedLogin}.` : 'Your token is ready to use.'}
-          </StatusBanner>
+          <Flash variant="success">
+            <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>Token saved</Text>
+            <Text as="p" sx={{ m: 0, fontSize: 1 }}>
+              {savedLogin ? `Authenticated as @${savedLogin}.` : 'Your token is ready to use.'}
+            </Text>
+          </Flash>
         )}
 
         {error && (
-          <StatusBanner variant="error" title="Could not save token" onDismiss={() => setError(null)}>
-            {error}
-          </StatusBanner>
+          <Flash variant="danger" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>Could not save token</Text>
+              <Text as="p" sx={{ m: 0, fontSize: 1 }}>{error}</Text>
+            </Box>
+            <Button
+              variant="invisible"
+              aria-label="Dismiss"
+              onClick={() => setError(null)}
+              sx={{ boxShadow: 'none', color: 'fg.muted', p: 1, flexShrink: 0 }}
+            >
+              <XIcon size={14} />
+            </Button>
+          </Flash>
         )}
 
         <Box
@@ -92,7 +121,15 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
             </FormControl.Caption>
           </FormControl>
 
-          <PanelCard variant="inset" padding="medium">
+          <Box
+            sx={{
+              bg: 'canvas.inset',
+              border: '1px solid',
+              borderColor: 'border.default',
+              borderRadius: 2,
+              p: 3,
+            }}
+          >
             <Heading id="rgp-scopes-list" sx={{ fontSize: 1, mb: 2 }}>
               Required scopes
             </Heading>
@@ -104,15 +141,30 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
                 </Box>
               ))}
             </Box>
-          </PanelCard>
+          </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: mode === 'compact' ? 'column' : 'row', gap: 2, alignItems: mode === 'compact' ? 'stretch' : 'center' }}>
-          <PrimaryAction onClick={saveToken} disabled={!hasToken || validating} loading={validating}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: mode === 'compact' ? 'column' : 'row',
+            gap: 2,
+            alignItems: mode === 'compact' ? 'stretch' : 'center',
+          }}
+        >
+          <Button
+            variant="primary"
+            onClick={saveToken}
+            disabled={!hasToken || validating}
+            loading={validating}
+            sx={{ boxShadow: 'none' }}
+          >
             {hasToken ? 'Validate and save token' : 'Add a token to continue'}
-          </PrimaryAction>
+          </Button>
           {onOpenOptions && (
-            <SecondaryAction onClick={onOpenOptions}>Open full setup</SecondaryAction>
+            <Button variant="default" onClick={onOpenOptions} sx={{ boxShadow: 'none' }}>
+              Open full setup
+            </Button>
           )}
         </Box>
 
@@ -128,6 +180,6 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
           .
         </Text>
       </Box>
-    </PanelCard>
+    </Box>
   )
 }
