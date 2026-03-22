@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Box, Button, Spinner, Text } from '@primer/react'
-import Tippy from '@tippyjs/react'
-import { ensureTippyCss } from '../../lib/tippyUtils'
+import { Box, Button, Spinner, Text, Tooltip } from '@primer/react'
 import { SlidersIcon } from '../ui/primitives'
 import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
@@ -31,7 +29,6 @@ interface SprintStatus {
 
 
 export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFields }: Props) {
-  ensureTippyCss()
   const [state, setState] = useState<WidgetState>('loading')
   const [status, setStatus] = useState<SprintStatus | null>(null)
   const [acknowledging, setAcknowledging] = useState(false)
@@ -87,7 +84,7 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
         {state === 'no-active' && (
           <>
             {status?.nearestUpcoming && (
-              <Tippy content="Activate the next upcoming sprint" placement="top" delay={[400, 0]}>
+              <Tooltip text="Activate the next upcoming sprint" direction="n">
                 <Button
                   variant="invisible"
                   onClick={handleAcknowledge}
@@ -110,9 +107,9 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                 >
                   {acknowledging ? <Spinner size="small" /> : 'Start Sprint'}
                 </Button>
-              </Tippy>
+              </Tooltip>
             )}
-            <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
+            <Tooltip text="Sprint settings" direction="n">
               <Button
                 variant="invisible"
                 aria-label="Sprint settings"
@@ -132,13 +129,13 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
               >
                 <SlidersIcon size={14} />
               </Button>
-            </Tippy>
+            </Tooltip>
           </>
         )}
 
         {(state === 'acknowledged' || state === 'active') && (
           <>
-            <Tippy content="End the current sprint" placement="top" delay={[400, 0]}>
+            <Tooltip text="End the current sprint" direction="n">
               <Button
                 variant="invisible"
                 onClick={() => {
@@ -163,8 +160,8 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
               >
                 End Sprint
               </Button>
-            </Tippy>
-            <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
+            </Tooltip>
+            <Tooltip text="Sprint settings" direction="n">
               <Button
                 variant="invisible"
                 aria-label="Sprint settings"
@@ -184,7 +181,7 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
               >
                 <SlidersIcon size={14} />
               </Button>
-            </Tippy>
+            </Tooltip>
           </>
         )}
     </Box>
