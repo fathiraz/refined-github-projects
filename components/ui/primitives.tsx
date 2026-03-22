@@ -12,16 +12,16 @@ import {
 } from '@primer/react'
 
 type IconProps = {
-  size?: number
+  size?: number | string
   color?: string
 }
 
-function SvgIcon({ size = 16, color = 'currentColor', children }: IconProps & { children: React.ReactNode }) {
+function SvgIcon({ size = 16, color = 'currentColor', viewBox = '0 0 16 16', children }: IconProps & { viewBox?: string; children: React.ReactNode }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 16 16"
+      viewBox={viewBox}
       fill="none"
       stroke={color}
       strokeWidth="1.6"
@@ -317,6 +317,25 @@ export function MoveIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>
       <path d="M8 1v14M8 1l-3 3M8 1l3 3M8 15l-3-3M8 15l3-3" />
+    </SvgIcon>
+  )
+}
+
+export function EyeIcon(props: IconProps) {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" strokeWidth="2" />
+      <circle cx="12" cy="12" r="3" strokeWidth="2" />
+    </SvgIcon>
+  )
+}
+
+export function EyeOffIcon(props: IconProps) {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" strokeWidth="2" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" strokeWidth="2" />
+      <line x1="1" y1="1" x2="23" y2="23" strokeWidth="2" />
     </SvgIcon>
   )
 }
