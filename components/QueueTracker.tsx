@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Flash, ProgressBar, Spinner, Text, Tooltip } from '@primer/react'
+import Tippy from '@tippyjs/react'
+import { ensureTippyCss } from '../lib/tippyUtils'
+import { Box, Button, Flash, ProgressBar, Spinner, Text } from '@primer/react'
 import { queueStore, type ProcessEntry } from '../lib/queueStore'
 import { sendMessage } from '../lib/messages'
 import { CheckIcon, XIcon } from './ui/primitives'
 
 function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (processId: string, isDone: boolean) => void }) {
+  ensureTippyCss()
   const [countdown, setCountdown] = useState(0)
 
   const isDone = entry.done
@@ -29,7 +32,6 @@ function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (pr
     <Box sx={{
       display: 'flex', alignItems: 'flex-start', gap: 3, p: 3,
       bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
     }}>
       {/* Status icon */}
       <Box sx={{ flexShrink: 0, pt: '2px' }}>
@@ -109,7 +111,7 @@ function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (pr
       </Box>
 
       {/* Dismiss / Cancel */}
-      <Tooltip text={isDone ? 'Dismiss' : 'Cancel'} direction="w">
+      <Tippy content={isDone ? 'Dismiss' : 'Cancel'} placement="left" delay={[400, 0]}>
         <Button
           variant="invisible"
           size="small"
@@ -119,7 +121,7 @@ function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (pr
         >
           <XIcon size={16} />
         </Button>
-      </Tooltip>
+      </Tippy>
     </Box>
   )
 }

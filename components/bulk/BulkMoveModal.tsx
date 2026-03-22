@@ -357,7 +357,6 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
                     position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
                     bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
                     borderRadius: 1, mt: '2px', maxHeight: 200, overflowY: 'auto',
-                    boxShadow: 'shadow.medium',
                   }}>
                     {filteredTargets.length === 0 ? (
                       <Text sx={{ display: 'block', px: 2, py: 2, fontSize: 0, color: 'fg.muted' }}>No items found</Text>

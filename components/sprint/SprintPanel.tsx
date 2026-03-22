@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import Tippy from '@tippyjs/react'
+import { ensureTippyCss } from '../../lib/tippyUtils'
 import {
   Box, Button, Flash, FormControl, Radio, RadioGroup,
-  Select, Spinner, Text, TextInput, Tooltip,
+  Select, Spinner, Text, TextInput,
 } from '@primer/react'
 import { SlidersIcon, XIcon, PlusIcon, SprintIcon } from '../ui/primitives'
 import { sendMessage } from '../../lib/messages'
@@ -162,7 +164,9 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Text sx={{ fontSize: 1, color: 'fg.muted' }}>This project has no iteration fields.</Text>
-        <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
+        <Tippy content="Discard changes" placement="top" delay={[400, 0]} zIndex={10002}>
+          <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
+        </Tippy>
       </Box>
     )
   }
@@ -295,37 +299,45 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
                 />
               )}
 
-              <Button
-                variant="invisible"
-                size="small"
-                aria-label="Remove exclusion"
-                onClick={() => removeExcludeCondition(idx)}
-                sx={{ p: '5px', color: 'fg.muted', flexShrink: 0 }}
-              >
-                <XIcon size={12} />
-              </Button>
+              <Tippy content="Remove exclusion rule" placement="top" delay={[400, 0]} zIndex={10002}>
+                <Button
+                  variant="invisible"
+                  size="small"
+                  aria-label="Remove exclusion"
+                  onClick={() => removeExcludeCondition(idx)}
+                  sx={{ p: '5px', color: 'fg.muted', flexShrink: 0 }}
+                >
+                  <XIcon size={12} />
+                </Button>
+              </Tippy>
             </Box>
           )
         })}
-        <Button
-          variant="invisible"
-          size="small"
-          onClick={addExcludeCondition}
-          sx={{ alignSelf: 'flex-start', color: 'fg.muted' }}
-        >
-          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-            <PlusIcon size={12} />
-            <Text sx={{ fontSize: 0 }}>Add exclusion</Text>
-          </Box>
-        </Button>
+        <Tippy content="Add a field exclusion rule" placement="top" delay={[400, 0]} zIndex={10002}>
+          <Button
+            variant="invisible"
+            size="small"
+            onClick={addExcludeCondition}
+            sx={{ alignSelf: 'flex-start', color: 'fg.muted' }}
+          >
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+              <PlusIcon size={12} />
+              <Text sx={{ fontSize: 0 }}>Add exclusion</Text>
+            </Box>
+          </Button>
+        </Tippy>
       </Box>
 
       {/* Actions */}
       <Box sx={{ display: 'flex', gap: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted' }}>
-        <Button variant="primary" size="small" disabled={!canSave || saving} onClick={handleSave}>
-          {saving ? <Spinner size="small" /> : 'Save'}
-        </Button>
-        <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
+        <Tippy content="Save sprint settings" placement="top" delay={[400, 0]} zIndex={10002}>
+          <Button variant="primary" size="small" disabled={!canSave || saving} onClick={handleSave}>
+            {saving ? <Spinner size="small" /> : 'Save'}
+          </Button>
+        </Tippy>
+        <Tippy content="Discard changes" placement="top" delay={[400, 0]} zIndex={10002}>
+          <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
+        </Tippy>
       </Box>
     </Box>
   )
@@ -440,15 +452,19 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
       )}
 
       <Box sx={{ display: 'flex', gap: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted' }}>
-        <Button variant="default" size="small" onClick={onClose}>Cancel</Button>
-        <Button
-          variant="danger"
-          size="small"
-          disabled={!loaded || hasNoFuture || !selectedIterationId || ending}
-          onClick={handleEnd}
-        >
-          {ending ? 'Ending…' : 'End Sprint'}
-        </Button>
+        <Tippy content="Go back" placement="top" delay={[400, 0]} zIndex={10002}>
+          <Button variant="default" size="small" onClick={onClose}>Cancel</Button>
+        </Tippy>
+        <Tippy content="Move open items to the next sprint" placement="top" delay={[400, 0]} zIndex={10002}>
+          <Button
+            variant="danger"
+            size="small"
+            disabled={!loaded || hasNoFuture || !selectedIterationId || ending}
+            onClick={handleEnd}
+          >
+            {ending ? 'Ending…' : 'End Sprint'}
+          </Button>
+        </Tippy>
       </Box>
     </Box>
   )
@@ -457,6 +473,7 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
 // ── Main panel ───────────────────────────────────────────────
 
 export function SprintPanel({ projectId, owner, isOrg, number, getFields, visible, onClose }: Props) {
+  ensureTippyCss()
   if (!visible) return null
 
   const [state, setState] = useState<PanelState>('loading')
@@ -522,7 +539,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
       onClick={onClose}
     >
       <Box
-        sx={{ bg: 'canvas.default', border: '1px solid', borderColor: 'border.default', borderRadius: 2, boxShadow: 'shadow.large', overflow: 'hidden', width: '100%', maxWidth: 480 }}
+        sx={{ bg: 'canvas.default', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: 480 }}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }}
         onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
@@ -534,16 +551,16 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
             <Text sx={{ fontWeight: 'semibold', fontSize: 1, color: 'fg.default' }}>Sprint</Text>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Tooltip text="Sprint settings" direction="sw">
+            <Tippy content="Sprint settings" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
               <Button variant="invisible" size="small" onClick={() => setShowSettings((v) => !v)} aria-label="Sprint settings" sx={{ p: '5px', color: 'fg.muted', boxShadow: 'none' }}>
                 <SlidersIcon size={14} />
               </Button>
-            </Tooltip>
-            <Tooltip text="Close sprint panel" direction="sw">
+            </Tippy>
+            <Tippy content="Close sprint panel" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
               <Button variant="invisible" size="small" onClick={onClose} aria-label="Close sprint panel" sx={{ p: '5px', color: 'fg.muted', boxShadow: 'none' }}>
                 <XIcon size={14} />
               </Button>
-            </Tooltip>
+            </Tippy>
           </Box>
         </Box>
 
@@ -585,7 +602,9 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Sprint tracking isn't set up for this project yet.</Text>
                   <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>Each GitHub project has its own sprint configuration.</Text>
-                  <Button variant="primary" size="small" onClick={() => setShowSettings(true)}>Set Up Sprint</Button>
+                  <Tippy content="Configure sprint tracking for this project" placement="top" delay={[400, 0]} zIndex={10002}>
+                    <Button variant="primary" size="small" onClick={() => setShowSettings(true)}>Set Up Sprint</Button>
+                  </Tippy>
                 </Box>
               )}
 
@@ -600,9 +619,11 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                       <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
                         Next: {status.nearestUpcoming.title} — starts {fmt(status.nearestUpcoming.startDate)}
                       </Text>
-                      <Button variant="primary" size="small" disabled={acknowledging} onClick={handleAcknowledge}>
-                        {acknowledging ? <Spinner size="small" /> : 'Track Sprint'}
-                      </Button>
+                      <Tippy content="Start tracking the upcoming sprint" placement="top" delay={[400, 0]} zIndex={10002}>
+                        <Button variant="primary" size="small" disabled={acknowledging} onClick={handleAcknowledge}>
+                          {acknowledging ? <Spinner size="small" /> : 'Track Sprint'}
+                        </Button>
+                      </Tippy>
                     </>
                   )}
                 </Box>
@@ -620,7 +641,9 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                     {fmt(currentSprint.startDate)} – {fmt(currentSprint.endDate)}
                   </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                    <Button variant="default" size="small" onClick={handleStopTracking}>Stop tracking</Button>
+                    <Tippy content="Stop tracking this sprint" placement="top" delay={[400, 0]} zIndex={10002}>
+                      <Button variant="default" size="small" onClick={handleStopTracking}>Stop tracking</Button>
+                    </Tippy>
                   </Box>
                 </Box>
               )}
@@ -635,7 +658,9 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                     <Box sx={{ height: '100%', borderRadius: '3px', bg: 'accent.emphasis', width: `${sprintProgress(currentSprint.startDate, currentSprint.endDate)}%` }} />
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                    <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)}>End Sprint</Button>
+                    <Tippy content="End the current sprint" placement="top" delay={[400, 0]} zIndex={10002}>
+                      <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)}>End Sprint</Button>
+                    </Tippy>
                   </Box>
                 </Box>
               )}
