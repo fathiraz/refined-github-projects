@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Box, Button, Text, Tooltip, ActionList, CounterLabel } from '@primer/react'
+import Tippy from '@tippyjs/react'
+import { ensureTippyCss } from '../lib/tippyUtils'
+import { Box, Button, Text, ActionList, CounterLabel } from '@primer/react'
 import { selectionStore } from '../lib/selectionStore'
 import { getAllInjectedItemIds, isEditableTarget } from '../lib/domUtils'
 import { exportSelectedToCSV } from '../lib/csvExport'
@@ -40,6 +42,7 @@ function shortcut(key: string) { return isMac ? `⌘⇧${key}` : `⌃⇧${key}` 
 // ── Main component ──────────────────────────────────────────
 
 export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: Props) {
+  ensureTippyCss()
   const [count, setCount] = useState(() => selectionStore.count())
   const [projectData, setProjectData] = useState<ProjectData | null>(null)
   const [firstRepoName, setFirstRepoName] = useState('')
@@ -504,7 +507,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         zIndex: 9999,
         bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
         borderRadius: 2, px: 4, py: 3,
-        boxShadow: 'shadow.large',
         display: 'flex', flexDirection: 'column',
         gap: tokenStatusError ? 2 : 0,
       }}>
@@ -569,7 +571,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
                 position: 'absolute', bottom: 'calc(100% + 6px)', right: 0,
                 width: 256, zIndex: 100,
                 bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
-                borderRadius: 2, boxShadow: 'shadow.large',
+                borderRadius: 2,
                 overflow: 'hidden',
               }}>
               <ActionList>
@@ -753,7 +755,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
 
           {/* Spacer + clear */}
           <Box sx={{ flex: 1 }} />
-          <Tooltip text="Clear selection (Esc)" direction="n">
+          <Tippy content="Clear selection (Esc)" placement="top" delay={[400, 0]}>
             <Button
               variant="invisible"
               size="small"
@@ -770,7 +772,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             >
               <XIcon size={14} />
             </Button>
-          </Tooltip>
+          </Tippy>
         </Box>
       </Box>
     </>
