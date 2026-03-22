@@ -1,7 +1,7 @@
 # Refined GitHub Projects
 
 <p align="center">
-  <img src="assets/images/demo.gif" alt="Demo of Refined GitHub Projects bulk actions" width="100%" />
+  <img src="src/assets/images/demo.gif" alt="Demo of Refined GitHub Projects bulk actions" width="100%" />
 </p>
 
 <p align="center">
@@ -117,37 +117,37 @@ curl -sL https://raw.githubusercontent.com/fathiraz/refined-github-projects/main
 
 ### Bulk Actions Bar
 
-![Bulk Actions Bar](assets/images/screenshot-1.png)
+![Bulk Actions Bar](src/assets/images/screenshot-1.png)
 
 *Select multiple items and run bulk actions directly from the table view.*
 
 ### Bulk Edit Wizard
 
-![Bulk Edit Wizard](assets/images/screenshot-2.png)
+![Bulk Edit Wizard](src/assets/images/screenshot-2.png)
 
 *Pick fields, set new values, and apply updates across selected items in a guided 3-step flow.*
 
 ### Deep Duplicate Modal
 
-![Deep Duplicate Modal](assets/images/screenshot-3.png)
+![Deep Duplicate Modal](src/assets/images/screenshot-3.png)
 
 *Clone items with project fields, assignees, labels, body, and sub-issue links preserved before you confirm.*
 
 ### Review & Queue Tracker
 
-![Review & Queue Tracker](assets/images/screenshot-4.png)
+![Review & Queue Tracker](src/assets/images/screenshot-4.png)
 
 *Review every change before applying, then monitor live queue progress with rate-limit-safe execution.*
 
 ### Feature Comparison
 
-![Feature Comparison](assets/images/screenshot-5.png)
+![Feature Comparison](src/assets/images/screenshot-5.png)
 
 *Compare native GitHub Projects vs Refined GitHub Projects and see what bulk superpowers are added.*
 
 ### Extension Popup
 
-![Extension Popup](assets/images/screenshot-6.png)
+![Extension Popup](src/assets/images/screenshot-6.png)
 
 *Add your GitHub PAT once to unlock all features, stored locally in your browser.*
 
