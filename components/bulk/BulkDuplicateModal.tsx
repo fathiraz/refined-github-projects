@@ -29,7 +29,7 @@ const sectionLabel = {
   display: 'block' as const,
 }
 
-export function DeepDuplicateModal({ itemId, projectId, owner, isOrg, projectNumber, onClose }: Props) {
+export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNumber, onClose }: Props) {
   const [step, setStep] = useState<Step>('LOADING')
   const [preview, setPreview] = useState<ItemPreviewData | null>(null)
   const [error, setError] = useState<string>('')

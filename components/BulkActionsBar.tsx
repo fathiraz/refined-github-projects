@@ -8,7 +8,7 @@ import { exportSelectedToCSV } from '../lib/csvExport'
 import { sendMessage } from '../lib/messages'
 import { queueStore } from '../lib/queueStore'
 import { flyToTracker } from '../lib/flyAnimation'
-import { DeepDuplicateModal } from './bulk/DeepDuplicateModal'
+import { BulkDuplicateModal } from './bulk/BulkDuplicateModal'
 import { BulkEditWizard, type WizardStep, type ProjectField, type ProjectData } from './bulk/BulkEditWizard'
 import { BulkCloseModal } from './bulk/BulkCloseModal'
 import { BulkDeleteModal } from './bulk/BulkDeleteModal'
@@ -462,9 +462,9 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         />
       )}
 
-      {/* Deep Duplicate modal */}
+      {/* Bulk Duplicate modal */}
       {showDupModal && (
-        <DeepDuplicateModal
+        <BulkDuplicateModal
           itemId={selectionStore.getAll()[0]}
           projectId={projectData?.id || projectId}
           owner={owner}
