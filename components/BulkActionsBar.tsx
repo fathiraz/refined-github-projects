@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Box, Button, Text, Tooltip } from '@primer/react'
+import { Box, Button, Text, Tooltip, ActionList, CounterLabel } from '@primer/react'
 import { selectionStore } from '../lib/selectionStore'
 import { getAllInjectedItemIds, isEditableTarget } from '../lib/domUtils'
 import { exportSelectedToCSV } from '../lib/csvExport'
@@ -18,7 +18,7 @@ import { BulkUnpinModal } from './bulk/BulkUnpinModal'
 import { BulkRenameModal } from './bulk/BulkRenameModal'
 import { BulkMoveModal, type ReorderOp } from './bulk/BulkMoveModal'
 import {
-  ChevronDownIcon, CircleSlashIcon, TrashIcon, CopyIcon,
+  CircleSlashIcon, TrashIcon, CopyIcon,
   ListCheckIcon, DownloadIcon, SyncIcon, LockIcon, PinIcon, UnpinIcon, ArrowRightIcon, XIcon, PencilIcon, MoveIcon,
 } from './ui/primitives'
 
@@ -31,74 +31,6 @@ interface Props {
 }
 
 type ModalStep = 'CLOSED' | WizardStep
-
-// ── Action menu item ────────────────────────────────────────
-
-function MenuItem({ icon, iconBg, iconColor, label, badge, shortcutHint, onClick }: {
-  icon: React.ReactNode
-  iconBg: string
-  iconColor: string
-  label: string
-  badge?: string
-  shortcutHint?: string
-  onClick: () => void
-}) {
-  return (
-    <Box
-      as="button"
-      type="button"
-      onClick={onClick}
-      sx={{
-        display: 'flex', alignItems: 'center', gap: '6px',
-        width: '100%', px: 2, py: '4px',
-        bg: 'transparent', border: 'none', cursor: 'pointer',
-        fontSize: 0, fontWeight: 500, color: 'fg.default', textAlign: 'left',
-        borderRadius: 1,
-        transition: 'background-color 120ms ease, transform 80ms ease',
-        ':hover': { bg: 'canvas.subtle' },
-        ':active': { transform: 'scale(0.97)', bg: 'canvas.subtle' },
-        '@media (prefers-reduced-motion: reduce)': { transition: 'none', ':active': { transform: 'none' } },
-      }}
-    >
-      <Box sx={{
-        width: 22, height: 22, borderRadius: 2,
-        bg: iconBg, color: iconColor,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}>
-        {icon}
-      </Box>
-      <Text sx={{ flex: 1, fontSize: 0 }}>{label}</Text>
-      {badge && (
-        <Box sx={{ fontSize: 0, fontWeight: 'bold', px: 1, py: '1px', borderRadius: 2, bg: 'danger.subtle', color: 'danger.fg', flexShrink: 0 }}>
-          {badge}
-        </Box>
-      )}
-      {shortcutHint && (
-        <Box as="kbd" sx={{
-          fontSize: 0, fontFamily: 'inherit', fontWeight: 500,
-          px: '5px', py: '1px', borderRadius: 1,
-          bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default',
-          color: 'fg.muted', cursor: 'default', lineHeight: 1.6, flexShrink: 0,
-          letterSpacing: '0.02em',
-        }}>
-          {shortcutHint}
-        </Box>
-      )}
-    </Box>
-  )
-}
-
-function GroupLabel({ label }: { label: string }) {
-  return (
-    <Text sx={{
-      display: 'block', px: 2, pt: '6px', pb: '2px',
-      fontSize: 0, fontWeight: 'semibold', color: 'fg.subtle',
-      textTransform: 'uppercase', letterSpacing: '0.08em',
-    }}>
-      {label}
-    </Text>
-  )
-}
 
 // ── Platform detection ──────────────────────────────────────
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
@@ -120,6 +52,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [showDupModal, setShowDupModal] = useState(false)
   const applyBtnRef = useRef<HTMLButtonElement | null>(null)
   const actionsButtonRef = useRef<HTMLButtonElement | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
@@ -133,8 +66,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [showMoveModal, setShowMoveModal] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
   const anyModalOpen = showCloseModal || showOpenModal || showDeleteModal ||
     showLockModal || showPinModal || showTransferModal || showDupModal || showRenameModal || showMoveModal
 
@@ -590,17 +521,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
           {/* Selection count + keyboard hints */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-            {/* Accent pill */}
-            <Box sx={{
-              display: 'inline-flex', alignItems: 'center',
-              px: 2, py: '3px', borderRadius: '20px',
-              bg: 'accent.subtle', color: 'accent.fg',
-              border: '1px solid', borderColor: 'accent.muted',
-              fontWeight: 'bold', fontSize: 1, lineHeight: 1.4,
-            }}>
-              {count} {count === 1 ? 'item' : 'items'}
-            </Box>
-            <Text sx={{ fontSize: 0, color: 'fg.muted', flexShrink: 0 }}>selected</Text>
+            <CounterLabel scheme="primary" sx={{ fontSize: 1, fontWeight: 'bold', px: 2, py: '3px' }}>{count}</CounterLabel>
+            <Text sx={{ fontSize: 0, color: 'fg.muted', flexShrink: 0 }}>{count === 1 ? 'item' : 'items'} selected</Text>
             {/* ⌘A / Esc hints */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {(['⌘A', 'Esc'] as const).map(key => (
@@ -641,119 +563,191 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
               }}>
                 {isMac ? ' ⌘⇧B ' : ' ⌃⇧B '}
               </Box>
-              <Box
-                sx={{
-                  display: 'inline-flex', alignItems: 'center', ml: '2px',
-                  transform: menuOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
-                  transition: 'transform 150ms ease',
-                  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                }}
-              >
-                <ChevronDownIcon size={12} />
-              </Box>
             </Button>
-
             {menuOpen && (
               <Box sx={{
-                position: 'absolute', bottom: 'calc(100% + 6px)', left: 0,
-                minWidth: 220, bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
-                borderRadius: 2, zIndex: 9999, py: 1, px: 1, overflow: 'hidden',
-                boxShadow: 'shadow.large',
+                position: 'absolute', bottom: 'calc(100% + 6px)', right: 0,
+                width: 256, zIndex: 100,
+                bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
+                borderRadius: 2, boxShadow: 'shadow.large',
+                overflow: 'hidden',
               }}>
-                <GroupLabel label="Fields" />
-                <MenuItem
-                  icon={<ListCheckIcon size={13} />}
-                  iconBg="accent.subtle" iconColor="accent.fg"
-                  label="Edit Fields"
-                  shortcutHint={shortcut('E')}
-                  onClick={() => { setMenuOpen(false); handleFieldSelectionOpen() }}
-                />
-                {count === 1 && (
-                  <MenuItem
-                    icon={<CopyIcon size={13} />}
-                    iconBg="done.subtle" iconColor="done.fg"
-                    label="Deep Duplicate"
-                    shortcutHint={shortcut('D')}
-                    onClick={() => { setMenuOpen(false); checkToken().then(ok => ok && setShowDupModal(true)) }}
-                  />
-                )}
-                <GroupLabel label="Content" />
-                <MenuItem
-                  icon={<PencilIcon size={13} />}
-                  iconBg="accent.subtle" iconColor="accent.fg"
-                  label="Rename Titles"
-                  shortcutHint={shortcut('R')}
-                  onClick={handleBulkRename}
-                />
-                <MenuItem
-                  icon={<MoveIcon size={13} />}
-                  iconBg="accent.subtle" iconColor="accent.fg"
-                  label="Reorder Items"
-                  shortcutHint={shortcut('J')}
-                  onClick={handleBulkReorder}
-                />
-                <GroupLabel label="Status" />
-                <MenuItem
-                  icon={<CircleSlashIcon size={13} />}
-                  iconBg="attention.subtle" iconColor="attention.fg"
-                  label="Close Issues"
-                  shortcutHint={shortcut('X')}
-                  onClick={handleBulkClose}
-                />
-                <MenuItem
-                  icon={<SyncIcon size={13} />}
-                  iconBg="success.subtle" iconColor="success.fg"
-                  label="Reopen Issues"
-                  shortcutHint={shortcut('O')}
-                  onClick={handleBulkOpen}
-                />
-                <MenuItem
-                  icon={<LockIcon size={13} />}
-                  iconBg="attention.subtle" iconColor="attention.fg"
-                  label="Lock Conversations"
-                  shortcutHint={shortcut('L')}
-                  onClick={handleLock}
-                />
-                <GroupLabel label="Visibility" />
-                <MenuItem
-                  icon={<PinIcon size={13} />}
-                  iconBg="accent.subtle" iconColor="accent.fg"
-                  label="Pin Issues"
-                  shortcutHint={shortcut('F')}
-                  onClick={handlePin}
-                />
-                <MenuItem
-                  icon={<UnpinIcon size={13} />}
-                  iconBg="accent.subtle" iconColor="accent.fg"
-                  label="Unpin"
-                  onClick={handleUnpin}
-                />
-                <GroupLabel label="Move" />
-                <MenuItem
-                  icon={<ArrowRightIcon size={13} />}
-                  iconBg="done.subtle" iconColor="done.fg"
-                  label="Transfer Issues"
-                  shortcutHint={shortcut('M')}
-                  onClick={handleTransfer}
-                />
-                <Box sx={{ height: '1px', bg: 'border.default', my: 1 }} />
-                <MenuItem
-                  icon={<DownloadIcon size={13} />}
-                  iconBg="success.subtle" iconColor="success.fg"
-                  label="Export CSV"
-                  shortcutHint={shortcut('V')}
-                  onClick={() => { setMenuOpen(false); exportSelectedToCSV() }}
-                />
-                <Box sx={{ height: '1px', bg: 'border.default', my: 1 }} />
-                <MenuItem
-                  icon={<TrashIcon size={13} />}
-                  iconBg="danger.subtle" iconColor="danger.fg"
-                  label="Delete"
-                  badge="admin"
-                  shortcutHint={isMac ? '⌘⇧⌫' : '⌃⇧⌫'}
-                  onClick={handleBulkDelete}
-                />
-              </Box>
+              <ActionList>
+                <ActionList.Group>
+                  <ActionList.GroupHeading>Fields</ActionList.GroupHeading>
+                  <ActionList.Item onSelect={() => handleFieldSelectionOpen()}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ListCheckIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Edit Fields
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('E')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                  {count === 1 && (
+                    <ActionList.Item onSelect={() => checkToken().then(ok => ok && setShowDupModal(true))}>
+                      <ActionList.LeadingVisual>
+                        <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'done.subtle', color: 'done.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <CopyIcon size={13} />
+                        </Box>
+                      </ActionList.LeadingVisual>
+                      Deep Duplicate
+                      <ActionList.TrailingVisual>
+                        <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                          {shortcut('D')}
+                        </Box>
+                      </ActionList.TrailingVisual>
+                    </ActionList.Item>
+                  )}
+                </ActionList.Group>
+                <ActionList.Group>
+                  <ActionList.GroupHeading>Content</ActionList.GroupHeading>
+                  <ActionList.Item onSelect={handleBulkRename}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <PencilIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Rename Titles
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('R')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                  <ActionList.Item onSelect={handleBulkReorder}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <MoveIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Reorder Items
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('J')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                </ActionList.Group>
+                <ActionList.Group>
+                  <ActionList.GroupHeading>Status</ActionList.GroupHeading>
+                  <ActionList.Item onSelect={handleBulkClose}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'attention.subtle', color: 'attention.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CircleSlashIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Close Issues
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('X')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                  <ActionList.Item onSelect={handleBulkOpen}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'success.subtle', color: 'success.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <SyncIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Reopen Issues
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('O')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                  <ActionList.Item onSelect={handleLock}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'attention.subtle', color: 'attention.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <LockIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Lock Conversations
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('L')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                </ActionList.Group>
+                <ActionList.Group>
+                  <ActionList.GroupHeading>Visibility</ActionList.GroupHeading>
+                  <ActionList.Item onSelect={handlePin}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <PinIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Pin Issues
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('F')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                  <ActionList.Item onSelect={handleUnpin}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <UnpinIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Unpin
+                  </ActionList.Item>
+                </ActionList.Group>
+                <ActionList.Group>
+                  <ActionList.GroupHeading>Move</ActionList.GroupHeading>
+                  <ActionList.Item onSelect={handleTransfer}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'done.subtle', color: 'done.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ArrowRightIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Transfer Issues
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('M')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                </ActionList.Group>
+                <ActionList.Divider />
+                <ActionList.Item onSelect={() => exportSelectedToCSV()}>
+                  <ActionList.LeadingVisual>
+                    <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'success.subtle', color: 'success.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <DownloadIcon size={13} />
+                    </Box>
+                  </ActionList.LeadingVisual>
+                  Export CSV
+                  <ActionList.TrailingVisual>
+                    <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                      {shortcut('V')}
+                    </Box>
+                  </ActionList.TrailingVisual>
+                </ActionList.Item>
+                <ActionList.Divider />
+                <ActionList.Item variant="danger" onSelect={handleBulkDelete}>
+                  <ActionList.LeadingVisual>
+                    <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'danger.subtle', color: 'danger.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <TrashIcon size={13} />
+                    </Box>
+                  </ActionList.LeadingVisual>
+                  Delete
+                  <ActionList.TrailingVisual>
+                    <Box sx={{ fontSize: 0, fontWeight: 'bold', px: 1, py: '1px', borderRadius: 2, bg: 'danger.subtle', color: 'danger.fg', mr: 1 }}>
+                      admin
+                    </Box>
+                    <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                      {isMac ? '⌘⇧⌫' : '⌃⇧⌫'}
+                    </Box>
+                  </ActionList.TrailingVisual>
+                </ActionList.Item>
+              </ActionList>
+            </Box>
             )}
           </Box>
 
