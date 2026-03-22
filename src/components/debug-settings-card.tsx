@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, FormControl, Heading, Text, ToggleSwitch } from '@primer/react'
+import { Box, Heading, Text, ToggleSwitch } from '@primer/react'
 import { debugStorage } from '../lib/storage'
 
 export function DebugSettingsCard(): React.JSX.Element {
@@ -53,27 +53,25 @@ export function DebugSettingsCard(): React.JSX.Element {
           </Text>
         </Box>
 
-        <FormControl>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 3 }}>
-            <Box>
-              <FormControl.Label id="rgp-debug-label" sx={{ fontWeight: 'bold', fontSize: 1, mb: 0, cursor: 'default' }}>
-                Enable debug console
-              </FormControl.Label>
-              <FormControl.Caption>
-                When enabled, all debug logs will be printed to the browser console.
-                Use this for troubleshooting or development purposes.
-              </FormControl.Caption>
-            </Box>
-            <ToggleSwitch
-              checked={debugEnabled}
-              onClick={() => handleToggle(!debugEnabled)}
-              disabled={loading}
-              aria-labelledby="rgp-debug-label"
-              size="small"
-              sx={{ flexShrink: 0 }}
-            />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 3 }}>
+          <Box>
+            <Text id="rgp-debug-label" sx={{ fontWeight: 'bold', fontSize: 1, display: 'block', mb: '2px', cursor: 'default' }}>
+              Enable debug console
+            </Text>
+            <Text sx={{ fontSize: 0, color: 'fg.muted', display: 'block' }}>
+              When enabled, all debug logs will be printed to the browser console.
+              Use this for troubleshooting or development purposes.
+            </Text>
           </Box>
-        </FormControl>
+          <ToggleSwitch
+            checked={debugEnabled}
+            onClick={() => handleToggle(!debugEnabled)}
+            disabled={loading}
+            aria-labelledby="rgp-debug-label"
+            size="small"
+            sx={{ flexShrink: 0 }}
+          />
+        </Box>
       </Box>
     </Box>
   )

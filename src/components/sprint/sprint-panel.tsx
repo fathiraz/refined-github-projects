@@ -10,7 +10,10 @@ import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
 import type { ExcludeCondition, SprintSettings } from '../../lib/storage'
 import { iterationEndDate, nextAfter } from '../../lib/sprint-utils'
+import { injectSprintFilter, SPRINT_FILTER } from '../../lib/filter-utils'
 import type { Iteration } from '../../lib/sprint-utils'
+
+console.log('[rgp:sprint] sprint-panel module loaded')
 import type { ProjectData } from '../../entries/content/observer'
 import { sprintConfirmEndStore } from '../../lib/sprint-confirm-end-store'
 
@@ -148,6 +151,9 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
         excludeConditions: excludeConditions.filter((c) => c.fieldId && (c.optionId || c.optionName.trim())),
       }
       await sendMessage('saveSprintSettings', { projectId, settings })
+      console.log('[rgp:sprint] settings saved — calling injectSprintFilter')
+      injectSprintFilter()
+      console.log('[rgp:sprint] injectSprintFilter done')
       onSaved()
     } catch (e) {
       setError(String(e))
@@ -329,15 +335,22 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       </Box>
 
       {/* Actions */}
-      <Box sx={{ display: 'flex', gap: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted' }}>
-        <Tippy content="Save sprint settings" placement="top" delay={[400, 0]} zIndex={10002}>
-          <Button variant="primary" size="small" disabled={!canSave || saving} onClick={handleSave}>
-            {saving ? <Spinner size="small" /> : 'Save'}
-          </Button>
-        </Tippy>
-        <Tippy content="Discard changes" placement="top" delay={[400, 0]} zIndex={10002}>
-          <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
-        </Tippy>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted' }}>
+        <Flash variant="warning" sx={{ fontSize: 0 }}>
+          Saving will automatically add{' '}
+          <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>{SPRINT_FILTER}</Text>
+          {' '}to the table filter if not already present.
+        </Flash>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Tippy content="Save sprint settings" placement="top" delay={[400, 0]} zIndex={10002}>
+            <Button variant="primary" size="small" disabled={!canSave || saving} onClick={handleSave}>
+              {saving ? <Spinner size="small" /> : 'Save'}
+            </Button>
+          </Tippy>
+          <Tippy content="Discard changes" placement="top" delay={[400, 0]} zIndex={10002}>
+            <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
+          </Tippy>
+        </Box>
       </Box>
     </Box>
   )
@@ -474,8 +487,9 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
 
 export function SprintPanel({ projectId, owner, isOrg, number, getFields, visible, onClose }: Props) {
   ensureTippyCss()
-  if (!visible) return null
+  console.log('[rgp:sprint] SprintPanel rendered, visible:', visible)
 
+  // All hooks must be called unconditionally before any early return
   const [state, setState] = useState<PanelState>('loading')
   const [status, setStatus] = useState<SprintStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -489,11 +503,12 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
     try {
       const result = await sendMessage('getSprintStatus', { projectId, owner, number, isOrg })
       setStatus(result)
-      if (!result.hasSettings) setState('not-configured')
-      else if (result.activeSprint) setState('active')
-      else if (result.acknowledgedSprint) setState('acknowledged')
-      else setState('no-active')
+      if (!result.hasSettings) { setState('not-configured'); console.log('[rgp:sprint] state: not-configured') }
+      else if (result.activeSprint) { setState('active'); console.log('[rgp:sprint] state: active, sprint:', result.activeSprint.title) }
+      else if (result.acknowledgedSprint) { setState('acknowledged'); console.log('[rgp:sprint] state: acknowledged, sprint:', result.acknowledgedSprint.title) }
+      else { setState('no-active'); console.log('[rgp:sprint] state: no-active') }
     } catch (e) {
+      console.error('[rgp:sprint] fetchStatus error:', e)
       setError(String(e))
       setState('error')
     }
@@ -510,6 +525,8 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
     })
     return () => { unsub() }
   }, [state, showSettings])
+
+  if (!visible) return null
 
   const handleAcknowledge = async () => {
     if (!status?.nearestUpcoming) return
@@ -640,6 +657,11 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                   <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
                     {fmt(currentSprint.startDate)} – {fmt(currentSprint.endDate)}
                   </Text>
+                  <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
+                    Filter{' '}
+                    <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>{SPRINT_FILTER}</Text>
+                    {' '}is applied automatically on save.
+                  </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                     <Tippy content="Stop tracking this sprint" placement="top" delay={[400, 0]} zIndex={10002}>
                       <Button variant="default" size="small" onClick={handleStopTracking}>Stop tracking</Button>
@@ -657,6 +679,11 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                   <Box sx={{ height: '6px', borderRadius: '3px', bg: 'neutral.muted', overflow: 'hidden', mt: 1 }}>
                     <Box sx={{ height: '100%', borderRadius: '3px', bg: 'accent.emphasis', width: `${sprintProgress(currentSprint.startDate, currentSprint.endDate)}%` }} />
                   </Box>
+                  <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
+                    Filter{' '}
+                    <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>{SPRINT_FILTER}</Text>
+                    {' '}is applied automatically on save.
+                  </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                     <Tippy content="End the current sprint" placement="top" delay={[400, 0]} zIndex={10002}>
                       <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)}>End Sprint</Button>

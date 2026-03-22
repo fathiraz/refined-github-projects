@@ -9,6 +9,7 @@ export class ErrorBoundary extends React.Component<
   state: State = { hasError: false, message: '' }
 
   static getDerivedStateFromError(error: Error): State {
+    console.error('[rgp:error-boundary] caught error:', error)
     return { hasError: true, message: error.message }
   }
 
