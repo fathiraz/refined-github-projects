@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Button, Flash, Heading, Text } from '@primer/react'
+import { Box, Button, Checkbox, Flash, FormControl, Heading, Text, TextInput } from '@primer/react'
 import { AutocompleteInput } from '../ui/AutocompleteInput'
 import { MarkdownTextarea } from '../ui/MarkdownTextarea'
 import {
@@ -77,31 +77,6 @@ function getFieldIcon(dataType: string): React.ReactNode {
     case 'COMMENT':       return <TextLineIcon color={c} />
     default:              return null
   }
-}
-
-// Custom checkbox for field selection rows
-function FieldCheckbox({ checked }: { checked: boolean }) {
-  return (
-    <Box sx={{
-      width: 18, height: 18, borderRadius: '4px', border: '1.5px solid',
-      borderColor: checked ? 'accent.emphasis' : 'border.default',
-      bg: checked ? 'accent.emphasis' : 'transparent',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      transition: 'all 150ms ease', flexShrink: 0,
-      '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-    }}>
-      {checked && <CheckIcon size={11} color="#fff" />}
-    </Box>
-  )
-}
-
-// Shared raw input styles (used for date / number / text)
-const inputCss: React.CSSProperties = {
-  padding: '8px 12px',
-  background: 'var(--bgColor-muted, var(--color-canvas-subtle))',
-  color: 'var(--fgColor-default)',
-  border: '1px solid var(--borderColor-default)',
-  borderRadius: 6, outline: 'none', fontFamily: 'inherit', fontSize: 14, boxSizing: 'border-box',
 }
 
 // ── Step subcomponents ──────────────────────────────────────
@@ -233,7 +208,7 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
                   '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                 }}
               >
-                <FieldCheckbox checked={isSelected} />
+                <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
                 <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{getFieldIcon(field.dataType)}</Box>
                 <Text sx={{ fontSize: 1, fontWeight: 'bold', color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
                   {field.name}
@@ -274,7 +249,7 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
                         '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                       }}
                     >
-                      <FieldCheckbox checked={isSelected} />
+                      <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
                       <Box sx={{ display: 'flex', flexShrink: 0 }}>{getFieldIcon(field.dataType)}</Box>
                       <Text sx={{ fontSize: 1, fontWeight: 500, color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
                         {field.name}
@@ -410,37 +385,30 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
             )
           } else if (field.dataType === 'DATE') {
             inputContent = (
-              <input
+              <TextInput
                 type="date"
                 value={(value.date as string) || ''}
                 onChange={e => onUpdateFieldValue(field.id, { date: e.target.value })}
-                style={{ ...inputCss, maxWidth: 200, width: '100%' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--color-accent-emphasis, #0969da)' }}
-                onBlur={e => { e.target.style.borderColor = 'var(--borderColor-default)' }}
+                sx={{ maxWidth: 200 }}
               />
             )
           } else if (field.dataType === 'NUMBER') {
             inputContent = (
-              <input
+              <TextInput
                 type="number"
                 placeholder="Enter number..."
                 value={(value.number as number | '') ?? ''}
                 onChange={e => onUpdateFieldValue(field.id, { number: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
-                style={{ ...inputCss, maxWidth: 160, width: '100%' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--color-accent-emphasis, #0969da)' }}
-                onBlur={e => { e.target.style.borderColor = 'var(--borderColor-default)' }}
+                sx={{ maxWidth: 160 }}
               />
             )
           } else if (field.dataType === 'TITLE') {
             inputContent = (
-              <input
-                type="text"
+              <TextInput
+                block
                 placeholder="New title for all selected items..."
                 value={(value.text as string) || ''}
                 onChange={e => onUpdateFieldValue(field.id, { text: e.target.value })}
-                style={{ ...inputCss, width: '100%' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--color-accent-emphasis, #0969da)' }}
-                onBlur={e => { e.target.style.borderColor = 'var(--borderColor-default)' }}
               />
             )
           } else if (field.dataType === 'BODY') {
@@ -461,26 +429,25 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
             )
           } else {
             inputContent = (
-              <input
-                type="text"
+              <TextInput
+                block
                 placeholder={isDefault ? 'E.g. comma separated...' : 'Enter value...'}
                 value={(value.text as string) || ''}
                 onChange={e => onUpdateFieldValue(field.id, { text: e.target.value })}
-                style={{ ...inputCss, width: '100%' }}
-                onFocus={e => { e.target.style.borderColor = 'var(--color-accent-emphasis, #0969da)' }}
-                onBlur={e => { e.target.style.borderColor = 'var(--borderColor-default)' }}
               />
             )
           }
 
           return (
-            <Box key={field.id} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default', display: 'flex', alignItems: 'center', gap: 2 }}>
-                {getFieldIcon(field.dataType) && <Box sx={{ color: 'fg.muted', display: 'flex' }}>{getFieldIcon(field.dataType)}</Box>}
+            <FormControl key={field.id}>
+              <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold' }}>
+                {getFieldIcon(field.dataType) && (
+                  <Box sx={{ color: 'fg.muted', display: 'flex' }}>{getFieldIcon(field.dataType)}</Box>
+                )}
                 {field.name}
-              </Text>
+              </FormControl.Label>
               {inputContent}
-            </Box>
+            </FormControl>
           )
         })}
       </Box>

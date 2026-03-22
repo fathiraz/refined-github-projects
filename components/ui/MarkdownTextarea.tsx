@@ -78,7 +78,7 @@ export function MarkdownTextarea({ value, onChange, placeholder, rows = 6 }: Pro
   } as React.CSSProperties
 
   return (
-    <div style={{ border: '1px solid var(--borderColor-default)', borderRadius: 6, overflow: 'hidden' }}>
+    <div style={{ border: '1px solid var(--borderColor-default)', borderRadius: 6, overflow: 'hidden', width: '100%' }}>
       {/* Tab bar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px',
