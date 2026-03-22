@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Box, Button, Flash, Heading, Spinner, Text } from '@primer/react'
+import { Box, Button, Flash, FormControl, Heading, Spinner, Text, TextInput } from '@primer/react'
 import { sendMessage, ItemPreviewData } from '../lib/messages'
 import { queueStore } from '../lib/queueStore'
 import { flyToTracker } from '../lib/flyAnimation'
 import { AutocompleteInput } from './ui/AutocompleteInput'
+import { MarkdownTextarea } from './ui/MarkdownTextarea'
 import { CopyIcon, XIcon } from './ui/primitives'
 
 type Step = 'LOADING' | 'PREVIEW' | 'ERROR'
@@ -18,22 +19,6 @@ interface Props {
 }
 
 type EditableField = ItemPreviewData['fields'][number]
-
-const inputCss: React.CSSProperties = {
-  width: '100%',
-  padding: '8px 12px',
-  background: 'var(--bgColor-muted, var(--color-canvas-subtle))',
-  color: 'var(--fgColor-default)',
-  border: '1px solid var(--borderColor-default)',
-  borderRadius: 6,
-  outline: 'none',
-  fontFamily: 'inherit',
-  fontSize: 14,
-  boxSizing: 'border-box',
-}
-
-const ACCENT = 'var(--color-accent-emphasis, #0969da)'
-const BORDER = 'var(--borderColor-default)'
 
 const sectionLabel = {
   fontSize: 0 as const,
@@ -152,7 +137,7 @@ export function DeepDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
             <Flash variant="danger" sx={{ width: '100%' }}>
               {error || 'An error occurred.'}
             </Flash>
-            <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none' }}>Close</Button>
+            <Button variant="default" onClick={onClose}>Close</Button>
           </Box>
         )}
 
@@ -161,30 +146,21 @@ export function DeepDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
           <>
             <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {/* Title */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Title</Text>
-                <input
-                  type="text"
-                  value={editedTitle}
-                  onChange={e => setEditedTitle(e.target.value)}
-                  style={inputCss}
-                  onFocus={e => { e.target.style.borderColor = ACCENT }}
-                  onBlur={e => { e.target.style.borderColor = BORDER }}
-                />
-              </Box>
+              <FormControl>
+                <FormControl.Label>Title</FormControl.Label>
+                <TextInput block value={editedTitle} onChange={e => setEditedTitle(e.target.value)} />
+              </FormControl>
 
               {/* Body */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Body</Text>
-                <textarea
+              <FormControl>
+                <FormControl.Label>Description</FormControl.Label>
+                <MarkdownTextarea
                   value={editedBody}
-                  onChange={e => setEditedBody(e.target.value)}
-                  rows={3}
-                  style={{ ...inputCss, resize: 'vertical', lineHeight: 1.5 }}
-                  onFocus={e => { e.target.style.borderColor = ACCENT }}
-                  onBlur={e => { e.target.style.borderColor = BORDER }}
+                  onChange={setEditedBody}
+                  placeholder="Enter description (supports markdown)..."
+                  rows={6}
                 />
-              </Box>
+              </FormControl>
 
               {/* People section */}
               <Box sx={{ borderTop: '1px solid', borderColor: 'border.default', pt: 3 }}>
@@ -231,99 +207,91 @@ export function DeepDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
                   {editedFields.map(field => (
                     <Box key={field.fieldId} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{field.fieldName}</Text>
-
                       {field.dataType === 'TEXT' && (
-                        <input
-                          type="text"
-                          value={field.text ?? ''}
-                          onChange={e => updateField(field.fieldId, { text: e.target.value })}
-                          style={inputCss}
-                          onFocus={e => { e.target.style.borderColor = ACCENT }}
-                          onBlur={e => { e.target.style.borderColor = BORDER }}
-                        />
+                        <FormControl>
+                          <FormControl.Label>{field.fieldName}</FormControl.Label>
+                          <TextInput block value={field.text ?? ''} onChange={e => updateField(field.fieldId, { text: e.target.value })} />
+                        </FormControl>
                       )}
 
                       {field.dataType === 'SINGLE_SELECT' && field.options && (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                          {field.options.map(opt => {
-                            const isSelected = field.optionId === opt.id
-                            return (
-                              <Box
-                                key={opt.id}
-                                as="button"
-                                type="button"
-                                onClick={() => updateField(field.fieldId, { optionId: opt.id, optionName: opt.name, optionColor: opt.color })}
-                                sx={{
-                                  display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1,
-                                  border: '1px solid', borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                                  borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
-                                  cursor: 'pointer', transition: 'all 150ms ease',
-                                  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                                }}
-                              >
-                                <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0 }} style={{ backgroundColor: opt.color || 'var(--borderColor-default)' }} />
-                                <Text sx={{ fontSize: 1, fontWeight: 500, color: 'fg.default' }}>{opt.name}</Text>
-                              </Box>
-                            )
-                          })}
-                        </Box>
+                        <>
+                          <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{field.fieldName}</Text>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                            {field.options.map(opt => {
+                              const isSelected = field.optionId === opt.id
+                              return (
+                                <Box
+                                  key={opt.id}
+                                  as="button"
+                                  type="button"
+                                  onClick={() => updateField(field.fieldId, { optionId: opt.id, optionName: opt.name, optionColor: opt.color })}
+                                  sx={{
+                                    display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1,
+                                    border: '1px solid', borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                                    borderRadius: 2, bg: isSelected ? 'accent.subtle' : 'canvas.default',
+                                    cursor: 'pointer', transition: 'all 150ms ease',
+                                    '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                                  }}
+                                >
+                                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0 }} style={{ backgroundColor: opt.color || 'var(--borderColor-default)' }} />
+                                  <Text sx={{ fontSize: 1, fontWeight: 500, color: 'fg.default' }}>{opt.name}</Text>
+                                </Box>
+                              )
+                            })}
+                          </Box>
+                        </>
                       )}
 
                       {field.dataType === 'NUMBER' && (
-                        <input
-                          type="number"
-                          value={field.number ?? ''}
-                          onChange={e => updateField(field.fieldId, { number: parseFloat(e.target.value) })}
-                          style={inputCss}
-                          onFocus={e => { e.target.style.borderColor = ACCENT }}
-                          onBlur={e => { e.target.style.borderColor = BORDER }}
-                        />
+                        <FormControl>
+                          <FormControl.Label>{field.fieldName}</FormControl.Label>
+                          <TextInput type="number" block value={String(field.number ?? '')} onChange={e => updateField(field.fieldId, { number: parseFloat(e.target.value) })} />
+                        </FormControl>
                       )}
 
                       {field.dataType === 'DATE' && (
-                        <input
-                          type="date"
-                          value={field.date ?? ''}
-                          onChange={e => updateField(field.fieldId, { date: e.target.value })}
-                          style={inputCss}
-                          onFocus={e => { e.target.style.borderColor = ACCENT }}
-                          onBlur={e => { e.target.style.borderColor = BORDER }}
-                        />
+                        <FormControl>
+                          <FormControl.Label>{field.fieldName}</FormControl.Label>
+                          <TextInput type="date" block value={field.date ?? ''} onChange={e => updateField(field.fieldId, { date: e.target.value })} />
+                        </FormControl>
                       )}
 
                       {field.dataType === 'ITERATION' && field.iterations && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          {field.iterations.map(iter => {
-                            const isSelected = field.iterationId === iter.id
-                            return (
-                              <Box
-                                key={iter.id}
-                                as="button"
-                                type="button"
-                                onClick={() => updateField(field.fieldId, { iterationId: iter.id, iterationTitle: iter.title, iterationStartDate: iter.startDate })}
-                                sx={{
-                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                  px: 3, py: 2, border: '1px solid',
-                                  borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                                  borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
-                                  cursor: 'pointer', transition: 'all 150ms ease',
-                                  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                                }}
-                              >
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                  <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{iter.title}</Text>
-                                  <Text sx={{ fontSize: 0, color: 'fg.muted', mt: '2px' }}>{iter.startDate}</Text>
-                                </Box>
-                                {isSelected && (
-                                  <Box sx={{ color: 'accent.fg' }}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                        <>
+                          <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{field.fieldName}</Text>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {field.iterations.map(iter => {
+                              const isSelected = field.iterationId === iter.id
+                              return (
+                                <Box
+                                  key={iter.id}
+                                  as="button"
+                                  type="button"
+                                  onClick={() => updateField(field.fieldId, { iterationId: iter.id, iterationTitle: iter.title, iterationStartDate: iter.startDate })}
+                                  sx={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    px: 3, py: 2, border: '1px solid',
+                                    borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                                    borderRadius: 2, bg: isSelected ? 'accent.subtle' : 'canvas.default',
+                                    cursor: 'pointer', transition: 'all 150ms ease',
+                                    '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{iter.title}</Text>
+                                    <Text sx={{ fontSize: 0, color: 'fg.muted', mt: '2px' }}>{iter.startDate}</Text>
                                   </Box>
-                                )}
-                              </Box>
-                            )
-                          })}
-                        </Box>
+                                  {isSelected && (
+                                    <Box sx={{ color: 'accent.fg' }}>
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                                    </Box>
+                                  )}
+                                </Box>
+                              )
+                            })}
+                          </Box>
+                        </>
                       )}
                     </Box>
                   ))}
@@ -359,8 +327,8 @@ export function DeepDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
             {/* Footer */}
             <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-              <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none' }}>Cancel</Button>
-              <Button ref={duplicateBtnRef} variant="primary" onClick={handleDuplicate} sx={{ boxShadow: 'none', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+              <Button variant="default" onClick={onClose}>Cancel</Button>
+              <Button ref={duplicateBtnRef} variant="primary" onClick={handleDuplicate} sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                 <CopyIcon size={14} />
                 Duplicate →
               </Button>
