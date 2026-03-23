@@ -165,11 +165,11 @@ export function injectCheckboxStyles() {
     }
     /* Show drag handle on row hover or when row is checked */
     [role="row"]:hover > .rgp-cb-cell .rgp-dnd-handle,
-    .rgp-cb-cell:has(.rgp-selection-control[data-state="checked"]) .rgp-dnd-handle {
+    .rgp-cb-cell:has(.rgp-selection-control input:checked) .rgp-dnd-handle {
       opacity: 0.6;
     }
     [role="row"]:hover > .rgp-cb-cell .rgp-dnd-handle:hover,
-    .rgp-cb-cell:has(.rgp-selection-control[data-state="checked"]) .rgp-dnd-handle:hover {
+    .rgp-cb-cell:has(.rgp-selection-control input:checked) .rgp-dnd-handle:hover {
       opacity: 1;
     }
     .rgp-dnd-handle:active {
@@ -230,13 +230,14 @@ export function injectCheckboxStyles() {
       z-index: 1;
     }
 
-    /* Show checkbox control on row hover or when checked */
+    /* Show checkbox control on row hover or when checked/indeterminate */
     .rgp-cb-cell .rgp-selection-control {
       opacity: 0;
       transition: opacity 160ms ease;
     }
     [role="row"]:hover > .rgp-cb-cell .rgp-selection-control,
-    .rgp-cb-cell:has(.rgp-selection-control[data-state="checked"]) .rgp-selection-control {
+    .rgp-cb-cell:has(.rgp-selection-control input:checked) .rgp-selection-control,
+    .rgp-cb-cell:has(.rgp-selection-control input:indeterminate) .rgp-selection-control {
       opacity: 1;
     }
     .rgp-cb-cell--header .rgp-selection-control {
@@ -267,71 +268,21 @@ export function injectCheckboxStyles() {
     }
 
     .rgp-selection-control {
-      appearance: none;
-      -webkit-appearance: none;
-      border: none;
-      background: transparent;
-      padding: 0;
-      margin: 0;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       width: 20px;
       height: 20px;
-      cursor: pointer;
       border-radius: 4px;
-      transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), background-color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .rgp-selection-control:hover {
-      background: var(--color-accent-subtle, rgba(9, 105, 218, 0.08));
-      transform: translateY(-1px);
-    }
-
-    .rgp-selection-control:focus-visible {
+    .rgp-selection-control:focus-within {
       outline: 2px solid var(--color-accent-emphasis);
       outline-offset: 2px;
     }
 
-    .rgp-selection-control__box {
-      width: 16px;
-      height: 16px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 3px;
-      border: 1.5px solid var(--color-border-default);
-      background: var(--color-canvas-default);
-      color: transparent;
-      transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    html[data-color-mode="dark"] .rgp-selection-control__box {
-      background: var(--color-canvas-overlay);
-      border-color: var(--color-border-default);
-    }
-    @media (prefers-color-scheme: dark) {
-      html[data-color-mode="auto"] .rgp-selection-control__box {
-        background: var(--color-canvas-overlay);
-        border-color: var(--color-border-default);
-      }
-    }
-
-    .rgp-selection-control[data-state="checked"] .rgp-selection-control__box,
-    .rgp-selection-control[data-state="indeterminate"] .rgp-selection-control__box {
-      background: var(--color-accent-emphasis);
-      border-color: var(--color-accent-emphasis);
-      color: var(--color-fg-on-emphasis);
-      transform: scale(1.02);
-    }
-
-    .rgp-selection-control__dash {
-      width: 8px;
-      height: 2px;
-      border-radius: 999px;
-      background: currentColor;
-    }
-
-    [role="row"]:has(.rgp-selection-control[data-state="checked"]) {
+    [role="row"]:has(.rgp-selection-control input:checked) {
       background-color: var(--color-accent-subtle, rgba(9, 105, 218, 0.06)) !important;
       box-shadow: inset 2px 0 0 var(--color-accent-emphasis);
     }
@@ -366,7 +317,7 @@ export function injectCheckboxStyles() {
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .rgp-selection-control, .rgp-selection-control__box { transition: none !important; }
+      .rgp-selection-control { transition: none !important; }
     }
   `
   document.head.appendChild(style)

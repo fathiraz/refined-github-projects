@@ -3,6 +3,7 @@ import type { ContentScriptContext } from 'wxt/utils/content-script-context'
 import ReactDOM from 'react-dom/client'
 import { StyleSheetManager } from 'styled-components'
 import isPropValid from '@emotion/is-prop-valid'
+import { ThemeProvider } from '@primer/react'
 import { BulkActionsBar } from '../../components/bulk-actions-bar'
 import { OnboardingCoach } from '../../components/onboarding-coach'
 import { QueueTracker } from '../../components/queue-tracker'
@@ -188,11 +189,19 @@ export async function setupMounts(
   sprintPanelUi.mount()
 
   // Mount single portal host root (all checkbox portals render through this one root)
+  const portalStyleHost = document.createElement('div')
+  document.head.appendChild(portalStyleHost)
   const portalHostDiv = document.createElement('div')
   portalHostDiv.id = 'rgp-portal-host'
   document.body.appendChild(portalHostDiv)
   const portalRoot = ReactDOM.createRoot(portalHostDiv)
-  portalRoot.render(<CheckboxPortalHost />)
+  portalRoot.render(
+    <StyleSheetManager target={portalStyleHost} shouldForwardProp={isPropValid}>
+      <ThemeProvider colorMode="auto">
+        <CheckboxPortalHost />
+      </ThemeProvider>
+    </StyleSheetManager>,
+  )
 
   // Warn before navigating away while background jobs are running
   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
