@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Refined GitHub Projects — Bulk superpowers for GitHub Projects V2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-2: #1c2128;
+            --border: #30363d;
+            --border-subtle: #21262d;
+            --text: #e6edf3;
+            --text-muted: #7d8590;
+            --text-subtle: #484f58;
+            --green: #3fb950;
+            --green-dim: #1a4128;
+            --blue: #58a6ff;
+            --blue-dim: #0d2541;
+            --purple: #bc8cff;
+            --purple-dim: #271a3f;
+            --orange: #ffa657;
+            --red: #f85149;
+            --accent: #238636;
+            --accent-hover: #2ea043;
+            --mono: 'DM Mono', monospace;
+            --sans: 'DM Sans', sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 16px;
+            overflow-x: hidden;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .nav-cta {
+            background: var(--accent);
+            color: white !important;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            transition: background 0.15s !important;
+        }
+
+        .nav-cta:hover {
+            background: var(--accent-hover) !important;
+            color: white !important;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 24px 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(48, 54, 61, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(48, 54, 61, 0.4) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%);
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 300px;
+            background: radial-gradient(ellipse, rgba(35, 134, 54, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-inner {
+            position: relative;
+            z-index: 1;
+            max-width: 860px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--green);
+            margin-bottom: 28px;
+            font-family: var(--mono);
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse-dot 2s ease infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        h1 {
+            font-size: clamp(42px, 6vw, 72px);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+        }
+
+        h1 em {
+            font-style: normal;
+            color: var(--green);
+        }
+
+        .hero-sub {
+            font-size: clamp(17px, 2vw, 20px);
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 36px;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: border-color 0.15s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-muted);
+            transform: translateY(-1px);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-num {
+            display: block;
+            font-size: 28px;
+            font-weight: 700;
+            font-family: var(--mono);
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .hero-stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* SECTION BASE */
+        section {
+            padding: 96px 24px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--green);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 560px;
+            line-height: 1.6;
+        }
+
+        /* WHY SECTION */
+        .why {
+            background: var(--bg);
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 56px;
+        }
+
+        .why-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: border-color 0.15s;
+        }
+
+        .why-card:hover {
+            border-color: var(--text-subtle);
+        }
+
+        .why-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 14px;
+        }
+
+        .why-card h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .why-card p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* FEATURES */
+        .features {
+            background: var(--surface);
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 80px;
+            margin-top: 64px;
+        }
+
+        .feature-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .feature-item.reverse {
+            direction: rtl;
+        }
+
+        .feature-item.reverse>* {
+            direction: ltr;
+        }
+
+        .feature-text {}
+
+        .feature-number {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-subtle);
+            letter-spacing: 0.08em;
+            margin-bottom: 12px;
+        }
+
+        .feature-text h3 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+
+        .feature-text h3 span {
+            color: var(--green);
+        }
+
+        .feature-text p {
+            color: var(--text-muted);
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .feature-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-family: var(--mono);
+            color: var(--text-muted);
+        }
+
+        .feature-visual {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .feature-visual img {
+            width: 100%;
+            display: block;
+        }
+
+        /* ACTIONS TABLE */
+        .actions {
+            background: var(--bg);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 56px;
+        }
+
+        .action-cell {
+            background: var(--surface);
+            padding: 18px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .action-cell-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .action-cell h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .action-cell p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .action-cell kbd {
+            font-family: var(--mono);
+            font-size: 11px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1px 5px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: inline-block;
+        }
+
+        /* INSTALL */
+        .install {
+            background: var(--surface);
+        }
+
+        .install-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            margin-top: 56px;
+        }
+
+        .install-steps {}
+
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--green);
+            color: #0d1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-content h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .step-content code {
+            font-family: var(--mono);
+            font-size: 13px;
+            background: var(--surface-2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--blue);
+        }
+
+        .install-pat {}
+
+        .pat-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .pat-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .scope-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 14px;
+        }
+
+        .scope-row:last-child {
+            border-bottom: none;
+        }
+
+        .scope-name {
+            font-family: var(--mono);
+            color: var(--blue);
+            font-size: 13px;
+        }
+
+        .scope-reason {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .privacy-note {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            background: rgba(35, 134, 54, 0.08);
+            border: 1px solid rgba(35, 134, 54, 0.3);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* DEV SETUP */
+        .dev {
+            background: var(--bg);
+        }
+
+        .code-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 32px;
+        }
+
+        .code-block-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .code-block-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: var(--mono);
+        }
+
+        .code-block-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background: #ff5f57;
+        }
+
+        .dot-yellow {
+            background: #febc2e;
+        }
+
+        .dot-green {
+            background: #28c840;
+        }
+
+        pre {
+            padding: 20px 24px;
+            overflow-x: auto;
+            font-family: var(--mono);
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .comment {
+            color: var(--text-subtle);
+        }
+
+        .cmd {
+            color: var(--green);
+        }
+
+        .arg {
+            color: var(--blue);
+        }
+
+        /* ARCH */
+        .arch {
+            background: var(--surface);
+        }
+
+        .arch-diagram {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 48px;
+            overflow-x: auto;
+        }
+
+        .arch-diagram pre {
+            color: var(--text-muted);
+            font-size: 13px;
+            padding: 0;
+            white-space: pre;
+        }
+
+        .arch-rules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .arch-rule {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 20px;
+            border-left: 3px solid var(--red);
+        }
+
+        .arch-rule.green {
+            border-left-color: var(--green);
+        }
+
+        .arch-rule h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .arch-rule p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ROADMAP */
+        .roadmap {
+            background: var(--bg);
+        }
+
+        .roadmap-list {
+            margin-top: 48px;
+            max-width: 720px;
+        }
+
+        .roadmap-item {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .roadmap-item:last-child {
+            border-bottom: none;
+        }
+
+        .roadmap-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .roadmap-check.done {
+            background: var(--green);
+            color: #0d1117;
+        }
+
+        .roadmap-check.todo {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+        }
+
+        .roadmap-text {
+            font-size: 15px;
+        }
+
+        .roadmap-text.done {
+            color: var(--text-muted);
+        }
+
+        .roadmap-text.todo {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .footer-tagline {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .footer-links a:hover {
+            color: var(--text);
+        }
+
+        .footer-copy {
+            font-size: 13px;
+            color: var(--text-subtle);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+
+            .feature-item,
+            .feature-item.reverse {
+                grid-template-columns: 1fr;
+                direction: ltr;
+            }
+
+            .install-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-stats {
+                gap: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-inner">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-icon">⚡</div>
+                Refined GitHub Projects
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#install">Install</a></li>
+                <li><a href="#dev">Dev Setup</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="https://github.com/fathiraz/refined-github-projects" target="_blank">GitHub</a></li>
+                <li><a href="https://github.com/fathiraz/refined-github-projects/releases" target="_blank"
+                        class="nav-cta">Download</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-grid"></div>
+        <div class="hero-glow"></div>
+        <div class="hero-inner">
+            <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                v0.1.1 · Manifest V3 · No backend required
+            </div>
+            <h1>GitHub Projects,<br /><em>bulk-edited.</em></h1>
+            <p class="hero-sub">
+                The bulk operations and sprint tooling that GitHub Projects V2 should have shipped with —
+                running entirely in your browser, your token never leaving your machine.
+            </p>
+            <div class="hero-actions">
+                <a href="https://github.com/fathiraz/refined-github-projects/releases" class="btn-primary"
+                    target="_blank">
+                    ⬇ Download Latest Release
+                </a>
+                <a href="https://github.com/fathiraz/refined-github-projects" class="btn-secondary" target="_blank">
+                    ★ View on GitHub
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-num">11+</span>
+                    <span class="hero-stat-label">Bulk actions</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-num">3</span>
+                    <span class="hero-stat-label">Browsers supported</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-num">0</span>
+                    <span class="hero-stat-label">Bytes sent to servers</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-num">MV3</span>
+                    <span class="hero-stat-label">Manifest version</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WHY -->
+    <section class="why" id="why">
+        <div class="container">
+            <span class="section-label">Why it exists</span>
+            <h2>GitHub Projects is powerful.<br />Managing it at scale isn't.</h2>
+            <p class="section-desc">Refined GitHub Projects fixes the gaps that slow down every sprint planning session.
+            </p>
+            <div class="why-grid">
+                <div class="why-card">
+                    <div class="why-card-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">📋</div>
+                    <h3>One field at a time, forever</h3>
+                    <p>Native GitHub lets you update exactly one item's field per interaction. With a backlog of 60
+                        items, that's 60 clicks just to flip a Status.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-card-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">🔁</div>
+                    <h3>GitHub's duplicate strips everything</h3>
+                    <p>The built-in duplicate copies only the title. Every assignee, label, status, and project field
+                        has to be re-applied manually — every single time.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-card-icon" style="background:rgba(188,140,255,0.12); color:var(--purple);">🏃</div>
+                    <h3>Ending a sprint is a chore</h3>
+                    <p>Moving incomplete items to the next iteration requires opening each issue individually, changing
+                        the sprint field, and hoping you didn't miss any.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-card-icon" style="background:rgba(255,166,87,0.12); color:var(--orange);">🔒</div>
+                    <h3>No visibility into background ops</h3>
+                    <p>When you do find a workaround — via API or script — there's no progress indicator, no rate-limit
+                        safety, and a 403 ban if you fire too fast.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+        <div class="container">
+            <span class="section-label">Features</span>
+            <h2>Everything your project board<br />was always missing.</h2>
+
+            <div class="feature-list">
+
+                <!-- Bulk Actions -->
+                <div class="feature-item">
+                    <div class="feature-text">
+                        <div class="feature-number">01 / BULK ACTIONS</div>
+                        <h3>Select many. <span>Edit once.</span></h3>
+                        <p>Press <kbd
+                                style="font-family:var(--mono);background:var(--surface-2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:13px;">⌘A</kbd>
+                            to select all visible items — or check individual rows. The floating Actions bar appears
+                            instantly. Open the full menu with <kbd
+                                style="font-family:var(--mono);background:var(--surface-2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:13px;">⌘⇧B</kbd>
+                            to access all 11 bulk operations, grouped by category.</p>
+                        <div class="feature-pills">
+                            <span class="pill">Edit Fields</span>
+                            <span class="pill">Rename Titles</span>
+                            <span class="pill">Close Issues</span>
+                            <span class="pill">Reopen Issues</span>
+                            <span class="pill">Pin / Unpin</span>
+                            <span class="pill">Transfer</span>
+                            <span class="pill">Export CSV</span>
+                            <span class="pill">Delete</span>
+                        </div>
+                    </div>
+                    <div class="feature-visual">
+                        <img src="screenshot-1.png" alt="Bulk Actions Bar showing all available operations" />
+                    </div>
+                </div>
+
+                <!-- Bulk Edit Wizard -->
+                <div class="feature-item reverse">
+                    <div class="feature-text">
+                        <div class="feature-number">02 / BULK EDIT WIZARD</div>
+                        <h3>Pick fields. Set values. <span>Apply to all.</span></h3>
+                        <p>A guided 3-step wizard lets you choose exactly which fields to update, set new values for
+                            every field type (single-select, iteration, number, date, assignees, labels), then review a
+                            clean diff of every change before a single API call fires.</p>
+                        <div class="feature-pills">
+                            <span class="pill">Step 1: Select Fields</span>
+                            <span class="pill">Step 2: Set Values</span>
+                            <span class="pill">Step 3: Review &amp; Apply</span>
+                        </div>
+                    </div>
+                    <div class="feature-visual">
+                        <img src="screenshot-2.png" alt="Bulk Edit Wizard 3-step flow" />
+                    </div>
+                </div>
+
+                <!-- Deep Duplicate -->
+                <div class="feature-item">
+                    <div class="feature-text">
+                        <div class="feature-number">03 / DEEP DUPLICATE</div>
+                        <h3>Clone issues like a real <span>copy machine.</span></h3>
+                        <p>GitHub's built-in duplicate copies the title only. Deep Duplicate clones the complete issue —
+                            all project fields, assignees, labels, body, and sub-issue links — and presents everything
+                            in an editable modal before you confirm.</p>
+                        <div class="feature-pills">
+                            <span class="pill">All project fields</span>
+                            <span class="pill">Assignees &amp; labels</span>
+                            <span class="pill">Issue body</span>
+                            <span class="pill">Edit before confirm</span>
+                        </div>
+                    </div>
+                    <div class="feature-visual">
+                        <img src="screenshot-3.png" alt="Deep Duplicate modal" />
+                    </div>
+                </div>
+
+                <!-- Queue Tracker -->
+                <div class="feature-item reverse">
+                    <div class="feature-text">
+                        <div class="feature-number">04 / LIVE QUEUE TRACKER</div>
+                        <h3>Review, apply, and <span>watch it run.</span></h3>
+                        <p>Every mutation runs through a sequential background queue with 1-second delays between
+                            writes. The live tracker shows real-time percentage progress. On 403 or 429 responses, the
+                            queue automatically backs off — keeping your PAT safe on large projects.</p>
+                        <div class="feature-pills">
+                            <span class="pill">Rate-limit safe</span>
+                            <span class="pill">Auto 403/429 backoff</span>
+                            <span class="pill">Live % progress</span>
+                            <span class="pill">No Promise.all()</span>
+                        </div>
+                    </div>
+                    <div class="feature-visual">
+                        <img src="screenshot-4.png" alt="Live Queue Tracker with progress" />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ALL ACTIONS -->
+    <section class="actions" id="actions">
+        <div class="container">
+            <span class="section-label">Full action list</span>
+            <h2>Everything GitHub Projects<br />should have shipped.</h2>
+            <p class="section-desc">One extension. Eleven superpowers. Zero extra tabs.</p>
+            <div class="actions-grid">
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">✏️</div>
+                    <div>
+                        <h4>Edit Fields</h4>
+                        <p>Bulk-update Status, Priority, Sprint, Size, Estimate, Assignees, Labels, and custom fields
+                        </p>
+                        <kbd>⌘⇧E</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">📝</div>
+                    <div>
+                        <h4>Rename Titles</h4>
+                        <p>Update issue or PR titles across multiple items at once</p>
+                        <kbd>⌘⇧R</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">⇅</div>
+                    <div>
+                        <h4>Reorder Items</h4>
+                        <p>Reposition selected items within your project board</p>
+                        <kbd>⌘⇧J</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(255,81,73,0.12); color:var(--red);">⊗</div>
+                    <div>
+                        <h4>Close Issues</h4>
+                        <p>Mark as Completed or Not Planned. Sweep a whole sprint in one action.</p>
+                        <kbd>⌘⇧X</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">↻</div>
+                    <div>
+                        <h4>Reopen Issues</h4>
+                        <p>Restore closed items back to open. Only affects actually-closed issues.</p>
+                        <kbd>⌘⇧O</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(255,166,87,0.12); color:var(--orange);">🔒
+                    </div>
+                    <div>
+                        <h4>Lock Conversations</h4>
+                        <p>Lock with reason: off-topic, too heated, resolved, or spam</p>
+                        <kbd>⌘⇧L</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(188,140,255,0.12); color:var(--purple);">📌
+                    </div>
+                    <div>
+                        <h4>Pin / Unpin Issues</h4>
+                        <p>Promote or demote important issues at the repository level (max 3)</p>
+                        <kbd>⌘⇧F</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">→</div>
+                    <div>
+                        <h4>Transfer Issues</h4>
+                        <p>Move issues to another repository with full history intact</p>
+                        <kbd>⌘⇧M</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">⬇</div>
+                    <div>
+                        <h4>Export to CSV</h4>
+                        <p>Download selected items with all fields, assignees, labels, and custom properties</p>
+                        <kbd>⌘⇧V</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(188,140,255,0.12); color:var(--purple);">⎘
+                    </div>
+                    <div>
+                        <h4>Deep Duplicate</h4>
+                        <p>Clone any item with all fields, assignees, labels, body, and sub-issue relationships</p>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(255,81,73,0.12); color:var(--red);">🗑</div>
+                    <div>
+                        <h4>Delete Items</h4>
+                        <p>Permanently remove items from your project. Requires admin access.</p>
+                        <kbd>⌘⇧⌫</kbd>
+                    </div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-cell-icon" style="background:rgba(255,166,87,0.12); color:var(--orange);">🏃
+                    </div>
+                    <div>
+                        <h4>End Sprint</h4>
+                        <p>One click moves all incomplete items to the next iteration automatically</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section class="install" id="install">
+        <div class="container">
+            <span class="section-label">Installation</span>
+            <h2>Up and running<br />in under two minutes.</h2>
+            <div class="install-grid">
+                <div class="install-steps">
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h4>Download the latest release</h4>
+                            <p>Go to the <a href="https://github.com/fathiraz/refined-github-projects/releases"
+                                    style="color:var(--blue);">Releases page</a> and download the browser build package
+                                (not the source archive). Extract it on your machine.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h4>Open your browser's extension page</h4>
+                            <p>Chrome / Edge: <code>chrome://extensions</code><br />Firefox:
+                                <code>about:debugging#/runtime/this-firefox</code></p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>Load unpacked extension</h4>
+                            <p>Chrome / Edge: enable <strong>Developer mode</strong>, click <strong>Load
+                                    unpacked</strong>, select the extracted folder.<br />Firefox: click <strong>Load
+                                    Temporary Add-on</strong>, select the manifest file.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <h4>Add your GitHub PAT</h4>
+                            <p>Click the extension icon, paste your token, and click <strong>Validate and save</strong>.
+                                All features unlock automatically — one token for everything.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        style="margin-top:8px; padding:16px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;">
+                        <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Tested browsers</div>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <span style="font-size:13px; color:var(--text-muted);">✅ Arc (Chromium)</span>
+                            <span style="font-size:13px; color:var(--text-muted);">✅ Microsoft Edge</span>
+                            <span style="font-size:13px; color:var(--text-muted);">✅ Zen (Firefox)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="install-pat">
+                    <div class="pat-card">
+                        <h3>🔑 Required PAT scopes</h3>
+                        <div class="scope-row">
+                            <span class="scope-name">repo</span>
+                            <span class="scope-reason">Read/write issues, labels, assignees</span>
+                        </div>
+                        <div class="scope-row">
+                            <span class="scope-name">read:org</span>
+                            <span class="scope-reason">Read org membership for assignee search</span>
+                        </div>
+                        <div class="scope-row">
+                            <span class="scope-name">project</span>
+                            <span class="scope-reason">Read/write GitHub Projects V2 fields</span>
+                        </div>
+                        <div class="privacy-note">
+                            🔒 Your token is stored in browser extension storage and never sent to any server. All API
+                            calls go directly from your browser to <code
+                                style="font-family:var(--mono);font-size:12px;">api.github.com</code>.
+                        </div>
+                    </div>
+
+                    <div
+                        style="margin-top:20px; padding:20px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;">
+                        <div style="font-size:13px; font-weight:600; margin-bottom:10px;">Generate a PAT</div>
+                        <p style="font-size:13px; color:var(--text-muted); line-height:1.6; margin-bottom:12px;">GitHub
+                            → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new
+                            token (classic)</p>
+                        <a href="https://github.com/settings/tokens/new?scopes=repo,read:org,project&description=Refined+GitHub+Projects"
+                            target="_blank"
+                            style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:white;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">
+                            Generate token →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DEV SETUP -->
+    <section class="dev" id="dev">
+        <div class="container">
+            <span class="section-label">Development</span>
+            <h2>Build it yourself.</h2>
+            <p class="section-desc">Node.js 18+ and pnpm required.</p>
+            <div class="code-block">
+                <div class="code-block-header">
+                    <div class="code-block-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <span class="code-block-title">bash</span>
+                </div>
+                <pre><span class="comment"># Clone the repository</span>
+<span class="cmd">git clone</span> <span class="arg">https://github.com/fathiraz/refined-github-projects.git</span>
+<span class="cmd">cd</span> refined-github-projects
+
+<span class="comment"># Install dependencies</span>
+<span class="cmd">pnpm install</span>
+
+<span class="comment"># Start dev server with hot reload</span>
+<span class="cmd">pnpm dev</span>
+
+<span class="comment"># Production build</span>
+<span class="cmd">pnpm build</span>
+
+<span class="comment"># Type check</span>
+<span class="cmd">pnpm typecheck</span></pre>
+            </div>
+            <p style="margin-top:16px; font-size:14px; color:var(--text-muted);">After build, load <code
+                    style="font-family:var(--mono);font-size:13px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--blue);">.output/chrome-mv3</code>
+                in Chrome/Edge via <strong>Load unpacked</strong>. For Firefox, load the Firefox output folder.</p>
+        </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="arch" id="architecture">
+        <div class="container">
+            <span class="section-label">Architecture</span>
+            <h2>How it works.</h2>
+            <p class="section-desc">A clean three-layer extension — content script, background worker, and popup — with
+                no external servers in the loop.</p>
+
+            <div class="arch-diagram">
+                <pre>
+┌─────────────────┐   sendMessage    ┌─────────────────────────┐    ┌─────────────────────┐
+│  Content Script │ ───────────────→ │  Background Service     │ ──→│  GitHub GraphQL API │
+│  (DOM / UI)     │                  │  Worker                 │    │  api.github.com     │
+│                 │ ←─────────────── │  • PAT storage          │    │                     │
+│  • Shadow DOM   │   queueStateUpd  │  • Sequential queue     │    │                     │
+│  • Row observer │                  │  • Rate limit backoff   │    │                     │
+└─────────────────┘                  └─────────────────────────┘    └─────────────────────┘
+         ↑
+         │ WXT Storage API
+         ↓
+┌─────────────────┐
+│  Extension      │
+│  Popup          │
+│  • PAT config   │
+└─────────────────┘</pre>
+            </div>
+
+            <div class="arch-rules">
+                <div class="arch-rule">
+                    <h4>⛔ Never use Promise.all() for mutations</h4>
+                    <p>GitHub will 403-ban your PAT if you fire parallel GraphQL mutations. All operations must run
+                        sequentially with <code style="font-family:var(--mono);font-size:12px;">sleep(1000)</code>
+                        between writes.</p>
+                </div>
+                <div class="arch-rule">
+                    <h4>⛔ Never call the API from Content Scripts</h4>
+                    <p>All GitHub API calls must go through <code
+                            style="font-family:var(--mono);font-size:12px;">sendMessage</code> to the Background Service
+                        Worker. Never fire <code style="font-family:var(--mono);font-size:12px;">fetch</code> to
+                        api.github.com from a content script.</p>
+                </div>
+                <div class="arch-rule green">
+                    <h4>✅ Anchor to data-testid / ARIA labels</h4>
+                    <p>GitHub's CSS class names are generated and change frequently. Always anchor injected UI to stable
+                        <code style="font-family:var(--mono);font-size:12px;">data-testid</code> attributes or ARIA
+                        labels.</p>
+                </div>
+                <div class="arch-rule green">
+                    <h4>✅ Shadow DOM isolation</h4>
+                    <p>All injected UI lives in a Shadow DOM container. This guarantees RGP's styles never leak into
+                        GitHub's own UI and vice versa.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section class="roadmap" id="roadmap">
+        <div class="container">
+            <span class="section-label">Roadmap</span>
+            <h2>What's shipped, what's next.</h2>
+            <div class="roadmap-list">
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk update fields — Status,
+                        Assignee, Sprint, Priority, Labels, custom fields</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk close / reopen
+                        issues</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk lock / pin / unpin /
+                        transfer / delete</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk rename titles &amp;
+                        reorder items</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Export selected items to
+                        CSV</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Deep duplicate with all
+                        fields and sub-issues</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Sprint management — end
+                        sprint with auto-assignment</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Task completion tracker in
+                        sprint group headers</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Live queue tracker with
+                        real-time progress and rate-limit backoff</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check todo"></div><span class="roadmap-text todo">Chrome Web Store
+                        release</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check todo"></div><span class="roadmap-text todo">Firefox Add-ons release</span>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-check todo"></div><span class="roadmap-text todo">Safari support</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-logo">⚡ Refined GitHub Projects</div>
+            <div class="footer-tagline">GitHub Projects, bulk-edited the way it should work.</div>
+            <ul class="footer-links">
+                <li><a href="https://github.com/fathiraz/refined-github-projects" target="_blank">GitHub</a></li>
+                <li><a href="https://github.com/fathiraz/refined-github-projects/releases" target="_blank">Releases</a>
+                </li>
+                <li><a href="https://github.com/fathiraz/refined-github-projects/issues" target="_blank">Issues</a></li>
+                <li><a href="https://github.com/fathiraz" target="_blank">fathiraz</a></li>
+            </ul>
+            <div class="footer-copy">MIT License · Built with WXT, React, Primer CSS · ⚡ 90% built with AI agents</div>
+        </div>
+    </footer>
+
+</body>
+
+</html>
