@@ -17,6 +17,11 @@
   <a href="https://microsoftedge.microsoft.com/addons"><img src="https://img.shields.io/badge/Edge-Coming_Soon-yellow?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Edge Add-ons" /></a>
 </p>
 
+<p align="center">
+  <em>Inspired by <a href="https://github.com/refined-github/refined-github">refined-github</a> — the gold standard for browser extensions that fix what GitHub won't.<br/>
+  ⚡ 90% built with multiple AI agents. By fathiraz.</em>
+</p>
+
 ---
 
 ## 📋 Table of Contents
@@ -51,6 +56,23 @@ GitHub Projects V2 is a solid board — but editing items in bulk is painful. Yo
 
 ## ✨ Features
 
+| Feature | What it does |
+|---------|-------------|
+| **Bulk update fields** | Change Status, Assignee, Iteration, Priority, Labels, and any custom field across N items at once |
+| **Bulk close issues** | Mark issues as Completed or Not Planned in a single click |
+| **Bulk reopen issues** | Restore closed items back to active work |
+| **Bulk lock / unlock** | Lock conversations with a reason (off-topic, too heated, resolved, spam) |
+| **Bulk pin / unpin** | Promote or demote important issues at the repository level |
+| **Bulk transfer** | Move issues to another repository, history intact |
+| **Bulk delete** | Permanently remove items from your project |
+| **Bulk rename titles** | Update issue or PR titles across multiple items |
+| **Export to CSV** | Download selected items with all fields, assignees, labels, and custom properties |
+| **Sprint management** | End a sprint with one click; incomplete items auto-assign to the next iteration |
+| **Task completion tracker** | Live task counters in sprint group headers, updated in real time |
+| **Deep duplicate** | Clone any item with all custom fields, assignees, labels, and sub-issue relationships |
+
+---
+
 ### Bulk Actions Bar
 Select items with `⌘A` / `Ctrl+A` — the floating bar appears. Hit **Actions** (`⌘⇧B`) to open the full menu.
 
@@ -68,6 +90,7 @@ Select items with `⌘A` / `Ctrl+A` — the floating bar appears. Hit **Actions*
 | Status | Close Issues | `⌘⇧X` |
 | Status | Reopen Issues | `⌘⇧O` |
 | Status | Lock Conversations | `⌘⇧L` |
+| Status | Unlock Conversations | — |
 | Visibility | Pin Issues | `⌘⇧F` |
 | Visibility | Unpin Issues | — |
 | Move | Transfer Issues | `⌘⇧M` |
@@ -131,8 +154,8 @@ End a sprint with one click. Incomplete items are automatically moved to the nex
 | Arc | Chromium | ✅ Tested |
 | Microsoft Edge | Chromium | ✅ Tested |
 | Zen | Firefox (Gecko) | ✅ Tested |
-| Chrome | Chromium | Should work |
-| Firefox | Gecko | Should work |
+| Chrome | Chromium | ✅ Tested |
+| Firefox | Gecko | ✅ Tested |
 
 ### For Humans
 
@@ -153,11 +176,16 @@ Done. The extension is live on every GitHub Projects table you open.
 Paste this into Cursor, Claude Code, or any coding agent:
 
 ```text
-Install Refined GitHub Projects from the latest GitHub release.
-Then load it as an unpacked browser extension and complete PAT setup.
+Install Refined GitHub Projects from the latest GitHub release at:
+https://github.com/fathiraz/refined-github-projects/releases
 
-Repository: https://github.com/fathiraz/refined-github-projects
-Release page: https://github.com/fathiraz/refined-github-projects/releases
+Steps:
+1. Download the latest browser build package (not the source archive)
+2. Extract the archive
+3. Load as unpacked extension:
+   - Chrome/Edge: chrome://extensions → Developer mode → Load unpacked → select extracted folder
+   - Firefox: about:debugging#/runtime/this-firefox → Load Temporary Add-on → select manifest.json
+4. Click the extension icon → paste your GitHub PAT (scopes: repo, read:org, project) → Validate and save
 ```
 
 Or fetch these instructions directly:
