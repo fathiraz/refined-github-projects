@@ -2,18 +2,17 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Tippy from '@tippyjs/react'
 import { ensureTippyCss } from '../../lib/tippy-utils'
 import {
-  Box, Button, Flash, FormControl, Radio, RadioGroup,
+  Box, Button, Flash, FormControl, Heading, Radio, RadioGroup,
   Select, Spinner, Text, TextInput,
 } from '@primer/react'
 import { SlidersIcon, XIcon, PlusIcon, SprintIcon } from '../ui/primitives'
+import { ModalStepHeader } from '../ui/modal-step-header'
 import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
 import type { ExcludeCondition, SprintSettings } from '../../lib/storage'
 import { iterationEndDate, nextAfter } from '../../lib/sprint-utils'
 import { injectSprintFilter, SPRINT_FILTER } from '../../lib/filter-utils'
 import type { Iteration } from '../../lib/sprint-utils'
-
-console.log('[rgp:sprint] sprint-panel module loaded')
 import type { ProjectData } from '../../entries/content/observer'
 import { sprintConfirmEndStore } from '../../lib/sprint-confirm-end-store'
 
@@ -66,7 +65,7 @@ function sprintProgress(startDate: string, endDate: string): number {
   return Math.min(100, Math.round(((total - daysLeft(endDate)) / total) * 100))
 }
 
-// ── Settings view (inline, formerly SprintSettingsDrawer) ────
+// ── Settings view ────────────────────────────────────────────
 
 interface SettingsViewProps {
   projectId: string
@@ -76,10 +75,9 @@ interface SettingsViewProps {
   getFields: () => Promise<ProjectData>
   currentSettings: SprintSettings | null
   onSaved: () => void
-  onCancel: () => void
 }
 
-function SettingsView({ projectId, owner, isOrg, number, getFields, currentSettings, onSaved, onCancel }: SettingsViewProps) {
+function SettingsView({ projectId, owner, isOrg, number, getFields, currentSettings, onSaved }: SettingsViewProps) {
   const [fields, setFields] = useState<FieldNode[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -151,9 +149,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
         excludeConditions: excludeConditions.filter((c) => c.fieldId && (c.optionId || c.optionName.trim())),
       }
       await sendMessage('saveSprintSettings', { projectId, settings })
-      console.log('[rgp:sprint] settings saved — calling injectSprintFilter')
       injectSprintFilter()
-      console.log('[rgp:sprint] injectSprintFilter done')
       onSaved()
     } catch (e) {
       setError(String(e))
@@ -168,12 +164,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
 
   if (iterationFields.length === 0) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <Text sx={{ fontSize: 1, color: 'fg.muted' }}>This project has no iteration fields.</Text>
-        <Tippy content="Discard changes" placement="top" delay={[400, 0]} zIndex={10002}>
-          <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
-        </Tippy>
-      </Box>
+      <Text sx={{ fontSize: 1, color: 'fg.muted' }}>This project has no iteration fields.</Text>
     )
   }
 
@@ -311,7 +302,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
                   size="small"
                   aria-label="Remove exclusion"
                   onClick={() => removeExcludeCondition(idx)}
-                  sx={{ p: '5px', color: 'fg.muted', flexShrink: 0 }}
+                  sx={{ p: '5px', color: 'fg.muted', flexShrink: 0, boxShadow: 'none' }}
                 >
                   <XIcon size={12} />
                 </Button>
@@ -324,7 +315,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
             variant="invisible"
             size="small"
             onClick={addExcludeCondition}
-            sx={{ alignSelf: 'flex-start', color: 'fg.muted' }}
+            sx={{ alignSelf: 'flex-start', color: 'fg.muted', boxShadow: 'none' }}
           >
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
               <PlusIcon size={12} />
@@ -334,21 +325,18 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
         </Tippy>
       </Box>
 
-      {/* Actions */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted' }}>
-        <Flash variant="warning" sx={{ fontSize: 0 }}>
+      {/* Footer */}
+      <Box sx={{ pt: 2, borderTop: '1px solid', borderColor: 'border.default' }}>
+        <Flash variant="warning" sx={{ fontSize: 0, mb: 3 }}>
           Saving will automatically add{' '}
           <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>{SPRINT_FILTER}</Text>
           {' '}to the table filter if not already present.
         </Flash>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Tippy content="Save sprint settings" placement="top" delay={[400, 0]} zIndex={10002}>
-            <Button variant="primary" size="small" disabled={!canSave || saving} onClick={handleSave}>
-              {saving ? <Spinner size="small" /> : 'Save'}
+            <Button variant="primary" disabled={!canSave || saving} onClick={handleSave} sx={{ boxShadow: 'none' }}>
+              {saving ? <Spinner size="small" /> : 'Save Settings →'}
             </Button>
-          </Tippy>
-          <Tippy content="Discard changes" placement="top" delay={[400, 0]} zIndex={10002}>
-            <Button variant="default" size="small" onClick={onCancel}>Cancel</Button>
           </Tippy>
         </Box>
       </Box>
@@ -356,7 +344,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
   )
 }
 
-// ── End sprint view (inline, formerly EndSprintConfirmModal) ─
+// ── End sprint view ──────────────────────────────────────────
 
 interface EndSprintViewProps {
   projectId: string
@@ -365,11 +353,10 @@ interface EndSprintViewProps {
   number: number
   activeSprint: SprintInfo
   settings: SprintSettings
-  onClose: () => void
   onComplete: () => void
 }
 
-function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings, onClose, onComplete }: EndSprintViewProps) {
+function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings, onComplete }: EndSprintViewProps) {
   const [futureIterations, setFutureIterations] = useState<SprintInfo[]>([])
   const [selectedIterationId, setSelectedIterationId] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -420,15 +407,6 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.default' }}>
-          End {activeSprint.title}?
-        </Text>
-        <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-          {fmt(activeSprint.startDate)} – {fmt(activeSprint.endDate)}
-        </Text>
-      </Box>
-
       {!loaded && <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}><Spinner size="small" /></Box>}
 
       {error && <Flash variant="danger" sx={{ fontSize: 0 }}>{error}</Flash>}
@@ -464,18 +442,16 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
         </>
       )}
 
-      <Box sx={{ display: 'flex', gap: 2, pt: 2, borderTop: '1px solid', borderColor: 'border.muted' }}>
-        <Tippy content="Go back" placement="top" delay={[400, 0]} zIndex={10002}>
-          <Button variant="default" size="small" onClick={onClose}>Cancel</Button>
-        </Tippy>
+      {/* Footer */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2, borderTop: '1px solid', borderColor: 'border.default' }}>
         <Tippy content="Move open items to the next sprint" placement="top" delay={[400, 0]} zIndex={10002}>
           <Button
             variant="danger"
-            size="small"
             disabled={!loaded || hasNoFuture || !selectedIterationId || ending}
             onClick={handleEnd}
+            sx={{ boxShadow: 'none' }}
           >
-            {ending ? 'Ending…' : 'End Sprint'}
+            {ending ? 'Ending…' : 'End Sprint →'}
           </Button>
         </Tippy>
       </Box>
@@ -487,9 +463,7 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
 
 export function SprintPanel({ projectId, owner, isOrg, number, getFields, visible, onClose }: Props) {
   ensureTippyCss()
-  console.log('[rgp:sprint] SprintPanel rendered, visible:', visible)
 
-  // All hooks must be called unconditionally before any early return
   const [state, setState] = useState<PanelState>('loading')
   const [status, setStatus] = useState<SprintStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -503,10 +477,10 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
     try {
       const result = await sendMessage('getSprintStatus', { projectId, owner, number, isOrg })
       setStatus(result)
-      if (!result.hasSettings) { setState('not-configured'); console.log('[rgp:sprint] state: not-configured') }
-      else if (result.activeSprint) { setState('active'); console.log('[rgp:sprint] state: active, sprint:', result.activeSprint.title) }
-      else if (result.acknowledgedSprint) { setState('acknowledged'); console.log('[rgp:sprint] state: acknowledged, sprint:', result.acknowledgedSprint.title) }
-      else { setState('no-active'); console.log('[rgp:sprint] state: no-active') }
+      if (!result.hasSettings) setState('not-configured')
+      else if (result.activeSprint) setState('active')
+      else if (result.acknowledgedSprint) setState('acknowledged')
+      else setState('no-active')
     } catch (e) {
       console.error('[rgp:sprint] fetchStatus error:', e)
       setError(String(e))
@@ -556,30 +530,45 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
       onClick={onClose}
     >
       <Box
-        sx={{ bg: 'canvas.default', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: 480 }}
+        sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: 480 }}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }}
         onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
       >
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 3, py: 2, borderBottom: '1px solid', borderColor: 'border.default', bg: 'canvas.subtle' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <SprintIcon size={16} color="var(--fgColor-accent, #0969da)" />
-            <Text sx={{ fontWeight: 'semibold', fontSize: 1, color: 'fg.default' }}>Sprint</Text>
+        {/* Header — switches between ModalStepHeader (sub-views) and custom (main) */}
+        {showSettings ? (
+          <ModalStepHeader
+            title="Sprint Settings"
+            onBack={() => setShowSettings(false)}
+            onClose={onClose}
+          />
+        ) : confirmingEnd && status?.activeSprint ? (
+          <ModalStepHeader
+            title="End Sprint"
+            subtitle={`${status.activeSprint.title} · ${fmt(status.activeSprint.startDate)} – ${fmt(status.activeSprint.endDate)}`}
+            onBack={() => setConfirmingEnd(false)}
+            onClose={onClose}
+          />
+        ) : (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <SprintIcon size={16} color="var(--fgColor-accent, #0969da)" />
+              <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Sprint</Heading>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Tippy content="Sprint settings" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
+                <Button variant="invisible" size="small" onClick={() => setShowSettings((v) => !v)} aria-label="Sprint settings" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none' }}>
+                  <SlidersIcon size={16} />
+                </Button>
+              </Tippy>
+              <Tippy content="Close sprint panel" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
+                <Button variant="invisible" size="small" onClick={onClose} aria-label="Close sprint panel" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none' }}>
+                  <XIcon size={16} />
+                </Button>
+              </Tippy>
+            </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Tippy content="Sprint settings" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
-              <Button variant="invisible" size="small" onClick={() => setShowSettings((v) => !v)} aria-label="Sprint settings" sx={{ p: '5px', color: 'fg.muted', boxShadow: 'none' }}>
-                <SlidersIcon size={14} />
-              </Button>
-            </Tippy>
-            <Tippy content="Close sprint panel" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
-              <Button variant="invisible" size="small" onClick={onClose} aria-label="Close sprint panel" sx={{ p: '5px', color: 'fg.muted', boxShadow: 'none' }}>
-                <XIcon size={14} />
-              </Button>
-            </Tippy>
-          </Box>
-        </Box>
+        )}
 
         {/* Body */}
         <Box sx={{ px: 4, py: 3, minHeight: 160 }}>
@@ -592,7 +581,6 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
               getFields={getFields}
               currentSettings={status?.settings ?? null}
               onSaved={async () => { setShowSettings(false); await fetchStatus() }}
-              onCancel={() => setShowSettings(false)}
             />
           ) : confirmingEnd && status?.activeSprint && status?.settings ? (
             <EndSprintView
@@ -602,7 +590,6 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
               number={number}
               activeSprint={status.activeSprint}
               settings={status.settings}
-              onClose={() => setConfirmingEnd(false)}
               onComplete={async () => { setConfirmingEnd(false); await fetchStatus() }}
             />
           ) : (
@@ -620,7 +607,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                   <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Sprint tracking isn't set up for this project yet.</Text>
                   <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>Each GitHub project has its own sprint configuration.</Text>
                   <Tippy content="Configure sprint tracking for this project" placement="top" delay={[400, 0]} zIndex={10002}>
-                    <Button variant="primary" size="small" onClick={() => setShowSettings(true)}>Set Up Sprint</Button>
+                    <Button variant="primary" size="small" onClick={() => setShowSettings(true)} sx={{ boxShadow: 'none' }}>Set Up Sprint</Button>
                   </Tippy>
                 </Box>
               )}
@@ -637,7 +624,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                         Next: {status.nearestUpcoming.title} — starts {fmt(status.nearestUpcoming.startDate)}
                       </Text>
                       <Tippy content="Start tracking the upcoming sprint" placement="top" delay={[400, 0]} zIndex={10002}>
-                        <Button variant="primary" size="small" disabled={acknowledging} onClick={handleAcknowledge}>
+                        <Button variant="primary" size="small" disabled={acknowledging} onClick={handleAcknowledge} sx={{ boxShadow: 'none' }}>
                           {acknowledging ? <Spinner size="small" /> : 'Track Sprint'}
                         </Button>
                       </Tippy>
@@ -664,7 +651,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                   </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                     <Tippy content="Stop tracking this sprint" placement="top" delay={[400, 0]} zIndex={10002}>
-                      <Button variant="default" size="small" onClick={handleStopTracking}>Stop tracking</Button>
+                      <Button variant="default" size="small" onClick={handleStopTracking} sx={{ boxShadow: 'none' }}>Stop tracking</Button>
                     </Tippy>
                   </Box>
                 </Box>
@@ -686,7 +673,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                   </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                     <Tippy content="End the current sprint" placement="top" delay={[400, 0]} zIndex={10002}>
-                      <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)}>End Sprint</Button>
+                      <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)} sx={{ boxShadow: 'none' }}>End Sprint</Button>
                     </Tippy>
                   </Box>
                 </Box>

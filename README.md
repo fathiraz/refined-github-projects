@@ -32,6 +32,7 @@
 - [Architecture](#️-architecture)
 - [Tech Stack](#️-tech-stack)
 - [Getting Started](#-getting-started)
+- [Tested On](#tested-on)
 - [Usage Guide](#-usage-guide)
 - [Roadmap](#️-roadmap)
 - [Contributing](#-contributing)
@@ -80,6 +81,14 @@ GitHub Projects V2 is powerful, but managing dozens or hundreds of items is pain
 ---
 
 ## Installation
+
+### Tested On
+
+| Browser | Engine | Status |
+|---------|--------|--------|
+| Arc | Chromium | Tested |
+| Microsoft Edge | Chromium | Tested |
+| Zen | Firefox (Gecko) | Tested |
 
 ### For Humans
 
