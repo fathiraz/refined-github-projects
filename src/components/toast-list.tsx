@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Box, Button, Flash, Text } from '@primer/react'
 import { toastStore, type ToastEntry } from '../lib/toast-store'
 import { AlertIcon, CheckIcon, InfoIcon, XIcon } from './ui/primitives'
+import { Z_OVERLAY } from '../lib/z-index'
 
 const FLASH_VARIANT: Record<ToastEntry['type'], 'success' | 'warning' | 'danger' | 'default'> = {
   success: 'success',
@@ -58,7 +59,16 @@ function ToastCard({ toast }: { toast: ToastEntry }) {
               variant="invisible"
               size="small"
               onClick={toast.action.onClick}
-              sx={{ px: 1, py: '2px', fontSize: 0, fontWeight: 'bold', color: 'accent.fg', boxShadow: 'none' }}
+              sx={{
+                px: 1, py: '2px', fontSize: 0, fontWeight: 'bold', color: 'accent.fg', boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
             >
               {toast.action.label}
             </Button>
@@ -68,7 +78,16 @@ function ToastCard({ toast }: { toast: ToastEntry }) {
             size="small"
             onClick={() => toastStore.dismiss(toast.id)}
             aria-label="Dismiss"
-            sx={{ p: '2px', minWidth: 'unset', color: 'fg.muted', boxShadow: 'none' }}
+            sx={{
+              p: '2px', minWidth: 'unset', color: 'fg.muted', boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}
           >
             <XIcon size={13} />
           </Button>
@@ -103,7 +122,7 @@ export function ToastList() {
 
   return (
     <Box sx={{
-      position: 'fixed', left: 3, bottom: 3, zIndex: 9999,
+      position: 'fixed', left: 3, bottom: 3, zIndex: Z_OVERLAY,
       width: 'min(340px, calc(100vw - 40px))',
       display: 'flex', flexDirection: 'column', gap: 1,
     }}>

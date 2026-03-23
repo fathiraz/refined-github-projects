@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Autocomplete, Box, Button, Spinner, Text } from '@primer/react'
 import { LockIcon, SearchIcon } from '../ui/primitives'
+import { Z_MODAL } from '../../lib/z-index'
 import { ModalStepHeader } from '../ui/modal-step-header'
 import { sendMessage } from '../../lib/messages'
 
@@ -61,7 +62,7 @@ export function BulkTransferModal({ count, owner, firstItemId, projectId, onClos
   )
 
   return (
-    <Box sx={{ position: 'fixed', inset: 0, bg: 'rgba(27,31,36,0.5)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Box sx={{ position: 'fixed', inset: 0, bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Box sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
         <ModalStepHeader title="Transfer Issues" onClose={onClose} />
 
@@ -112,7 +113,16 @@ export function BulkTransferModal({ count, owner, firstItemId, projectId, onClos
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, px: 4, pb: 3 }}>
-          <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none' }}>Cancel</Button>
+          <Button variant="default" onClick={onClose} sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}>Cancel</Button>
           <Button
             variant="primary"
             disabled={selected === null}
@@ -121,7 +131,16 @@ export function BulkTransferModal({ count, owner, firstItemId, projectId, onClos
               const [repoOwner, repoName] = selected.nameWithOwner.split('/')
               onConfirm(repoOwner, repoName)
             }}
-            sx={{ boxShadow: 'none' }}
+            sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
           >
             Transfer Issue{count !== 1 ? 's' : ''} →
           </Button>

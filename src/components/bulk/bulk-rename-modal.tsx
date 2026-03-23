@@ -3,6 +3,7 @@ import { Box, Button, Spinner, Text } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
 import { PencilIcon } from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
+import { Z_MODAL } from '../../lib/z-index'
 
 type Stage = 'LOADING' | 'CONFIGURE' | 'PREVIEW' | 'ERROR'
 type RenameTab = 'FIND_REPLACE' | 'PREFIX_SUFFIX'
@@ -89,7 +90,7 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
 
   const overlayStyle = {
     position: 'fixed' as const, inset: 0,
-    bg: 'rgba(27,31,36,0.5)', zIndex: 10001,
+    bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }
 
@@ -126,7 +127,16 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
             </Box>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 4, pb: 3 }}>
-            <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none' }}>Close</Button>
+            <Button variant="default" onClick={onClose} sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}>Close</Button>
           </Box>
         </Box>
       </Box>
@@ -154,7 +164,16 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
 
           {/* Footer */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
-            <Button variant="primary" onClick={handleConfirm} sx={{ boxShadow: 'none' }}>
+            <Button variant="primary" onClick={handleConfirm} sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}>
               Rename {changedCount} item{changedCount !== 1 ? 's' : ''}
             </Button>
           </Box>
@@ -308,12 +327,30 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
             {changedCount} of {count} title{count !== 1 ? 's' : ''} will change
           </Text>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none' }}>Cancel</Button>
+            <Button variant="default" onClick={onClose} sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}>Cancel</Button>
             <Button
               variant="primary"
               disabled={changedCount === 0}
               onClick={() => setStage('PREVIEW')}
-              sx={{ boxShadow: 'none' }}
+              sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}
             >
               Preview →
             </Button>

@@ -80,7 +80,16 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
               variant="invisible"
               aria-label="Dismiss"
               onClick={() => setError(null)}
-              sx={{ boxShadow: 'none', color: 'fg.muted', p: 1, flexShrink: 0 }}
+              sx={{
+                boxShadow: 'none', color: 'fg.muted', p: 1, flexShrink: 0,
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
             >
               <XIcon size={14} />
             </Button>
@@ -157,12 +166,30 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
             onClick={saveToken}
             disabled={!hasToken || validating}
             loading={validating}
-            sx={{ boxShadow: 'none' }}
+            sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
           >
             {hasToken ? 'Validate and save token' : 'Add a token to continue'}
           </Button>
           {onOpenOptions && (
-            <Button variant="default" onClick={onOpenOptions} sx={{ boxShadow: 'none' }}>
+            <Button variant="default" onClick={onOpenOptions} sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}>
               Open full setup
             </Button>
           )}

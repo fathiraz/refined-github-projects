@@ -23,6 +23,7 @@ import {
   CircleSlashIcon, TrashIcon, CopyIcon,
   ListCheckIcon, DownloadIcon, SyncIcon, LockIcon, PinIcon, UnpinIcon, ArrowRightIcon, XIcon, PencilIcon, MoveIcon,
 } from './ui/primitives'
+import { Z_OVERLAY } from '../lib/z-index'
 
 interface Props {
   projectId: string
@@ -504,7 +505,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         position: 'fixed', left: '50%', bottom: 4,
         transform: 'translateX(-50%)',
         width: 'min(760px, calc(100vw - 32px))',
-        zIndex: 9999,
+        zIndex: Z_OVERLAY,
         bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
         borderRadius: 2, px: 4, py: 3,
         display: 'flex', flexDirection: 'column',
@@ -550,9 +551,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
               onClick={() => setMenuOpen(o => !o)}
               sx={{
                 boxShadow: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px',
-                transition: 'transform 80ms ease',
-                ':active': { transform: 'scale(0.97)' },
-                '@media (prefers-reduced-motion: reduce)': { transition: 'none', ':active': { transform: 'none' } },
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
               }}
             >
               <ListCheckIcon size={14} />
@@ -764,10 +766,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
               sx={{
                 color: 'fg.muted', boxShadow: 'none', p: '5px',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'transform 80ms ease, color 120ms ease',
-                ':hover': { color: 'fg.default', bg: 'canvas.subtle' },
-                ':active': { transform: 'scale(0.88)', color: 'fg.default' },
-                '@media (prefers-reduced-motion: reduce)': { transition: 'none', ':active': { transform: 'none' } },
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms', color: 'fg.default' },
+                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
               }}
             >
               <XIcon size={14} />

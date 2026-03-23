@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { extractItemId, getStoredItemId, getAllInjectedItemIds, INJECTED_ATTR } from '../../lib/dom-utils'
 import { portalStore } from '../../lib/portal-store'
+import { Z_TOOLTIP } from '../../lib/z-index'
 
 /** Attribute for group-header / select-all checkboxes. */
 export const GROUP_CB_ATTR = 'data-rgp-gcb'
@@ -133,7 +134,7 @@ export function injectCheckboxStyles() {
       vertical-align: top;
       padding: 2px;
       opacity: 1;
-      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted, #d0d7de);
+      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted);
     }
     /* Persistent bottom divider — always visible regardless of hover */
     .rgp-cb-cell::after {
@@ -143,7 +144,7 @@ export function injectCheckboxStyles() {
       left: 0;
       right: 0;
       height: var(--borderWidth-thin, 1px);
-      background: var(--borderColor-muted, #d0d7de);
+      background: var(--borderColor-muted);
       pointer-events: none;
       z-index: 1;
     }
@@ -158,7 +159,7 @@ export function injectCheckboxStyles() {
       border-radius: 4px;
       flex-shrink: 0;
       cursor: grab;
-      color: var(--fgColor-muted, var(--color-fg-muted, #57606a));
+      color: var(--fgColor-muted, var(--color-fg-muted));
       opacity: 0;
       transition: opacity 160ms ease, background-color 120ms ease, transform 150ms ease;
     }
@@ -175,11 +176,11 @@ export function injectCheckboxStyles() {
       cursor: grabbing;
     }
     .rgp-dnd-handle:hover {
-      background-color: var(--bgColor-neutral-muted, var(--color-neutral-subtle, rgba(175,184,193,0.2)));
+      background-color: var(--bgColor-neutral-muted, var(--color-neutral-subtle));
       opacity: 0.65 !important;
     }
     .rgp-dnd-handle:focus-visible {
-      outline: 2px solid var(--color-accent-emphasis, #0969da);
+      outline: 2px solid var(--color-accent-emphasis);
       outline-offset: 2px;
     }
     .rgp-dnd-handle::after {
@@ -188,8 +189,8 @@ export function injectCheckboxStyles() {
       bottom: calc(100% + 6px);
       left: 50%;
       transform: translateX(-50%);
-      background: var(--bgColor-emphasis, #24292f);
-      color: var(--fgColor-onEmphasis, var(--color-fg-on-emphasis, #fff));
+      background: var(--bgColor-emphasis);
+      color: var(--fgColor-onEmphasis, var(--color-fg-on-emphasis));
       font-size: 11px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       white-space: nowrap;
@@ -198,7 +199,7 @@ export function injectCheckboxStyles() {
       pointer-events: none;
       opacity: 0;
       transition: opacity 120ms ease 500ms;
-      z-index: 10001;
+      z-index: ${Z_TOOLTIP};
     }
     .rgp-dnd-handle:hover::after {
       opacity: 1;
@@ -214,7 +215,7 @@ export function injectCheckboxStyles() {
       height: 34px;
       padding: 2px;
       opacity: 1;
-      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted, #d0d7de);
+      border-right: var(--borderWidth-thin, 1px) solid var(--borderColor-muted);
     }
     /* Persistent bottom divider for header — always visible */
     .rgp-cb-cell--header::after {
@@ -224,7 +225,7 @@ export function injectCheckboxStyles() {
       left: 0;
       right: 0;
       height: var(--borderWidth-thin, 1px);
-      background: var(--borderColor-muted, #d0d7de);
+      background: var(--borderColor-muted);
       pointer-events: none;
       z-index: 1;
     }
@@ -288,7 +289,7 @@ export function injectCheckboxStyles() {
     }
 
     .rgp-selection-control:focus-visible {
-      outline: 2px solid var(--color-accent-emphasis, #0969da);
+      outline: 2px solid var(--color-accent-emphasis);
       outline-offset: 2px;
     }
 
@@ -299,27 +300,27 @@ export function injectCheckboxStyles() {
       align-items: center;
       justify-content: center;
       border-radius: 3px;
-      border: 1.5px solid var(--color-border-default, #d0d7de);
-      background: var(--color-canvas-default, #ffffff);
+      border: 1.5px solid var(--color-border-default);
+      background: var(--color-canvas-default);
       color: transparent;
       transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
     }
     html[data-color-mode="dark"] .rgp-selection-control__box {
-      background: var(--color-canvas-overlay, #161b22);
-      border-color: var(--color-border-default, #30363d);
+      background: var(--color-canvas-overlay);
+      border-color: var(--color-border-default);
     }
     @media (prefers-color-scheme: dark) {
       html[data-color-mode="auto"] .rgp-selection-control__box {
-        background: var(--color-canvas-overlay, #161b22);
-        border-color: var(--color-border-default, #30363d);
+        background: var(--color-canvas-overlay);
+        border-color: var(--color-border-default);
       }
     }
 
     .rgp-selection-control[data-state="checked"] .rgp-selection-control__box,
     .rgp-selection-control[data-state="indeterminate"] .rgp-selection-control__box {
-      background: var(--color-accent-emphasis, #0969da);
-      border-color: var(--color-accent-emphasis, #0969da);
-      color: var(--color-fg-on-emphasis, #ffffff);
+      background: var(--color-accent-emphasis);
+      border-color: var(--color-accent-emphasis);
+      color: var(--color-fg-on-emphasis);
       transform: scale(1.02);
     }
 
@@ -332,7 +333,7 @@ export function injectCheckboxStyles() {
 
     [role="row"]:has(.rgp-selection-control[data-state="checked"]) {
       background-color: var(--color-accent-subtle, rgba(9, 105, 218, 0.06)) !important;
-      box-shadow: inset 2px 0 0 var(--color-accent-emphasis, #0969da);
+      box-shadow: inset 2px 0 0 var(--color-accent-emphasis);
     }
 
     .rgp-deep-dup-btn {

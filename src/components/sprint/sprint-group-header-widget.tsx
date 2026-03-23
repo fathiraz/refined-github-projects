@@ -103,9 +103,10 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                     border: 'none',
                     borderRadius: 2,
                     boxShadow: 'none',
-                    transition: 'background-color 120ms ease',
-                    '&:hover:not([disabled])': { bg: 'accent.subtle' },
-                    '&:active:not([disabled])': { bg: 'canvas.inset' },
+                    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
+                    '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                    '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
                   }}
                 >
                   {acknowledging ? <Spinner size="small" /> : 'Start Sprint'}
@@ -126,8 +127,10 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                   border: 'none',
                   borderRadius: 1,
                   boxShadow: 'none',
-                  transition: 'color 150ms ease, background-color 150ms ease',
-                  '&:hover:not([disabled])': { color: 'fg.default', bg: 'canvas.subtle' },
+                  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
+                  '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                  '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
                 }}
               >
                 <SlidersIcon size={14} />
@@ -156,9 +159,10 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                   border: 'none',
                   borderRadius: 2,
                   boxShadow: 'none',
-                  transition: 'background-color 120ms ease',
-                  '&:hover:not([disabled])': { bg: 'accent.subtle' },
-                  '&:active:not([disabled])': { bg: 'canvas.inset' },
+                  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
+                  '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                  '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
                 }}
               >
                 End Sprint
@@ -178,8 +182,10 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                   border: 'none',
                   borderRadius: 1,
                   boxShadow: 'none',
-                  transition: 'color 150ms ease, background-color 150ms ease',
-                  '&:hover:not([disabled])': { color: 'fg.default', bg: 'canvas.subtle' },
+                  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
+                  '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                  '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
                 }}
               >
                 <SlidersIcon size={14} />
