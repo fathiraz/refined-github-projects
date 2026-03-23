@@ -1,7 +1,7 @@
 # Refined GitHub Projects
 
 <p align="center">
-  <img src="src/assets/images/demo.gif" alt="Refined GitHub Projects — Select many. Edit once." width="100%" />
+  <img src="src/assets/images/demo.gif" alt="Refined GitHub Projects — Bulk superpowers for GitHub Projects V2" width="100%" />
 </p>
 
 <p align="center">
@@ -121,19 +121,19 @@ GitHub's native duplicate copies only the title. Deep Duplicate clones the full 
 
 ---
 
-### Live Queue Tracker
+### Sprint Management
 
 <p align="center">
-  <img src="src/assets/images/screenshot-4.png" alt="Live Queue Tracker" width="100%" />
+  <img src="src/assets/images/screenshot-4.png" alt="Sprint Management" width="100%" />
 </p>
 
-Every bulk operation runs through a sequential background queue with 1-second delays between mutations. The live tracker shows real-time percentage progress and automatically backs off on 403 / 429 errors — keeping your PAT safe.
+End a sprint with one click. The **Sprint** widget (top-right on any Projects page) shows the active iteration and task completion. Hit **End Sprint**, pick the target iteration for incomplete items, and the background queue moves them automatically — no manual re-assignment.
 
 ---
 
-### Sprint Management
+### Live Queue Tracker
 
-End a sprint with one click. Incomplete items are automatically moved to the next iteration — no manual re-assignment.
+Every bulk operation runs through a sequential background queue with 1-second delays between mutations. The live tracker shows real-time percentage progress and automatically backs off on 403 / 429 errors — keeping your PAT safe on large projects.
 
 ---
 
