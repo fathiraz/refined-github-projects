@@ -33,7 +33,16 @@ export function ModalStepHeader({ title, onClose, icon, step, totalSteps, subtit
           variant="default"
           size="small"
           onClick={onBack}
-          sx={{ mt: '2px', boxShadow: 'none', px: 2, flexShrink: 0 }}
+          sx={{
+            mt: '2px', boxShadow: 'none', px: 2, flexShrink: 0,
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
         >
           ←
         </Button>
@@ -63,7 +72,16 @@ export function ModalStepHeader({ title, onClose, icon, step, totalSteps, subtit
           size="small"
           onClick={onClose}
           aria-label="Close"
-          sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted', boxShadow: 'none' }}
+          sx={{
+            p: '4px', minWidth: 'unset', color: 'fg.muted', boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
         >
           <XIcon size={16} />
         </Button>

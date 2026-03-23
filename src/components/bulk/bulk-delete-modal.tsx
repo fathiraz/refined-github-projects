@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Button, Flash, Heading, Text } from '@primer/react'
 import { XIcon } from '../ui/primitives'
+import { Z_MODAL } from '../../lib/z-index'
 
 interface Props {
   count: number
@@ -13,7 +14,7 @@ export function BulkDeleteModal({ count, onClose, onConfirm }: Props) {
     <Box
       sx={{
         position: 'fixed', inset: 0,
-        bg: 'rgba(27,31,36,0.5)', zIndex: 10000,
+        bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
@@ -38,8 +39,26 @@ export function BulkDeleteModal({ count, onClose, onConfirm }: Props) {
 
         {/* Footer */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, px: 4, pb: 3 }}>
-          <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none' }}>Cancel</Button>
-          <Button variant="danger" onClick={onConfirm} sx={{ boxShadow: 'none' }}>
+          <Button variant="default" onClick={onClose} sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}>Cancel</Button>
+          <Button variant="danger" onClick={onConfirm} sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}>
             Remove {count} Item{count !== 1 ? 's' : ''} →
           </Button>
         </Box>

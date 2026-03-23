@@ -5,6 +5,7 @@ import { Box, Button, Flash, ProgressBar, Spinner, Text } from '@primer/react'
 import { queueStore, type ProcessEntry } from '../lib/queue-store'
 import { sendMessage } from '../lib/messages'
 import { CheckIcon, XIcon } from './ui/primitives'
+import { Z_OVERLAY } from '../lib/z-index'
 
 function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (processId: string, isDone: boolean) => void }) {
   ensureTippyCss()
@@ -117,7 +118,16 @@ function ProcessCard({ entry, onDismiss }: { entry: ProcessEntry; onDismiss: (pr
           size="small"
           onClick={() => onDismiss(entry.processId, isDone)}
           aria-label={isDone ? 'Dismiss' : 'Cancel'}
-          sx={{ p: '2px', minWidth: 'unset', color: 'fg.muted', flexShrink: 0 }}
+          sx={{
+            p: '2px', minWidth: 'unset', color: 'fg.muted', flexShrink: 0,
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
         >
           <XIcon size={16} />
         </Button>
@@ -145,7 +155,7 @@ export function QueueTracker() {
 
   return (
     <Box sx={{
-      position: 'fixed', right: 3, bottom: 3, zIndex: 9999,
+      position: 'fixed', right: 3, bottom: 3, zIndex: Z_OVERLAY,
       width: 'min(380px, calc(100vw - 40px))',
       display: 'flex', flexDirection: 'column', gap: 2,
     }}>

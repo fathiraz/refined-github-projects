@@ -8,6 +8,7 @@ import {
   TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon, PencilIcon,
 } from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
+import { Z_MODAL } from '../../lib/z-index'
 
 export interface ProjectField {
   id: string
@@ -49,21 +50,21 @@ interface WizardProps {
 // ── Field icon helpers ──────────────────────────────────────
 
 const FIELD_COLORS: Record<string, string> = {
-  ASSIGNEES:     'var(--color-accent-fg, #0969da)',
-  LABELS:        'var(--color-success-fg, #1a7f37)',
-  ISSUE_TYPE:    'var(--color-done-fg, #8250df)',
-  SINGLE_SELECT: 'var(--color-attention-fg, #9a6700)',
-  ITERATION:     'var(--color-done-fg, #8250df)',
-  NUMBER:        'var(--color-accent-fg, #0969da)',
-  DATE:          'var(--color-danger-fg, #cf222e)',
-  TEXT:          'var(--fgColor-muted, #8b949e)',
-  TITLE:         'var(--color-accent-fg, #0969da)',
-  BODY:          'var(--fgColor-muted, #8b949e)',
-  COMMENT:       'var(--color-success-fg, #1a7f37)',
+  ASSIGNEES:     'var(--color-accent-fg)',
+  LABELS:        'var(--color-success-fg)',
+  ISSUE_TYPE:    'var(--color-done-fg)',
+  SINGLE_SELECT: 'var(--color-attention-fg)',
+  ITERATION:     'var(--color-done-fg)',
+  NUMBER:        'var(--color-accent-fg)',
+  DATE:          'var(--color-danger-fg)',
+  TEXT:          'var(--fgColor-muted)',
+  TITLE:         'var(--color-accent-fg)',
+  BODY:          'var(--fgColor-muted)',
+  COMMENT:       'var(--color-success-fg)',
 }
 
 function getFieldIcon(dataType: string): React.ReactNode {
-  const c = FIELD_COLORS[dataType] ?? 'var(--fgColor-muted, #8b949e)'
+  const c = FIELD_COLORS[dataType] ?? 'var(--fgColor-muted)'
   switch (dataType) {
     case 'ASSIGNEES':     return <PersonIcon color={c} />
     case 'LABELS':        return <TagIcon color={c} />
@@ -95,8 +96,8 @@ function TokenWarning({ onClose, onOpenOptions }: { onClose: () => void; onOpenO
         </Text>
       </Box>
       <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none' }}>Cancel</Button>
-        <Button variant="primary" onClick={onOpenOptions} sx={{ boxShadow: 'none' }}>Set up token</Button>
+        <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Cancel</Button>
+        <Button variant="primary" onClick={onOpenOptions} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Set up token</Button>
       </Box>
     </Box>
   )
@@ -145,7 +146,7 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
           variant="invisible"
           size="small"
           onClick={() => onSetSelectedFields(allSelected ? [] : allEligibleFields)}
-          sx={{ p: 0, color: 'accent.fg', fontSize: 1, fontWeight: 'bold' }}
+          sx={{ p: 0, color: 'accent.fg', fontSize: 1, fontWeight: 'bold', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
         >
           {allSelected ? 'Deselect all' : 'Select all'}
         </Button>
@@ -187,11 +188,11 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Custom Fields</Text>
-              <GearIcon color="var(--fgColor-muted, #8b949e)" />
+              <GearIcon color="var(--fgColor-muted)" />
             </Box>
             <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
               <Box sx={{ bg: 'canvas.subtle', px: 3, py: 2, borderBottom: '1px solid', borderColor: 'border.default', display: 'flex', alignItems: 'center', gap: 2 }}>
-                <ProjectBoardIcon color="var(--fgColor-muted, #8b949e)" />
+                <ProjectBoardIcon color="var(--fgColor-muted)" />
                 <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{projectData.title}</Text>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', p: 1 }}>
@@ -231,7 +232,7 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
       </Box>
 
       <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="primary" disabled={selectedFields.length === 0} onClick={onNext} sx={{ boxShadow: 'none' }}>
+        <Button variant="primary" disabled={selectedFields.length === 0} onClick={onNext} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
           Next: Set Values →
         </Button>
       </Box>
@@ -318,7 +319,7 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
                         <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 'bold' }}>{iter.title}</Text>
                         <Text sx={{ color: 'fg.muted', fontSize: 0, mt: '2px' }}>{iter.startDate}</Text>
                       </Box>
-                      {isSelected && <CheckIcon size={14} color="var(--color-accent-fg, #0969da)" />}
+                      {isSelected && <CheckIcon size={14} color="var(--color-accent-fg)" />}
                     </Box>
                   )
                 })}
@@ -418,8 +419,8 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
       </Box>
 
       <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'space-between' }}>
-        <Button variant="default" onClick={onBack} sx={{ boxShadow: 'none' }}>← Back</Button>
-        <Button variant="primary" onClick={onNext} sx={{ boxShadow: 'none' }}>Review Changes →</Button>
+        <Button variant="default" onClick={onBack} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>← Back</Button>
+        <Button variant="primary" onClick={onNext} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Review Changes →</Button>
       </Box>
     </>
   )
@@ -494,8 +495,8 @@ function SummaryStep({ count, selectedFields, fieldValues, concurrentError, appl
           </Flash>
         )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button variant="default" onClick={onBack} sx={{ boxShadow: 'none' }}>← Back</Button>
-          <Button ref={applyBtnRef} variant="primary" onClick={onApply} sx={{ boxShadow: 'none' }}>
+          <Button variant="default" onClick={onBack} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>← Back</Button>
+          <Button ref={applyBtnRef} variant="primary" onClick={onApply} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
             Apply to {count} Item{count !== 1 ? 's' : ''}
           </Button>
         </Box>
@@ -515,7 +516,7 @@ export function BulkEditWizard({
     <Box
       sx={{
         position: 'fixed', inset: 0,
-        bg: 'rgba(27,31,36,0.5)', zIndex: 10000,
+        bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
       onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
@@ -525,6 +526,8 @@ export function BulkEditWizard({
         bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
         borderRadius: 2, width: 'min(640px, 90vw)', maxHeight: '80vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
       }}>
         {step === 'TOKEN_WARNING' && (
           <TokenWarning onClose={onClose} onOpenOptions={onOpenOptions} />

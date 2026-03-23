@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Tippy from '@tippyjs/react'
 import { ensureTippyCss } from '../../lib/tippy-utils'
 import {
-  Box, Button, Flash, FormControl, Heading, Radio, RadioGroup,
+  Box, Button, Flash, FormControl, Heading, Label, Radio, RadioGroup,
   Select, Spinner, Text, TextInput,
 } from '@primer/react'
+import { Z_MODAL, Z_TOOLTIP } from '../../lib/z-index'
 import { SlidersIcon, XIcon, PlusIcon, SprintIcon } from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
 import { sendMessage } from '../../lib/messages'
@@ -296,13 +297,13 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
                 />
               )}
 
-              <Tippy content="Remove exclusion rule" placement="top" delay={[400, 0]} zIndex={10002}>
+              <Tippy content="Remove exclusion rule" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
                 <Button
                   variant="invisible"
                   size="small"
                   aria-label="Remove exclusion"
                   onClick={() => removeExcludeCondition(idx)}
-                  sx={{ p: '5px', color: 'fg.muted', flexShrink: 0, boxShadow: 'none' }}
+                  sx={{ p: '5px', color: 'fg.muted', flexShrink: 0, boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
                 >
                   <XIcon size={12} />
                 </Button>
@@ -310,12 +311,12 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
             </Box>
           )
         })}
-        <Tippy content="Add a field exclusion rule" placement="top" delay={[400, 0]} zIndex={10002}>
+        <Tippy content="Add a field exclusion rule" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
           <Button
             variant="invisible"
             size="small"
             onClick={addExcludeCondition}
-            sx={{ alignSelf: 'flex-start', color: 'fg.muted', boxShadow: 'none' }}
+            sx={{ alignSelf: 'flex-start', color: 'fg.muted', boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
           >
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
               <PlusIcon size={12} />
@@ -333,8 +334,8 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
           {' '}to the table filter if not already present.
         </Flash>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Tippy content="Save sprint settings" placement="top" delay={[400, 0]} zIndex={10002}>
-            <Button variant="primary" disabled={!canSave || saving} onClick={handleSave} sx={{ boxShadow: 'none' }}>
+          <Tippy content="Save sprint settings" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+            <Button variant="primary" disabled={!canSave || saving} onClick={handleSave} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
               {saving ? <Spinner size="small" /> : 'Save Settings →'}
             </Button>
           </Tippy>
@@ -444,12 +445,12 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
 
       {/* Footer */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2, borderTop: '1px solid', borderColor: 'border.default' }}>
-        <Tippy content="Move open items to the next sprint" placement="top" delay={[400, 0]} zIndex={10002}>
+        <Tippy content="Move open items to the next sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
           <Button
             variant="danger"
             disabled={!loaded || hasNoFuture || !selectedIterationId || ending}
             onClick={handleEnd}
-            sx={{ boxShadow: 'none' }}
+            sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
           >
             {ending ? 'Ending…' : 'End Sprint →'}
           </Button>
@@ -526,11 +527,11 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
 
   return (
     <Box
-      sx={{ position: 'fixed', inset: 0, bg: 'rgba(27,31,36,0.5)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      sx={{ position: 'fixed', inset: 0, bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       onClick={onClose}
     >
       <Box
-        sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: 480 }}
+        sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: 480, animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }}
         onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
@@ -552,17 +553,17 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
         ) : (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <SprintIcon size={16} color="var(--fgColor-accent, #0969da)" />
+              <SprintIcon size={16} color="var(--fgColor-accent)" />
               <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Sprint</Heading>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Tippy content="Sprint settings" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
-                <Button variant="invisible" size="small" onClick={() => setShowSettings((v) => !v)} aria-label="Sprint settings" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none' }}>
+              <Tippy content="Sprint settings" placement="bottom-end" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+                <Button variant="invisible" size="small" onClick={() => setShowSettings((v) => !v)} aria-label="Sprint settings" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
                   <SlidersIcon size={16} />
                 </Button>
               </Tippy>
-              <Tippy content="Close sprint panel" placement="bottom-end" delay={[400, 0]} zIndex={10002}>
-                <Button variant="invisible" size="small" onClick={onClose} aria-label="Close sprint panel" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none' }}>
+              <Tippy content="Close sprint panel" placement="bottom-end" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+                <Button variant="invisible" size="small" onClick={onClose} aria-label="Close sprint panel" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
                   <XIcon size={16} />
                 </Button>
               </Tippy>
@@ -606,8 +607,8 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Sprint tracking isn't set up for this project yet.</Text>
                   <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>Each GitHub project has its own sprint configuration.</Text>
-                  <Tippy content="Configure sprint tracking for this project" placement="top" delay={[400, 0]} zIndex={10002}>
-                    <Button variant="primary" size="small" onClick={() => setShowSettings(true)} sx={{ boxShadow: 'none' }}>Set Up Sprint</Button>
+                  <Tippy content="Configure sprint tracking for this project" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+                    <Button variant="primary" size="small" onClick={() => setShowSettings(true)} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Set Up Sprint</Button>
                   </Tippy>
                 </Box>
               )}
@@ -623,8 +624,8 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                       <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
                         Next: {status.nearestUpcoming.title} — starts {fmt(status.nearestUpcoming.startDate)}
                       </Text>
-                      <Tippy content="Start tracking the upcoming sprint" placement="top" delay={[400, 0]} zIndex={10002}>
-                        <Button variant="primary" size="small" disabled={acknowledging} onClick={handleAcknowledge} sx={{ boxShadow: 'none' }}>
+                      <Tippy content="Start tracking the upcoming sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+                        <Button variant="primary" size="small" disabled={acknowledging} onClick={handleAcknowledge} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
                           {acknowledging ? <Spinner size="small" /> : 'Track Sprint'}
                         </Button>
                       </Tippy>
@@ -637,9 +638,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.default' }}>{currentSprint.title}</Text>
-                    <Text sx={{ fontSize: 0, color: 'fg.muted', bg: 'canvas.subtle', border: '1px solid', borderColor: 'border.muted', borderRadius: '2em', px: 2, py: '2px', lineHeight: 1.5 }}>
-                      Upcoming
-                    </Text>
+                    <Label variant="attention">Upcoming</Label>
                   </Box>
                   <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
                     {fmt(currentSprint.startDate)} – {fmt(currentSprint.endDate)}
@@ -650,8 +649,8 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                     {' '}is applied automatically on save.
                   </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                    <Tippy content="Stop tracking this sprint" placement="top" delay={[400, 0]} zIndex={10002}>
-                      <Button variant="default" size="small" onClick={handleStopTracking} sx={{ boxShadow: 'none' }}>Stop tracking</Button>
+                    <Tippy content="Stop tracking this sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+                      <Button variant="default" size="small" onClick={handleStopTracking} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Stop tracking</Button>
                     </Tippy>
                   </Box>
                 </Box>
@@ -672,8 +671,8 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                     {' '}is applied automatically on save.
                   </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                    <Tippy content="End the current sprint" placement="top" delay={[400, 0]} zIndex={10002}>
-                      <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)} sx={{ boxShadow: 'none' }}>End Sprint</Button>
+                    <Tippy content="End the current sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+                      <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>End Sprint</Button>
                     </Tippy>
                   </Box>
                 </Box>

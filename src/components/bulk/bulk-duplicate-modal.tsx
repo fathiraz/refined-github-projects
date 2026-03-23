@@ -6,6 +6,7 @@ import { flyToTracker } from '../../lib/fly-animation'
 import { AutocompleteInput } from '../ui/autocomplete-input'
 import { MarkdownTextarea } from '../ui/markdown-textarea'
 import { CopyIcon, XIcon } from '../ui/primitives'
+import { Z_MODAL } from '../../lib/z-index'
 
 type Step = 'LOADING' | 'PREVIEW' | 'ERROR'
 
@@ -99,7 +100,7 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
     <Box
       sx={{
         position: 'fixed', inset: 0,
-        bg: 'rgba(27,31,36,0.5)', zIndex: 10001,
+        bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
       onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }}
@@ -137,7 +138,16 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
             <Flash variant="danger" sx={{ width: '100%' }}>
               {error || 'An error occurred.'}
             </Flash>
-            <Button variant="default" onClick={onClose}>Close</Button>
+            <Button variant="default" onClick={onClose} sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}>Close</Button>
           </Box>
         )}
 
@@ -327,8 +337,27 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
             {/* Footer */}
             <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-              <Button variant="default" onClick={onClose}>Cancel</Button>
-              <Button ref={duplicateBtnRef} variant="primary" onClick={handleDuplicate} sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+              <Button variant="default" onClick={onClose} sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}>Cancel</Button>
+              <Button ref={duplicateBtnRef} variant="primary" onClick={handleDuplicate} sx={{
+                display: 'inline-flex', alignItems: 'center', gap: 1,
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}>
                 <CopyIcon size={14} />
                 Duplicate →
               </Button>
