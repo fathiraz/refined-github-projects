@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import Tippy from '@tippyjs/react'
 import { ensureTippyCss } from '../../lib/tippy-utils'
-import { Box, Button, Spinner, Text } from '@primer/react'
+import { Box, Button, Label, Spinner, Text } from '@primer/react'
 import { SlidersIcon } from '../ui/primitives'
 import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
@@ -76,81 +76,53 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
     }
   }
 
+  const normalizedError = (error ?? 'Unable to load sprint status').replace(/^Error:\s*/, '').trim()
+  const displayError =
+    normalizedError.length > 72 ? `${normalizedError.slice(0, 69).trimEnd()}...` : normalizedError
+
   return (
     <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-        {state === 'loading' && <Spinner size="small" />}
+      {state === 'loading' && (
+        <Box
+          role="status"
+          aria-live="polite"
+          sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, minHeight: '24px', boxShadow: 'none' }}
+        >
+          <Spinner size="small" srText="" aria-hidden="true" />
+          <Text sx={{ fontSize: 0, lineHeight: 1.5, color: 'fg.muted' }}>Checking sprint...</Text>
+        </Box>
+      )}
 
-        {state === 'error' && (
-          <Text sx={{ fontSize: 0, color: 'danger.fg' }}>{error ?? 'Sprint error'}</Text>
-        )}
+      {state === 'error' && (
+        <Box
+          role="alert"
+          aria-live="assertive"
+          sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, minHeight: '24px', maxWidth: '240px', boxShadow: 'none' }}
+        >
+          <Label variant="danger" sx={{ fontSize: 0 }}>
+            Issue
+          </Label>
+          <Text
+            sx={{ fontSize: 0, lineHeight: 1.5, color: 'danger.fg', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            title={normalizedError}
+            aria-label={normalizedError}
+          >
+            {displayError}
+          </Text>
+        </Box>
+      )}
 
-        {state === 'no-active' && (
-          <>
-            {status?.nearestUpcoming && (
-              <Tippy content="Activate the next upcoming sprint" placement="top" delay={[400, 0]}>
-                <Button
-                  variant="invisible"
-                  onClick={handleAcknowledge}
-                  disabled={acknowledging}
-                  sx={{
-                    color: 'accent.fg',
-                    fontWeight: 500,
-                    fontSize: 0,
-                    px: '8px',
-                    py: '3px',
-                    height: 'auto',
-                    lineHeight: 1.5,
-                    border: 'none',
-                    borderRadius: 2,
-                    boxShadow: 'none',
-                    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
-                    '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                    '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
-                  }}
-                >
-                  {acknowledging ? <Spinner size="small" /> : 'Start Sprint'}
-                </Button>
-              </Tippy>
-            )}
-            <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
+      {state === 'no-active' && (
+        <>
+          {status?.nearestUpcoming && (
+            <Tippy content="Activate the next upcoming sprint" placement="top" delay={[400, 0]}>
               <Button
                 variant="invisible"
-                aria-label="Sprint settings"
-                onClick={() => sprintPanelStore.set(true)}
-                sx={{
-                  color: 'fg.muted',
-                  p: '3px',
-                  height: 'auto',
-                  minWidth: 0,
-                  lineHeight: 1,
-                  border: 'none',
-                  borderRadius: 1,
-                  boxShadow: 'none',
-                  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
-                  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                  '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
-                }}
-              >
-                <SlidersIcon size={14} />
-              </Button>
-            </Tippy>
-          </>
-        )}
-
-        {(state === 'acknowledged' || state === 'active') && (
-          <>
-            <Tippy content="End the current sprint" placement="top" delay={[400, 0]}>
-              <Button
-                variant="invisible"
-                onClick={() => {
-                  sprintPanelStore.set(true)
-                  sprintConfirmEndStore.set(true)
-                }}
+                onClick={handleAcknowledge}
+                disabled={acknowledging}
                 sx={{
                   color: 'accent.fg',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   fontSize: 0,
                   px: '8px',
                   py: '3px',
@@ -165,34 +137,90 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                   '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
                 }}
               >
-                End Sprint
+                {acknowledging ? <Spinner size="small" /> : 'Start Sprint'}
               </Button>
             </Tippy>
-            <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
-              <Button
-                variant="invisible"
-                aria-label="Sprint settings"
-                onClick={() => sprintPanelStore.set(true)}
-                sx={{
-                  color: 'fg.muted',
-                  p: '3px',
-                  height: 'auto',
-                  minWidth: 0,
-                  lineHeight: 1,
-                  border: 'none',
-                  borderRadius: 1,
-                  boxShadow: 'none',
-                  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
-                  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                  '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
-                }}
-              >
-                <SlidersIcon size={14} />
-              </Button>
-            </Tippy>
-          </>
-        )}
+          )}
+          <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
+            <Button
+              variant="invisible"
+              aria-label="Sprint settings"
+              onClick={() => sprintPanelStore.set(true)}
+              sx={{
+                color: 'fg.muted',
+                p: '3px',
+                height: 'auto',
+                minWidth: 0,
+                lineHeight: 1,
+                border: 'none',
+                borderRadius: 1,
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
+              }}
+            >
+              <SlidersIcon size={14} />
+            </Button>
+          </Tippy>
+        </>
+      )}
+
+      {(state === 'acknowledged' || state === 'active') && (
+        <>
+          <Tippy content="End the current sprint" placement="top" delay={[400, 0]}>
+            <Button
+              variant="invisible"
+              onClick={() => {
+                sprintPanelStore.set(true)
+                sprintConfirmEndStore.set(true)
+              }}
+              sx={{
+                color: 'accent.fg',
+                fontWeight: 600,
+                fontSize: 0,
+                px: '8px',
+                py: '3px',
+                height: 'auto',
+                lineHeight: 1.5,
+                border: 'none',
+                borderRadius: 2,
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
+              }}
+            >
+              End Sprint
+            </Button>
+          </Tippy>
+          <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
+            <Button
+              variant="invisible"
+              aria-label="Sprint settings"
+              onClick={() => sprintPanelStore.set(true)}
+              sx={{
+                color: 'fg.muted',
+                p: '3px',
+                height: 'auto',
+                minWidth: 0,
+                lineHeight: 1,
+                border: 'none',
+                borderRadius: 1,
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
+              }}
+            >
+              <SlidersIcon size={14} />
+            </Button>
+          </Tippy>
+        </>
+      )}
     </Box>
   )
 }
