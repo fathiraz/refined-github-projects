@@ -28,6 +28,45 @@ export default defineConfig({
       },
     },
   }),
+  hooks: {
+    'build:manifestGenerated': (wxt, manifest) => {
+      if (manifest.web_accessible_resources) {
+        // Step 1: Clean each entry - remove use_dynamic_url from CSS files, dedupe matches
+        const cleaned = manifest.web_accessible_resources.map((resource: any) => {
+          const cleanedResource = { ...resource }
+          
+          // Remove use_dynamic_url for CSS files (only needed for JS)
+          const isCssOnly = resource.resources.every((r: string) => r.endsWith('.css'))
+          if (isCssOnly && cleanedResource.use_dynamic_url) {
+            delete cleanedResource.use_dynamic_url
+          }
+          
+          // Deduplicate matches array
+          if (cleanedResource.matches && Array.isArray(cleanedResource.matches)) {
+            cleanedResource.matches = [...new Set(cleanedResource.matches)]
+          }
+          
+          return cleanedResource
+        })
+
+        // Step 2: Merge entries by resources - group by resources array
+        const byResources = new Map<string, any>()
+        for (const resource of cleaned) {
+          const key = JSON.stringify(resource.resources.slice().sort())
+          if (byResources.has(key)) {
+            // Merge matches arrays
+            const existing = byResources.get(key)
+            const allMatches = [...existing.matches, ...resource.matches]
+            existing.matches = [...new Set(allMatches)]
+          } else {
+            byResources.set(key, { ...resource })
+          }
+        }
+
+        manifest.web_accessible_resources = Array.from(byResources.values())
+      }
+    }
+  },
   manifest: {
     name: 'Refined GitHub Projects',
     description: 'GitHub Projects, but the way it should work. Bulk edit, close, delete, and deep duplicate items — all from the table.',
@@ -35,6 +74,12 @@ export default defineConfig({
     host_permissions: [
       'https://api.github.com/*',
       'https://github.com/*',
+    ],
+    web_accessible_resources: [
+      {
+        resources: ['content-scripts/content.css'],
+        matches: ['https://github.com/*'],
+      },
     ],
     action: {
       default_popup: 'popup.html',

@@ -1,12 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Box, Button, Flash, FormControl, Heading, Spinner, Text, TextInput } from '@primer/react'
+import Tippy from '../ui/tooltip'
+import { Box, Button, Flash, FormControl, Spinner, Text, TextInput } from '@primer/react'
 import { sendMessage, ItemPreviewData } from '../../lib/messages'
 import { queueStore } from '../../lib/queue-store'
 import { flyToTracker } from '../../lib/fly-animation'
-import { AutocompleteInput } from '../ui/autocomplete-input'
+import { RepoMetadataSelectPanel, type RepoMetadataItem } from '../ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '../ui/markdown-textarea'
-import { CopyIcon, XIcon } from '../ui/primitives'
-import { Z_MODAL } from '../../lib/z-index'
+import {
+  CalendarIcon,
+  CheckIcon,
+  CopyIcon,
+  HashIcon,
+  OptionsSelectIcon,
+  PersonIcon,
+  ProjectBoardIcon,
+  SyncIcon,
+  TagIcon,
+  TextLineIcon,
+} from '../ui/primitives'
+import { ModalStepHeader } from '../ui/modal-step-header'
+import { Z_MODAL, Z_TOOLTIP } from '../../lib/z-index'
+import { ensureTippyCss } from '../../lib/tippy-utils'
 
 type Step = 'LOADING' | 'PREVIEW' | 'ERROR'
 
@@ -22,15 +36,50 @@ interface Props {
 type EditableField = ItemPreviewData['fields'][number]
 
 const sectionLabel = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 2,
   fontSize: 0 as const,
   fontWeight: 'bold' as const,
   textTransform: 'uppercase' as const,
   color: 'fg.muted' as const,
   letterSpacing: '0.05em',
-  display: 'block' as const,
+}
+
+const prefixLabelIcon = {
+  color: 'fg.muted' as const,
+  display: 'flex' as const,
+  alignItems: 'center' as const,
+  flexShrink: 0 as const,
+}
+
+function getFieldIcon(dataType: EditableField['dataType']): React.ReactNode {
+  switch (dataType) {
+    case 'TEXT':
+      return <TextLineIcon size={14} />
+    case 'NUMBER':
+      return <HashIcon size={14} />
+    case 'DATE':
+      return <CalendarIcon size={14} />
+    case 'SINGLE_SELECT':
+      return <OptionsSelectIcon size={14} />
+    case 'ITERATION':
+      return <SyncIcon size={14} />
+    default:
+      return null
+  }
+}
+
+function getFieldOptionTooltip(fieldName: string, optionName: string): string {
+  return `Set ${fieldName} to ${optionName}.`
+}
+
+function duplicateValueTooltip(fieldName: string): string {
+  return `Value applied to the duplicated item for ${fieldName}.`
 }
 
 export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNumber, onClose }: Props) {
+  ensureTippyCss()
   const [step, setStep] = useState<Step>('LOADING')
   const [preview, setPreview] = useState<ItemPreviewData | null>(null)
   const [error, setError] = useState<string>('')
@@ -39,8 +88,8 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
   const [editedTitle, setEditedTitle] = useState('')
   const [editedBody, setEditedBody] = useState('')
-  const [editedAssignees, setEditedAssignees] = useState<{ id: string; name: string; avatarUrl: string }[]>([])
-  const [editedLabels, setEditedLabels] = useState<{ id: string; name: string; color: string }[]>([])
+  const [editedAssignees, setEditedAssignees] = useState<RepoMetadataItem[]>([])
+  const [editedLabels, setEditedLabels] = useState<RepoMetadataItem[]>([])
   const [editedFields, setEditedFields] = useState<EditableField[]>([])
 
   useEffect(() => {
@@ -110,19 +159,20 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
         borderRadius: 2, width: 'min(640px, 90vw)', maxHeight: '80vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        boxShadow: 'none',
       }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default', flexShrink: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box sx={{ color: 'accent.fg' }}><CopyIcon size={16} /></Box>
-            <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>
-              {step === 'PREVIEW' ? 'Deep Duplicate' : step === 'ERROR' ? 'Error' : 'Loading…'}
-            </Heading>
-          </Box>
-          <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-            <XIcon size={16} />
-          </Button>
-        </Box>
+        <ModalStepHeader
+          title="Deep Duplicate"
+          icon={<CopyIcon size={16} />}
+          subtitle={
+            step === 'LOADING'
+              ? 'Loading item details…'
+              : step === 'ERROR'
+                ? 'Something went wrong while loading the item.'
+                : undefined
+          }
+          onClose={onClose}
+        />
 
         {/* Loading */}
         {step === 'LOADING' && (
@@ -156,54 +206,92 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
           <>
             <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {/* Title */}
-              <FormControl>
-                <FormControl.Label>Title</FormControl.Label>
+              <FormControl sx={{ width: '100%' }}>
+                <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
+                  <Tippy content={duplicateValueTooltip('title')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                    <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                      <Box sx={prefixLabelIcon}><TextLineIcon size={14} /></Box>
+                      Title
+                    </Box>
+                  </Tippy>
+                </FormControl.Label>
                 <TextInput block value={editedTitle} onChange={e => setEditedTitle(e.target.value)} />
               </FormControl>
 
               {/* Body */}
-              <FormControl>
-                <FormControl.Label>Description</FormControl.Label>
-                <MarkdownTextarea
-                  value={editedBody}
-                  onChange={setEditedBody}
-                  placeholder="Enter description (supports markdown)..."
-                  rows={6}
-                />
+              <FormControl sx={{ width: '100%' }}>
+                <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
+                  <Tippy content={duplicateValueTooltip('description')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                    <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                      <Box sx={prefixLabelIcon}><TextLineIcon size={14} /></Box>
+                      Description
+                    </Box>
+                  </Tippy>
+                </FormControl.Label>
+                <Box sx={{ width: '100%' }}>
+                  <MarkdownTextarea
+                    value={editedBody}
+                    onChange={setEditedBody}
+                    placeholder="Enter description (supports markdown)..."
+                    rows={6}
+                  />
+                </Box>
               </FormControl>
 
               {/* People section */}
               <Box sx={{ borderTop: '1px solid', borderColor: 'border.default', pt: 3 }}>
-                <Text sx={sectionLabel}>People</Text>
+                <Text sx={sectionLabel}>
+                  <Box as="span" sx={prefixLabelIcon}><PersonIcon size={14} /></Box>
+                  People
+                </Text>
               </Box>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Assignees</Text>
-                <AutocompleteInput
-                  type="ASSIGNEES"
-                  owner={repoOwner}
-                  repoName={repoName}
-                  value={editedAssignees}
-                  onChange={setEditedAssignees}
-                  placeholder="Search assignees…"
-                />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
+                <Tippy content={duplicateValueTooltip('assignees')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                  <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
+                    <Box as="span" sx={prefixLabelIcon}><PersonIcon size={14} /></Box>
+                    Assignees
+                  </Text>
+                </Tippy>
+                <Box sx={{ width: '100%' }}>
+                  <RepoMetadataSelectPanel
+                    type="ASSIGNEES"
+                    owner={repoOwner}
+                    repoName={repoName}
+                    value={editedAssignees}
+                    onChange={setEditedAssignees}
+                    placeholder="Select assignees"
+                  />
+                </Box>
               </Box>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Labels</Text>
-                <AutocompleteInput
-                  type="LABELS"
-                  owner={repoOwner}
-                  repoName={repoName}
-                  value={editedLabels}
-                  onChange={setEditedLabels}
-                  placeholder="Search labels…"
-                />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
+                <Tippy content={duplicateValueTooltip('labels')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                  <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
+                    <Box as="span" sx={prefixLabelIcon}><TagIcon size={14} /></Box>
+                    Labels
+                  </Text>
+                </Tippy>
+                <Box sx={{ width: '100%' }}>
+                  <RepoMetadataSelectPanel
+                    type="LABELS"
+                    owner={repoOwner}
+                    repoName={repoName}
+                    value={editedLabels}
+                    onChange={setEditedLabels}
+                    placeholder="Select labels"
+                  />
+                </Box>
               </Box>
 
               {preview?.issueTypeName && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Type</Text>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
+                  <Tippy content={duplicateValueTooltip('issue type')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                    <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
+                      <Box as="span" sx={prefixLabelIcon}><OptionsSelectIcon size={14} /></Box>
+                      Type
+                    </Text>
+                  </Tippy>
                   <Text sx={{ fontSize: 1, color: 'fg.muted' }}>{preview.issueTypeName}</Text>
                 </Box>
               )}
@@ -212,41 +300,70 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
               {editedFields.length > 0 && (
                 <>
                   <Box sx={{ borderTop: '1px solid', borderColor: 'border.default', pt: 3 }}>
-                    <Text sx={sectionLabel}>Project Fields</Text>
+                    <Text sx={sectionLabel}>
+                      <Box as="span" sx={prefixLabelIcon}><ProjectBoardIcon size={14} /></Box>
+                      Project Fields
+                    </Text>
                   </Box>
 
                   {editedFields.map(field => (
-                    <Box key={field.fieldId} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box key={field.fieldId} sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
                       {field.dataType === 'TEXT' && (
-                        <FormControl>
-                          <FormControl.Label>{field.fieldName}</FormControl.Label>
+                        <FormControl sx={{ width: '100%' }}>
+                          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
+                            <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                              <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                {getFieldIcon(field.dataType) && (
+                                  <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                                )}
+                                {field.fieldName}
+                              </Box>
+                            </Tippy>
+                          </FormControl.Label>
                           <TextInput block value={field.text ?? ''} onChange={e => updateField(field.fieldId, { text: e.target.value })} />
                         </FormControl>
                       )}
 
                       {field.dataType === 'SINGLE_SELECT' && field.options && (
                         <>
-                          <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{field.fieldName}</Text>
+                          <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
+                              {getFieldIcon(field.dataType) && (
+                                <Box as="span" sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                              )}
+                              {field.fieldName}
+                            </Text>
+                          </Tippy>
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                             {field.options.map(opt => {
                               const isSelected = field.optionId === opt.id
                               return (
-                                <Box
+                                <Tippy
                                   key={opt.id}
-                                  as="button"
-                                  type="button"
-                                  onClick={() => updateField(field.fieldId, { optionId: opt.id, optionName: opt.name, optionColor: opt.color })}
-                                  sx={{
-                                    display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1,
-                                    border: '1px solid', borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                                    borderRadius: 2, bg: isSelected ? 'accent.subtle' : 'canvas.default',
-                                    cursor: 'pointer', transition: 'all 150ms ease',
-                                    '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                                  }}
+                                  content={getFieldOptionTooltip(field.fieldName, opt.name)}
+                                  delay={[400, 0]}
+                                  placement="top"
+                                  zIndex={Z_TOOLTIP}
                                 >
-                                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0 }} style={{ backgroundColor: opt.color || 'var(--borderColor-default)' }} />
-                                  <Text sx={{ fontSize: 1, fontWeight: 500, color: 'fg.default' }}>{opt.name}</Text>
-                                </Box>
+                                  <Box
+                                    as="button"
+                                    type="button"
+                                    aria-pressed={isSelected}
+                                    onClick={() => updateField(field.fieldId, { optionId: opt.id, optionName: opt.name, optionColor: opt.color })}
+                                    sx={{
+                                      display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1,
+                                      border: '1px solid', borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                                      borderRadius: 2, bg: isSelected ? 'accent.subtle' : 'canvas.default',
+                                      cursor: 'pointer', transition: 'all 150ms ease',
+                                      '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                                    }}
+                                  >
+                                    <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                      <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0 }} style={{ backgroundColor: opt.color || 'var(--borderColor-default)' }} />
+                                      <Text sx={{ fontSize: 1, fontWeight: 500, color: 'fg.default' }}>{opt.name}</Text>
+                                    </Box>
+                                  </Box>
+                                </Tippy>
                               )
                             })}
                           </Box>
@@ -254,50 +371,91 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
                       )}
 
                       {field.dataType === 'NUMBER' && (
-                        <FormControl>
-                          <FormControl.Label>{field.fieldName}</FormControl.Label>
-                          <TextInput type="number" block value={String(field.number ?? '')} onChange={e => updateField(field.fieldId, { number: parseFloat(e.target.value) })} />
+                        <FormControl sx={{ width: '100%' }}>
+                          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
+                            <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                              <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                {getFieldIcon(field.dataType) && (
+                                  <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                                )}
+                                {field.fieldName}
+                              </Box>
+                            </Tippy>
+                          </FormControl.Label>
+                          <TextInput
+                            type="number"
+                            block
+                            value={String(field.number ?? '')}
+                            onChange={e => {
+                              const parsed = parseFloat(e.target.value)
+                              updateField(field.fieldId, { number: Number.isFinite(parsed) ? parsed : undefined })
+                            }}
+                          />
                         </FormControl>
                       )}
 
                       {field.dataType === 'DATE' && (
-                        <FormControl>
-                          <FormControl.Label>{field.fieldName}</FormControl.Label>
+                        <FormControl sx={{ width: '100%' }}>
+                          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
+                            <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                              <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                {getFieldIcon(field.dataType) && (
+                                  <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                                )}
+                                {field.fieldName}
+                              </Box>
+                            </Tippy>
+                          </FormControl.Label>
                           <TextInput type="date" block value={field.date ?? ''} onChange={e => updateField(field.fieldId, { date: e.target.value })} />
                         </FormControl>
                       )}
 
                       {field.dataType === 'ITERATION' && field.iterations && (
                         <>
-                          <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{field.fieldName}</Text>
+                          <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
+                              {getFieldIcon(field.dataType) && (
+                                <Box as="span" sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                              )}
+                              {field.fieldName}
+                            </Text>
+                          </Tippy>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {field.iterations.map(iter => {
                               const isSelected = field.iterationId === iter.id
                               return (
-                                <Box
+                                <Tippy
                                   key={iter.id}
-                                  as="button"
-                                  type="button"
-                                  onClick={() => updateField(field.fieldId, { iterationId: iter.id, iterationTitle: iter.title, iterationStartDate: iter.startDate })}
-                                  sx={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    px: 3, py: 2, border: '1px solid',
-                                    borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                                    borderRadius: 2, bg: isSelected ? 'accent.subtle' : 'canvas.default',
-                                    cursor: 'pointer', transition: 'all 150ms ease',
-                                    '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                                  }}
+                                  content={getFieldOptionTooltip(field.fieldName, iter.title)}
+                                  delay={[400, 0]}
+                                  placement="top"
+                                  zIndex={Z_TOOLTIP}
                                 >
-                                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                    <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{iter.title}</Text>
-                                    <Text sx={{ fontSize: 0, color: 'fg.muted', mt: '2px' }}>{iter.startDate}</Text>
-                                  </Box>
+                                  <Box
+                                    as="button"
+                                    type="button"
+                                    aria-pressed={isSelected}
+                                    onClick={() => updateField(field.fieldId, { iterationId: iter.id, iterationTitle: iter.title, iterationStartDate: iter.startDate })}
+                                    sx={{
+                                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                      px: 3, py: 2, border: '1px solid',
+                                      borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                                      borderRadius: 2, bg: isSelected ? 'accent.subtle' : 'canvas.default',
+                                      cursor: 'pointer', transition: 'all 150ms ease',
+                                      '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                                    }}
+                                  >
+                                    <Box as="span" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                      <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{iter.title}</Text>
+                                      <Text sx={{ fontSize: 0, color: 'fg.muted', mt: '2px' }}>{iter.startDate}</Text>
+                                    </Box>
                                   {isSelected && (
                                     <Box sx={{ color: 'accent.fg' }}>
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                                      <CheckIcon size={14} />
                                     </Box>
                                   )}
-                                </Box>
+                                  </Box>
+                                </Tippy>
                               )
                             })}
                           </Box>
@@ -312,7 +470,10 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
               {preview?.parentIssue && (
                 <>
                   <Box sx={{ borderTop: '1px solid', borderColor: 'border.default', pt: 3 }}>
-                    <Text sx={sectionLabel}>Relationships</Text>
+                    <Text sx={sectionLabel}>
+                      <Box as="span" sx={prefixLabelIcon}><ProjectBoardIcon size={14} /></Box>
+                      Relationships
+                    </Text>
                   </Box>
                   <Box>
                     <Text as="p" sx={{ m: 0, mb: 1, fontSize: 0, color: 'fg.muted' }}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import Tippy from '@tippyjs/react'
+import Tippy from './ui/tooltip'
 import { ensureTippyCss } from '../lib/tippy-utils'
 import { Box, Button, Text, ActionList, CounterLabel } from '@primer/react'
 import { selectionStore } from '../lib/selection-store'
@@ -9,7 +9,7 @@ import { sendMessage } from '../lib/messages'
 import { queueStore } from '../lib/queue-store'
 import { flyToTracker } from '../lib/fly-animation'
 import { BulkDuplicateModal } from './bulk/bulk-duplicate-modal'
-import { BulkEditWizard, type WizardStep, type ProjectField, type ProjectData } from './bulk/bulk-edit-wizard'
+import { BulkEditWizard, type WizardStep, type ProjectField, type ProjectData } from './bulk/bulk-edit-modal'
 import { BulkCloseModal } from './bulk/bulk-close-modal'
 import { BulkDeleteModal } from './bulk/bulk-delete-modal'
 import { BulkOpenModal } from './bulk/bulk-open-modal'
@@ -578,7 +578,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
               }}>
               <ActionList>
                 <ActionList.Group>
-                  <ActionList.GroupHeading>Fields</ActionList.GroupHeading>
+                  <ActionList.GroupHeading as="h3">Fields</ActionList.GroupHeading>
                   <ActionList.Item onSelect={() => handleFieldSelectionOpen()}>
                     <ActionList.LeadingVisual>
                       <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -609,7 +609,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
                   )}
                 </ActionList.Group>
                 <ActionList.Group>
-                  <ActionList.GroupHeading>Content</ActionList.GroupHeading>
+                  <ActionList.GroupHeading as="h3">Content</ActionList.GroupHeading>
                   <ActionList.Item onSelect={handleBulkRename}>
                     <ActionList.LeadingVisual>
                       <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -638,7 +638,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
                   </ActionList.Item>
                 </ActionList.Group>
                 <ActionList.Group>
-                  <ActionList.GroupHeading>Status</ActionList.GroupHeading>
+                  <ActionList.GroupHeading as="h3">Status</ActionList.GroupHeading>
                   <ActionList.Item onSelect={handleBulkClose}>
                     <ActionList.LeadingVisual>
                       <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'attention.subtle', color: 'attention.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -680,7 +680,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
                   </ActionList.Item>
                 </ActionList.Group>
                 <ActionList.Group>
-                  <ActionList.GroupHeading>Visibility</ActionList.GroupHeading>
+                  <ActionList.GroupHeading as="h3">Visibility</ActionList.GroupHeading>
                   <ActionList.Item onSelect={handlePin}>
                     <ActionList.LeadingVisual>
                       <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -704,7 +704,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
                   </ActionList.Item>
                 </ActionList.Group>
                 <ActionList.Group>
-                  <ActionList.GroupHeading>Move</ActionList.GroupHeading>
+                  <ActionList.GroupHeading as="h3">Move</ActionList.GroupHeading>
                   <ActionList.Item onSelect={handleTransfer}>
                     <ActionList.LeadingVisual>
                       <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'done.subtle', color: 'done.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

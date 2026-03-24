@@ -19,6 +19,7 @@ export class GqlError extends Error {
 export async function gql<T = unknown>(
   query: string,
   variables: Record<string, unknown>,
+  options?: { silent?: boolean },
 ): Promise<T> {
   const pat = await patStorage.getValue()
   logger.log('[rgp:gql] →', operationName(query), variables)
@@ -43,9 +44,11 @@ export async function gql<T = unknown>(
   logger.log('[rgp:gql] ←', res.status, operationName(query))
   const json = await res.json()
   if (json.errors?.length) {
-    console.error('[rgp:gql] GraphQL errors', json.errors)
-    logger.log('[rgp:gql] QUERY:', query)
-    logger.log('[rgp:gql] VARIABLES:', variables)
+    if (!options?.silent) {
+      console.error('[rgp:gql] GraphQL errors', JSON.stringify(json.errors, null, 2))
+      logger.log('[rgp:gql] QUERY:', query)
+      logger.log('[rgp:gql] VARIABLES:', variables)
+    }
     throw new GqlError(json.errors[0].message, 200, 0)
   }
   return json.data as T

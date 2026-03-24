@@ -1,6 +1,6 @@
 import React from 'react'
 import { Checkbox } from '@primer/react'
-import Tippy from '@tippyjs/react'
+import Tippy from './ui/tooltip'
 import { ensureTippyCss } from '../lib/tippy-utils'
 
 interface SelectionControlProps {

@@ -1,6 +1,7 @@
 import React from 'react'
-import { Box, Button, Heading, Text } from '@primer/react'
-import { XIcon } from '../ui/primitives'
+import { Box, Button, Text } from '@primer/react'
+import { ArrowRightIcon, UnpinIcon } from '../ui/primitives'
+import { ModalStepHeader } from '../ui/modal-step-header'
 import { Z_MODAL } from '../../lib/z-index'
 
 interface Props {
@@ -13,12 +14,7 @@ export function BulkUnpinModal({ count, onClose, onConfirm }: Props) {
   return (
     <Box sx={{ position: 'fixed', inset: 0, bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Box sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-          <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Unpin Issues</Heading>
-          <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-            <XIcon size={16} />
-          </Button>
-        </Box>
+        <ModalStepHeader title="Unpin Issues" icon={<UnpinIcon size={16} />} onClose={onClose} />
 
         <Box sx={{ px: 4, py: 3 }}>
           <Text as="p" sx={{ m: 0, fontSize: 1, color: 'fg.default' }}>
@@ -47,7 +43,12 @@ export function BulkUnpinModal({ count, onClose, onConfirm }: Props) {
               '&:hover:not(:disabled)': { transform: 'none' },
             },
           }}>
-            Unpin Issue{count !== 1 ? 's' : ''} →
+            <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+              <Text as="span" sx={{ fontSize: 1, color: 'inherit' }}>
+                Unpin Issue{count !== 1 ? 's' : ''}
+              </Text>
+              <ArrowRightIcon size={16} />
+            </Box>
           </Button>
         </Box>
       </Box>

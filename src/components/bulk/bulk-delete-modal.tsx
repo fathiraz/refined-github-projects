@@ -1,6 +1,7 @@
 import React from 'react'
-import { Box, Button, Flash, Heading, Text } from '@primer/react'
-import { XIcon } from '../ui/primitives'
+import { Box, Button, Flash, Text } from '@primer/react'
+import { TrashIcon } from '../ui/primitives'
+import { ModalStepHeader } from '../ui/modal-step-header'
 import { Z_MODAL } from '../../lib/z-index'
 
 interface Props {
@@ -19,13 +20,7 @@ export function BulkDeleteModal({ count, onClose, onConfirm }: Props) {
       }}
     >
       <Box sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, width: '100%', maxWidth: 480, overflow: 'hidden' }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
-          <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Delete</Heading>
-          <Button variant="invisible" size="small" onClick={onClose} aria-label="Close" sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted' }}>
-            <XIcon size={16} />
-          </Button>
-        </Box>
+        <ModalStepHeader title="Delete" icon={<TrashIcon size={16} />} onClose={onClose} />
 
         {/* Body */}
         <Box sx={{ px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>

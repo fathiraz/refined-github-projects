@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { StyleSheetManager } from 'styled-components'
 import isPropValid from '@emotion/is-prop-valid'
-import { SprintGroupHeaderWidget } from '../../components/sprint/sprint-group-header-widget'
+import { SprintGroupHeaderWidget } from '../../components/sprint/sprint-table-widget'
 import type { ProjectData } from './observer'
 
 const SPRINT_HDR_ATTR = 'data-rgp-sprint-hdr'

@@ -10,334 +10,222 @@ import {
   Text,
   ThemeProvider,
 } from '@primer/react'
+import {
+  AlertIcon as PrimerAlertIcon,
+  ArrowSwitchIcon as PrimerArrowSwitchIcon,
+  ArrowRightIcon as PrimerArrowRightIcon,
+  CalendarIcon as PrimerCalendarIcon,
+  CheckCircleIcon as PrimerCheckCircleIcon,
+  CheckIcon as PrimerCheckIcon,
+  ChevronDownIcon as PrimerChevronDownIcon,
+  CircleSlashIcon as PrimerCircleSlashIcon,
+  CopyIcon as PrimerCopyIcon,
+  DownloadIcon as PrimerDownloadIcon,
+  EyeClosedIcon as PrimerEyeClosedIcon,
+  EyeIcon as PrimerEyeIcon,
+  FilterIcon as PrimerFilterIcon,
+  GearIcon as PrimerGearIcon,
+  HashIcon as PrimerHashIcon,
+  InfoIcon as PrimerInfoIcon,
+  IterationsIcon as PrimerIterationsIcon,
+  IssueClosedIcon as PrimerIssueClosedIcon,
+  IssueReopenedIcon as PrimerIssueReopenedIcon,
+  LockIcon as PrimerLockIcon,
+  PencilIcon as PrimerPencilIcon,
+  PinIcon as PrimerPinIcon,
+  PinSlashIcon as PrimerPinSlashIcon,
+  PersonIcon as PrimerPersonIcon,
+  PlusIcon as PrimerPlusIcon,
+  ProjectIcon as PrimerProjectIcon,
+  SearchIcon as PrimerSearchIcon,
+  ShieldIcon as PrimerShieldIcon,
+  SingleSelectIcon as PrimerSingleSelectIcon,
+  SlidersIcon as PrimerSlidersIcon,
+  StopwatchIcon as PrimerStopwatchIcon,
+  SyncIcon as PrimerSyncIcon,
+  TasklistIcon as PrimerTasklistIcon,
+  TagIcon as PrimerTagIcon,
+  TrashIcon as PrimerTrashIcon,
+  TypographyIcon as PrimerTypographyIcon,
+  XIcon as PrimerXIcon,
+} from '@primer/octicons-react'
 
 type IconProps = {
   size?: number | string
   color?: string
 }
 
-function SvgIcon({ size = 16, color = 'currentColor', viewBox = '0 0 16 16', children }: IconProps & { viewBox?: string; children: React.ReactNode }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={viewBox}
-      fill="none"
-      stroke={color}
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {children}
-    </svg>
-  )
+type PrimerOcticonComponent = React.ComponentType<{ size?: number | 'small' | 'medium' | 'large'; fill?: string }>
+
+function Octicon({ icon: Icon, size = 16, color = 'currentColor' }: IconProps & { icon: PrimerOcticonComponent }) {
+  if (typeof size === 'string') {
+    if (size === 'small' || size === 'medium' || size === 'large') {
+      return <Icon size={size} fill={color} />
+    }
+
+    const numericSize = Number(size)
+    if (Number.isFinite(numericSize)) {
+      return <Icon size={numericSize} fill={color} />
+    }
+
+    // Preserve CSS-length sizing support from existing IconProps API.
+    const iconElement = <Icon size={16} fill="currentColor" />
+    return (
+      <span style={{ display: 'inline-flex', width: size, height: size, color, lineHeight: 0 }}>
+        {React.cloneElement(iconElement as React.ReactElement<any>, { style: { width: '100%', height: '100%' } })}
+      </span>
+    )
+  }
+
+  return <Icon size={size} fill={color} />
 }
 
 export function CheckIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M3 8.5 6.25 11.5 13 4.5" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerCheckIcon} {...props} />
 }
 
 export function AlertIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M8 2.5 14 13H2L8 2.5Z" />
-      <path d="M8 6v3" />
-      <circle cx="8" cy="11.1" r="0.6" fill={props.color || 'currentColor'} stroke="none" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerAlertIcon} {...props} />
 }
 
 export function InfoIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <circle cx="8" cy="8" r="5.5" />
-      <path d="M8 7.25v3" />
-      <circle cx="8" cy="5" r="0.6" fill={props.color || 'currentColor'} stroke="none" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerInfoIcon} {...props} />
 }
 
 export function XIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="m4.5 4.5 7 7" />
-      <path d="m11.5 4.5-7 7" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerXIcon} {...props} />
 }
 
 export function GearIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <circle cx="8" cy="8" r="2.1" />
-      <path d="M8 2.5v1.3M8 12.2v1.3M13.5 8h-1.3M3.8 8H2.5M11.9 4.1l-.9.9M5 11l-.9.9M11.9 11.9l-.9-.9M5 5l-.9-.9" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerGearIcon} {...props} />
+}
+
+export function FilterIcon(props: IconProps) {
+  return <Octicon icon={PrimerFilterIcon} {...props} />
+}
+
+export function IterationsIcon(props: IconProps) {
+  return <Octicon icon={PrimerIterationsIcon} {...props} />
 }
 
 export function SlidersIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M2.5 4h11" />
-      <circle cx="5.5" cy="4" r="1.5" />
-      <path d="M2.5 8h11" />
-      <circle cx="10.5" cy="8" r="1.5" />
-      <path d="M2.5 12h11" />
-      <circle cx="7" cy="12" r="1.5" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerSlidersIcon} {...props} />
 }
 
 export function PlusIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M8 3.25v9.5M3.25 8h9.5" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerPlusIcon} {...props} />
 }
 
 export function TrashIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M3.75 4.5h8.5" />
-      <path d="M6 4.5v-1h4v1" />
-      <path d="M5 6.25v5.5M8 6.25v5.5M11 6.25v5.5" />
-      <path d="M4.75 4.5l.5 8.25h5.5l.5-8.25" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerTrashIcon} {...props} />
 }
 
 export function ChevronDownIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M3.5 6 8 10.5 12.5 6" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerChevronDownIcon} {...props} />
 }
 
 export function CircleCheckIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <circle cx="8" cy="8" r="5.5" />
-      <path d="M5.5 8.25 7.25 10 10.5 6" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerCheckCircleIcon} {...props} />
 }
 
 export function CircleSlashIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <circle cx="8" cy="8" r="5.5" />
-      <path d="M4.5 4.5 11.5 11.5" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerCircleSlashIcon} {...props} />
 }
 
 export function CopyIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <rect x="5.5" y="2.5" width="7" height="8" rx="1.5" />
-      <path d="M3.5 5v6.5c0 .8.7 1.5 1.5 1.5h5" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerCopyIcon} {...props} />
 }
 
 export function SyncIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M12.5 5.25V2.75h-2.5" />
-      <path d="M3.75 7A4.75 4.75 0 0 1 12.5 5.25" />
-      <path d="M3.5 10.75v2.5H6" />
-      <path d="M12.25 9A4.75 4.75 0 0 1 3.5 10.75" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerSyncIcon} {...props} />
 }
 
 export function PersonIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="8" cy="5.5" r="2.5" />
-      <path d="M2.5 13.5c0-2.5 2.5-4 5.5-4s5.5 1.5 5.5 4" />
-    </svg>
-  )
+  return <Octicon icon={PrimerPersonIcon} size={size} color={color} />
 }
 
 export function TagIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M2.5 2.75h5.25l5.5 5.5-5.25 5.25-5.5-5.5V2.75Z" />
-      <circle cx="5.5" cy="5.5" r="0.75" fill={color} stroke="none" />
-    </svg>
-  )
+  return <Octicon icon={PrimerTagIcon} size={size} color={color} />
 }
 
 export function ShieldIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M8 2 L13.5 4.5v4C13.5 11.5 11 13.5 8 14 5 13.5 2.5 11.5 2.5 8.5v-4L8 2Z" />
-      <path d="M6 8.5h4M8 7v3" />
-    </svg>
-  )
+  return <Octicon icon={PrimerShieldIcon} size={size} color={color} />
 }
 
 export function HashIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M5.5 2.5 4 13.5M12 2.5 10.5 13.5" />
-      <path d="M3 6.5h10M2.5 9.5h10" />
-    </svg>
-  )
+  return <Octicon icon={PrimerHashIcon} size={size} color={color} />
 }
 
 export function CalendarIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2.5" y="3.5" width="11" height="10" rx="1.5" />
-      <path d="M2.5 7h11" />
-      <path d="M5.5 2v3M10.5 2v3" />
-      <rect x="5" y="8.75" width="2" height="2" rx="0.5" fill={color} stroke="none" />
-    </svg>
-  )
+  return <Octicon icon={PrimerCalendarIcon} size={size} color={color} />
 }
 
 export function TextLineIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M2.5 4H8M8 4h5.5M8 4v8" />
-      <path d="M5.5 12h5" />
-    </svg>
-  )
+  return <Octicon icon={PrimerTypographyIcon} size={size} color={color} />
+}
+
+export function IssueClosedIcon({ size = 16, color = 'currentColor' }: IconProps) {
+  return <Octicon icon={PrimerIssueClosedIcon} size={size} color={color} />
+}
+
+export function IssueReopenedIcon({ size = 16, color = 'currentColor' }: IconProps) {
+  return <Octicon icon={PrimerIssueReopenedIcon} size={size} color={color} />
 }
 
 export function OptionsSelectIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2.5" y="3.5" width="11" height="9" rx="1.5" />
-      <path d="M5 8l2 2 4-4" />
-    </svg>
-  )
+  return <Octicon icon={PrimerSingleSelectIcon} size={size} color={color} />
 }
 
 export function ListCheckIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M2.5 4.5h7.5" />
-      <path d="M2.5 8h5.5" />
-      <path d="M2.5 11.5h4.5" />
-      <path d="M11 8.5l1.5 1.5 2.5-2.5" />
-    </svg>
-  )
+  return <Octicon icon={PrimerTasklistIcon} size={size} color={color} />
 }
 
 export function ProjectBoardIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" />
-      <path d="M6 2.5v11" />
-      <path d="M2.5 6.5h3.5M2.5 10h3.5" />
-    </svg>
-  )
+  return <Octicon icon={PrimerProjectIcon} size={size} color={color} />
 }
 
-export function SprintIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M2.5 8A5.5 5.5 0 1 1 8 13.5" />
-      <path d="M2.5 8V5.5H5" />
-      <path d="M8 5.5v3l2 1.25" />
-    </svg>
-  )
+export function SprintIcon(props: IconProps) {
+  return <Octicon icon={PrimerStopwatchIcon} {...props} />
 }
 
 export function LockIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill={color} aria-hidden="true">
-      <path d="M4 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 14 8.5v5A1.5 1.5 0 0 1 12.5 15h-9A1.5 1.5 0 0 1 2 13.5v-5A1.5 1.5 0 0 1 3.5 7H4Zm1.5 0h5V5a2.5 2.5 0 0 0-5 0v2Zm-2 1a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5h-9Z"/>
-    </svg>
-  )
+  return <Octicon icon={PrimerLockIcon} size={size} color={color} />
 }
 
 export function PinIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill={color} aria-hidden="true">
-      <path d="m9.585.52.929.928-.797.797.64 1.95a3.508 3.508 0 0 1-.17 2.6l-.474.948-2.152 2.152-.624-.624a.5.5 0 0 0-.707 0L3.5 12.5l-.354.354-.707-.707.354-.354 3.123-3.123a.5.5 0 0 0 0-.707l-.624-.624L7.444 5.187l.948-.474a3.508 3.508 0 0 1 2.6-.17l1.95.64.797-.797.928.929L9.585.52Z"/>
-    </svg>
-  )
+  return <Octicon icon={PrimerPinIcon} size={size} color={color} />
 }
 
 export function UnpinIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill={color} aria-hidden="true">
-      <path d="M7.28.22a.749.749 0 0 1 1.06 0l1.94 1.94L11.5 3.44a.749.749 0 0 1 0 1.06l-.793.793 1.646 1.646a.749.749 0 0 1 0 1.06l-.757.758a3.001 3.001 0 0 1-2.888.777L5.38 11.51a3 3 0 0 1 .284 2.642l-.007.019a1.742 1.742 0 0 1-1.103 1.078.75.75 0 0 1-.948-.948 1.742 1.742 0 0 1 1.078-1.103l.019-.007a1.5 1.5 0 0 0 .942-1.414 1.502 1.502 0 0 0-.278-1.085L3.561 9.503a3.001 3.001 0 0 1 .777-2.888L5.096 5.856 3.22 3.28a.749.749 0 0 1 1.06-1.06l4 3.999zm.838 3.004L9.56 4.666 7.76 6.466a1.5 1.5 0 0 0-.388 1.444l.354.354a1.5 1.5 0 0 0 1.444-.388l1.8-1.8zM.47 15.53a.749.749 0 1 0 1.06-1.06l-1.53-1.53A.749.749 0 1 0 0 14L.47 15.53z" />
-    </svg>
-  )
+  return <Octicon icon={PrimerPinSlashIcon} size={size} color={color} />
 }
 
 export function ArrowRightIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill={color} aria-hidden="true">
-      <path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.042-1.06l2.97-2.97H3.75a.75.75 0 0 1 0-1.5h7.44L8.22 4.03a.75.75 0 0 1 0-1.06Z"/>
-    </svg>
-  )
+  return <Octicon icon={PrimerArrowRightIcon} size={size} color={color} />
 }
 
 export function DownloadIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M8 2v8M5 7l3 3 3-3" />
-      <path d="M2.5 12h11" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerDownloadIcon} {...props} />
 }
 
 export function SearchIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <circle cx="6.5" cy="6.5" r="4" />
-      <path d="M9.5 9.5 13 13" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerSearchIcon} {...props} />
 }
 
 export function PencilIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M11.5 2.5 13.5 4.5 5.5 12.5H3.5v-2L11.5 2.5Z" />
-      <path d="M9.5 4.5l2 2" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerPencilIcon} {...props} />
 }
 
 export function MoveIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props}>
-      <path d="M8 1v14M8 1l-3 3M8 1l3 3M8 15l-3-3M8 15l3-3" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerArrowSwitchIcon} {...props} />
 }
 
 export function EyeIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props} viewBox="0 0 24 24">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" strokeWidth="2" />
-      <circle cx="12" cy="12" r="3" strokeWidth="2" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerEyeIcon} {...props} />
 }
 
 export function EyeOffIcon(props: IconProps) {
-  return (
-    <SvgIcon {...props} viewBox="0 0 24 24">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" strokeWidth="2" />
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" strokeWidth="2" />
-      <line x1="1" y1="1" x2="23" y2="23" strokeWidth="2" />
-    </SvgIcon>
-  )
+  return <Octicon icon={PrimerEyeClosedIcon} {...props} />
 }
 
 interface KeyboardHintProps {

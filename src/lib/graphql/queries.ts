@@ -240,16 +240,20 @@ export const GET_VIEWER_TOP_REPOS = `
   }
 `
 
-export const SEARCH_VIEWER_REPOS = `
-  query SearchViewerRepos($q: String!, $first: Int!) {
+export const GET_VIEWER_REPOS_PAGE = `
+  query GetViewerReposPage($first: Int!, $after: String) {
     viewer {
       repositories(
         first: $first
-        query: $q
+        after: $after
         affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]
         ownerAffiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]
         orderBy: { field: PUSHED_AT, direction: DESC }
       ) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
         nodes {
           id
           name

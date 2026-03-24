@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Tippy from '@tippyjs/react'
+import Tippy from './ui/tooltip'
 import { ensureTippyCss } from '../lib/tippy-utils'
 import { Box, Button, Flash, ProgressBar, Spinner, Text } from '@primer/react'
 import { queueStore, type ProcessEntry } from '../lib/queue-store'

@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ContentScriptContext } from 'wxt/utils/content-script-context'
 import ReactDOM from 'react-dom/client'
 import { StyleSheetManager } from 'styled-components'
 import isPropValid from '@emotion/is-prop-valid'
-import { ThemeProvider } from '@primer/react'
+import { Box, registerPortalRoot, ThemeProvider } from '@primer/react'
 import { BulkActionsBar } from '../../components/bulk-actions-bar'
 import { OnboardingCoach } from '../../components/onboarding-coach'
 import { QueueTracker } from '../../components/queue-tracker'
 import { ToastList } from '../../components/toast-list'
 import { CheckboxPortalHost } from '../../components/checkbox-portal-host'
-import { SprintPanel } from '../../components/sprint/sprint-panel'
+import { SprintPanel } from '../../components/sprint/sprint-modal'
 import { ErrorBoundary } from '../../components/error-boundary'
 import { ShadowThemeProvider } from '../../components/ui/shadow-theme-provider'
+import { BULK_BAR_PRIMER_PORTAL_NAME } from '../../lib/primer-shadow-portal'
+import { Z_MODAL_PORTAL } from '../../lib/z-index'
+import { installPrimerShadowDomCompat } from '../../lib/primer-shadow-dom-compat'
 import { queueStore } from '../../lib/queue-store'
 import { sprintPanelStore } from '../../lib/sprint-panel-store'
 import type { ProjectData } from './observer'
@@ -30,12 +33,51 @@ function SprintPanelDriver(props: SprintPanelProps) {
   )
 }
 
+function PrimerPortalRootHost({ shadowRoot }: { shadowRoot: ShadowRoot }) {
+  const portalRootRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const portalRoot = portalRootRef.current
+    if (!portalRoot) return
+
+    const cleanupShadowCompat = installPrimerShadowDomCompat(portalRoot, shadowRoot)
+    registerPortalRoot(portalRoot, BULK_BAR_PRIMER_PORTAL_NAME)
+
+    return cleanupShadowCompat
+  }, [shadowRoot])
+
+  return (
+    <Box
+      ref={portalRootRef}
+      data-rgp-primer-portal=""
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: Z_MODAL_PORTAL,
+      }}
+    />
+  )
+}
+
 interface ProjectContext {
   projectId: string
   owner: string
   isOrg: boolean
   number: number
 }
+
+/** Primer portals render outside BaseStyles; inherit page font + restore clickable overlay subtrees (host stays pointer-events: none). */
+const RGP_PRIMER_PORTAL_SURFACE_CSS = `
+[data-rgp-primer-portal],
+[data-rgp-primer-portal] * {
+  font-family: inherit;
+}
+[data-rgp-primer-portal] > *,
+[data-rgp-primer-portal] > * * {
+  pointer-events: auto;
+}
+`
 
 export async function setupMounts(
   ctx: ContentScriptContext,
@@ -51,10 +93,15 @@ export async function setupMounts(
     onMount(container, shadow) {
       const styleHost = document.createElement('div')
       container.parentElement!.insertBefore(styleHost, container)
+      const portalSurfaceStyle = document.createElement('style')
+      portalSurfaceStyle.setAttribute('data-rgp-primer-portal-surface', '')
+      portalSurfaceStyle.textContent = RGP_PRIMER_PORTAL_SURFACE_CSS
+      styleHost.appendChild(portalSurfaceStyle)
       const root = ReactDOM.createRoot(container)
       root.render(
         <StyleSheetManager target={styleHost} shouldForwardProp={isPropValid}>
           <ShadowThemeProvider>
+            <PrimerPortalRootHost shadowRoot={shadow} />
             <ErrorBoundary name="bulk-bar">
               <BulkActionsBar
                 projectId={projectContext.projectId}

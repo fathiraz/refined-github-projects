@@ -1,12 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import Tippy from '@tippyjs/react'
+import Tippy from '../ui/tooltip'
 import { ensureTippyCss } from '../../lib/tippy-utils'
 import {
   Box, Button, Flash, FormControl, Heading, Label, Radio, RadioGroup,
   Select, Spinner, Text, TextInput,
 } from '@primer/react'
 import { Z_MODAL, Z_TOOLTIP } from '../../lib/z-index'
-import { SlidersIcon, XIcon, PlusIcon, SprintIcon } from '../ui/primitives'
+import {
+  FilterIcon,
+  GearIcon,
+  IssueClosedIcon,
+  IterationsIcon,
+  OptionsSelectIcon,
+  PlusIcon,
+  SlidersIcon,
+  SprintIcon,
+  TextLineIcon,
+  XIcon,
+} from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
 import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
@@ -65,6 +76,8 @@ function sprintProgress(startDate: string, endDate: string): number {
   ))
   return Math.min(100, Math.round(((total - daysLeft(endDate)) / total) * 100))
 }
+
+const labelIconBoxSx = { color: 'fg.muted', display: 'flex', alignItems: 'center', flexShrink: 0 } as const
 
 // ── Settings view ────────────────────────────────────────────
 
@@ -175,7 +188,8 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
 
       {/* Sprint field */}
       <FormControl>
-        <FormControl.Label sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+        <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+          <Box sx={labelIconBoxSx}><IterationsIcon size={16} /></Box>
           Sprint field (Iteration)
         </FormControl.Label>
         <Select value={sprintFieldId} onChange={(e) => setSprintFieldId(e.target.value)} block>
@@ -194,7 +208,8 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
 
       {/* Done condition field */}
       <FormControl>
-        <FormControl.Label sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+        <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+          <Box sx={labelIconBoxSx}><IssueClosedIcon size={16} /></Box>
           Done condition field
         </FormControl.Label>
         <Select
@@ -214,14 +229,25 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       {/* Radio options for SINGLE_SELECT done field */}
       {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
         <RadioGroup name="doneOption" onChange={(v) => setDoneOptionId(v ?? '')} sx={{ pl: 2 }}>
-          <RadioGroup.Label sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+          <RadioGroup.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+            <Box sx={labelIconBoxSx}><OptionsSelectIcon size={16} /></Box>
             Done option
           </RadioGroup.Label>
           {selectedDoneField.options.map((opt) => (
-            <FormControl key={opt.id}>
-              <Radio value={opt.id} checked={doneOptionId === opt.id} onChange={() => setDoneOptionId(opt.id)} />
-              <FormControl.Label sx={{ fontSize: 1 }}>{opt.name}</FormControl.Label>
-            </FormControl>
+            <Tippy
+              key={opt.id}
+              content={`Items with "${opt.name}" on this field count as done for sprint workflows.`}
+              placement="top"
+              delay={[400, 0]}
+              zIndex={Z_TOOLTIP}
+            >
+              <Box>
+                <FormControl>
+                  <Radio value={opt.id} checked={doneOptionId === opt.id} onChange={() => setDoneOptionId(opt.id)} />
+                  <FormControl.Label sx={{ fontSize: 1 }}>{opt.name}</FormControl.Label>
+                </FormControl>
+              </Box>
+            </Tippy>
           ))}
         </RadioGroup>
       )}
@@ -229,7 +255,8 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       {/* Text input for TEXT done field */}
       {selectedDoneField?.dataType === 'TEXT' && (
         <FormControl>
-          <FormControl.Label sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+            <Box sx={labelIconBoxSx}><TextLineIcon size={16} /></Box>
             Done value
           </FormControl.Label>
           <TextInput
@@ -243,58 +270,67 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
 
       {/* Exclude from migration */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-          Exclude from migration <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
-        </Text>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={labelIconBoxSx}><FilterIcon size={16} /></Box>
+          <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+            Exclude from migration <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
+          </Text>
+        </Box>
         {excludeConditions.map((cond, idx) => {
           const selectedField = excludableFields.find((f) => f.id === cond.fieldId)
           return (
-            <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
-              <Select
-                value={cond.fieldId}
-                onChange={(e) => {
-                  const f = excludableFields.find((ef) => ef.id === e.target.value)
-                  updateExcludeCondition(idx, {
-                    fieldId: e.target.value,
-                    fieldName: f?.name ?? '',
-                    fieldType: f?.dataType === 'TEXT' ? 'TEXT' : 'SINGLE_SELECT',
-                    optionId: '',
-                    optionName: '',
-                  })
-                }}
-                sx={{ flex: 1, minWidth: 100 }}
-              >
-                <Select.Option value="">Select field…</Select.Option>
-                {excludableFields.map((f) => (
-                  <Select.Option key={f.id} value={f.id}>
-                    {f.name} ({f.dataType === 'TEXT' ? 'Text' : 'Single select'})
-                  </Select.Option>
-                ))}
-              </Select>
-
-              {selectedField?.dataType === 'SINGLE_SELECT' && selectedField.options && (
+            <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap', width: '100%' }}>
+              <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
                 <Select
-                  value={cond.optionId}
+                  value={cond.fieldId}
                   onChange={(e) => {
-                    const opt = selectedField.options!.find((o) => o.id === e.target.value)
-                    updateExcludeCondition(idx, { optionId: e.target.value, optionName: opt?.name ?? '' })
+                    const f = excludableFields.find((ef) => ef.id === e.target.value)
+                    updateExcludeCondition(idx, {
+                      fieldId: e.target.value,
+                      fieldName: f?.name ?? '',
+                      fieldType: f?.dataType === 'TEXT' ? 'TEXT' : 'SINGLE_SELECT',
+                      optionId: '',
+                      optionName: '',
+                    })
                   }}
-                  sx={{ flex: 1, minWidth: 100 }}
+                  block
                 >
-                  <Select.Option value="">Select option…</Select.Option>
-                  {selectedField.options.map((opt) => (
-                    <Select.Option key={opt.id} value={opt.id}>{opt.name}</Select.Option>
+                  <Select.Option value="">Select field…</Select.Option>
+                  {excludableFields.map((f) => (
+                    <Select.Option key={f.id} value={f.id}>
+                      {f.name} ({f.dataType === 'TEXT' ? 'Text' : 'Single select'})
+                    </Select.Option>
                   ))}
                 </Select>
+              </Box>
+
+              {selectedField?.dataType === 'SINGLE_SELECT' && selectedField.options && (
+                <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
+                  <Select
+                    value={cond.optionId}
+                    onChange={(e) => {
+                      const opt = selectedField.options!.find((o) => o.id === e.target.value)
+                      updateExcludeCondition(idx, { optionId: e.target.value, optionName: opt?.name ?? '' })
+                    }}
+                    block
+                  >
+                    <Select.Option value="">Select option…</Select.Option>
+                    {selectedField.options.map((opt) => (
+                      <Select.Option key={opt.id} value={opt.id}>{opt.name}</Select.Option>
+                    ))}
+                  </Select>
+                </Box>
               )}
 
               {selectedField?.dataType === 'TEXT' && (
-                <TextInput
-                  placeholder="Exact text value"
-                  value={cond.optionName}
-                  onChange={(e) => updateExcludeCondition(idx, { optionName: e.target.value, optionId: '' })}
-                  sx={{ width: 130 }}
-                />
+                <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
+                  <TextInput
+                    block
+                    placeholder="Exact text value"
+                    value={cond.optionName}
+                    onChange={(e) => updateExcludeCondition(idx, { optionName: e.target.value, optionId: '' })}
+                  />
+                </Box>
               )}
 
               <Tippy content="Remove exclusion rule" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
@@ -421,7 +457,8 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
       {loaded && futureIterations.length > 0 && (
         <>
           <FormControl>
-            <FormControl.Label sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+            <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+              <Box sx={labelIconBoxSx}><IterationsIcon size={16} /></Box>
               Open items will be moved to
             </FormControl.Label>
             <Select
@@ -540,12 +577,14 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
         {showSettings ? (
           <ModalStepHeader
             title="Sprint Settings"
+            icon={<GearIcon size={16} />}
             onBack={() => setShowSettings(false)}
             onClose={onClose}
           />
         ) : confirmingEnd && status?.activeSprint ? (
           <ModalStepHeader
             title="End Sprint"
+            icon={<SprintIcon size={16} />}
             subtitle={`${status.activeSprint.title} · ${fmt(status.activeSprint.startDate)} – ${fmt(status.activeSprint.endDate)}`}
             onBack={() => setConfirmingEnd(false)}
             onClose={onClose}

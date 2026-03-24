@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import Tippy from '@tippyjs/react'
+import Tippy from '../ui/tooltip'
 import { ensureTippyCss } from '../../lib/tippy-utils'
 import { Box, Button, Label, Spinner, Text } from '@primer/react'
 import { SlidersIcon } from '../ui/primitives'

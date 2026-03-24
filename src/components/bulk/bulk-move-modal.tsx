@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Box, Button, Spinner, Text } from '@primer/react'
+import Tippy from '../ui/tooltip'
+import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from '@primer/octicons-react'
+import { Box, Button, FormControl, Radio, RadioGroup, Spinner, Text, TextInput } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
 import { MoveIcon } from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
-import { Z_MODAL } from '../../lib/z-index'
+import { ensureTippyCss } from '../../lib/tippy-utils'
+import { Z_MODAL, Z_TOOLTIP } from '../../lib/z-index'
 
 type Stage = 'LOADING' | 'CONFIGURE' | 'PREVIEW' | 'ERROR'
 type MoveAction = 'TOP' | 'BOTTOM' | 'BEFORE' | 'AFTER'
@@ -108,9 +111,12 @@ function PreviewList({
               {item.title || '(no title)'}
             </Text>
             {isSel && (
-              <Text sx={{ fontSize: 0, color: 'accent.fg', fontWeight: 'semibold', flexShrink: 0, ml: 'auto' }}>
-                ↑ moving
-              </Text>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'accent.fg', flexShrink: 0, ml: 'auto' }}>
+                <ArrowUpIcon size={12} />
+                <Text sx={{ fontSize: 0, color: 'accent.fg', fontWeight: 'semibold' }}>
+                  moving
+                </Text>
+              </Box>
             )}
           </Box>
         )
@@ -122,6 +128,8 @@ function PreviewList({
 // ─── Modal ─────────────────────────────────────────────────────────────────────
 
 export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg, onClose, onConfirm }: Props) {
+  ensureTippyCss()
+
   const [stage, setStage] = useState<Stage>('LOADING')
   const [allOrderedItems, setAllOrderedItems] = useState<OrderedItem[]>([])
   const [selectedMemexIds, setSelectedMemexIds] = useState<Set<number>>(new Set())
@@ -276,11 +284,16 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
   }
 
   // ── CONFIGURE (Step 1/2) ─────────────────────────────────────────────────────
-  const actionOptions: Array<{ value: MoveAction; label: string }> = [
-    { value: 'TOP', label: '⬆ Move to Top' },
-    { value: 'BOTTOM', label: '⬇ Move to Bottom' },
-    { value: 'BEFORE', label: '↑ Move Before…' },
-    { value: 'AFTER', label: '↓ Move After…' },
+  const actionOptions: Array<{
+    value: MoveAction
+    label: string
+    description: string
+    icon: React.ComponentType<{ size?: number; fill?: string }>
+  }> = [
+    { value: 'TOP', label: 'Move to top', description: 'Place selected items at the top of the list.', icon: ArrowUpIcon },
+    { value: 'BOTTOM', label: 'Move to bottom', description: 'Place selected items at the bottom of the list.', icon: ArrowDownIcon },
+    { value: 'BEFORE', label: 'Move before', description: 'Place selected items right before a chosen item.', icon: ArrowUpIcon },
+    { value: 'AFTER', label: 'Move after', description: 'Place selected items right after a chosen item.', icon: ArrowDownIcon },
   ]
 
   const selectedTargetItem = nonSelectedItems.find(i => i.memexItemId === targetMemexId)
@@ -299,31 +312,70 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
         {/* Body */}
         <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Action selector */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Text sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>Where to move</Text>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {actionOptions.map(opt => (
-                <Box
-                  key={opt.value}
-                  as="button"
-                  type="button"
-                  onClick={() => { setAction(opt.value); if (opt.value === 'TOP' || opt.value === 'BOTTOM') setTargetMemexId(null) }}
-                  sx={{
-                    px: 3, py: '6px', fontSize: 0, borderRadius: 2, cursor: 'pointer',
-                    border: '1px solid',
-                    borderColor: action === opt.value ? 'accent.emphasis' : 'border.default',
-                    bg: action === opt.value ? 'accent.subtle' : 'canvas.default',
-                    color: action === opt.value ? 'accent.fg' : 'fg.default',
-                    fontWeight: action === opt.value ? 'semibold' : 'normal',
-                    transition: 'all 120ms ease',
-                    ':hover': { bg: action === opt.value ? 'accent.subtle' : 'canvas.subtle' },
-                  }}
-                >
-                  {opt.label}
-                </Box>
-              ))}
+          <RadioGroup
+            name="moveAction"
+            onChange={(v) => {
+              const nextAction = (v as MoveAction | null) ?? 'TOP'
+              setAction(nextAction)
+              if (nextAction === 'TOP' || nextAction === 'BOTTOM') setTargetMemexId(null)
+            }}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+          >
+            <RadioGroup.Label sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
+              Where to move
+            </RadioGroup.Label>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {actionOptions.map(opt => {
+                const isSelected = action === opt.value
+                const Icon = opt.icon
+
+                return (
+                  <Tippy key={opt.value} content={opt.description} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                    <FormControl
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        px: 3,
+                        py: '6px',
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                        bg: isSelected ? 'accent.subtle' : 'canvas.default',
+                        transition: 'background-color 120ms ease, border-color 120ms ease',
+                        ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
+                        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                      }}
+                    >
+                      <Radio
+                        value={opt.value}
+                        checked={isSelected}
+                        onChange={() => {
+                          setAction(opt.value)
+                          if (opt.value === 'TOP' || opt.value === 'BOTTOM') setTargetMemexId(null)
+                        }}
+                      />
+                      <FormControl.Label sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, cursor: 'help' }}>
+                        <Box
+                          as="span"
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            color: isSelected ? 'accent.fg' : 'fg.default',
+                            fontWeight: isSelected ? 'semibold' : 'normal',
+                          }}
+                        >
+                          <Icon size={14} />
+                          {opt.label}
+                        </Box>
+                      </FormControl.Label>
+                    </FormControl>
+                  </Tippy>
+                )
+              })}
             </Box>
-          </Box>
+          </RadioGroup>
 
           {/* Target item picker */}
           {needsTarget && (
@@ -332,11 +384,10 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
                 {action === 'BEFORE' ? 'Before which item?' : 'After which item?'}
               </Text>
               <Box ref={dropdownRef} sx={{ position: 'relative' }}>
-                <Box
-                  as="input"
-                  type="text"
+                <TextInput
+                  block
                   value={dropdownOpen ? targetSearch : (selectedTargetItem?.title ?? '')}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  onChange={(e) => {
                     setTargetSearch(e.target.value)
                     setTargetMemexId(null)
                     setDropdownOpen(true)
@@ -344,7 +395,7 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
                   onFocus={() => { setTargetSearch(''); setDropdownOpen(true) }}
                   placeholder="Search items…"
                   sx={{
-                    width: '100%', px: 2, py: '6px', fontSize: 1, borderRadius: 1,
+                    px: 2, py: '6px', fontSize: 1, borderRadius: 1,
                     border: '1px solid', borderColor: dropdownOpen ? 'accent.emphasis' : 'border.default',
                     bg: 'canvas.default', color: 'fg.default', outline: 'none',
                     ':focus': { borderColor: 'accent.emphasis', boxShadow: '0 0 0 2px rgba(9,105,218,0.15)' },
@@ -422,7 +473,10 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
               },
             }}
             >
-              Preview →
+              <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                Preview
+                <ArrowRightIcon size={14} />
+              </Box>
             </Button>
           </Box>
         </Box>

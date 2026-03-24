@@ -1,14 +1,17 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import Tippy from '../ui/tooltip'
 import { Box, Button, Checkbox, Flash, FormControl, Heading, Text, TextInput } from '@primer/react'
 import { AutocompleteInput } from '../ui/autocomplete-input'
+import { RepoMetadataSelectPanel } from '../ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '../ui/markdown-textarea'
 import {
   AlertIcon, CheckIcon,
   PersonIcon, TagIcon, ShieldIcon, HashIcon, CalendarIcon,
-  TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon, PencilIcon,
+  TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon, PencilIcon, ListCheckIcon,
 } from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
-import { Z_MODAL } from '../../lib/z-index'
+import { Z_MODAL, Z_TOOLTIP } from '../../lib/z-index'
+import { ensureTippyCss } from '../../lib/tippy-utils'
 
 export interface ProjectField {
   id: string
@@ -49,37 +52,36 @@ interface WizardProps {
 
 // ── Field icon helpers ──────────────────────────────────────
 
-const FIELD_COLORS: Record<string, string> = {
-  ASSIGNEES:     'var(--color-accent-fg)',
-  LABELS:        'var(--color-success-fg)',
-  ISSUE_TYPE:    'var(--color-done-fg)',
-  SINGLE_SELECT: 'var(--color-attention-fg)',
-  ITERATION:     'var(--color-done-fg)',
-  NUMBER:        'var(--color-accent-fg)',
-  DATE:          'var(--color-danger-fg)',
-  TEXT:          'var(--fgColor-muted)',
-  TITLE:         'var(--color-accent-fg)',
-  BODY:          'var(--fgColor-muted)',
-  COMMENT:       'var(--color-success-fg)',
-}
-
 function getFieldIcon(dataType: string): React.ReactNode {
-  const c = FIELD_COLORS[dataType] ?? 'var(--fgColor-muted)'
   switch (dataType) {
-    case 'ASSIGNEES':     return <PersonIcon color={c} />
-    case 'LABELS':        return <TagIcon color={c} />
-    case 'ISSUE_TYPE':    return <ShieldIcon color={c} />
-    case 'SINGLE_SELECT': return <OptionsSelectIcon color={c} />
-    case 'ITERATION':     return <SyncIcon color={c} />
-    case 'NUMBER':        return <HashIcon color={c} />
-    case 'DATE':          return <CalendarIcon color={c} />
-    case 'TEXT':          return <TextLineIcon color={c} />
-    case 'TITLE':         return <PencilIcon color={c} />
-    case 'BODY':          return <TextLineIcon color={c} />
-    case 'COMMENT':       return <TextLineIcon color={c} />
+    case 'ASSIGNEES':     return <PersonIcon />
+    case 'LABELS':        return <TagIcon />
+    case 'ISSUE_TYPE':    return <ShieldIcon />
+    case 'SINGLE_SELECT': return <OptionsSelectIcon />
+    case 'ITERATION':     return <SyncIcon />
+    case 'NUMBER':        return <HashIcon />
+    case 'DATE':          return <CalendarIcon />
+    case 'TEXT':          return <TextLineIcon />
+    case 'TITLE':         return <PencilIcon />
+    case 'BODY':          return <TextLineIcon />
+    case 'COMMENT':       return <TextLineIcon />
     default:              return null
   }
 }
+
+function getFieldSelectionTooltip(field: ProjectField): string {
+  return `Select ${field.name} to set the same value across all selected items.`
+}
+
+function getFieldOptionTooltip(fieldName: string, optionName: string): string {
+  return `Set ${fieldName} to ${optionName}.`
+}
+
+function getFieldValueStepTooltip(field: ProjectField, itemCount: number): string {
+  return `Set ${field.name} for all ${itemCount} selected item${itemCount !== 1 ? 's' : ''}.`
+}
+
+const bulkEditHeaderIcon = <ListCheckIcon size={16} />
 
 // ── Step subcomponents ──────────────────────────────────────
 
@@ -136,6 +138,7 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
     <>
       <ModalStepHeader
         title="Select Fields"
+        icon={bulkEditHeaderIcon}
         subtitle={`Choose the fields to update on the ${count} selected item${count !== 1 ? 's' : ''}.`}
         step={1}
         totalSteps={3}
@@ -158,27 +161,30 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
           {defaultFields.map(field => {
             const isSelected = selectedFields.some(f => f.id === field.id)
             return (
-              <Box
-                key={field.id}
-                as="button"
-                type="button"
-                onClick={() => onToggleField(field)}
-                sx={{
-                  display: 'flex', alignItems: 'center', gap: 3, width: '100%',
-                  textAlign: 'left', border: 'none', borderRadius: 2,
-                  bg: isSelected ? 'accent.subtle' : 'transparent',
-                  px: 3, py: 2, cursor: 'pointer',
-                  transition: 'background-color 150ms ease',
-                  ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
-                  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                }}
-              >
-                <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
-                <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{getFieldIcon(field.dataType)}</Box>
-                <Text sx={{ fontSize: 1, fontWeight: 'bold', color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
-                  {field.name}
-                </Text>
-              </Box>
+              <Tippy key={field.id} content={getFieldSelectionTooltip(field)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                <Box
+                  as="button"
+                  type="button"
+                  onClick={() => onToggleField(field)}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 3, width: '100%',
+                    textAlign: 'left', border: 'none', borderRadius: 2,
+                    bg: isSelected ? 'accent.subtle' : 'transparent',
+                    px: 3, py: 2, cursor: 'pointer',
+                    transition: 'background-color 150ms ease',
+                    ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
+                    '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                  }}
+                >
+                  <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
+                  <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: isSelected ? 'accent.fg' : 'fg.default' }}>{getFieldIcon(field.dataType)}</Box>
+                    <Text sx={{ fontSize: 1, fontWeight: 'bold', color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
+                      {field.name}
+                    </Text>
+                  </Box>
+                </Box>
+              </Tippy>
             )
           })}
         </Box>
@@ -199,30 +205,33 @@ function FieldsStep({ count, projectData, selectedFields, onToggleField, onSetSe
                 {eligibleCustomFields.map(field => {
                   const isSelected = selectedFields.some(f => f.id === field.id)
                   return (
-                    <Box
-                      key={field.id}
-                      as="button"
-                      type="button"
-                      onClick={() => onToggleField(field)}
-                      sx={{
-                        display: 'flex', alignItems: 'center', gap: 3, width: '100%',
-                        textAlign: 'left', border: 'none', borderRadius: 2,
-                        bg: isSelected ? 'accent.subtle' : 'transparent',
-                        px: 2, py: 2, cursor: 'pointer',
-                        transition: 'background-color 150ms ease',
-                        ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
-                        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                      }}
-                    >
-                      <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
-                      <Box sx={{ display: 'flex', flexShrink: 0 }}>{getFieldIcon(field.dataType)}</Box>
-                      <Text sx={{ fontSize: 1, fontWeight: 500, color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
-                        {field.name}
-                      </Text>
-                      <Text sx={{ fontSize: 0, px: 1, py: '2px', bg: 'neutral.muted', color: 'fg.muted', borderRadius: 2 }}>
-                        {field.dataType.toLowerCase()}
-                      </Text>
-                    </Box>
+                    <Tippy key={field.id} content={getFieldSelectionTooltip(field)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                      <Box
+                        as="button"
+                        type="button"
+                        onClick={() => onToggleField(field)}
+                        sx={{
+                          display: 'flex', alignItems: 'center', gap: 3, width: '100%',
+                          textAlign: 'left', border: 'none', borderRadius: 2,
+                          bg: isSelected ? 'accent.subtle' : 'transparent',
+                          px: 2, py: 2, cursor: 'pointer',
+                          transition: 'background-color 150ms ease',
+                          ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
+                          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                        }}
+                      >
+                        <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
+                        <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}>
+                          <Box sx={{ display: 'flex', flexShrink: 0, color: isSelected ? 'accent.fg' : 'fg.default' }}>{getFieldIcon(field.dataType)}</Box>
+                          <Text sx={{ fontSize: 1, fontWeight: 500, color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
+                            {field.name}
+                          </Text>
+                        </Box>
+                        <Text sx={{ fontSize: 0, px: 1, py: '2px', bg: 'neutral.muted', color: 'fg.muted', borderRadius: 2 }}>
+                          {field.dataType.toLowerCase()}
+                        </Text>
+                      </Box>
+                    </Tippy>
                   )
                 })}
               </Box>
@@ -257,6 +266,7 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
     <>
       <ModalStepHeader
         title="Set Values"
+        icon={bulkEditHeaderIcon}
         subtitle={`Assign new values for the ${selectedFields.length} selected field${selectedFields.length !== 1 ? 's' : ''}.`}
         step={2}
         totalSteps={3}
@@ -275,22 +285,25 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
                 {field.options.map(opt => {
                   const isSelected = value.singleSelectOptionId === opt.id
                   return (
-                    <Box
-                      key={opt.id}
-                      as="button"
-                      type="button"
-                      onClick={() => onUpdateFieldValue(field.id, { singleSelectOptionId: opt.id })}
-                      sx={{
-                        display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1,
-                        border: '1px solid', borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                        borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
-                        cursor: 'pointer', transition: 'all 150ms ease',
-                        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                      }}
-                    >
-                      <Box sx={{ width: 10, height: 10, borderRadius: '50%', bg: opt.color ? undefined : 'border.default' }} style={opt.color ? { backgroundColor: opt.color } : undefined} />
-                      <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 500 }}>{opt.name}</Text>
-                    </Box>
+                    <Tippy key={opt.id} content={getFieldOptionTooltip(field.name, opt.name)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                      <Box
+                        as="button"
+                        type="button"
+                        onClick={() => onUpdateFieldValue(field.id, { singleSelectOptionId: opt.id })}
+                        sx={{
+                          display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1,
+                          border: '1px solid', borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                          borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
+                          cursor: 'pointer', transition: 'all 150ms ease',
+                          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                        }}
+                      >
+                        <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Box sx={{ width: 10, height: 10, borderRadius: '50%', bg: opt.color ? undefined : 'border.default' }} style={opt.color ? { backgroundColor: opt.color } : undefined} />
+                          <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 500 }}>{opt.name}</Text>
+                        </Box>
+                      </Box>
+                    </Tippy>
                   )
                 })}
               </Box>
@@ -301,71 +314,76 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
                 {field.configuration.iterations.map(iter => {
                   const isSelected = value.iterationId === iter.id
                   return (
-                    <Box
-                      key={iter.id}
-                      as="button"
-                      type="button"
-                      onClick={() => onUpdateFieldValue(field.id, { iterationId: iter.id })}
-                      sx={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        px: 3, py: 2, border: '1px solid',
-                        borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                        borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
-                        cursor: 'pointer', transition: 'all 150ms ease',
-                        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                        <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 'bold' }}>{iter.title}</Text>
-                        <Text sx={{ color: 'fg.muted', fontSize: 0, mt: '2px' }}>{iter.startDate}</Text>
+                    <Tippy key={iter.id} content={getFieldOptionTooltip(field.name, iter.title)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                      <Box
+                        as="button"
+                        type="button"
+                        onClick={() => onUpdateFieldValue(field.id, { iterationId: iter.id })}
+                        sx={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          px: 3, py: 2, border: '1px solid',
+                          borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                          borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
+                          cursor: 'pointer', transition: 'all 150ms ease',
+                          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                        }}
+                      >
+                        <Box as="span" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 'bold' }}>{iter.title}</Text>
+                          <Text sx={{ color: 'fg.muted', fontSize: 0, mt: '2px' }}>{iter.startDate}</Text>
+                        </Box>
+                        {isSelected && <CheckIcon size={14} color="var(--color-accent-fg)" />}
                       </Box>
-                      {isSelected && <CheckIcon size={14} color="var(--color-accent-fg)" />}
-                    </Box>
+                    </Tippy>
                   )
                 })}
               </Box>
             )
           } else if (field.dataType === 'ASSIGNEES' || field.dataType === 'LABELS') {
             inputContent = (
-              <AutocompleteInput
-                type={field.dataType}
-                owner={owner}
-                repoName={firstRepoName}
-                value={(value.array as { name: string }[]) || []}
-                onChange={arr => onUpdateFieldValue(field.id, { array: arr })}
-                placeholder={`Search and select ${field.name.toLowerCase()}...`}
-              />
+              <Box sx={{ width: '100%' }}>
+                <RepoMetadataSelectPanel
+                  type={field.dataType}
+                  owner={owner}
+                  repoName={firstRepoName}
+                  value={(value.array as { id: string; name: string; color?: string; avatarUrl?: string }[]) || []}
+                  onChange={arr => onUpdateFieldValue(field.id, { array: arr })}
+                  placeholder={`Select ${field.name.toLowerCase()}`}
+                />
+              </Box>
             )
           } else if (field.dataType === 'ISSUE_TYPE' || field.name.toLowerCase() === 'type') {
             inputContent = (
-              <AutocompleteInput
-                type="ISSUE_TYPES"
-                owner={owner}
-                repoName={firstRepoName || ''}
-                value={(value.array as { name: string }[]) || []}
-                onChange={arr => onUpdateFieldValue(field.id, { ...(fieldValues[field.id] as Record<string, unknown> || {}), array: arr, dataType: 'ISSUE_TYPE' })}
-                placeholder={firstRepoName ? 'Search issue types...' : 'Repository not detected - please open a project with issues'}
-                singleSelect={true}
-                disabled={!firstRepoName}
-              />
+              <Box sx={{ width: '100%' }}>
+                <AutocompleteInput
+                  type="ISSUE_TYPES"
+                  owner={owner}
+                  repoName={firstRepoName || ''}
+                  value={(value.array as { name: string }[]) || []}
+                  onChange={arr => onUpdateFieldValue(field.id, { ...(fieldValues[field.id] as Record<string, unknown> || {}), array: arr, dataType: 'ISSUE_TYPE' })}
+                  placeholder={firstRepoName ? 'Search issue types...' : 'Repository not detected - please open a project with issues'}
+                  singleSelect={true}
+                  disabled={!firstRepoName}
+                />
+              </Box>
             )
           } else if (field.dataType === 'DATE') {
             inputContent = (
               <TextInput
+                block
                 type="date"
                 value={(value.date as string) || ''}
                 onChange={e => onUpdateFieldValue(field.id, { date: e.target.value })}
-                sx={{ maxWidth: 200 }}
               />
             )
           } else if (field.dataType === 'NUMBER') {
             inputContent = (
               <TextInput
+                block
                 type="number"
                 placeholder="Enter number..."
                 value={(value.number as number | '') ?? ''}
                 onChange={e => onUpdateFieldValue(field.id, { number: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
-                sx={{ maxWidth: 160 }}
               />
             )
           } else if (field.dataType === 'TITLE') {
@@ -379,19 +397,23 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
             )
           } else if (field.dataType === 'BODY') {
             inputContent = (
-              <MarkdownTextarea
-                value={(value.text as string) || ''}
-                onChange={text => onUpdateFieldValue(field.id, { text })}
-                placeholder="Set description for all selected items (replaces existing)..."
-              />
+              <Box sx={{ width: '100%' }}>
+                <MarkdownTextarea
+                  value={(value.text as string) || ''}
+                  onChange={text => onUpdateFieldValue(field.id, { text })}
+                  placeholder="Set description for all selected items (replaces existing)..."
+                />
+              </Box>
             )
           } else if (field.dataType === 'COMMENT') {
             inputContent = (
-              <MarkdownTextarea
-                value={(value.text as string) || ''}
-                onChange={text => onUpdateFieldValue(field.id, { text })}
-                placeholder="Comment to add to all selected items..."
-              />
+              <Box sx={{ width: '100%' }}>
+                <MarkdownTextarea
+                  value={(value.text as string) || ''}
+                  onChange={text => onUpdateFieldValue(field.id, { text })}
+                  placeholder="Comment to add to all selected items..."
+                />
+              </Box>
             )
           } else {
             inputContent = (
@@ -405,12 +427,16 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
           }
 
           return (
-            <FormControl key={field.id}>
-              <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold' }}>
-                {getFieldIcon(field.dataType) && (
-                  <Box sx={{ color: 'fg.muted', display: 'flex' }}>{getFieldIcon(field.dataType)}</Box>
-                )}
-                {field.name}
+            <FormControl key={field.id} sx={{ width: '100%' }}>
+              <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
+                <Tippy content={getFieldValueStepTooltip(field, count)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                  <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                    {getFieldIcon(field.dataType) && (
+                      <Box sx={{ color: 'fg.muted', display: 'flex' }}>{getFieldIcon(field.dataType)}</Box>
+                    )}
+                    {field.name}
+                  </Box>
+                </Tippy>
               </FormControl.Label>
               {inputContent}
             </FormControl>
@@ -442,6 +468,7 @@ function SummaryStep({ count, selectedFields, fieldValues, concurrentError, appl
     <>
       <ModalStepHeader
         title="Review & Apply"
+        icon={bulkEditHeaderIcon}
         subtitle={`You are updating ${count} item${count !== 1 ? 's' : ''}. Confirm the changes below.`}
         step={3}
         totalSteps={3}
@@ -512,6 +539,10 @@ export function BulkEditWizard({
   owner, firstRepoName, applyBtnRef,
   onClose, onToggleField, onUpdateFieldValue, onSetSelectedFields, onGoToStep, onApply, onOpenOptions,
 }: WizardProps) {
+  useEffect(() => {
+    ensureTippyCss()
+  }, [])
+
   return (
     <Box
       sx={{
@@ -519,13 +550,17 @@ export function BulkEditWizard({
         bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
-      onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') onClose()
+      }}
       onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
     >
       <Box sx={{
         bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
         borderRadius: 2, width: 'min(640px, 90vw)', maxHeight: '80vh',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        boxShadow: 'none',
         animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
         '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
       }}>

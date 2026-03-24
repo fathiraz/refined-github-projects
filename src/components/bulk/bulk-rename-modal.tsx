@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
+import Tippy from '../ui/tooltip'
 import { Box, Button, Spinner, Text } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
-import { PencilIcon } from '../ui/primitives'
+import { ArrowRightIcon, PencilIcon, PlusIcon, SearchIcon, TextLineIcon } from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
-import { Z_MODAL } from '../../lib/z-index'
+import { ensureTippyCss } from '../../lib/tippy-utils'
+import { Z_MODAL, Z_TOOLTIP } from '../../lib/z-index'
 
 type Stage = 'LOADING' | 'CONFIGURE' | 'PREVIEW' | 'ERROR'
 type RenameTab = 'FIND_REPLACE' | 'PREFIX_SUFFIX'
@@ -43,6 +45,10 @@ function applyRule(original: string, rule: RuleState): string {
 }
 
 export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm }: Props) {
+  useEffect(() => {
+    ensureTippyCss()
+  }, [])
+
   const [stage, setStage] = useState<Stage>('LOADING')
   const [items, setItems] = useState<TitleItem[]>([])
   const [errorMsg, setErrorMsg] = useState('')
@@ -99,6 +105,22 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
     borderRadius: 2, width: 'min(680px, 90vw)', maxHeight: '85vh',
     display: 'flex', flexDirection: 'column' as const, overflow: 'hidden',
   }
+
+  const inputLabelStyle = {
+    fontSize: 0,
+    fontWeight: 'semibold',
+    color: 'fg.muted',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 2,
+  } as const
+
+  const inputLabelIconStyle = {
+    color: 'fg.muted',
+    display: 'flex',
+    alignItems: 'center',
+    flexShrink: 0,
+  } as const
 
   // ── LOADING ──────────────────────────────────────────────────────────────────
   if (stage === 'LOADING') {
@@ -223,9 +245,15 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
           {activeTab === 'FIND_REPLACE' ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>Find</Text>
+                <Text as="label" htmlFor="bulk-rename-find-input" sx={inputLabelStyle}>
+                  <Box as="span" sx={inputLabelIconStyle}>
+                    <SearchIcon size={14} />
+                  </Box>
+                  Find
+                </Text>
                 <Box
                   as="input"
+                  id="bulk-rename-find-input"
                   type="text"
                   value={findText}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFindText(e.target.value)}
@@ -241,9 +269,15 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
                 />
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>Replace with</Text>
+                <Text as="label" htmlFor="bulk-rename-replace-input" sx={inputLabelStyle}>
+                  <Box as="span" sx={inputLabelIconStyle}>
+                    <ArrowRightIcon size={14} />
+                  </Box>
+                  Replace with
+                </Text>
                 <Box
                   as="input"
+                  id="bulk-rename-replace-input"
                   type="text"
                   value={replaceText}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReplaceText(e.target.value)}
@@ -269,15 +303,23 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCaseSensitive(e.target.checked)}
                   sx={{ cursor: 'pointer' }}
                 />
-                Case sensitive
+                <Tippy content="Match uppercase/lowercase letters exactly when finding text." delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                  <Box as="span" tabIndex={0} sx={{ outline: 'none' }}>Case sensitive</Box>
+                </Tippy>
               </Box>
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>Prefix</Text>
+                <Text as="label" htmlFor="bulk-rename-prefix-input" sx={inputLabelStyle}>
+                  <Box as="span" sx={inputLabelIconStyle}>
+                    <PlusIcon size={14} />
+                  </Box>
+                  Prefix
+                </Text>
                 <Box
                   as="input"
+                  id="bulk-rename-prefix-input"
                   type="text"
                   value={prefix}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrefix(e.target.value)}
@@ -293,9 +335,15 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
                 />
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>Suffix</Text>
+                <Text as="label" htmlFor="bulk-rename-suffix-input" sx={inputLabelStyle}>
+                  <Box as="span" sx={inputLabelIconStyle}>
+                    <TextLineIcon size={14} />
+                  </Box>
+                  Suffix
+                </Text>
                 <Box
                   as="input"
+                  id="bulk-rename-suffix-input"
                   type="text"
                   value={suffix}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSuffix(e.target.value)}
@@ -352,7 +400,10 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
               },
             }}
             >
-              Preview →
+              <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                Preview
+                <ArrowRightIcon size={14} />
+              </Box>
             </Button>
           </Box>
         </Box>
@@ -368,7 +419,9 @@ function PreviewTable({ items }: { items: Array<TitleItem & { newTitle: string }
         <Box as="tr">
           <Box as="th" sx={{ px: 2, py: 1, textAlign: 'left', fontWeight: 'semibold', color: 'fg.muted', width: 32, borderBottom: '1px solid', borderColor: 'border.default' }}>#</Box>
           <Box as="th" sx={{ px: 2, py: 1, textAlign: 'left', fontWeight: 'semibold', color: 'fg.muted', borderBottom: '1px solid', borderColor: 'border.default' }}>Original Title</Box>
-          <Box as="th" sx={{ px: 2, py: 1, textAlign: 'center', fontWeight: 'semibold', color: 'fg.muted', width: 24, borderBottom: '1px solid', borderColor: 'border.default' }}>→</Box>
+          <Box as="th" aria-label="Rename direction" sx={{ px: 2, py: 1, textAlign: 'center', fontWeight: 'semibold', color: 'fg.muted', width: 24, borderBottom: '1px solid', borderColor: 'border.default' }}>
+            <ArrowRightIcon size={14} />
+          </Box>
           <Box as="th" sx={{ px: 2, py: 1, textAlign: 'left', fontWeight: 'semibold', color: 'fg.muted', borderBottom: '1px solid', borderColor: 'border.default' }}>New Title</Box>
         </Box>
       </Box>
@@ -379,7 +432,9 @@ function PreviewTable({ items }: { items: Array<TitleItem & { newTitle: string }
             <Box as="tr" key={item.domId} sx={{ opacity: unchanged ? 0.5 : 1 }}>
               <Box as="td" sx={{ px: 2, py: 1, color: 'fg.muted', borderBottom: '1px solid', borderColor: 'border.muted' }}>{i + 1}</Box>
               <Box as="td" sx={{ px: 2, py: 1, color: unchanged ? 'fg.muted' : 'fg.default', borderBottom: '1px solid', borderColor: 'border.muted', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</Box>
-              <Box as="td" sx={{ px: 2, py: 1, color: 'fg.muted', textAlign: 'center', borderBottom: '1px solid', borderColor: 'border.muted' }}>→</Box>
+              <Box as="td" sx={{ px: 2, py: 1, color: 'fg.muted', textAlign: 'center', borderBottom: '1px solid', borderColor: 'border.muted' }}>
+                <ArrowRightIcon size={14} />
+              </Box>
               <Box as="td" sx={{ px: 2, py: 1, color: unchanged ? 'fg.muted' : 'fg.default', fontWeight: unchanged ? 'normal' : 'semibold', borderBottom: '1px solid', borderColor: 'border.muted', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.newTitle}</Box>
             </Box>
           )

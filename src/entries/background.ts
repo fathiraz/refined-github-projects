@@ -24,7 +24,7 @@ import {
   UPDATE_PR_BODY,
   ADD_COMMENT,
 } from '../lib/graphql/mutations'
-import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, SEARCH_VIEWER_REPOS, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '../lib/graphql/queries'
+import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, GET_VIEWER_REPOS_PAGE, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '../lib/graphql/queries'
 import { processQueue, cancelQueue, sleep } from '../lib/queue'
 import { patStorage, usernameStorage, allSprintSettingsStorage } from '../lib/storage'
 import { GET_PROJECT_ITEMS_WITH_FIELDS } from '../lib/graphql/queries'
@@ -175,6 +175,18 @@ export default defineBackground(() => {
 
   onMessage('searchTransferTargets', async ({ data }) => {
     type RepoNode = { id: string; name: string; nameWithOwner: string; isPrivate: boolean; description: string | null; hasIssuesEnabled: boolean; isArchived: boolean }
+    type ViewerReposPage = {
+      viewer: {
+        repositories: {
+          pageInfo: { hasNextPage: boolean; endCursor: string | null }
+          nodes: RepoNode[]
+        }
+      }
+    }
+    const trimmedQuery = data.q.trim().toLowerCase()
+    const isTransferEligible = (repo: RepoNode) => !repo.isArchived && repo.hasIssuesEnabled
+    const matchesQuery = (repo: RepoNode) =>
+      trimmedQuery === '' || repo.name.toLowerCase().includes(trimmedQuery) || repo.nameWithOwner.toLowerCase().includes(trimmedQuery)
 
     if (data.firstItemId && data.projectId) {
       try {
@@ -182,14 +194,10 @@ export default defineBackground(() => {
         const issueNodeId = resolved[0]?.issueNodeId
         if (issueNodeId) {
           const result = await gql<{ node: { possibleTransferRepositoriesForViewer?: { edges: { node: RepoNode }[] } } }>(
-            GET_POSSIBLE_TRANSFER_REPOS, { issueId: issueNodeId, first: 100 }
+            GET_POSSIBLE_TRANSFER_REPOS, { issueId: issueNodeId, first: 100 }, { silent: true }
           )
           let nodes = result.node?.possibleTransferRepositoriesForViewer?.edges.map(e => e.node) ?? []
-          nodes = nodes.filter(r => !r.isArchived && r.hasIssuesEnabled)
-          if (data.q.trim()) {
-            const q = data.q.toLowerCase()
-            nodes = nodes.filter(r => r.name.toLowerCase().includes(q) || r.nameWithOwner.toLowerCase().includes(q))
-          }
+          nodes = nodes.filter(r => isTransferEligible(r) && matchesQuery(r))
           return nodes
         }
       } catch (e) {
@@ -198,18 +206,39 @@ export default defineBackground(() => {
     }
 
     let nodes: RepoNode[]
-    if (data.q.trim() === '') {
+    if (trimmedQuery === '') {
       const result = await gql<{ viewer: { topRepositories: { nodes: RepoNode[] } } }>(
-        GET_VIEWER_TOP_REPOS, { first: 30 }
+        GET_VIEWER_TOP_REPOS, { first: 5 }
       )
       nodes = result.viewer?.topRepositories.nodes ?? []
     } else {
-      const result = await gql<{ viewer: { repositories: { nodes: RepoNode[] } } }>(
-        SEARCH_VIEWER_REPOS, { q: data.q, first: 20 }
-      )
-      nodes = result.viewer?.repositories.nodes ?? []
+      const matches: RepoNode[] = []
+      const seenRepoIds = new Set<string>()
+      let cursor: string | null = null
+      let hasNextPage = true
+
+      while (hasNextPage && matches.length < 20) {
+        const result: ViewerReposPage = await gql<ViewerReposPage>(
+          GET_VIEWER_REPOS_PAGE, { first: 100, after: cursor }
+        )
+        const repositories: ViewerReposPage['viewer']['repositories'] | undefined = result.viewer?.repositories
+        const pageNodes = repositories?.nodes ?? []
+
+        for (const repo of pageNodes) {
+          if (seenRepoIds.has(repo.id)) continue
+          seenRepoIds.add(repo.id)
+          if (!isTransferEligible(repo) || !matchesQuery(repo)) continue
+          matches.push(repo)
+          if (matches.length >= 20) break
+        }
+
+        hasNextPage = repositories?.pageInfo.hasNextPage ?? false
+        cursor = repositories?.pageInfo.endCursor ?? null
+      }
+
+      nodes = matches
     }
-    return nodes.filter(r => !r.isArchived && r.hasIssuesEnabled)
+    return nodes.filter(isTransferEligible)
   })
 
   onMessage('duplicateItem', async ({ data, sender }) => {

@@ -1,11 +1,19 @@
-import tippy from 'tippy.js'
+import tippy, { type Instance } from 'tippy.js'
 import { sprintPanelStore } from '../../lib/sprint-panel-store'
-import { ensureTippyCss } from '../../lib/tippy-utils'
+import { ensureTippyCss, getTippyDelayValue } from '../../lib/tippy-utils'
 
 const ATTR = 'data-rgp-sprint-btn'
+const TOOLTIP_DELAY = [400, 0] as const
 let _unsub: (() => void) | null = null
+let _tooltip: Instance | null = null
+let _tooltipButton: HTMLElement | null = null
+let _tooltipCleanup: (() => void) | null = null
+let _showTimeout: number | null = null
+let _hideTimeout: number | null = null
 
 export function injectStatusBarSprintButton() {
+  if (_tooltipButton && !_tooltipButton.isConnected) cleanupSprintButtonTooltip()
+
   // Anchor via stable CSS module class on the "Add status update" token span
   const statusToken = document.querySelector<HTMLElement>('[class*="latest-status-update-module"]')
   if (!statusToken) return
@@ -47,13 +55,17 @@ export function injectStatusBarSprintButton() {
   injectSprintButtonStyles()
   ensureTippyCss()
   const btn = sprintWrapper.querySelector('button')
-  if (btn) tippy(btn, { content: 'Sprint panel', placement: 'bottom', delay: [400, 0] })
+  if (btn) bindSprintButtonTooltip(btn)
 
   _unsub?.()
   _unsub = sprintPanelStore.subscribe((v) => {
     const el = document.querySelector<HTMLElement>(`[${ATTR}="1"]`)
     if (el) setButtonState(el, v)
-    else { _unsub?.(); _unsub = null }
+    else {
+      cleanupSprintButtonTooltip()
+      _unsub?.()
+      _unsub = null
+    }
   })
 }
 
@@ -78,4 +90,97 @@ function injectSprintButtonStyles(): void {
     }
   `
   document.head.appendChild(el)
+}
+
+function clearTooltipTimers() {
+  if (_showTimeout !== null) {
+    window.clearTimeout(_showTimeout)
+    _showTimeout = null
+  }
+
+  if (_hideTimeout !== null) {
+    window.clearTimeout(_hideTimeout)
+    _hideTimeout = null
+  }
+}
+
+function cleanupSprintButtonTooltip() {
+  clearTooltipTimers()
+  _tooltipCleanup?.()
+  _tooltipCleanup = null
+  _tooltip?.destroy()
+  _tooltip = null
+  _tooltipButton = null
+}
+
+function bindSprintButtonTooltip(button: HTMLElement) {
+  if (_tooltipButton === button) return
+
+  cleanupSprintButtonTooltip()
+  _tooltipButton = button
+  _tooltip = tippy(button, {
+    content: 'Sprint panel',
+    placement: 'bottom',
+    trigger: 'manual',
+  })
+
+  const scheduleShow = () => {
+    clearTooltipTimers()
+    const showDelay = getTippyDelayValue(TOOLTIP_DELAY, 0)
+    if (showDelay > 0) {
+      _showTimeout = window.setTimeout(() => {
+        _showTimeout = null
+        if (_tooltipButton !== button || !button.isConnected) return
+        _tooltip?.show()
+      }, showDelay)
+      return
+    }
+
+    _tooltip?.show()
+  }
+
+  const scheduleHide = () => {
+    if (!_tooltip) return
+
+    if (_showTimeout !== null) {
+      window.clearTimeout(_showTimeout)
+      _showTimeout = null
+    }
+
+    const hideDelay = getTippyDelayValue(TOOLTIP_DELAY, 1)
+    if (hideDelay > 0) {
+      if (_hideTimeout !== null) window.clearTimeout(_hideTimeout)
+      _hideTimeout = window.setTimeout(() => {
+        _hideTimeout = null
+        _tooltip?.hide()
+      }, hideDelay)
+      return
+    }
+
+    _tooltip.hide()
+  }
+
+  const hideImmediately = () => {
+    clearTooltipTimers()
+    _tooltip?.hide()
+  }
+
+  const passiveTouch: AddEventListenerOptions = { passive: true }
+  button.addEventListener('mouseenter', scheduleShow)
+  button.addEventListener('mouseleave', scheduleHide)
+  button.addEventListener('focusin', scheduleShow)
+  button.addEventListener('focusout', scheduleHide)
+  button.addEventListener('mousedown', hideImmediately)
+  button.addEventListener('click', hideImmediately)
+  button.addEventListener('touchstart', hideImmediately, passiveTouch)
+
+  _tooltipCleanup = () => {
+    button.removeEventListener('mouseenter', scheduleShow)
+    button.removeEventListener('mouseleave', scheduleHide)
+    button.removeEventListener('focusin', scheduleShow)
+    button.removeEventListener('focusout', scheduleHide)
+    button.removeEventListener('mousedown', hideImmediately)
+    button.removeEventListener('click', hideImmediately)
+    button.removeEventListener('touchstart', hideImmediately, passiveTouch)
+  }
 }
