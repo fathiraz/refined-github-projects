@@ -3,7 +3,7 @@ import Tippy from '../ui/tooltip'
 import { Box, Button, Flash, FormControl, Spinner, Text, TextInput } from '@primer/react'
 import { sendMessage, ItemPreviewData } from '../../lib/messages'
 import { queueStore } from '../../lib/queue-store'
-import { flyToTracker } from '../../lib/fly-animation'
+import { flyToTracker } from './bulk-utils'
 import { RepoMetadataSelectPanel, type RepoMetadataItem } from '../ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '../ui/markdown-textarea'
 import {

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box, Button, FormControl, Heading, Text, TextInput } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
-import { useTokenSetup } from '../../lib/use-token-setup'
+import { useTokenSetup } from '../../components/token-setup'
 import { usernameStorage } from '../../lib/storage'
 import { AppShell, EyeIcon, EyeOffIcon, KeyboardHint, PanelCard, StatusBanner } from '../../components/ui/primitives'
 import { DebugSettingsCard } from '../../components/debug-settings-card'

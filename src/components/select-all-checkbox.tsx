@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getAllInjectedItemIds } from '../lib/dom-utils'
+import { getAllInjectedItemIds } from '../lib/project-table-dom'
 import { selectionStore } from '../lib/selection-store'
 import { SelectionControl } from './selection-control'
 

@@ -3,11 +3,10 @@ import Tippy from './ui/tooltip'
 import { ensureTippyCss } from '../lib/tippy-utils'
 import { Box, Button, Text, ActionList, CounterLabel } from '@primer/react'
 import { selectionStore } from '../lib/selection-store'
-import { getAllInjectedItemIds, isEditableTarget } from '../lib/dom-utils'
-import { exportSelectedToCSV } from '../lib/csv-export'
+import { getAllInjectedItemIds, isEditableTarget } from '../lib/project-table-dom'
 import { sendMessage } from '../lib/messages'
 import { queueStore } from '../lib/queue-store'
-import { flyToTracker } from '../lib/fly-animation'
+import { exportSelectedToCSV, flyToTracker } from './bulk/bulk-utils'
 import { BulkDuplicateModal } from './bulk/bulk-duplicate-modal'
 import { BulkEditWizard, type WizardStep, type ProjectField, type ProjectData } from './bulk/bulk-edit-modal'
 import { BulkCloseModal } from './bulk/bulk-close-modal'
@@ -71,7 +70,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [showMoveModal, setShowMoveModal] = useState(false)
   const anyModalOpen = showCloseModal || showOpenModal || showDeleteModal ||
-    showLockModal || showPinModal || showTransferModal || showDupModal || showRenameModal || showMoveModal
+    showLockModal || showPinModal || showUnpinModal || showTransferModal || showDupModal || showRenameModal || showMoveModal
 
   // Selection subscription
   useEffect(() => {

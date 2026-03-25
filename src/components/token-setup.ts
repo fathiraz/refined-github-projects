@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { sendMessage } from './messages'
-import { patStorage } from './storage'
+import { sendMessage } from '../lib/messages'
+import { patStorage } from '../lib/storage'
 
 export function useTokenSetup() {
   const [token, setToken] = useState('')

@@ -12,18 +12,24 @@ import { CheckboxPortalHost } from '../../components/checkbox-portal-host'
 import { SprintPanel } from '../../components/sprint/sprint-modal'
 import { ErrorBoundary } from '../../components/error-boundary'
 import { ShadowThemeProvider } from '../../components/ui/shadow-theme-provider'
-import { BULK_BAR_PRIMER_PORTAL_NAME } from '../../lib/primer-shadow-portal'
+import { BULK_BAR_PRIMER_PORTAL_NAME, installPrimerShadowDomCompat } from '../../lib/primer-shadow-dom-compat'
 import { Z_MODAL_PORTAL } from '../../lib/z-index'
-import { installPrimerShadowDomCompat } from '../../lib/primer-shadow-dom-compat'
 import { queueStore } from '../../lib/queue-store'
-import { sprintPanelStore } from '../../lib/sprint-panel-store'
-import type { ProjectData } from './observer'
+import { sprintPanelStore } from '../../components/sprint/sprint-store'
+import type { ProjectContext, ProjectData } from '../../lib/github-project'
 
 type SprintPanelProps = Omit<React.ComponentProps<typeof SprintPanel>, 'visible' | 'onClose'>
 
 function SprintPanelDriver(props: SprintPanelProps) {
   const [visible, setVisible] = useState(false)
-  useEffect(() => { sprintPanelStore.subscribe(setVisible) }, [])
+
+  useEffect(() => {
+    const unsubscribe = sprintPanelStore.subscribe(setVisible)
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
   return (
     <SprintPanel
       {...props}
@@ -60,14 +66,6 @@ function PrimerPortalRootHost({ shadowRoot }: { shadowRoot: ShadowRoot }) {
   )
 }
 
-interface ProjectContext {
-  projectId: string
-  owner: string
-  isOrg: boolean
-  number: number
-}
-
-/** Primer portals render outside BaseStyles; inherit page font + restore clickable overlay subtrees (host stays pointer-events: none). */
 const RGP_PRIMER_PORTAL_SURFACE_CSS = `
 [data-rgp-primer-portal],
 [data-rgp-primer-portal] * {
@@ -79,12 +77,11 @@ const RGP_PRIMER_PORTAL_SURFACE_CSS = `
 }
 `
 
-export async function setupMounts(
+export async function setupContentUi(
   ctx: ContentScriptContext,
   projectContext: ProjectContext,
   getFields: () => Promise<ProjectData>,
 ) {
-  // Mount Bulk Actions Bar (Shadow DOM CSUI)
   const bulkBarUi = await createShadowRootUi(ctx, {
     name: 'rgp-bulk-bar',
     position: 'inline',
@@ -122,13 +119,12 @@ export async function setupMounts(
   })
   bulkBarUi.mount()
 
-  // Mount Queue Tracker (Shadow DOM CSUI)
   const queueUi = await createShadowRootUi(ctx, {
     name: 'rgp-queue-tracker',
     position: 'inline',
     anchor: document.body,
     append: 'last',
-    onMount(container, shadow) {
+    onMount(container) {
       const styleHost = document.createElement('div')
       container.parentElement!.insertBefore(styleHost, container)
       const root = ReactDOM.createRoot(container)
@@ -149,13 +145,12 @@ export async function setupMounts(
   })
   queueUi.mount()
 
-  // Mount Toast List (Shadow DOM CSUI — bottom-left)
   const toastUi = await createShadowRootUi(ctx, {
     name: 'rgp-toast-list',
     position: 'inline',
     anchor: document.body,
     append: 'last',
-    onMount(container, shadow) {
+    onMount(container) {
       const styleHost = document.createElement('div')
       container.parentElement!.insertBefore(styleHost, container)
       const root = ReactDOM.createRoot(container)
@@ -181,7 +176,7 @@ export async function setupMounts(
     position: 'inline',
     anchor: document.body,
     append: 'last',
-    onMount(container, shadow) {
+    onMount(container) {
       const styleHost = document.createElement('div')
       container.parentElement!.insertBefore(styleHost, container)
       const root = ReactDOM.createRoot(container)
@@ -202,13 +197,12 @@ export async function setupMounts(
   })
   onboardingUi.mount()
 
-  // Mount Sprint Panel (Shadow DOM CSUI — hidden by default, toggled via sprintPanelStore)
   const sprintPanelUi = await createShadowRootUi(ctx, {
     name: 'rgp-sprint-panel',
     position: 'inline',
     anchor: document.body,
     append: 'last',
-    onMount(container, shadow) {
+    onMount(container) {
       const styleHost = document.createElement('div')
       container.parentElement!.insertBefore(styleHost, container)
       const root = ReactDOM.createRoot(container)
@@ -235,7 +229,6 @@ export async function setupMounts(
   })
   sprintPanelUi.mount()
 
-  // Mount single portal host root (all checkbox portals render through this one root)
   const portalStyleHost = document.createElement('div')
   document.head.appendChild(portalStyleHost)
   const portalHostDiv = document.createElement('div')
@@ -250,13 +243,19 @@ export async function setupMounts(
     </StyleSheetManager>,
   )
 
-  // Warn before navigating away while background jobs are running
-  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
     if (queueStore.hasActive()) {
-      e.preventDefault()
-      e.returnValue = ''
+      event.preventDefault()
+      event.returnValue = ''
     }
   }
+
   window.addEventListener('beforeunload', handleBeforeUnload)
-  ctx.onInvalidated(() => window.removeEventListener('beforeunload', handleBeforeUnload))
+
+  ctx.onInvalidated(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    portalRoot.unmount()
+    portalHostDiv.remove()
+    portalStyleHost.remove()
+  })
 }

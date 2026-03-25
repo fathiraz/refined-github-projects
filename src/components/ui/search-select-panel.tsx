@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Button, SelectPanel, Text } from '@primer/react'
 import type { SelectPanelItemInput, SelectPanelItemProps } from '@primer/react'
 import { TriangleDownIcon } from '@primer/octicons-react'
-import { BULK_BAR_PRIMER_PORTAL_NAME } from '../../lib/primer-shadow-portal'
+import { BULK_BAR_PRIMER_PORTAL_NAME } from '../../lib/primer-shadow-dom-compat'
 import { Z_MODAL_PORTAL } from '../../lib/z-index'
 
 export type SearchSelectPanelMessage = {

@@ -5,7 +5,7 @@ import driverCss from 'driver.js/dist/driver.css?inline'
 import { sendMessage } from '../lib/messages'
 import { selectionStore } from '../lib/selection-store'
 import { onboardingDismissedStorage } from '../lib/storage'
-import { getAllInjectedItemIds } from '../lib/dom-utils'
+import { getAllInjectedItemIds } from '../lib/project-table-dom'
 import { KeyboardHint, PanelCard, PrimaryAction, StatusBanner, XIcon } from './ui/primitives'
 import { Z_OVERLAY } from '@/lib/z-index'
 // Override: strips non-conformant shadows and border-radius from driver.js

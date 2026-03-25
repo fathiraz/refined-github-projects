@@ -6,9 +6,8 @@ import { SlidersIcon } from '../ui/primitives'
 import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
 import type { SprintSettings } from '../../lib/storage'
-import type { ProjectData } from '../../entries/content/observer'
-import { sprintPanelStore } from '../../lib/sprint-panel-store'
-import { sprintConfirmEndStore } from '../../lib/sprint-confirm-end-store'
+import type { ProjectData } from '../../lib/github-project'
+import { sprintConfirmEndStore, sprintPanelStore } from './sprint-store'
 
 interface Props {
   projectId: string
@@ -167,7 +166,7 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
         </>
       )}
 
-      {(state === 'acknowledged' || state === 'active') && (
+      {state === 'active' && (
         <>
           <Tippy content="End the current sprint" placement="top" delay={[400, 0]}>
             <Button
