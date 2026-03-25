@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Heading, Text } from '@primer/react'
-import { TokenSetupCard } from '../../components/token-setup-card'
+import { TokenSetupCard } from '../../components/token-setup'
 import { DebugSettingsCard } from '../../components/debug-settings-card'
 import { AppShell, CheckIcon } from '../../components/ui/primitives'
 

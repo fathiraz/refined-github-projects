@@ -7,7 +7,7 @@ import { selectionStore } from '../lib/selection-store'
 import { onboardingDismissedStorage } from '../lib/storage'
 import { getAllInjectedItemIds } from '../lib/project-table-dom'
 import { KeyboardHint, PanelCard, PrimaryAction, StatusBanner, XIcon } from './ui/primitives'
-import { Z_OVERLAY } from '@/lib/z-index'
+import { Z_OVERLAY } from '../lib/z-index'
 // Override: strips non-conformant shadows and border-radius from driver.js
 import { DRIVER_CSS_OVERRIDES } from '../lib/driver-overrides'
 

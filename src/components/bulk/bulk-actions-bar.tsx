@@ -1,28 +1,39 @@
-import React, { useEffect, useState, useRef } from 'react'
-import Tippy from './ui/tooltip'
-import { ensureTippyCss } from '../lib/tippy-utils'
-import { Box, Button, Text, ActionList, CounterLabel } from '@primer/react'
-import { selectionStore } from '../lib/selection-store'
-import { getAllInjectedItemIds, isEditableTarget } from '../lib/project-table-dom'
-import { sendMessage } from '../lib/messages'
-import { queueStore } from '../lib/queue-store'
-import { exportSelectedToCSV, flyToTracker } from './bulk/bulk-utils'
-import { BulkDuplicateModal } from './bulk/bulk-duplicate-modal'
-import { BulkEditWizard, type WizardStep, type ProjectField, type ProjectData } from './bulk/bulk-edit-modal'
-import { BulkCloseModal } from './bulk/bulk-close-modal'
-import { BulkDeleteModal } from './bulk/bulk-delete-modal'
-import { BulkOpenModal } from './bulk/bulk-open-modal'
-import { BulkTransferModal } from './bulk/bulk-transfer-modal'
-import { BulkLockModal } from './bulk/bulk-lock-modal'
-import { BulkPinModal } from './bulk/bulk-pin-modal'
-import { BulkUnpinModal } from './bulk/bulk-unpin-modal'
-import { BulkRenameModal } from './bulk/bulk-rename-modal'
-import { BulkMoveModal, type ReorderOp } from './bulk/bulk-move-modal'
+import React, { useEffect, useRef, useState } from 'react'
+import { ActionList, Box, Button, CounterLabel, Text } from '@primer/react'
+import Tippy from '../ui/tooltip'
+import { ensureTippyCss } from '../../lib/tippy-utils'
+import { selectionStore } from '../../lib/selection-store'
+import { getAllInjectedItemIds, isEditableTarget } from '../../lib/project-table-dom'
+import { sendMessage } from '../../lib/messages'
+import { queueStore } from '../../lib/queue-store'
+import { exportSelectedToCSV, flyToTracker } from './bulk-utils'
+import { BulkDuplicateModal } from './bulk-duplicate-modal'
+import { BulkEditWizard, type ProjectData, type ProjectField, type WizardStep } from './bulk-edit-modal'
+import { BulkCloseModal } from './bulk-close-modal'
+import { BulkDeleteModal } from './bulk-delete-modal'
+import { BulkOpenModal } from './bulk-open-modal'
+import { BulkTransferModal } from './bulk-transfer-modal'
+import { BulkLockModal } from './bulk-lock-modal'
+import { BulkPinModal } from './bulk-pin-modal'
+import { BulkUnpinModal } from './bulk-unpin-modal'
+import { BulkRenameModal } from './bulk-rename-modal'
+import { BulkMoveModal, type ReorderOp } from './bulk-move-modal'
 import {
-  CircleSlashIcon, TrashIcon, CopyIcon,
-  ListCheckIcon, DownloadIcon, SyncIcon, LockIcon, PinIcon, UnpinIcon, ArrowRightIcon, XIcon, PencilIcon, MoveIcon,
-} from './ui/primitives'
-import { Z_OVERLAY } from '../lib/z-index'
+  ArrowRightIcon,
+  CircleSlashIcon,
+  CopyIcon,
+  DownloadIcon,
+  ListCheckIcon,
+  LockIcon,
+  MoveIcon,
+  PencilIcon,
+  PinIcon,
+  SyncIcon,
+  TrashIcon,
+  UnpinIcon,
+  XIcon,
+} from '../ui/primitives'
+import { Z_OVERLAY } from '../../lib/z-index'
 
 interface Props {
   projectId: string

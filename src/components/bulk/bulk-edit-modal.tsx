@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import Tippy from '../ui/tooltip'
 import { Box, Button, Checkbox, Flash, FormControl, Heading, Text, TextInput } from '@primer/react'
-import { AutocompleteInput } from '../ui/autocomplete-input'
 import { RepoMetadataSelectPanel } from '../ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '../ui/markdown-textarea'
 import {
@@ -355,14 +354,14 @@ function ValuesStep({ count, selectedFields, fieldValues, owner, firstRepoName, 
           } else if (field.dataType === 'ISSUE_TYPE' || field.name.toLowerCase() === 'type') {
             inputContent = (
               <Box sx={{ width: '100%' }}>
-                <AutocompleteInput
+                <RepoMetadataSelectPanel
                   type="ISSUE_TYPES"
                   owner={owner}
                   repoName={firstRepoName || ''}
-                  value={(value.array as { name: string }[]) || []}
-                  onChange={arr => onUpdateFieldValue(field.id, { ...(fieldValues[field.id] as Record<string, unknown> || {}), array: arr, dataType: 'ISSUE_TYPE' })}
-                  placeholder={firstRepoName ? 'Search issue types...' : 'Repository not detected - please open a project with issues'}
-                  singleSelect={true}
+                  value={(value.array as { id: string; name: string; color?: string; description?: string }[]) || []}
+                  onChange={(arr) => onUpdateFieldValue(field.id, { ...(fieldValues[field.id] as Record<string, unknown> || {}), array: arr, dataType: 'ISSUE_TYPE' })}
+                  placeholder={firstRepoName ? 'Select issue type' : 'Repository not detected - please open a project with issues'}
+                  singleSelect
                   disabled={!firstRepoName}
                 />
               </Box>
