@@ -1,7 +1,7 @@
-import { onMessage, sendMessage, ItemPreviewData } from '../lib/messages'
-import { logger, initDebugLogger } from '../lib/debug-logger'
-import { gql, GqlError } from '../lib/graphql/client'
-import { GET_PROJECT_ITEM_DETAILS, GET_PROJECT_FIELDS, GET_PROJECT_ITEMS_FOR_RESOLUTION, GET_REPOSITORY_ID } from '../lib/graphql/queries'
+import { onMessage, sendMessage, ItemPreviewData } from '../../lib/messages'
+import { logger, initDebugLogger } from '../../lib/debug-logger'
+import { gql, GqlError } from '../../lib/graphql/client'
+import { GET_PROJECT_ITEM_DETAILS, GET_PROJECT_FIELDS, GET_PROJECT_ITEMS_FOR_RESOLUTION, GET_REPOSITORY_ID } from '../../lib/graphql/queries'
 import {
   CLONE_ISSUE,
   ATTACH_TO_PROJECT,
@@ -23,13 +23,13 @@ import {
   UPDATE_ISSUE_BODY,
   UPDATE_PR_BODY,
   ADD_COMMENT,
-} from '../lib/graphql/mutations'
-import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, GET_VIEWER_REPOS_PAGE, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '../lib/graphql/queries'
-import { processQueue, cancelQueue, sleep } from '../lib/queue'
-import { patStorage, usernameStorage, allSprintSettingsStorage } from '../lib/storage'
-import { GET_PROJECT_ITEMS_WITH_FIELDS } from '../lib/graphql/queries'
-import { todayUtc, isActive, nearestUpcoming, nextAfter, iterationEndDate } from '../lib/sprint-utils'
-import type { SprintInfo } from '../lib/messages'
+} from '../../lib/graphql/mutations'
+import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, GET_VIEWER_REPOS_PAGE, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '../../lib/graphql/queries'
+import { processQueue, cancelQueue, sleep } from '../../lib/queue'
+import { patStorage, usernameStorage, allSprintSettingsStorage } from '../../lib/storage'
+import { GET_PROJECT_ITEMS_WITH_FIELDS } from '../../lib/graphql/queries'
+import { todayUtc, isActive, nearestUpcoming, nextAfter, iterationEndDate } from '../../lib/sprint-utils'
+import type { SprintInfo } from '../../lib/messages'
 
 // ─── Concurrency guards ───────────────────────────────────────────────────────
 let activeDuplicateCount = 0
@@ -384,7 +384,7 @@ export default defineBackground(() => {
         return
       }
 
-      const tasks: import('../lib/queue').QueueTask[] = []
+      const tasks: import('../../lib/queue').QueueTask[] = []
 
       for (const { domId, projectItemId, issueNodeId, typename } of resolvedItems) {
         for (const update of data.updates) {
@@ -591,7 +591,7 @@ export default defineBackground(() => {
         return
       }
 
-      const tasks: import('../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
         id: `close-${domId}`,
         run: async () => {
           await gql(CLOSE_ISSUE, { issueId: issueNodeId, stateReason: data.reason })
@@ -641,7 +641,7 @@ export default defineBackground(() => {
         return
       }
 
-      const tasks: import('../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
         id: `open-${domId}`,
         run: async () => {
           await gql(REOPEN_ISSUE, { issueId: issueNodeId })
@@ -691,7 +691,7 @@ export default defineBackground(() => {
         return
       }
 
-      const tasks: import('../lib/queue').QueueTask[] = resolvedItems.map(({ domId, projectItemId }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = resolvedItems.map(({ domId, projectItemId }) => ({
         id: `delete-${domId}`,
         run: async () => {
           await gql(DELETE_PROJECT_ITEM, { projectId: data.projectId, itemId: projectItemId })
@@ -730,7 +730,7 @@ export default defineBackground(() => {
       await broadcastQueue({ total: data.itemIds.length, completed: 0, paused: false, status: 'Resolving items...', processId, label }, tabId)
       const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
       if (resolvedItems.length === 0) { console.error('[rgp:bg] no valid items resolved for bulkLock, aborting'); return }
-      const tasks: import('../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
         id: `lock-${domId}`,
         run: async () => {
           await gql(LOCK_ISSUE, { lockableId: issueNodeId, ...(data.lockReason ? { lockReason: data.lockReason } : {}) })
@@ -761,7 +761,7 @@ export default defineBackground(() => {
       await broadcastQueue({ total: data.itemIds.length, completed: 0, paused: false, status: 'Resolving items...', processId, label }, tabId)
       const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
       if (resolvedItems.length === 0) { console.error('[rgp:bg] no valid items resolved for bulkPin, aborting'); return }
-      const tasks: import('../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
         id: `pin-${domId}`,
         run: async () => { await gql(PIN_ISSUE, { issueId: issueNodeId }); await sleep(1000) },
       }))
@@ -789,7 +789,7 @@ export default defineBackground(() => {
       await broadcastQueue({ total: data.itemIds.length, completed: 0, paused: false, status: 'Resolving items...', processId, label }, tabId)
       const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
       if (resolvedItems.length === 0) { console.error('[rgp:bg] no valid items resolved for bulkUnpin, aborting'); return }
-      const tasks: import('../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
         id: `unpin-${domId}`,
         run: async () => { await gql(UNPIN_ISSUE, { issueId: issueNodeId }); await sleep(1000) },
       }))
@@ -819,7 +819,7 @@ export default defineBackground(() => {
       await broadcastQueue({ total: data.itemIds.length, completed: 0, paused: false, status: 'Resolving items...', processId, label }, tabId)
       const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
       if (resolvedItems.length === 0) { console.error('[rgp:bg] no valid items resolved for bulkTransfer, aborting'); return }
-      const tasks: import('../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
         id: `transfer-${domId}`,
         run: async () => { await gql(TRANSFER_ISSUE, { issueId: issueNodeId, repositoryId: targetRepoId }); await sleep(1000) },
       }))
@@ -856,7 +856,7 @@ export default defineBackground(() => {
     const tabId = sender.tab?.id
 
     try {
-      const tasks: import('../lib/queue').QueueTask[] = data.renames.map(({ domId, issueNodeId, newTitle, typename }) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = data.renames.map(({ domId, issueNodeId, newTitle, typename }) => ({
         id: `rename-${domId}`,
         run: async () => {
           if (typename === 'PullRequest') {
@@ -981,7 +981,7 @@ export default defineBackground(() => {
     const tabId = sender.tab?.id
 
     try {
-      const tasks: import('../lib/queue').QueueTask[] = data.reorderOps.map((op, i) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = data.reorderOps.map((op, i) => ({
         id: `reorder-${i}`,
         run: async () => {
           await gql(UPDATE_PROJECT_ITEM_POSITION, {
@@ -1128,7 +1128,7 @@ export default defineBackground(() => {
         return acc
       }, [])
 
-      const tasks: import('../lib/queue').QueueTask[] = reorderOps.map((op, i) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = reorderOps.map((op, i) => ({
         id: `reorder-pos-${i}`,
         run: async () => {
           await gql(UPDATE_PROJECT_ITEM_POSITION, {
@@ -1359,7 +1359,7 @@ export default defineBackground(() => {
         return
       }
 
-      const tasks: import('../lib/queue').QueueTask[] = notDoneItems.map((item) => ({
+      const tasks: import('../../lib/queue').QueueTask[] = notDoneItems.map((item) => ({
         id: `sprint-move-${item.id}`,
         run: async () => {
           await gql(UPDATE_PROJECT_FIELD, {
@@ -1550,7 +1550,7 @@ async function runDeepDuplicate(
   let newIssueId = ''
   let newItemId = ''
 
-  const tasks: import('../lib/queue').QueueTask[] = [
+  const tasks: import('../../lib/queue').QueueTask[] = [
     {
       id: 'clone-issue',
       run: async () => {

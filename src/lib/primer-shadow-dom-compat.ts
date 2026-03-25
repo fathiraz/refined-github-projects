@@ -13,6 +13,10 @@
  * inside that overlay.
  */
 
+import { logger } from './debug-logger'
+
+export const BULK_BAR_PRIMER_PORTAL_NAME = 'rgp-bulk-bar-primer-portal' as const
+
 type ComposedMouseEvent = MouseEvent & { composedPath?: () => EventTarget[] }
 
 // Store only the current mousedown event's retargeted target/path so patched
@@ -64,7 +68,7 @@ function scheduleTrackedMousedownClear(): void {
   cancelTrackedMousedownClear()
   clearTrackedMousedownRaf = window.requestAnimationFrame(() => {
     clearTrackedMousedownRaf = null
-    console.log('[PrimerShadowCompat] clear tracked mousedown state')
+    logger.log('[PrimerShadowCompat] clear tracked mousedown state')
     resetTrackedMousedown()
   })
 }
@@ -90,7 +94,7 @@ export function installPrimerShadowDomCompat(portalHost: HTMLElement, shadowRoot
     if (originatedFromPortal) {
       activeMousedownPath = path
       activeMousedownTarget = target
-      console.log('[PrimerShadowCompat] capture:mousedown', {
+      logger.log('[PrimerShadowCompat] capture:mousedown', {
         target: describeEventTarget(target),
         path: summarizeEventPath(path),
         originatedFromPortal,
@@ -111,7 +115,7 @@ export function installPrimerShadowDomCompat(portalHost: HTMLElement, shadowRoot
       path.includes(portalHost) || path.includes(shadowRoot) || path.includes(shadowRoot.host)
 
     if (originatedFromPortal) {
-      console.log('[PrimerShadowCompat] capture:click', {
+      logger.log('[PrimerShadowCompat] capture:click', {
         target: describeEventTarget(e.target),
         path: summarizeEventPath(path),
       })
@@ -198,7 +202,7 @@ function patchOverlayContains(overlay: HTMLElement, portalHost: HTMLElement, sha
     const fallbackResult = pathHitsOverlay && isRetargetedNode
 
     if (activeMousedownPath.length > 0 && (pathHitsOverlay || isRetargetedNode)) {
-      console.log('[PrimerShadowCompat] contains:fallback-check', {
+      logger.log('[PrimerShadowCompat] contains:fallback-check', {
         overlay: describeEventTarget(overlay),
         node: describeEventTarget(node),
         activeTarget: describeEventTarget(activeMousedownTarget),

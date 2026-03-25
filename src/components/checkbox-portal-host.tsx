@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { portalStore, type PortalEntry } from '../lib/portal-store'
+import { checkboxPortalStore, type PortalEntry } from '../lib/checkbox-portal-store'
 import { RowCheckbox } from './row-checkbox'
 import { GroupCheckbox } from './group-checkbox'
 import { SelectAllCheckbox } from './select-all-checkbox'
@@ -8,7 +8,7 @@ import { SelectAllCheckbox } from './select-all-checkbox'
 export function CheckboxPortalHost() {
   const [entries, setEntries] = useState<readonly PortalEntry[]>([])
 
-  useEffect(() => portalStore.subscribe(setEntries), [])
+  useEffect(() => checkboxPortalStore.subscribe(setEntries), [])
 
   return (
     <>

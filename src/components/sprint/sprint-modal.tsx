@@ -22,11 +22,10 @@ import { ModalStepHeader } from '../ui/modal-step-header'
 import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
 import type { ExcludeCondition, SprintSettings } from '../../lib/storage'
-import { iterationEndDate, nextAfter } from '../../lib/sprint-utils'
-import { injectSprintFilter, SPRINT_FILTER } from '../../lib/filter-utils'
+import { iterationEndDate, nextAfter, injectSprintFilter, SPRINT_FILTER } from '../../lib/sprint-utils'
 import type { Iteration } from '../../lib/sprint-utils'
-import type { ProjectData } from '../../entries/content/observer'
-import { sprintConfirmEndStore } from '../../lib/sprint-confirm-end-store'
+import type { ProjectData } from '../../lib/github-project'
+import { sprintConfirmEndStore } from './sprint-store'
 
 // ── Shared helpers ───────────────────────────────────────────
 
@@ -403,7 +402,7 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
   useEffect(() => {
     sendMessage('getProjectFields', { owner, number, isOrg })
       .then((result) => {
-        const iterField = result.fields.find((f: any) => f.id === settings.sprintFieldId) as any
+        const iterField = result.fields.find((field) => field.id === settings.sprintFieldId) as FieldNode | undefined
         const iters: Iteration[] = iterField?.configuration?.iterations ?? []
         const future: SprintInfo[] = iters
           .filter((i) => i.startDate >= activeSprint.endDate)

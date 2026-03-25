@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Button, Flash, FormControl, Heading, Link, Spinner, Text, TextInput } from '@primer/react'
-import { useTokenSetup } from '../lib/use-token-setup'
+import { useTokenSetup } from './token-setup'
 import { CheckIcon, GearIcon, XIcon } from './ui/primitives'
 
 type Mode = 'compact' | 'full'
