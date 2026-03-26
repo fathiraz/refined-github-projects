@@ -67,10 +67,10 @@ export default defineConfig({
       }
     }
   },
-  manifest: {
+  manifest: ({ browser }) => ({
     name: 'Refined GitHub Projects',
     description: 'GitHub Projects, but the way it should work. Bulk edit, close, delete, and deep duplicate items — all from the table.',
-    permissions: ['storage', 'cookies'],
+    permissions: ['storage'],
     host_permissions: [
       'https://api.github.com/*',
       'https://github.com/*',
@@ -98,5 +98,17 @@ export default defineConfig({
       '96': 'icon/96.png',
       '128': 'icon/128.png',
     },
-  },
+    ...(browser === 'firefox'
+      ? {
+          browser_specific_settings: {
+            gecko: {
+              id: 'refined-github-projects@example.com',
+              data_collection_permissions: {
+                required: ['none'],
+              },
+            },
+          },
+        }
+      : {}),
+  }),
 })
