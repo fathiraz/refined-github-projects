@@ -129,7 +129,19 @@ export const GET_PROJECT_ITEMS_FOR_RESOLUTION = `
             id
             content {
               __typename
-              ... on Issue { id databaseId repository { owner { login } name } }
+              ... on Issue {
+                id
+                databaseId
+                number
+                parent {
+                  id
+                  databaseId
+                  number
+                  title
+                  repository { owner { login } name }
+                }
+                repository { owner { login } name }
+              }
               ... on PullRequest { id databaseId repository { owner { login } name } }
             }
           }
@@ -220,6 +232,55 @@ export const GET_REPOSITORY_ID = `
   query GetRepositoryId($owner: String!, $name: String!) {
     repository(owner: $owner, name: $name) {
       id
+    }
+  }
+`
+
+export const GET_REPOSITORY_ISSUE_BY_NUMBER = `
+  query GetRepositoryIssueByNumber($owner: String!, $name: String!, $number: Int!) {
+    repository(owner: $owner, name: $name) {
+      issue(number: $number) {
+        id
+        databaseId
+        number
+        title
+        state
+        repository { owner { login } name }
+      }
+    }
+  }
+`
+
+export const GET_REPOSITORY_RECENT_OPEN_ISSUES = `
+  query GetRepositoryRecentOpenIssues($owner: String!, $name: String!, $first: Int!) {
+    repository(owner: $owner, name: $name) {
+      issues(first: $first, states: [OPEN], orderBy: { field: UPDATED_AT, direction: DESC }) {
+        nodes {
+          id
+          databaseId
+          number
+          title
+          state
+          repository { owner { login } name }
+        }
+      }
+    }
+  }
+`
+
+export const SEARCH_RELATIONSHIP_ISSUES = `
+  query SearchRelationshipIssues($query: String!, $first: Int!) {
+    search(query: $query, type: ISSUE, first: $first) {
+      nodes {
+        ... on Issue {
+          id
+          databaseId
+          number
+          title
+          state
+          repository { owner { login } name }
+        }
+      }
     }
   }
 `

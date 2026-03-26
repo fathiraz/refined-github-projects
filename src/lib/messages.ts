@@ -53,6 +53,29 @@ export interface DuplicateItemPlan {
   }
 }
 
+export interface IssueSearchResultData extends IssueRelationshipData {
+  state?: 'OPEN' | 'CLOSED'
+}
+
+export interface BulkEditRelationshipListUpdate {
+  add: IssueRelationshipData[]
+  remove: IssueRelationshipData[]
+  clear: boolean
+}
+
+export interface BulkEditRelationshipsUpdate {
+  parent: {
+    set?: IssueRelationshipData
+    clear: boolean
+  }
+  blockedBy: BulkEditRelationshipListUpdate
+  blocking: BulkEditRelationshipListUpdate
+}
+
+export interface BulkRelationshipValidationResult {
+  errors: string[]
+}
+
 export interface ItemPreviewData {
   resolvedItemId: string
   issueNumber: number
@@ -107,6 +130,16 @@ interface ProtocolMap {
   getPatStatus(data: {}): { hasPat: boolean }
   validatePat(data: { token: string }): { valid: boolean; user?: string }
   searchRepoMetadata(data: { owner: string; name: string; q: string; type: 'ASSIGNEES' | 'LABELS' | 'MILESTONES' | 'ISSUE_TYPES' }): { id: string; name: string; color?: string; avatarUrl?: string; description?: string }[]
+  searchRelationshipIssues(data: {
+    q: string
+    owner?: string
+    repoName?: string
+  }): IssueSearchResultData[]
+  validateBulkRelationshipUpdates(data: {
+    itemIds: string[]
+    projectId: string
+    relationships: BulkEditRelationshipsUpdate
+  }): BulkRelationshipValidationResult
   searchTransferTargets(data: {
     owner: string
     q: string
@@ -117,6 +150,7 @@ interface ProtocolMap {
     itemIds: string[]
     projectId: string
     updates: { fieldId: string; value: unknown }[]
+    relationships?: BulkEditRelationshipsUpdate
     fieldMeta?: Record<string, {
       name: string
       options?: { id: string; name: string }[]
