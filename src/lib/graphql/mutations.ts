@@ -13,7 +13,7 @@ export const CLONE_ISSUE = `
       assigneeIds: $assigneeIds
       labelIds: $labelIds
     }) {
-      issue { id }
+      issue { id databaseId number }
     }
   }
 `
