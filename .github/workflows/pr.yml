@@ -192,9 +192,19 @@ jobs:
       - name: Run Cursor PR review
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        working-directory: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          timeout 900 agent -p --model auto --output-format json "$(cat "$REVIEW_DIR/prompt.txt")" > "$REVIEW_DIR/cursor-output.json"
+          if ! timeout 900 agent -p --trust --model auto --output-format json "$(cat "$REVIEW_DIR/prompt.txt")" > "$REVIEW_DIR/cursor-output.json" 2> "$REVIEW_DIR/cursor-error.log"; then
+            cat "$REVIEW_DIR/cursor-error.log" >&2 || true
+            exit 1
+          fi
+
+          if [ ! -s "$REVIEW_DIR/cursor-output.json" ]; then
+            echo "Cursor review produced no JSON output." >&2
+            cat "$REVIEW_DIR/cursor-error.log" >&2 || true
+            exit 1
+          fi
 
       - name: Normalize and post review feedback
         env:
