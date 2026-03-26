@@ -1,0 +1,382 @@
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      REVIEW_DIR: ${{ runner.temp }}/cursor-pr-review
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Cursor CLI
+        run: |
+          set -euo pipefail
+          installer="$(mktemp)"
+          trap 'rm -f "$installer"' EXIT
+          curl https://cursor.com/install -fsSL -o "$installer"
+          if [ ! -s "$installer" ]; then
+            echo "Cursor installer download was empty."
+            exit 1
+          fi
+          bash "$installer"
+          for bin_dir in "$HOME/.cursor/bin" "$HOME/.local/bin"; do
+            if [ -d "$bin_dir" ]; then
+              echo "$bin_dir" >> "$GITHUB_PATH"
+            fi
+          done
+
+      - name: Verify Cursor CLI installation
+        run: agent --version
+
+      - name: Prepare review context
+        run: |
+          set -euo pipefail
+          mkdir -p "$REVIEW_DIR"
+
+          git diff --no-color "$PR_BASE_SHA...$PR_HEAD_SHA" > "$REVIEW_DIR/pr-diff.txt"
+          git diff --name-only "$PR_BASE_SHA...$PR_HEAD_SHA" > "$REVIEW_DIR/changed-files.txt"
+
+          python3 <<'PY'
+          import json
+          import os
+          import pathlib
+          import re
+
+          review_dir = pathlib.Path(os.environ["REVIEW_DIR"])
+          diff_text = (review_dir / "pr-diff.txt").read_text()
+          event = json.loads(pathlib.Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+          pull_request = event["pull_request"]
+
+          metadata = {
+              "number": pull_request["number"],
+              "title": pull_request.get("title") or "",
+              "body": pull_request.get("body") or "",
+              "html_url": pull_request.get("html_url") or "",
+              "base": {
+                  "ref": pull_request["base"]["ref"],
+                  "sha": pull_request["base"]["sha"],
+              },
+              "head": {
+                  "ref": pull_request["head"]["ref"],
+                  "sha": pull_request["head"]["sha"],
+              },
+          }
+
+          target_lines = {}
+          current_file = None
+          new_line = None
+
+          for line in diff_text.splitlines():
+              if line.startswith("diff --git "):
+                  current_file = None
+                  new_line = None
+                  continue
+              if line.startswith("+++ "):
+                  if line == "+++ /dev/null":
+                      current_file = None
+                  elif line.startswith("+++ b/"):
+                      current_file = line[6:]
+                      target_lines.setdefault(current_file, set())
+                  else:
+                      current_file = None
+                  continue
+              if line.startswith("@@"):
+                  match = re.match(r"@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@", line)
+                  new_line = int(match.group(1)) if match else None
+                  continue
+              if current_file is None or new_line is None:
+                  continue
+              if line.startswith("+") and not line.startswith("+++"):
+                  target_lines[current_file].add(new_line)
+                  new_line += 1
+              elif line.startswith("-") and not line.startswith("---"):
+                  continue
+              else:
+                  new_line += 1
+
+          comment_targets = {
+              "files": [
+                  {
+                      "path": path,
+                      "added_lines": sorted(lines),
+                  }
+                  for path, lines in sorted(target_lines.items())
+                  if lines
+              ]
+          }
+
+          (review_dir / "pr-metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+          (review_dir / "comment-targets.json").write_text(json.dumps(comment_targets, indent=2) + "\n")
+          PY
+
+      - name: Run Cursor PR review
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          set -euo pipefail
+          PROMPT_FILE="$REVIEW_DIR/prompt.txt"
+          RAW_OUTPUT="$REVIEW_DIR/cursor-output.json"
+
+          cat > "$PROMPT_FILE" <<EOF
+          Review the submitted GitHub pull request using the checked-out repository and the provided context files.
+
+          Repository root: $(pwd)
+          Context files:
+          - $REVIEW_DIR/pr-metadata.json
+          - $REVIEW_DIR/changed-files.txt
+          - $REVIEW_DIR/pr-diff.txt
+          - $REVIEW_DIR/comment-targets.json
+
+          Return strict JSON only. Do not wrap it in markdown fences. Do not add any text before or after the JSON.
+
+          JSON schema:
+          {
+            "summary": "Short markdown summary. Use 'No actionable issues found.' when appropriate.",
+            "comments": [
+              {
+                "path": "relative/path.ts",
+                "line": 123,
+                "body": "One concise, actionable review comment for that changed line."
+              }
+            ]
+          }
+
+          Review rules:
+          - Review only the submitted PR changes plus any directly relevant surrounding repository context.
+          - Report only high-confidence bugs, security issues, correctness problems, or major maintainability issues.
+          - Do not report formatting, naming, style-only nits, or speculative concerns.
+          - Use at most 6 inline comments.
+          - Each inline comment must target a changed added line from comment-targets.json.
+          - line must be the new-file line number.
+          - body must be concise, specific, and actionable.
+          - If there are no actionable issues, return {"summary":"No actionable issues found.","comments":[]}.
+          EOF
+
+          timeout 900 agent -p --model auto --output-format json "$(cat "$PROMPT_FILE")" > "$RAW_OUTPUT"
+
+      - name: Normalize review output
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json
+          import os
+          import pathlib
+          import re
+
+          review_dir = pathlib.Path(os.environ["REVIEW_DIR"])
+          raw_output_path = review_dir / "cursor-output.json"
+          normalized_path = review_dir / "normalized-review.json"
+          summary_request_path = review_dir / "summary-review.json"
+          inline_comments_path = review_dir / "inline-comments.json"
+
+          def strip_code_fences(text: str) -> str:
+              text = text.strip()
+              if text.startswith("```"):
+                  text = re.sub(r"^```(?:json)?\s*", "", text)
+                  text = re.sub(r"\s*```$", "", text)
+              return text.strip()
+
+          def extract_structured_result(text: str):
+              text = strip_code_fences(text)
+              decoder = json.JSONDecoder()
+              for start in range(len(text)):
+                  if text[start] != "{":
+                      continue
+                  try:
+                      result, _ = decoder.raw_decode(text[start:])
+                  except json.JSONDecodeError:
+                      continue
+                  if isinstance(result, dict):
+                      return result
+              return None
+
+          def normalize_path(value: str) -> str:
+              value = (value or "").strip()
+              if value.startswith("./"):
+                  value = value[2:]
+              if value.startswith("b/"):
+                  value = value[2:]
+              return value
+
+          def normalize_summary(value) -> str:
+              if isinstance(value, list):
+                  lines = []
+                  for item in value:
+                      item_text = str(item).strip()
+                      if item_text:
+                          prefix = "- " if not item_text.startswith(("- ", "* ")) else ""
+                          lines.append(f"{prefix}{item_text}")
+                  return "\n".join(lines).strip()
+              if isinstance(value, str):
+                  return value.strip()
+              if value is None:
+                  return ""
+              return str(value).strip()
+
+          def shorten(text: str, limit: int) -> str:
+              text = re.sub(r"\s+", " ", text).strip()
+              if len(text) <= limit:
+                  return text
+              return text[: limit - 1].rstrip() + "…"
+
+          outer = json.loads(raw_output_path.read_text())
+          assistant_text = str(outer.get("result") or "").strip()
+          structured = extract_structured_result(assistant_text)
+
+          comment_targets = json.loads((review_dir / "comment-targets.json").read_text())
+          valid_targets = {
+              entry["path"]: set(entry["added_lines"])
+              for entry in comment_targets.get("files", [])
+          }
+
+          raw_comments = []
+          summary = ""
+          if structured:
+              summary = normalize_summary(structured.get("summary"))
+              raw_comments = structured.get("comments") or []
+          else:
+              summary = assistant_text or ""
+
+          filtered_comments = []
+          seen = set()
+          for candidate in raw_comments:
+              if not isinstance(candidate, dict):
+                  continue
+              path = normalize_path(str(candidate.get("path") or ""))
+              body = shorten(str(candidate.get("body") or ""), 500)
+              try:
+                  line = int(candidate.get("line"))
+              except (TypeError, ValueError):
+                  continue
+              if not path or not body or line <= 0:
+                  continue
+              if line not in valid_targets.get(path, set()):
+                  continue
+              key = (path, line)
+              if key in seen:
+                  continue
+              seen.add(key)
+              filtered_comments.append(
+                  {
+                      "path": path,
+                      "line": line,
+                      "body": body,
+                  }
+              )
+              if len(filtered_comments) >= 6:
+                  break
+
+          summary = shorten(summary, 4000)
+          if not summary:
+              if filtered_comments:
+                  summary = f"Found {len(filtered_comments)} actionable issue(s) on changed lines."
+              else:
+                  summary = "No actionable issues found."
+
+          review_body_lines = [
+              "## Cursor auto review",
+              "",
+              "No actionable issues found on changed lines." if not filtered_comments else f"Found {len(filtered_comments)} actionable issue(s) on changed lines.",
+              "",
+              summary,
+              "",
+              "_Generated automatically when this PR was submitted using Cursor CLI with `--model auto`._",
+          ]
+          review_request = {
+              "event": "COMMENT",
+              "body": "\n".join(line for line in review_body_lines if line is not None).strip(),
+          }
+
+          normalized = {
+              "summary": summary,
+              "comments": filtered_comments,
+              "raw_result": assistant_text,
+          }
+
+          normalized_path.write_text(json.dumps(normalized, indent=2) + "\n")
+          summary_request_path.write_text(json.dumps(review_request, indent=2) + "\n")
+          inline_comments_path.write_text(json.dumps(filtered_comments, indent=2) + "\n")
+          PY
+
+      - name: Post review feedback
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json
+          import os
+          import pathlib
+          import sys
+          import urllib.error
+          import urllib.request
+
+          review_dir = pathlib.Path(os.environ["REVIEW_DIR"])
+          repo = os.environ["GITHUB_REPOSITORY"]
+          pr_number = os.environ["PR_NUMBER"]
+          token = os.environ["GITHUB_TOKEN"]
+          head_sha = os.environ["PR_HEAD_SHA"]
+
+          def post(endpoint: str, payload: dict, *, allow_422: bool = False):
+              request = urllib.request.Request(
+                  f"https://api.github.com{endpoint}",
+                  data=json.dumps(payload).encode(),
+                  method="POST",
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {token}",
+                      "Content-Type": "application/json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request) as response:
+                      return json.loads(response.read().decode())
+              except urllib.error.HTTPError as exc:
+                  error_body = exc.read().decode()
+                  if allow_422 and exc.code == 422:
+                      print(f"Skipping inline comment because GitHub rejected it: {error_body}", file=sys.stderr)
+                      return None
+                  raise RuntimeError(f"GitHub API request failed ({exc.code}): {error_body}") from exc
+
+          summary_request = json.loads((review_dir / "summary-review.json").read_text())
+          inline_comments = json.loads((review_dir / "inline-comments.json").read_text())
+
+          post(f"/repos/{repo}/pulls/{pr_number}/reviews", summary_request)
+
+          posted_inline_comments = 0
+          for comment in inline_comments:
+              payload = {
+                  "body": comment["body"],
+                  "commit_id": head_sha,
+                  "path": comment["path"],
+                  "line": comment["line"],
+                  "side": "RIGHT",
+              }
+              if post(f"/repos/{repo}/pulls/{pr_number}/comments", payload, allow_422=True) is not None:
+                  posted_inline_comments += 1
+
+          print(f"Posted {posted_inline_comments} inline comment(s).")
+          PY
