@@ -220,7 +220,7 @@ pnpm dev
 pnpm build
 ```
 
-Load `.output/chrome-mv3` in `chrome://extensions` or `edge://extensions`, or load the Firefox output in `about:debugging`.
+Load `dist/chrome-mv3` in `chrome://extensions` or `edge://extensions`, or load the Firefox output in `about:debugging`.
 
 If you want to use Safari manually, follow the [WXT Safari publishing guide](https://wxt.dev/guide/essentials/publishing.html#safari).
 
