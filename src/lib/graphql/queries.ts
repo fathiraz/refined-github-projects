@@ -15,13 +15,15 @@ export const GET_PROJECT_ITEM_DETAILS = `
         content {
           ... on Issue {
             id
+            databaseId
+            number
             title
             body
             repository { id owner { login } name }
             assignees(first: 10) { nodes { id login name avatarUrl } }
             labels(first: 20) { nodes { id name color } }
             issueType { id name }
-            parent { id number title repository { owner { login } name } }
+            parent { id databaseId number title repository { owner { login } name } }
           }
         }
         fieldValues(first: 50) {
