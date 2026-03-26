@@ -1,7 +1,7 @@
-import { onMessage, sendMessage, type DuplicateItemPlan, type IssueRelationshipData, type ItemPreviewData } from '../../lib/messages'
+import { onMessage, sendMessage, type BulkEditRelationshipsUpdate, type BulkRelationshipValidationResult, type DuplicateItemPlan, type IssueRelationshipData, type IssueSearchResultData, type ItemPreviewData } from '../../lib/messages'
 import { logger, initDebugLogger } from '../../lib/debug-logger'
 import { gql } from '../../lib/graphql/client'
-import { GET_PROJECT_ITEM_DETAILS, GET_PROJECT_FIELDS, GET_PROJECT_ITEMS_FOR_RESOLUTION, GET_REPOSITORY_ID } from '../../lib/graphql/queries'
+import { GET_PROJECT_ITEM_DETAILS, GET_PROJECT_FIELDS, GET_PROJECT_ITEMS_FOR_RESOLUTION, GET_REPOSITORY_ID, GET_REPOSITORY_ISSUE_BY_NUMBER, GET_REPOSITORY_RECENT_OPEN_ISSUES, SEARCH_RELATIONSHIP_ISSUES } from '../../lib/graphql/queries'
 import {
   CLONE_ISSUE,
   ATTACH_TO_PROJECT,
@@ -41,6 +41,9 @@ const MAX_CONCURRENT_BULK = 3
 let activeSprintEndCount = 0
 const MAX_CONCURRENT_SPRINT_END = 1
 
+const RESOLVED_ITEM_CACHE_TTL_MS = 15_000
+const resolvedItemCache = new Map<string, { resolvedItems: ResolvedItem[]; expiresAt: number }>()
+
 // ─── Types for Issue Types query ───────────────────────────────────────────────
 interface IssueTypeNode {
   id: string
@@ -56,6 +59,63 @@ interface IssueTypesResult {
       edges: { node: IssueTypeNode }[]
     }
   } | null
+}
+
+interface RelationshipSearchIssueNode {
+  id: string
+  databaseId: number
+  number: number
+  title: string
+  state: 'OPEN' | 'CLOSED'
+  repository: {
+    owner: { login: string }
+    name: string
+  }
+}
+
+interface RelationshipSearchResult {
+  repository?: {
+    issue?: RelationshipSearchIssueNode | null
+    issues?: {
+      nodes: RelationshipSearchIssueNode[]
+    }
+  } | null
+  search?: {
+    nodes: Array<RelationshipSearchIssueNode | null>
+  }
+}
+
+function createResolvedItemCacheKey(projectId: string, itemIds: string[]): string {
+  return `${projectId}::${[...new Set(itemIds)].sort().join('|')}`
+}
+
+function pruneResolvedItemCache(now = Date.now()): void {
+  for (const [key, entry] of resolvedItemCache.entries()) {
+    if (entry.expiresAt <= now) {
+      resolvedItemCache.delete(key)
+    }
+  }
+}
+
+function cacheResolvedItems(projectId: string, itemIds: string[], resolvedItems: ResolvedItem[]): void {
+  pruneResolvedItemCache()
+  resolvedItemCache.set(createResolvedItemCacheKey(projectId, itemIds), {
+    resolvedItems,
+    expiresAt: Date.now() + RESOLVED_ITEM_CACHE_TTL_MS,
+  })
+}
+
+function takeCachedResolvedItems(projectId: string, itemIds: string[]): ResolvedItem[] | undefined {
+  pruneResolvedItemCache()
+
+  const key = createResolvedItemCacheKey(projectId, itemIds)
+  const entry = resolvedItemCache.get(key)
+  if (!entry) {
+    return undefined
+  }
+
+  resolvedItemCache.delete(key)
+  return entry.resolvedItems
 }
 
 export default defineBackground(() => {
@@ -171,6 +231,70 @@ export default defineBackground(() => {
       console.error('[rgp:bg] searchRepoMetadata failed', e)
       return []
     }
+  })
+
+  onMessage('searchRelationshipIssues', async ({ data }) => {
+    try {
+      const trimmedQuery = data.q.trim()
+
+      if (trimmedQuery === '') {
+        if (!data.owner || !data.repoName) return []
+        const result = await withRateLimitRetry(
+          () => gql<RelationshipSearchResult>(GET_REPOSITORY_RECENT_OPEN_ISSUES, {
+            owner: data.owner,
+            name: data.repoName,
+            first: 5,
+          }),
+        )
+
+        return dedupeRelationships(
+          (result.repository?.issues?.nodes ?? [])
+            .filter(Boolean)
+            .map(mapIssueNodeToRelationshipSearchResult),
+        )
+      }
+
+      const exactReference = parseExactIssueReference(trimmedQuery, data.owner, data.repoName)
+      if (exactReference) {
+        const exactResult = await withRateLimitRetry(
+          () => gql<RelationshipSearchResult>(GET_REPOSITORY_ISSUE_BY_NUMBER, {
+            owner: exactReference.owner,
+            name: exactReference.repoName,
+            number: exactReference.number,
+          }, { silent: true }),
+        )
+
+        const exactIssue = exactResult.repository?.issue
+        if (exactIssue) {
+          return [mapIssueNodeToRelationshipSearchResult(exactIssue)]
+        }
+      }
+
+      const result = await withRateLimitRetry(
+        () => gql<RelationshipSearchResult>(SEARCH_RELATIONSHIP_ISSUES, {
+          query: buildRelationshipSearchQuery(trimmedQuery, data.owner, data.repoName),
+          first: 20,
+        }),
+      )
+
+      return dedupeRelationships(
+        (result.search?.nodes ?? [])
+          .filter((node): node is RelationshipSearchIssueNode => Boolean(node))
+          .map(mapIssueNodeToRelationshipSearchResult),
+      )
+    } catch (error) {
+      console.error('[rgp:bg] searchRelationshipIssues failed', error)
+      return []
+    }
+  })
+
+  onMessage('validateBulkRelationshipUpdates', async ({ data }) => {
+    const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId)
+    cacheResolvedItems(data.projectId, data.itemIds, resolvedItems)
+    const errors = await getBulkRelationshipValidationErrors(resolvedItems, data.relationships)
+
+    const result: BulkRelationshipValidationResult = { errors }
+    return result
   })
 
   onMessage('searchTransferTargets', async ({ data }) => {
@@ -401,7 +525,10 @@ export default defineBackground(() => {
     try {
       // Resolve DOM-extracted item IDs to real ProjectV2Item Node IDs
       await broadcastQueue({ total: data.itemIds.length, completed: 0, paused: false, status: 'Resolving items...', processId, label }, tabId)
-      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId)
+      const cachedResolvedItems = data.relationships
+        ? takeCachedResolvedItems(data.projectId, data.itemIds)
+        : undefined
+      const resolvedItems = cachedResolvedItems ?? await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
       logger.log('[rgp:bg] resolved item IDs', resolvedItems)
 
       if (resolvedItems.length === 0) {
@@ -411,7 +538,8 @@ export default defineBackground(() => {
 
       const tasks: import('../../lib/queue').QueueTask[] = []
 
-      for (const { domId, projectItemId, issueNodeId, typename } of resolvedItems) {
+      for (const item of resolvedItems) {
+        const { domId, projectItemId, issueNodeId, typename } = item
         for (const update of data.updates) {
           const { dataType, singleSelectOptionId, iterationId, array } = update.value as any
 
@@ -570,6 +698,10 @@ export default defineBackground(() => {
               })
             },
           })
+        }
+
+        if (data.relationships) {
+          tasks.push(...buildBulkRelationshipTasks(item, data.relationships, tabId))
         }
       }
 
@@ -1533,9 +1665,65 @@ interface RestIssueDependencyEntry extends RestIssuePayload {
   blocked_issue?: RestIssuePayload
 }
 
-interface RestIssueDependencyListResponse {
-  dependencies?: RestIssueDependencyEntry[]
-  blocking_issues?: RestIssueDependencyEntry[]
+type RestIssueDependencyResponse =
+  | RestIssueDependencyEntry[]
+  | {
+      dependencies?: RestIssueDependencyEntry[]
+      blocking_issues?: RestIssueDependencyEntry[]
+    }
+
+function relationshipKey(issue: IssueRelationshipData): string {
+  return issue.databaseId ? `db:${issue.databaseId}` : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
+}
+
+function parseExactIssueReference(
+  query: string,
+  fallbackOwner?: string,
+  fallbackRepoName?: string,
+): { owner: string; repoName: string; number: number } | null {
+  const explicitMatch = query.match(/^([^/\s]+)\/([^#\s]+)#(\d+)$/)
+  if (explicitMatch) {
+    return {
+      owner: explicitMatch[1],
+      repoName: explicitMatch[2],
+      number: parseInt(explicitMatch[3], 10),
+    }
+  }
+
+  const localMatch = query.match(/^#?(\d+)$/)
+  if (localMatch && fallbackOwner && fallbackRepoName) {
+    return {
+      owner: fallbackOwner,
+      repoName: fallbackRepoName,
+      number: parseInt(localMatch[1], 10),
+    }
+  }
+
+  return null
+}
+
+function buildRelationshipSearchQuery(
+  query: string,
+  fallbackOwner?: string,
+  fallbackRepoName?: string,
+): string {
+  const repoScope = fallbackOwner && fallbackRepoName && !/\brepo:[^\s]+/.test(query)
+    ? `repo:${fallbackOwner}/${fallbackRepoName} `
+    : ''
+
+  return `${repoScope}is:issue archived:false sort:updated-desc ${query}`.trim()
+}
+
+function mapIssueNodeToRelationshipSearchResult(issue: RelationshipSearchIssueNode): IssueSearchResultData {
+  return {
+    nodeId: issue.id,
+    databaseId: issue.databaseId,
+    number: issue.number,
+    title: issue.title,
+    repoOwner: issue.repository.owner.login,
+    repoName: issue.repository.name,
+    state: issue.state,
+  }
 }
 
 class GitHubRequestError extends Error {
@@ -1601,6 +1789,19 @@ function normalizeIssueRelationship(entry: RestIssueDependencyEntry): IssueRelat
   }
 }
 
+function getRelationshipEntries(
+  response: RestIssueDependencyResponse,
+  kind: 'blocked_by' | 'blocking',
+): RestIssueDependencyEntry[] {
+  if (Array.isArray(response)) {
+    return response
+  }
+
+  return kind === 'blocking'
+    ? (response.blocking_issues ?? response.dependencies ?? [])
+    : (response.dependencies ?? [])
+}
+
 async function githubRest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const pat = await patStorage.getValue()
   const headers = new Headers(init.headers)
@@ -1651,15 +1852,13 @@ async function listIssueRelationships(
 
   for (let page = 1; page <= 10; page++) {
     const response = await withRateLimitRetry(
-      () => githubRest<RestIssueDependencyListResponse>(
+      () => githubRest<RestIssueDependencyResponse>(
         `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/dependencies/${kind}?per_page=100&page=${page}`,
       ),
       tabId,
     )
 
-    const entries = kind === 'blocking'
-      ? (response.blocking_issues ?? response.dependencies ?? [])
-      : (response.dependencies ?? [])
+    const entries = getRelationshipEntries(response, kind)
 
     for (const entry of entries) {
       const normalized = normalizeIssueRelationship(entry)
@@ -1680,6 +1879,30 @@ async function listIssueRelationships(
   }
 
   return relationships
+}
+
+async function getCurrentParentRelationship(
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  tabId?: number,
+): Promise<IssueRelationshipData | undefined> {
+  try {
+    const response = await withRateLimitRetry(
+      () => githubRest<RestIssueDependencyEntry>(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/parent`,
+      ),
+      tabId,
+    )
+
+    return normalizeIssueRelationship(response) ?? undefined
+  } catch (error) {
+    if (error instanceof GitHubRequestError && error.status === 404) {
+      return undefined
+    }
+
+    throw error
+  }
 }
 
 async function listIssueRelationshipsSafe(
@@ -1708,6 +1931,296 @@ function buildFieldValueFromSource(fieldValue: FieldValue): Record<string, unkno
 
 function formatRelationshipLabel(issue: IssueRelationshipData): string {
   return `${issue.repoOwner}/${issue.repoName}#${issue.number}`
+}
+
+function dedupeRelationships(issues: IssueRelationshipData[]): IssueRelationshipData[] {
+  const deduped = new Map<string, IssueRelationshipData>()
+  for (const issue of issues) {
+    deduped.set(relationshipKey(issue), issue)
+  }
+  return [...deduped.values()]
+}
+
+function formatResolvedIssueLabel(item: ResolvedItem): string {
+  if (item.repoOwner && item.repoName && item.issueNumber) {
+    return `${item.repoOwner}/${item.repoName}#${item.issueNumber}`
+  }
+
+  if (item.repoOwner && item.repoName) {
+    return `${item.repoOwner}/${item.repoName}`
+  }
+
+  return item.domId
+}
+
+async function getBulkRelationshipValidationErrors(
+  resolvedItems: ResolvedItem[],
+  relationships: BulkEditRelationshipsUpdate | undefined,
+): Promise<string[]> {
+  if (!relationships) return []
+
+  const errors = new Set<string>()
+  const blockedByAdd = dedupeRelationships(relationships.blockedBy.add)
+  const blockingAdd = dedupeRelationships(relationships.blocking.add)
+  const blockedByRemoveKeys = new Set(dedupeRelationships(relationships.blockedBy.remove).map(relationshipKey))
+  const blockingRemoveKeys = new Set(dedupeRelationships(relationships.blocking.remove).map(relationshipKey))
+  const blockedByAddKeys = new Set(blockedByAdd.map(relationshipKey))
+  const blockingAddKeys = new Set(blockingAdd.map(relationshipKey))
+  const needsDependencyValidation = blockedByAdd.length > 0 || blockingAdd.length > 0
+
+  for (const item of resolvedItems) {
+    if (item.typename !== 'Issue' || !item.issueDatabaseId || !item.issueNumber) continue
+
+    const itemLabel = formatResolvedIssueLabel(item)
+    if (relationships.parent.set?.databaseId === item.issueDatabaseId) {
+      errors.add(`${itemLabel} cannot be its own parent.`)
+    }
+
+    if (!needsDependencyValidation) continue
+
+    const currentBlockedBy = await listIssueRelationshipsSafe('blocked_by', item.repoOwner, item.repoName, item.issueNumber)
+    const currentBlocking = await listIssueRelationshipsSafe('blocking', item.repoOwner, item.repoName, item.issueNumber)
+    const effectiveBlockedByKeys = new Set(currentBlockedBy.map(relationshipKey))
+    const effectiveBlockingKeys = new Set(currentBlocking.map(relationshipKey))
+
+    if (relationships.blockedBy.clear) {
+      effectiveBlockedByKeys.clear()
+    } else {
+      for (const key of blockedByRemoveKeys) {
+        effectiveBlockedByKeys.delete(key)
+      }
+    }
+
+    if (relationships.blocking.clear) {
+      effectiveBlockingKeys.clear()
+    } else {
+      for (const key of blockingRemoveKeys) {
+        effectiveBlockingKeys.delete(key)
+      }
+    }
+
+    for (const issue of blockedByAdd) {
+      const key = relationshipKey(issue)
+      if (issue.databaseId === item.issueDatabaseId) {
+        errors.add(`${itemLabel} cannot be blocked by itself.`)
+        continue
+      }
+
+      if (effectiveBlockingKeys.has(key) || blockingAddKeys.has(key)) {
+        errors.add(`${itemLabel} cannot both block and be blocked by ${formatRelationshipLabel(issue)}.`)
+      }
+    }
+
+    for (const issue of blockingAdd) {
+      const key = relationshipKey(issue)
+      if (issue.databaseId === item.issueDatabaseId) {
+        errors.add(`${itemLabel} cannot block itself.`)
+        continue
+      }
+
+      if (effectiveBlockedByKeys.has(key) || blockedByAddKeys.has(key)) {
+        errors.add(`${itemLabel} cannot both block and be blocked by ${formatRelationshipLabel(issue)}.`)
+      }
+    }
+  }
+
+  return [...errors]
+}
+
+function buildBulkRelationshipTasks(
+  item: ResolvedItem,
+  relationships: BulkEditRelationshipsUpdate | undefined,
+  tabId?: number,
+): import('../../lib/queue').QueueTask[] {
+  if (!relationships || item.typename !== 'Issue' || !item.issueDatabaseId || !item.issueNumber) {
+    return []
+  }
+
+  const issueDatabaseId = item.issueDatabaseId
+  const issueNumber = item.issueNumber
+  const tasks: import('../../lib/queue').QueueTask[] = []
+
+  const nextParent = relationships.parent.set
+  if ((nextParent && nextParent.databaseId && nextParent.databaseId !== issueDatabaseId) || relationships.parent.clear) {
+    tasks.push({
+      id: `bulk-rel-parent-${item.domId}`,
+      detail: nextParent ? `Parent → ${formatRelationshipLabel(nextParent)}` : 'Clear parent relationship',
+      run: async () => {
+        if (nextParent?.databaseId && nextParent.databaseId !== issueDatabaseId) {
+          if (item.currentParent?.databaseId === nextParent.databaseId) {
+            return
+          }
+
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(nextParent.repoOwner)}/${encodeURIComponent(nextParent.repoName)}/issues/${nextParent.number}/sub_issues`, {
+              method: 'POST',
+              body: JSON.stringify({ sub_issue_id: issueDatabaseId, replace_parent: true }),
+            }),
+            tabId,
+          )
+          await sleep(1000)
+          return
+        }
+
+        if (!relationships.parent.clear) {
+          return
+        }
+
+        const currentParent = item.currentParent ?? await getCurrentParentRelationship(
+          item.repoOwner,
+          item.repoName,
+          issueNumber,
+          tabId,
+        )
+
+        if (!currentParent) {
+          console.warn('[rgp:bg] parent clear requested but no current parent could be resolved', {
+            domId: item.domId,
+            repoOwner: item.repoOwner,
+            repoName: item.repoName,
+            issueNumber,
+          })
+          return
+        }
+
+        try {
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(currentParent.repoOwner)}/${encodeURIComponent(currentParent.repoName)}/issues/${currentParent.number}/sub_issue`, {
+              method: 'DELETE',
+              body: JSON.stringify({ sub_issue_id: issueDatabaseId }),
+            }),
+            tabId,
+          )
+          await sleep(1000)
+        } catch (error) {
+          console.error('[rgp:bg] failed to clear parent relationship', {
+            domId: item.domId,
+            repoOwner: item.repoOwner,
+            repoName: item.repoName,
+            issueNumber,
+            currentParent,
+            error,
+          })
+          if (!(error instanceof GitHubRequestError) || error.status !== 404) {
+            throw error
+          }
+        }
+      },
+    })
+  }
+
+  if (
+    relationships.blockedBy.clear ||
+    relationships.blockedBy.add.length > 0 ||
+    relationships.blockedBy.remove.length > 0
+  ) {
+    tasks.push({
+      id: `bulk-rel-blocked-by-${item.domId}`,
+      detail: 'Blocked by relationships',
+      run: async () => {
+        const current = await listIssueRelationshipsSafe('blocked_by', item.repoOwner, item.repoName, issueNumber, tabId)
+        const currentByKey = new Map(current.map(issue => [relationshipKey(issue), issue]))
+
+        const removeBlockedBy = async (issue: IssueRelationshipData) => {
+          if (!issue.databaseId) return
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(item.repoOwner)}/${encodeURIComponent(item.repoName)}/issues/${issueNumber}/dependencies/blocked_by/${issue.databaseId}`, {
+              method: 'DELETE',
+            }),
+            tabId,
+          )
+          await sleep(1000)
+        }
+
+        if (relationships.blockedBy.clear) {
+          for (const issue of current) {
+            await removeBlockedBy(issue)
+          }
+          currentByKey.clear()
+        } else {
+          for (const issue of dedupeRelationships(relationships.blockedBy.remove)) {
+            const existing = currentByKey.get(relationshipKey(issue))
+            if (!existing) continue
+            await removeBlockedBy(existing)
+            currentByKey.delete(relationshipKey(existing))
+          }
+        }
+
+        for (const issue of dedupeRelationships(relationships.blockedBy.add)) {
+          if (!issue.databaseId || issue.databaseId === issueDatabaseId) continue
+          const key = relationshipKey(issue)
+          if (currentByKey.has(key)) continue
+
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(item.repoOwner)}/${encodeURIComponent(item.repoName)}/issues/${issueNumber}/dependencies/blocked_by`, {
+              method: 'POST',
+              body: JSON.stringify({ issue_id: issue.databaseId }),
+            }),
+            tabId,
+          )
+          await sleep(1000)
+          currentByKey.set(key, issue)
+        }
+      },
+    })
+  }
+
+  if (
+    relationships.blocking.clear ||
+    relationships.blocking.add.length > 0 ||
+    relationships.blocking.remove.length > 0
+  ) {
+    tasks.push({
+      id: `bulk-rel-blocking-${item.domId}`,
+      detail: 'Blocking relationships',
+      run: async () => {
+        const current = await listIssueRelationshipsSafe('blocking', item.repoOwner, item.repoName, issueNumber, tabId)
+        const currentByKey = new Map(current.map(issue => [relationshipKey(issue), issue]))
+
+        const removeBlocking = async (issue: IssueRelationshipData) => {
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(issue.repoOwner)}/${encodeURIComponent(issue.repoName)}/issues/${issue.number}/dependencies/blocked_by/${issueDatabaseId}`, {
+              method: 'DELETE',
+            }),
+            tabId,
+          )
+          await sleep(1000)
+        }
+
+        if (relationships.blocking.clear) {
+          for (const issue of current) {
+            await removeBlocking(issue)
+          }
+          currentByKey.clear()
+        } else {
+          for (const issue of dedupeRelationships(relationships.blocking.remove)) {
+            const existing = currentByKey.get(relationshipKey(issue))
+            if (!existing) continue
+            await removeBlocking(existing)
+            currentByKey.delete(relationshipKey(existing))
+          }
+        }
+
+        for (const issue of dedupeRelationships(relationships.blocking.add)) {
+          if (!issue.databaseId || issue.databaseId === issueDatabaseId) continue
+          const key = relationshipKey(issue)
+          if (currentByKey.has(key)) continue
+
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(issue.repoOwner)}/${encodeURIComponent(issue.repoName)}/issues/${issue.number}/dependencies/blocked_by`, {
+              method: 'POST',
+              body: JSON.stringify({ issue_id: issueDatabaseId }),
+            }),
+            tabId,
+          )
+          await sleep(1000)
+          currentByKey.set(key, issue)
+        }
+      },
+    })
+  }
+
+  return tasks
 }
 
 // ─── Deep Duplicate ───────────────────────────────────────────────────────────
@@ -2000,6 +2513,9 @@ interface ResolvedItem {
   projectItemId: string
   repoOwner: string
   repoName: string
+  issueDatabaseId?: number
+  issueNumber?: number
+  currentParent?: IssueRelationshipData
   typename?: 'Issue' | 'PullRequest'
 }
 
@@ -2047,6 +2563,17 @@ async function resolveProjectItemIds(domIds: string[], projectId: string, tabId?
             __typename?: string
             id: string
             databaseId: number
+            number?: number
+            parent?: {
+              id: string
+              databaseId: number
+              number: number
+              title: string
+              repository: {
+                owner: { login: string }
+                name: string
+              }
+            } | null
             repository?: { owner: { login: string }; name: string }
           } | null
         }[]
@@ -2086,6 +2613,16 @@ async function resolveProjectItemIds(domIds: string[], projectId: string, tabId?
           projectItemId: item.id,
           repoOwner: item.content.repository?.owner?.login || '',
           repoName: item.content.repository?.name || '',
+          issueDatabaseId: item.content.databaseId,
+          issueNumber: item.content.number,
+          currentParent: item.content.parent ? {
+            nodeId: item.content.parent.id,
+            databaseId: item.content.parent.databaseId,
+            number: item.content.parent.number,
+            title: item.content.parent.title,
+            repoOwner: item.content.parent.repository.owner.login,
+            repoName: item.content.parent.repository.name,
+          } : undefined,
           typename: (item.content as any).__typename as 'Issue' | 'PullRequest' | undefined,
         })
         remaining.delete(dbId)

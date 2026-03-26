@@ -4,11 +4,11 @@ import Tippy from '../ui/tooltip'
 import { ensureTippyCss } from '../../lib/tippy-utils'
 import { selectionStore } from '../../lib/selection-store'
 import { getAllInjectedItemIds, isEditableTarget } from '../../lib/project-table-dom'
-import { sendMessage } from '../../lib/messages'
+import { sendMessage, type BulkEditRelationshipsUpdate } from '../../lib/messages'
 import { queueStore } from '../../lib/queue-store'
 import { exportSelectedToCSV, flyToTracker } from './bulk-utils'
 import { BulkDuplicateModal } from './bulk-duplicate-modal'
-import { BulkEditWizard, type ProjectData, type ProjectField, type WizardStep } from './bulk-edit-modal'
+import { BulkEditWizard, type ProjectData, type ProjectField, type RelationshipSelectionState, type WizardStep } from './bulk-edit-modal'
 import { BulkCloseModal } from './bulk-close-modal'
 import { BulkDeleteModal } from './bulk-delete-modal'
 import { BulkOpenModal } from './bulk-open-modal'
@@ -45,6 +45,46 @@ interface Props {
 
 type ModalStep = 'CLOSED' | WizardStep
 
+function createEmptyRelationshipUpdates(): BulkEditRelationshipsUpdate {
+  return {
+    parent: {
+      set: undefined,
+      clear: false,
+    },
+    blockedBy: {
+      add: [],
+      remove: [],
+      clear: false,
+    },
+    blocking: {
+      add: [],
+      remove: [],
+      clear: false,
+    },
+  }
+}
+
+function createEmptyRelationshipSelection(): RelationshipSelectionState {
+  return {
+    parent: false,
+    blockedBy: false,
+    blocking: false,
+  }
+}
+
+function hasRelationshipOperations(relationships: BulkEditRelationshipsUpdate): boolean {
+  return Boolean(
+    relationships.parent.clear ||
+    relationships.parent.set ||
+    relationships.blockedBy.clear ||
+    relationships.blockedBy.add.length > 0 ||
+    relationships.blockedBy.remove.length > 0 ||
+    relationships.blocking.clear ||
+    relationships.blocking.add.length > 0 ||
+    relationships.blocking.remove.length > 0,
+  )
+}
+
 // ── Platform detection ──────────────────────────────────────
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 /** Returns the display string for a Ctrl/Cmd+Shift+key shortcut */
@@ -62,6 +102,9 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [step, setStep] = useState<ModalStep>('CLOSED')
   const [selectedFields, setSelectedFields] = useState<ProjectField[]>([])
   const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({})
+  const [relationshipUpdates, setRelationshipUpdates] = useState<BulkEditRelationshipsUpdate>(createEmptyRelationshipUpdates())
+  const [relationshipSelection, setRelationshipSelection] = useState<RelationshipSelectionState>(createEmptyRelationshipSelection())
+  const [bulkUpdateValidationErrors, setBulkUpdateValidationErrors] = useState<string[]>([])
   const [concurrentError, setConcurrentError] = useState(false)
   const [showDupModal, setShowDupModal] = useState(false)
   const applyBtnRef = useRef<HTMLButtonElement | null>(null)
@@ -91,6 +134,11 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       if (newCount === 0) {
         setStep('CLOSED')
         setMenuOpen(false)
+        setSelectedFields([])
+        setFieldValues({})
+        setRelationshipUpdates(createEmptyRelationshipUpdates())
+        setRelationshipSelection(createEmptyRelationshipSelection())
+        setBulkUpdateValidationErrors([])
         setShowDupModal(false)
         setShowCloseModal(false)
         setShowOpenModal(false)
@@ -257,13 +305,13 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   async function handleBulkUpdate() {
     if (queueStore.getActiveCount() >= 3) { setConcurrentError(true); return }
     setConcurrentError(false)
-    const rect = applyBtnRef.current?.getBoundingClientRect()
-    if (rect) flyToTracker(rect)
+    setBulkUpdateValidationErrors([])
     const itemIds = selectionStore.getAll()
     const updates = selectedFields.map(field => ({
       fieldId: field.id,
       value: { ...(fieldValues[field.id] as Record<string, unknown> || {}), dataType: field.dataType },
     }))
+    const relationships = hasRelationshipOperations(relationshipUpdates) ? relationshipUpdates : undefined
     const fieldMeta = Object.fromEntries(
       selectedFields.map(field => [
         field.id,
@@ -274,11 +322,36 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         },
       ])
     )
-    sendMessage('bulkUpdate', { itemIds, projectId: projectData?.id || projectId, updates, fieldMeta })
+
+    if (relationships) {
+      const validation = await sendMessage('validateBulkRelationshipUpdates', {
+        itemIds,
+        projectId: projectData?.id || projectId,
+        relationships,
+      })
+
+      if (validation.errors.length > 0) {
+        setBulkUpdateValidationErrors(validation.errors)
+        return
+      }
+    }
+
+    const rect = applyBtnRef.current?.getBoundingClientRect()
+    if (rect) flyToTracker(rect)
+    sendMessage('bulkUpdate', {
+      itemIds,
+      projectId: projectData?.id || projectId,
+      updates,
+      relationships,
+      fieldMeta,
+    })
     setStep('CLOSED')
     selectionStore.clear()
     setSelectedFields([])
     setFieldValues({})
+    setRelationshipUpdates(createEmptyRelationshipUpdates())
+    setRelationshipSelection(createEmptyRelationshipSelection())
+    setBulkUpdateValidationErrors([])
   }
 
   async function handleFieldSelectionOpen() {
@@ -286,6 +359,9 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       setStep('FIELDS')
       setSelectedFields([])
       setFieldValues({})
+      setRelationshipUpdates(createEmptyRelationshipUpdates())
+      setRelationshipSelection(createEmptyRelationshipSelection())
+      setBulkUpdateValidationErrors([])
     }
   }
 
@@ -388,6 +464,18 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     selectionStore.clear()
   }
 
+  function handleUpdateRelationshipSelection(selection: RelationshipSelectionState) {
+    setBulkUpdateValidationErrors([])
+    setRelationshipSelection(selection)
+    setRelationshipUpdates(prev => ({
+      parent: selection.parent ? prev.parent : { set: undefined, clear: false },
+      blockedBy: selection.blockedBy ? prev.blockedBy : { add: [], remove: [], clear: false },
+      blocking: selection.blocking ? prev.blocking : { add: [], remove: [], clear: false },
+    }))
+  }
+
+  const hasChanges = selectedFields.length > 0 || hasRelationshipOperations(relationshipUpdates)
+
   if (count === 0) return null
 
   return (
@@ -400,17 +488,40 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
           projectData={projectData}
           selectedFields={selectedFields}
           fieldValues={fieldValues}
+          relationships={relationshipUpdates}
+          relationshipSelection={relationshipSelection}
+          hasChanges={hasChanges}
+          validationErrors={bulkUpdateValidationErrors}
           concurrentError={concurrentError}
           owner={owner}
           firstRepoName={firstRepoName}
           applyBtnRef={applyBtnRef}
           onClose={() => setStep('CLOSED')}
-          onToggleField={f => setSelectedFields(prev =>
-            prev.some(x => x.id === f.id) ? prev.filter(x => x.id !== f.id) : [...prev, f]
-          )}
-          onUpdateFieldValue={(id, v) => setFieldValues(prev => ({ ...prev, [id]: v }))}
-          onSetSelectedFields={setSelectedFields}
-          onGoToStep={s => setStep(s)}
+          onToggleField={f => {
+            setBulkUpdateValidationErrors([])
+            setSelectedFields(prev =>
+              prev.some(x => x.id === f.id) ? prev.filter(x => x.id !== f.id) : [...prev, f]
+            )
+          }}
+          onUpdateFieldValue={(id, v) => {
+            setBulkUpdateValidationErrors([])
+            setFieldValues(prev => ({ ...prev, [id]: v }))
+          }}
+          onUpdateRelationships={(relationships) => {
+            setBulkUpdateValidationErrors([])
+            setRelationshipUpdates(relationships)
+          }}
+          onUpdateRelationshipSelection={handleUpdateRelationshipSelection}
+          onSetSelectedFields={(fields) => {
+            setBulkUpdateValidationErrors([])
+            setSelectedFields(fields)
+          }}
+          onGoToStep={s => {
+            if (s !== 'SUMMARY') {
+              setBulkUpdateValidationErrors([])
+            }
+            setStep(s)
+          }}
           onApply={handleBulkUpdate}
           onOpenOptions={() => { sendMessage('openOptions', {}); setStep('CLOSED') }}
         />
