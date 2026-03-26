@@ -10,14 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10.32.1
-      - uses: actions/setup-node@v6
+      - name: Set up Node.js
+        id: setup-node-act
+        uses: actions/setup-node@v6
         with:
-          node-version: 25
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm build
+          node-version: 25
+      - name: Run CI
+        env:
+          SETUP_NODE_VERSION: ${{ steps.setup-node-act.outputs.node-version }}
+        run: |
+          set -euo pipefail
+          node_version="${SETUP_NODE_VERSION#v}"
+          export PATH="/opt/hostedtoolcache/node/${node_version}/x64/bin:$PATH"
+          node --version
+          npm --version
+          npm install --global pnpm@10.32.1
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm build
