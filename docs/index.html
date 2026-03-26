@@ -926,8 +926,8 @@
                 <li><a href="#dev">Dev Setup</a></li>
                 <li><a href="#architecture">Architecture</a></li>
                 <li><a href="https://github.com/fathiraz/refined-github-projects" target="_blank">GitHub</a></li>
-                <li><a href="https://github.com/fathiraz/refined-github-projects/releases" target="_blank"
-                        class="nav-cta">Download</a></li>
+                <li><a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"
+                        target="_blank" class="nav-cta">Install</a></li>
             </ul>
         </div>
     </nav>
@@ -939,7 +939,7 @@
         <div class="hero-inner">
             <div class="hero-badge">
                 <span class="hero-badge-dot"></span>
-                v0.1.4 · Manifest V3 · No backend required
+                    Chrome Web Store live · Manifest V3 · No backend required
             </div>
             <h1>GitHub Projects,<br /><em>bulk-edited.</em></h1>
             <p class="hero-sub">
@@ -947,9 +947,9 @@
                 running entirely in your browser, your token never leaves your machine.
             </p>
             <div class="hero-actions">
-                <a href="https://github.com/fathiraz/refined-github-projects/releases" class="btn-primary"
+                <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg" class="btn-primary"
                     target="_blank">
-                    ⬇ Download Latest Release
+                    Install on Chrome
                 </a>
                 <a href="https://github.com/fathiraz/refined-github-projects" class="btn-secondary" target="_blank">
                     ★ View on GitHub
@@ -961,7 +961,7 @@
                     <span class="hero-stat-label">Bulk actions</span>
                 </div>
                 <div class="hero-stat">
-                    <span class="hero-stat-num">3</span>
+                    <span class="hero-stat-num">4</span>
                     <span class="hero-stat-label">Browsers supported</span>
                 </div>
                 <div class="hero-stat">
@@ -1236,22 +1236,32 @@
                     <div class="step">
                         <div class="step-num">1</div>
                         <div class="step-content">
-                            <h4>Download the latest release</h4>
-                            <p>Go to the <a href="https://github.com/fathiraz/refined-github-projects/releases"
-                                    style="color:var(--blue);">Releases page</a> and download the browser build package
-                                (not the source archive). Extract it on your machine.</p>
+                            <h4>Install on Chrome</h4>
+                            <p>Install directly from the <a
+                                    href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"
+                                    style="color:var(--blue);">Chrome Web Store</a> for the fastest setup.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-num">2</div>
                         <div class="step-content">
-                            <h4>Open your browser's extension page</h4>
-                            <p>Chrome / Edge: <code>chrome://extensions</code><br />Firefox:
-                                <code>about:debugging#/runtime/this-firefox</code></p>
+                            <h4>Need Edge, Firefox, or local testing?</h4>
+                            <p>Download the latest browser build from the <a
+                                    href="https://github.com/fathiraz/refined-github-projects/releases"
+                                    style="color:var(--blue);">Releases page</a>. Edge stays supported via manual
+                                install only, so extract the package before loading it unpacked.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>Open your browser's extension page</h4>
+                            <p>Chrome: <code>chrome://extensions</code><br />Edge: <code>edge://extensions</code><br />
+                                Firefox: <code>about:debugging#/runtime/this-firefox</code></p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">4</div>
                         <div class="step-content">
                             <h4>Load unpacked extension</h4>
                             <p>Chrome / Edge: enable <strong>Developer mode</strong>, click <strong>Load
@@ -1260,7 +1270,7 @@
                         </div>
                     </div>
                     <div class="step">
-                        <div class="step-num">4</div>
+                        <div class="step-num">5</div>
                         <div class="step-content">
                             <h4>Add your GitHub PAT</h4>
                             <p>Click the extension icon, paste your token, and click <strong>Validate and save</strong>.
@@ -1272,8 +1282,9 @@
                         style="margin-top:8px; padding:16px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;">
                         <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Tested browsers</div>
                         <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <span style="font-size:13px; color:var(--text-muted);">✅ Google Chrome (Chrome Web Store)</span>
                             <span style="font-size:13px; color:var(--text-muted);">✅ Arc (Chromium)</span>
-                            <span style="font-size:13px; color:var(--text-muted);">✅ Microsoft Edge</span>
+                            <span style="font-size:13px; color:var(--text-muted);">✅ Microsoft Edge (manual install)</span>
                             <span style="font-size:13px; color:var(--text-muted);">✅ Zen (Firefox)</span>
                         </div>
                     </div>
@@ -1351,7 +1362,14 @@
             </div>
             <p style="margin-top:16px; font-size:14px; color:var(--text-muted);">After build, load <code
                     style="font-family:var(--mono);font-size:13px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--blue);">.output/chrome-mv3</code>
-                in Chrome/Edge via <strong>Load unpacked</strong>. For Firefox, load the Firefox output folder.</p>
+                in <code
+                    style="font-family:var(--mono);font-size:13px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--blue);">chrome://extensions</code>
+                or <code
+                    style="font-family:var(--mono);font-size:13px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--blue);">edge://extensions</code>
+                via <strong>Load unpacked</strong>. For Firefox, load the Firefox output folder.</p>
+            <p style="margin-top:12px; font-size:14px; color:var(--text-muted);">Want to use Safari manually? Follow
+                the <a href="https://wxt.dev/guide/essentials/publishing.html#safari" target="_blank"
+                    style="color:var(--blue);">WXT Safari publishing guide</a>.</p>
         </div>
     </section>
 
@@ -1454,14 +1472,11 @@
                         real-time progress and rate-limit backoff</span>
                 </div>
                 <div class="roadmap-item">
-                    <div class="roadmap-check todo"></div><span class="roadmap-text todo">Chrome Web Store
+                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Chrome Web Store
                         release</span>
                 </div>
                 <div class="roadmap-item">
                     <div class="roadmap-check todo"></div><span class="roadmap-text todo">Firefox Add-ons release</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check todo"></div><span class="roadmap-text todo">Safari support</span>
                 </div>
             </div>
         </div>
