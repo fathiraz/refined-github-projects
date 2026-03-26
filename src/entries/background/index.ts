@@ -41,6 +41,9 @@ const MAX_CONCURRENT_BULK = 3
 let activeSprintEndCount = 0
 const MAX_CONCURRENT_SPRINT_END = 1
 
+const RESOLVED_ITEM_CACHE_TTL_MS = 15_000
+const resolvedItemCache = new Map<string, { resolvedItems: ResolvedItem[]; expiresAt: number }>()
+
 // ─── Types for Issue Types query ───────────────────────────────────────────────
 interface IssueTypeNode {
   id: string
@@ -80,6 +83,39 @@ interface RelationshipSearchResult {
   search?: {
     nodes: Array<RelationshipSearchIssueNode | null>
   }
+}
+
+function createResolvedItemCacheKey(projectId: string, itemIds: string[]): string {
+  return `${projectId}::${[...new Set(itemIds)].sort().join('|')}`
+}
+
+function pruneResolvedItemCache(now = Date.now()): void {
+  for (const [key, entry] of resolvedItemCache.entries()) {
+    if (entry.expiresAt <= now) {
+      resolvedItemCache.delete(key)
+    }
+  }
+}
+
+function cacheResolvedItems(projectId: string, itemIds: string[], resolvedItems: ResolvedItem[]): void {
+  pruneResolvedItemCache()
+  resolvedItemCache.set(createResolvedItemCacheKey(projectId, itemIds), {
+    resolvedItems,
+    expiresAt: Date.now() + RESOLVED_ITEM_CACHE_TTL_MS,
+  })
+}
+
+function takeCachedResolvedItems(projectId: string, itemIds: string[]): ResolvedItem[] | undefined {
+  pruneResolvedItemCache()
+
+  const key = createResolvedItemCacheKey(projectId, itemIds)
+  const entry = resolvedItemCache.get(key)
+  if (!entry) {
+    return undefined
+  }
+
+  resolvedItemCache.delete(key)
+  return entry.resolvedItems
 }
 
 export default defineBackground(() => {
@@ -254,6 +290,7 @@ export default defineBackground(() => {
 
   onMessage('validateBulkRelationshipUpdates', async ({ data }) => {
     const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId)
+    cacheResolvedItems(data.projectId, data.itemIds, resolvedItems)
     const errors = await getBulkRelationshipValidationErrors(resolvedItems, data.relationships)
 
     const result: BulkRelationshipValidationResult = { errors }
@@ -488,7 +525,10 @@ export default defineBackground(() => {
     try {
       // Resolve DOM-extracted item IDs to real ProjectV2Item Node IDs
       await broadcastQueue({ total: data.itemIds.length, completed: 0, paused: false, status: 'Resolving items...', processId, label }, tabId)
-      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
+      const cachedResolvedItems = data.relationships
+        ? takeCachedResolvedItems(data.projectId, data.itemIds)
+        : undefined
+      const resolvedItems = cachedResolvedItems ?? await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
       logger.log('[rgp:bg] resolved item IDs', resolvedItems)
 
       if (resolvedItems.length === 0) {
@@ -1664,10 +1704,14 @@ function parseExactIssueReference(
 
 function buildRelationshipSearchQuery(
   query: string,
-  _fallbackOwner?: string,
-  _fallbackRepoName?: string,
+  fallbackOwner?: string,
+  fallbackRepoName?: string,
 ): string {
-  return `is:issue archived:false sort:updated-desc ${query}`.trim()
+  const repoScope = fallbackOwner && fallbackRepoName && !/\brepo:[^\s]+/.test(query)
+    ? `repo:${fallbackOwner}/${fallbackRepoName} `
+    : ''
+
+  return `${repoScope}is:issue archived:false sort:updated-desc ${query}`.trim()
 }
 
 function mapIssueNodeToRelationshipSearchResult(issue: RelationshipSearchIssueNode): IssueSearchResultData {
