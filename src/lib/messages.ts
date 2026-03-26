@@ -1,8 +1,61 @@
 import { defineExtensionMessaging } from '@webext-core/messaging'
 import type { ExcludeCondition, SprintSettings } from './storage'
 
+export interface IssueRelationshipData {
+  nodeId?: string
+  databaseId?: number
+  number: number
+  title: string
+  repoOwner: string
+  repoName: string
+}
+
+export interface DuplicateItemPlan {
+  title: {
+    enabled: boolean
+    value: string
+  }
+  body: {
+    enabled: boolean
+    value: string
+  }
+  assignees: {
+    enabled: boolean
+    ids: string[]
+  }
+  labels: {
+    enabled: boolean
+    ids: string[]
+  }
+  issueType: {
+    enabled: boolean
+    id?: string
+    name?: string
+  }
+  fieldValues: {
+    fieldId: string
+    enabled: boolean
+    value: Record<string, unknown>
+  }[]
+  relationships: {
+    parent: {
+      enabled: boolean
+      issue?: IssueRelationshipData
+    }
+    blockedBy: {
+      enabled: boolean
+      issues: IssueRelationshipData[]
+    }
+    blocking: {
+      enabled: boolean
+      issues: IssueRelationshipData[]
+    }
+  }
+}
+
 export interface ItemPreviewData {
   resolvedItemId: string
+  issueNumber: number
   title: string
   body: string
   repoOwner: string
@@ -28,12 +81,10 @@ export interface ItemPreviewData {
   }[]
   issueTypeId?: string
   issueTypeName?: string
-  parentIssue?: {
-    id: string
-    number: number
-    title: string
-    repoOwner: string
-    repoName: string
+  relationships: {
+    parent?: IssueRelationshipData
+    blockedBy: IssueRelationshipData[]
+    blocking: IssueRelationshipData[]
   }
 }
 
@@ -49,13 +100,7 @@ interface ProtocolMap {
   duplicateItem(data: {
     itemId: string
     projectId: string
-    overrides?: {
-      title?: string
-      body?: string
-      assigneeIds?: string[]
-      labelIds?: string[]
-      fieldValues?: { fieldId: string; value: Record<string, unknown> }[]
-    }
+    plan?: DuplicateItemPlan
   }): void
   getItemPreview(data: { itemId: string; owner: string; number: number; isOrg: boolean }): ItemPreviewData
   openOptions(data: {}): void

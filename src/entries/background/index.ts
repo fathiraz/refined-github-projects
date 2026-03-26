@@ -1,6 +1,6 @@
-import { onMessage, sendMessage, ItemPreviewData } from '../../lib/messages'
+import { onMessage, sendMessage, type DuplicateItemPlan, type IssueRelationshipData, type ItemPreviewData } from '../../lib/messages'
 import { logger, initDebugLogger } from '../../lib/debug-logger'
-import { gql, GqlError } from '../../lib/graphql/client'
+import { gql } from '../../lib/graphql/client'
 import { GET_PROJECT_ITEM_DETAILS, GET_PROJECT_FIELDS, GET_PROJECT_ITEMS_FOR_RESOLUTION, GET_REPOSITORY_ID } from '../../lib/graphql/queries'
 import {
   CLONE_ISSUE,
@@ -244,7 +244,7 @@ export default defineBackground(() => {
   onMessage('duplicateItem', async ({ data, sender }) => {
     logger.log('[rgp:bg] duplicateItem received', { itemId: data.itemId, projectId: data.projectId })
     const tabId = sender.tab?.id
-    await runDeepDuplicate(data.itemId, data.projectId, tabId, data.overrides)
+    await runDeepDuplicate(data.itemId, data.projectId, tabId, data.plan)
   })
 
   onMessage('getItemPreview', async ({ data }) => {
@@ -285,6 +285,18 @@ export default defineBackground(() => {
     if (!source) throw new Error('Project item not found — ID resolution may have failed')
     const issue = source.content
     if (!issue?.title) throw new Error('Item is not a supported type (must be a GitHub Issue)')
+    const blockedBy = await listIssueRelationshipsSafe(
+      'blocked_by',
+      issue.repository.owner.login,
+      issue.repository.name,
+      issue.number,
+    )
+    const blocking = await listIssueRelationshipsSafe(
+      'blocking',
+      issue.repository.owner.login,
+      issue.repository.name,
+      issue.number,
+    )
 
     // 4. Correlate field values with definitions
     const fields: ItemPreviewData['fields'] = []
@@ -325,9 +337,10 @@ export default defineBackground(() => {
     // Also include fields that have no current value but have a definition (optional — skip for now,
     // only include fields with existing values so the modal shows what would be copied)
 
-    const parentIssue = issue.parent
+    const parentRelationship = issue.parent
       ? {
-          id: issue.parent.id,
+          nodeId: issue.parent.id,
+          databaseId: issue.parent.databaseId,
           number: issue.parent.number,
           title: issue.parent.title,
           repoOwner: issue.parent.repository.owner.login,
@@ -337,6 +350,7 @@ export default defineBackground(() => {
 
     const response: ItemPreviewData = {
       resolvedItemId,
+      issueNumber: issue.number,
       title: issue.title,
       body: issue.body,
       repoOwner: issue.repository.owner.login,
@@ -347,10 +361,21 @@ export default defineBackground(() => {
       fields,
       issueTypeId: issue.issueType?.id,
       issueTypeName: issue.issueType?.name,
-      parentIssue,
+      relationships: {
+        parent: parentRelationship,
+        blockedBy,
+        blocking,
+      },
     }
 
-    logger.log('[rgp:bg] getItemPreview returning', { fieldsCount: fields.length })
+    logger.log('[rgp:bg] getItemPreview returning', {
+      fieldsCount: fields.length,
+      relationships: {
+        parent: Boolean(parentRelationship),
+        blockedBy: blockedBy.length,
+        blocking: blocking.length,
+      },
+    })
     return response
   })
 
@@ -1474,18 +1499,215 @@ interface ProjectItemDetails {
     project: { id: string }
     content: {
       id: string
+      databaseId: number
+      number: number
       title: string
       body: string
       repository: { id: string; owner: { login: string }; name: string }
       assignees: { nodes: { id: string; login: string; name: string; avatarUrl: string }[] }
       labels: { nodes: { id: string; name: string; color: string }[] }
       issueType?: { id: string; name: string }
-      parent?: { id: string; number: number; title: string; repository: { owner: { login: string }; name: string } }
+      parent?: { id: string; databaseId: number; number: number; title: string; repository: { owner: { login: string }; name: string } }
     }
     fieldValues: {
       nodes: FieldValue[]
     }
   }
+}
+
+interface RestIssuePayload {
+  id?: number
+  node_id?: string
+  number?: number
+  title?: string
+  repository_url?: string
+  html_url?: string
+}
+
+interface RestIssueDependencyEntry extends RestIssuePayload {
+  repository?: {
+    full_name?: string
+  }
+  issue?: RestIssuePayload
+  blocking_issue?: RestIssuePayload
+  blocked_issue?: RestIssuePayload
+}
+
+interface RestIssueDependencyListResponse {
+  dependencies?: RestIssueDependencyEntry[]
+  blocking_issues?: RestIssueDependencyEntry[]
+}
+
+class GitHubRequestError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public retryAfter: number,
+  ) {
+    super(message)
+    this.name = 'GitHubRequestError'
+  }
+}
+
+function parseRepoFromUrl(url?: string): { repoOwner: string; repoName: string } | null {
+  if (!url) return null
+
+  const apiMatch = url.match(/\/repos\/([^/]+)\/([^/]+)$/)
+  if (apiMatch) {
+    return {
+      repoOwner: decodeURIComponent(apiMatch[1]),
+      repoName: decodeURIComponent(apiMatch[2]),
+    }
+  }
+
+  const htmlMatch = url.match(/github\.com\/([^/]+)\/([^/]+)\/issues\/\d+$/)
+  if (htmlMatch) {
+    return {
+      repoOwner: decodeURIComponent(htmlMatch[1]),
+      repoName: decodeURIComponent(htmlMatch[2]),
+    }
+  }
+
+  return null
+}
+
+function getIssueFromDependencyEntry(entry: RestIssueDependencyEntry): RestIssuePayload | null {
+  return entry.issue ?? entry.blocking_issue ?? entry.blocked_issue ?? entry
+}
+
+function normalizeIssueRelationship(entry: RestIssueDependencyEntry): IssueRelationshipData | null {
+  const issue = getIssueFromDependencyEntry(entry)
+  if (!issue || typeof issue.number !== 'number' || typeof issue.title !== 'string') {
+    return null
+  }
+
+  const fullName = entry.repository?.full_name
+  const [fullNameOwner, fullNameRepo] = fullName?.split('/') ?? []
+  const repoFromUrl = parseRepoFromUrl(issue.repository_url ?? issue.html_url)
+  const repoOwner = fullNameOwner ?? repoFromUrl?.repoOwner
+  const repoName = fullNameRepo ?? repoFromUrl?.repoName
+
+  if (!repoOwner || !repoName) {
+    return null
+  }
+
+  return {
+    nodeId: issue.node_id,
+    databaseId: issue.id,
+    number: issue.number,
+    title: issue.title,
+    repoOwner,
+    repoName,
+  }
+}
+
+async function githubRest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const pat = await patStorage.getValue()
+  const headers = new Headers(init.headers)
+  headers.set('Accept', 'application/vnd.github+json')
+  headers.set('Authorization', `Bearer ${pat ?? ''}`)
+  headers.set('X-GitHub-Api-Version', '2022-11-28')
+  if (init.body && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+
+  const res = await fetch(`https://api.github.com${path}`, {
+    ...init,
+    headers,
+  })
+
+  if (!res.ok) {
+    const retryAfter = Number(res.headers.get('Retry-After') ?? 0)
+    let message = res.statusText
+
+    try {
+      const json = await res.json() as { message?: string }
+      if (json.message) {
+        message = json.message
+      }
+    } catch {
+      // Ignore JSON parse failures and fall back to status text.
+    }
+
+    throw new GitHubRequestError(message, res.status, retryAfter)
+  }
+
+  if (res.status === 204) {
+    return undefined as T
+  }
+
+  return await res.json() as T
+}
+
+async function listIssueRelationships(
+  kind: 'blocked_by' | 'blocking',
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  tabId?: number,
+): Promise<IssueRelationshipData[]> {
+  const relationships: IssueRelationshipData[] = []
+  const seen = new Set<string>()
+
+  for (let page = 1; page <= 10; page++) {
+    const response = await withRateLimitRetry(
+      () => githubRest<RestIssueDependencyListResponse>(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/dependencies/${kind}?per_page=100&page=${page}`,
+      ),
+      tabId,
+    )
+
+    const entries = kind === 'blocking'
+      ? (response.blocking_issues ?? response.dependencies ?? [])
+      : (response.dependencies ?? [])
+
+    for (const entry of entries) {
+      const normalized = normalizeIssueRelationship(entry)
+      if (!normalized) continue
+
+      const dedupeKey = normalized.databaseId
+        ? `db:${normalized.databaseId}`
+        : `${normalized.repoOwner}/${normalized.repoName}#${normalized.number}`
+
+      if (seen.has(dedupeKey)) continue
+      seen.add(dedupeKey)
+      relationships.push(normalized)
+    }
+
+    if (entries.length < 100) {
+      break
+    }
+  }
+
+  return relationships
+}
+
+async function listIssueRelationshipsSafe(
+  kind: 'blocked_by' | 'blocking',
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  tabId?: number,
+): Promise<IssueRelationshipData[]> {
+  try {
+    return await listIssueRelationships(kind, owner, repo, issueNumber, tabId)
+  } catch (error) {
+    console.warn('[rgp:bg] failed to load issue relationships', { kind, owner, repo, issueNumber, error })
+    return []
+  }
+}
+
+function buildFieldValueFromSource(fieldValue: FieldValue): Record<string, unknown> | null {
+  if ('text' in fieldValue) return { text: fieldValue.text }
+  if ('optionId' in fieldValue) return { singleSelectOptionId: fieldValue.optionId }
+  if ('iterationId' in fieldValue) return { iterationId: fieldValue.iterationId }
+  if ('number' in fieldValue) return { number: fieldValue.number }
+  if ('date' in fieldValue) return { date: fieldValue.date }
+  return null
+}
+
+function formatRelationshipLabel(issue: IssueRelationshipData): string {
+  return `${issue.repoOwner}/${issue.repoName}#${issue.number}`
 }
 
 // ─── Deep Duplicate ───────────────────────────────────────────────────────────
@@ -1494,15 +1716,8 @@ async function runDeepDuplicate(
   itemId: string,
   _projectId: string,
   tabId?: number,
-  overrides?: {
-    title?: string
-    body?: string
-    assigneeIds?: string[]
-    labelIds?: string[]
-    fieldValues?: { fieldId: string; value: Record<string, unknown> }[]
-  },
+  plan?: DuplicateItemPlan,
 ) {
-  // Concurrency guard — reject if already at max
   if (activeDuplicateCount >= MAX_CONCURRENT_DUPLICATES) {
     console.warn('[rgp:bg] max concurrent duplicates reached, rejecting new request')
     return
@@ -1512,176 +1727,266 @@ async function runDeepDuplicate(
   const processId = `dup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
   logger.log('[rgp:bg] runDeepDuplicate starting', { itemId, processId })
 
-  // Show tracker card immediately before the network fetch
   await broadcastQueue(
     { total: 2, completed: 0, paused: false, status: 'Fetching item…', processId, label: 'Deep duplicate' },
     tabId,
   )
 
   try {
-  // First, fetch details to know how many fields we have
-  let details: ProjectItemDetails
-  try {
-    details = await withRateLimitRetry(
-      () => gql<ProjectItemDetails>(GET_PROJECT_ITEM_DETAILS, { itemId }),
-      tabId,
-    )
-  } catch (e) {
-    console.error('[rgp:bg] failed to fetch item details', e)
-    return
-  }
-
-  const source = details.node
-  if (!source) { console.error('[rgp:bg] item not found'); return }
-  const issue = source.content
-  if (!issue?.title) { console.error('[rgp:bg] item is not a GitHub Issue (Draft/PR)'); return }
-  const fieldValues = source.fieldValues.nodes.filter(Boolean)
-  const SUPPORTED_FIELD_TYPES = new Set(['TEXT', 'SINGLE_SELECT', 'ITERATION', 'NUMBER', 'DATE'])
-  const filteredFieldValues = fieldValues.filter(
-    (fv): fv is FieldValue => !!fv.field && SUPPORTED_FIELD_TYPES.has(fv.field.dataType)
-  )
-  const sourceParent = issue.parent ?? null
-  const hasIssueType = !!issue.issueType?.id
-  const labelIds = overrides?.labelIds ?? issue.labels.nodes.map((l) => l.id)
-  const hasLabels = labelIds.length > 0
-  const label = overrides?.title ?? issue.title
-  const totalSteps = 3 + filteredFieldValues.length + (hasIssueType ? 1 : 0) + (sourceParent ? 1 : 0) + (hasLabels ? 1 : 0)
-
-  let newIssueId = ''
-  let newItemId = ''
-
-  const tasks: import('../../lib/queue').QueueTask[] = [
-    {
-      id: 'clone-issue',
-      run: async () => {
-        const title = overrides?.title ?? issue.title
-        const body = overrides?.body ?? issue.body
-        const assigneeIds = overrides?.assigneeIds ?? issue.assignees.nodes.map((a) => a.id)
-        logger.log('[rgp:bg] cloning issue', { repositoryId: issue.repository.id, title })
-        interface CloneResult { createIssue: { issue: { id: string } } }
-        const result = await withRateLimitRetry(
-          () =>
-            gql<CloneResult>(CLONE_ISSUE, {
-              repositoryId: issue.repository.id,
-              title,
-              body,
-              assigneeIds,
-            }),
-          tabId,
-        )
-        newIssueId = result.createIssue.issue.id
-        await sleep(1000)
-      }
-    },
-    ...(hasLabels ? [{
-      id: 'add-labels',
-      run: async () => {
-        logger.log('[rgp:bg] adding labels', { labelIds, issueId: newIssueId })
-        await withRateLimitRetry(
-          () => gql(ADD_LABELS, { labelableId: newIssueId, labelIds }),
-          tabId,
-        )
-        await sleep(1000)
-      },
-    }] : []),
-    {
-      id: 'attach-project',
-      run: async () => {
-        logger.log('[rgp:bg] attaching to project', { newIssueId, projectId: source.project.id })
-        interface AttachResult { addProjectV2ItemById: { item: { id: string } } }
-        const result = await withRateLimitRetry(
-          () =>
-            gql<AttachResult>(ATTACH_TO_PROJECT, {
-              projectId: source.project.id,
-              contentId: newIssueId,
-            }),
-          tabId,
-        )
-        newItemId = result.addProjectV2ItemById.item.id
-        await sleep(1000)
-      }
-    },
-    ...(hasIssueType ? [{
-      id: 'issue-type',
-      run: async () => {
-        logger.log('[rgp:bg] applying issue type', { typeId: issue.issueType!.id })
-        await withRateLimitRetry(
-          () => gql(UPDATE_ISSUE_TYPE, { issueId: newIssueId, issueTypeId: issue.issueType!.id }),
-          tabId,
-        )
-        await sleep(1000)
-      },
-    }] : []),
-    ...filteredFieldValues.map((fv) => {
-      const overrideFieldMap = new Map(
-        (overrides?.fieldValues ?? []).map(o => [o.fieldId, o.value])
+    let details: ProjectItemDetails
+    try {
+      details = await withRateLimitRetry(
+        () => gql<ProjectItemDetails>(GET_PROJECT_ITEM_DETAILS, { itemId }),
+        tabId,
       )
-      return {
-        id: `field-${fv.field.name.toLowerCase().replace(/\s+/g, '-')}`,
+    } catch (error) {
+      console.error('[rgp:bg] failed to fetch item details', error)
+      return
+    }
+
+    const source = details.node
+    if (!source) {
+      console.error('[rgp:bg] item not found')
+      return
+    }
+
+    const issue = source.content
+    if (!issue?.title) {
+      console.error('[rgp:bg] item is not a GitHub Issue (Draft/PR)')
+      return
+    }
+
+    const sourceFieldValues = source.fieldValues.nodes.filter(Boolean)
+    const supportedFieldTypes = new Set(['TEXT', 'SINGLE_SELECT', 'ITERATION', 'NUMBER', 'DATE'])
+    const filteredFieldValues = sourceFieldValues.filter(
+      (fieldValue): fieldValue is FieldValue => !!fieldValue.field && supportedFieldTypes.has(fieldValue.field.dataType),
+    )
+    const sourceParent: IssueRelationshipData | undefined = issue.parent
+      ? {
+          nodeId: issue.parent.id,
+          databaseId: issue.parent.databaseId,
+          number: issue.parent.number,
+          title: issue.parent.title,
+          repoOwner: issue.parent.repository.owner.login,
+          repoName: issue.parent.repository.name,
+        }
+      : undefined
+
+    const enabledFieldPlans = plan?.fieldValues
+      ? plan.fieldValues.filter(field => field.enabled)
+      : filteredFieldValues
+          .map(fieldValue => ({
+            fieldId: fieldValue.field.id,
+            enabled: true,
+            value: buildFieldValueFromSource(fieldValue) ?? {},
+          }))
+          .filter(field => field.enabled)
+
+    const fieldNameById = new Map(filteredFieldValues.map(fieldValue => [fieldValue.field.id, fieldValue.field.name]))
+    const title = plan?.title.enabled === false ? issue.title : (plan?.title.value ?? issue.title)
+    const body = plan ? (plan.body.enabled ? plan.body.value : undefined) : issue.body
+    const assigneeIds = plan ? (plan.assignees.enabled ? plan.assignees.ids : []) : issue.assignees.nodes.map(a => a.id)
+    const labelIds = plan ? (plan.labels.enabled ? plan.labels.ids : []) : issue.labels.nodes.map(label => label.id)
+    const issueTypeId = plan ? (plan.issueType.enabled ? plan.issueType.id : undefined) : issue.issueType?.id
+    const issueTypeName = plan?.issueType.name ?? issue.issueType?.name
+    const parentRelationship = plan?.relationships.parent
+      ? (plan.relationships.parent.enabled ? plan.relationships.parent.issue : undefined)
+      : sourceParent
+    const blockedByRelationships = plan?.relationships.blockedBy
+      ? (plan.relationships.blockedBy.enabled ? plan.relationships.blockedBy.issues : [])
+      : []
+    const blockingRelationships = plan?.relationships.blocking
+      ? (plan.relationships.blocking.enabled ? plan.relationships.blocking.issues : [])
+      : []
+    const hasIssueType = Boolean(issueTypeId)
+    const hasLabels = labelIds.length > 0
+    const trackerLabel = title
+    const totalSteps = 3 + enabledFieldPlans.length + (hasIssueType ? 1 : 0) + (hasLabels ? 1 : 0) + (parentRelationship?.nodeId ? 1 : 0) + blockedByRelationships.length + blockingRelationships.length
+
+    let newIssueId = ''
+    let newIssueDatabaseId: number | null = null
+    let newIssueNumber: number | null = null
+    let newItemId = ''
+
+    const tasks: import('../../lib/queue').QueueTask[] = [
+      {
+        id: 'clone-issue',
+        detail: title,
         run: async () => {
-          let value: Record<string, unknown>
-          if (overrideFieldMap.has(fv.field.id)) {
-            value = overrideFieldMap.get(fv.field.id)!
-          } else if ('text' in fv) {
-            value = { text: fv.text }
-          } else if ('optionId' in fv) {
-            value = { singleSelectOptionId: fv.optionId }
-          } else if ('iterationId' in fv) {
-            value = { iterationId: fv.iterationId }
-          } else if ('number' in fv) {
-            value = { number: (fv as NumberFieldValue).number }
-          } else if ('date' in fv) {
-            value = { date: (fv as DateFieldValue).date }
-          } else {
+          logger.log('[rgp:bg] cloning issue', { repositoryId: issue.repository.id, title })
+          interface CloneResult {
+            createIssue: {
+              issue: {
+                id: string
+                databaseId: number
+                number: number
+              }
+            }
+          }
+
+          const result = await withRateLimitRetry(
+            () =>
+              gql<CloneResult>(CLONE_ISSUE, {
+                repositoryId: issue.repository.id,
+                title,
+                body,
+                assigneeIds,
+              }),
+            tabId,
+          )
+
+          newIssueId = result.createIssue.issue.id
+          newIssueDatabaseId = result.createIssue.issue.databaseId
+          newIssueNumber = result.createIssue.issue.number
+          await sleep(1000)
+        },
+      },
+      ...(hasLabels
+        ? [{
+            id: 'add-labels',
+            detail: `${labelIds.length} label${labelIds.length !== 1 ? 's' : ''}`,
+            run: async () => {
+              logger.log('[rgp:bg] adding labels', { labelIds, issueId: newIssueId })
+              await withRateLimitRetry(
+                () => gql(ADD_LABELS, { labelableId: newIssueId, labelIds }),
+                tabId,
+              )
+              await sleep(1000)
+            },
+          }]
+        : []),
+      {
+        id: 'attach-project',
+        detail: issue.repository.name,
+        run: async () => {
+          logger.log('[rgp:bg] attaching to project', { newIssueId, projectId: source.project.id })
+          interface AttachResult { addProjectV2ItemById: { item: { id: string } } }
+          const result = await withRateLimitRetry(
+            () =>
+              gql<AttachResult>(ATTACH_TO_PROJECT, {
+                projectId: source.project.id,
+                contentId: newIssueId,
+              }),
+            tabId,
+          )
+          newItemId = result.addProjectV2ItemById.item.id
+          await sleep(1000)
+        },
+      },
+      ...(hasIssueType && issueTypeId
+        ? [{
+            id: 'issue-type',
+            detail: issueTypeName,
+            run: async () => {
+              logger.log('[rgp:bg] applying issue type', { issueTypeId, issueId: newIssueId })
+              await withRateLimitRetry(
+                () => gql(UPDATE_ISSUE_TYPE, { issueId: newIssueId, issueTypeId }),
+                tabId,
+              )
+              await sleep(1000)
+            },
+          }]
+        : []),
+      ...enabledFieldPlans.map(field => ({
+        id: `field-${(fieldNameById.get(field.fieldId) ?? field.fieldId).toLowerCase().replace(/\s+/g, '-')}`,
+        detail: fieldNameById.get(field.fieldId) ?? field.fieldId,
+        run: async () => {
+          const value = field.value
+          const values = Object.values(value)
+          if (values.length === 0 || values.every(candidate => candidate === '' || candidate == null)) {
             return
           }
 
-          // Skip empty values
-          const vals = Object.values(value)
-          if (vals.length === 0 || vals.every(v => v === '' || v == null)) return
-
-          await gql(UPDATE_PROJECT_FIELD, {
-            projectId: source.project.id,
-            itemId: newItemId,
-            fieldId: fv.field.id,
-            value,
-          })
+          await withRateLimitRetry(
+            () => gql(UPDATE_PROJECT_FIELD, {
+              projectId: source.project.id,
+              itemId: newItemId,
+              fieldId: field.fieldId,
+              value,
+            }),
+            tabId,
+          )
           await sleep(1000)
-        }
-      }
-    }),
-    ...(sourceParent ? [{
-      id: `rel-parent-${sourceParent.id}`,
-      run: async () => {
-        logger.log('[rgp:bg] linking sub-issue to parent', { parentId: sourceParent.id, subIssueId: newIssueId })
-        await withRateLimitRetry(
-          () => gql(ADD_SUB_ISSUE, { issueId: sourceParent.id, subIssueId: newIssueId }),
-          tabId,
-        )
-        await sleep(1000)
-      }
-    }] : [])
-  ]
+        },
+      })),
+      ...(parentRelationship?.nodeId
+        ? [{
+            id: `rel-parent-${parentRelationship.number}`,
+            detail: formatRelationshipLabel(parentRelationship),
+            run: async () => {
+              logger.log('[rgp:bg] linking sub-issue to parent', { parentId: parentRelationship.nodeId, subIssueId: newIssueId })
+              await withRateLimitRetry(
+                () => gql(ADD_SUB_ISSUE, { issueId: parentRelationship.nodeId, subIssueId: newIssueId }),
+                tabId,
+              )
+              await sleep(1000)
+            },
+          }]
+        : []),
+      ...blockedByRelationships.map(relationship => ({
+        id: `rel-blocked-by-${relationship.databaseId ?? relationship.number}`,
+        detail: formatRelationshipLabel(relationship),
+        run: async () => {
+          if (!newIssueNumber || !relationship.databaseId) {
+            return
+          }
 
-  // We add 1 for the already completed "Fetch" phase
-  await processQueue(tasks, async state => {
-    await broadcastQueue(
-      {
-        total: totalSteps,
-        completed: 1 + state.completed,
-        paused: state.paused,
-        retryAfter: state.retryAfter,
-        status: state.completed === 0 ? 'Cloning issue...' : state.completed === 1 ? 'Attaching to project...' : 'Syncing fields...',
-        processId,
-        label,
-      },
-      tabId,
-    )
-  }, processId)
+          logger.log('[rgp:bg] copying blocked-by relationship', {
+            issueNumber: newIssueNumber,
+            blockingIssueId: relationship.databaseId,
+          })
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(issue.repository.owner.login)}/${encodeURIComponent(issue.repository.name)}/issues/${newIssueNumber}/dependencies/blocked_by`, {
+              method: 'POST',
+              body: JSON.stringify({ issue_id: relationship.databaseId }),
+            }),
+            tabId,
+          )
+          await sleep(1000)
+        },
+      })),
+      ...blockingRelationships.map(relationship => ({
+        id: `rel-blocking-${relationship.databaseId ?? relationship.number}`,
+        detail: formatRelationshipLabel(relationship),
+        run: async () => {
+          if (!newIssueDatabaseId) {
+            return
+          }
 
-  // Final done broadcast
-  await broadcastQueue({ total: 0, completed: 0, paused: false, status: 'Done!', processId, label }, tabId)
-  logger.log('[rgp:bg] deep duplicate complete', { processId })
+          logger.log('[rgp:bg] copying blocking relationship', {
+            issueNumber: relationship.number,
+            blockingIssueId: newIssueDatabaseId,
+          })
+          await withRateLimitRetry(
+            () => githubRest(`/repos/${encodeURIComponent(relationship.repoOwner)}/${encodeURIComponent(relationship.repoName)}/issues/${relationship.number}/dependencies/blocked_by`, {
+              method: 'POST',
+              body: JSON.stringify({ issue_id: newIssueDatabaseId }),
+            }),
+            tabId,
+          )
+          await sleep(1000)
+        },
+      })),
+    ]
+
+    await processQueue(tasks, async state => {
+      await broadcastQueue(
+        {
+          total: totalSteps,
+          completed: 1 + state.completed,
+          paused: state.paused,
+          retryAfter: state.retryAfter,
+          status: state.completed === 0 ? 'Cloning issue...' : 'Applying duplicate plan...',
+          detail: state.detail,
+          processId,
+          label: trackerLabel,
+        },
+        tabId,
+      )
+    }, processId)
+
+    await broadcastQueue({ total: 0, completed: 0, paused: false, status: 'Done!', processId, label: trackerLabel }, tabId)
+    logger.log('[rgp:bg] deep duplicate complete', { processId })
   } finally {
     activeDuplicateCount--
   }
@@ -1905,7 +2210,7 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>, tabId?: number): Prom
       return await fn()
     } catch (err) {
       lastErr = err
-      const e = err as GqlError
+      const e = err as { status?: number; retryAfter?: number }
       if (e.status === 403 || e.status === 429) {
         const retryAfter = e.retryAfter ?? 60
         console.warn('[rgp:bg] rate limited, retrying in', retryAfter, 's (attempt', attempt + 1, '/ 3)')
