@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/fathiraz/refined-github-projects/compare/v0.2.0...v0.2.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* **app:** permission for firefox and cookies permission ([#7](https://github.com/fathiraz/refined-github-projects/issues/7)) ([c181d50](https://github.com/fathiraz/refined-github-projects/commit/c181d50c905f1326133729a4d8b7d8c588a232ab))
+
 ## [0.2.0](https://github.com/fathiraz/refined-github-projects/compare/v0.1.4...v0.2.0) (2026-03-26)
 
 
