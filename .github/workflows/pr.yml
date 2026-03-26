@@ -14,18 +14,23 @@ concurrency:
 
 jobs:
   review:
-    if: github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      REVIEW_DIR: ${{ runner.temp }}/cursor-pr-review
     steps:
       - name: Checkout PR head
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6   
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Set review directory
+        run: |
+          set -euo pipefail
+          review_dir="$RUNNER_TEMP/cursor-pr-review"
+          mkdir -p "$review_dir"
+          echo "REVIEW_DIR=$review_dir" >> "$GITHUB_ENV"
 
       - name: Install Cursor CLI
         run: |
@@ -350,24 +355,57 @@ jobs:
               "",
               "_Generated automatically when this PR was submitted using Cursor CLI with `--model auto`._",
           ]
+          review_body = "\n".join(line for line in review_body_lines if line is not None).strip()
           review_request = {
               "event": "COMMENT",
-              "body": "\n".join(line for line in review_body_lines if line is not None).strip(),
+              "body": review_body,
           }
 
-          post(f"/repos/{repo}/pulls/{pr_number}/reviews", review_request)
-
-          posted_inline_comments = 0
-          for comment in filtered_comments:
-              payload = {
+          review_comments = [
+              {
                   "body": comment["body"],
-                  "commit_id": head_sha,
                   "path": comment["path"],
                   "line": comment["line"],
                   "side": "RIGHT",
               }
-              if post(f"/repos/{repo}/pulls/{pr_number}/comments", payload, allow_422=True) is not None:
-                  posted_inline_comments += 1
+              for comment in filtered_comments
+          ]
+
+          posted_inline_comments = 0
+          if review_comments:
+              review_request["comments"] = review_comments
+              review_response = post(
+                  f"/repos/{repo}/pulls/{pr_number}/reviews",
+                  review_request,
+                  allow_422=True,
+              )
+              if review_response is not None:
+                  posted_inline_comments = len(review_comments)
+              else:
+                  print(
+                      "Combined review creation was rejected; falling back to summary review and best-effort inline comments.",
+                      file=sys.stderr,
+                  )
+                  post(
+                      f"/repos/{repo}/pulls/{pr_number}/reviews",
+                      {
+                          "event": "COMMENT",
+                          "body": review_body,
+                      },
+                  )
+
+                  for comment in review_comments:
+                      payload = {
+                          "body": comment["body"],
+                          "commit_id": head_sha,
+                          "path": comment["path"],
+                          "line": comment["line"],
+                          "side": "RIGHT",
+                      }
+                      if post(f"/repos/{repo}/pulls/{pr_number}/comments", payload, allow_422=True) is not None:
+                          posted_inline_comments += 1
+          else:
+              post(f"/repos/{repo}/pulls/{pr_number}/reviews", review_request)
 
           print(f"Posted {posted_inline_comments} inline comment(s).")
           PY
