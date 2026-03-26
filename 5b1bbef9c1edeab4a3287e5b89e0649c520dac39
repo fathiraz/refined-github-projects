@@ -1,0 +1,39 @@
+.github/workflows/ci.yml
+  e9f41186355a407b 13-14,17,19,23-36
+  adad1f6e34491a30 18
+.github/workflows/pr.yml
+  e9f41186355a407b 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "5b1bbef9c1edeab4a3287e5b89e0649c520dac39",
+  "prompts": {
+    "adad1f6e34491a30": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "de93eec6-d432-4f7e-850c-3b4539486768",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 4,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "e9f41186355a407b": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "2ecdb6fe-2568-4779-9690-3569814ac6bc",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>",
+      "messages": [],
+      "total_additions": 49,
+      "total_deletions": 17,
+      "accepted_lines": 24,
+      "overriden_lines": 0
+    }
+  }
+}
