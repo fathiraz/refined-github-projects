@@ -5,7 +5,7 @@
 ```bash
 pnpm install
 pnpm dev       # hot reload on chrome://extensions
-pnpm build     # production build → .output/chrome-mv3/
+pnpm build     # production build → dist/chrome-mv3/
 pnpm typecheck # tsc --noEmit
 ```
 
