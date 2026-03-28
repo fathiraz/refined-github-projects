@@ -140,6 +140,13 @@ export interface HierarchyData {
   blocking: IssueRelationshipData[]
 }
 
+export interface BulkRandomAssignData {
+  itemIds: string[]
+  projectId: string
+  assignments: Array<{ itemId: string; assigneeIds: string[] }>
+  strategy: 'balanced' | 'random' | 'round-robin'
+}
+
 interface ProtocolMap {
   duplicateItem(data: {
     itemId: string
@@ -183,6 +190,8 @@ interface ProtocolMap {
     projectId: string
     reason: 'COMPLETED' | 'NOT_PLANNED'
   }): void
+  /** Assigns multiple items to users based on a strategy */
+  bulkRandomAssign(data: BulkRandomAssignData): void
   bulkOpen(data: {
     itemIds: string[]
     projectId: string
