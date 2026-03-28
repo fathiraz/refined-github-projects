@@ -53,6 +53,9 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
         .catch(() => {
           setState({ status: 'error' })
         })
+        .finally(() => {
+          pendingRef.current = null
+        })
     },
     [itemId, projectContext.owner, projectContext.number, projectContext.isOrg],
   )

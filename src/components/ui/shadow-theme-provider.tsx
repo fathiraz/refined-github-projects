@@ -4,8 +4,13 @@ import { BaseStyles, ThemeProvider } from '@primer/react'
 function resolveMode(): 'day' | 'night' {
   const mode = document.documentElement.getAttribute('data-color-mode')
   const dark = document.documentElement.getAttribute('data-dark-theme')
-  if (mode === 'dark' || (mode !== 'light' && dark)) return 'night'
+  if (mode === 'dark') return 'night'
   if (mode === 'light') return 'day'
+  if (mode === 'auto') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day'
+  }
+  // data-color-mode absent: use data-dark-theme presence as hint, then system preference
+  if (dark) return 'night'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day'
 }
 

@@ -94,6 +94,13 @@ interface RelationshipSearchResult {
   }
 }
 
+function pruneExpiredCache<T>(cache: Map<string, { data: T; expiresAt: number }>): void {
+  const now = Date.now()
+  for (const [key, entry] of cache.entries()) {
+    if (entry.expiresAt <= now) cache.delete(key)
+  }
+}
+
 function createResolvedItemCacheKey(projectId: string, itemIds: string[]): string {
   return `${projectId}::${[...new Set(itemIds)].sort().join('|')}`
 }
@@ -494,6 +501,7 @@ export default defineBackground(() => {
       },
     }
 
+    pruneExpiredCache(previewCache)
     previewCache.set(cacheKey, { data: response, expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS })
     logger.log('[rgp:bg] getItemPreview returning', {
       fieldsCount: fields.length,
@@ -566,6 +574,7 @@ export default defineBackground(() => {
       blocking,
     }
 
+    pruneExpiredCache(hierarchyCache)
     hierarchyCache.set(cacheKey, { data: result, expiresAt: Date.now() + HIERARCHY_CACHE_TTL_MS })
     return result
   })
@@ -1670,7 +1679,10 @@ async function getProjectFieldsData(
     user?: { projectV2: FieldsResultProject }
   }>(GET_PROJECT_FIELDS, { owner, number, isOrg })
   const project = result.organization?.projectV2 || result.user?.projectV2
-  if (project) fieldsCache.set(cacheKey, { data: project, expiresAt: Date.now() + FIELDS_CACHE_TTL_MS })
+  if (project) {
+    pruneExpiredCache(fieldsCache)
+    fieldsCache.set(cacheKey, { data: project, expiresAt: Date.now() + FIELDS_CACHE_TTL_MS })
+  }
   return { project }
 }
 
