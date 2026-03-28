@@ -1,8 +1,14 @@
-import React, { useState } from 'react'
-import { Box, Button, Text } from '@primer/react'
+import React, { useState, useEffect } from 'react'
+import { Box, Button, Text, Select } from '@primer/react'
 import { ModalStepHeader } from '../ui/modal-step-header'
 import { PersonIcon } from '../ui/primitives'
 import { Z_MODAL } from '../../lib/z-index'
+import {
+  distributeBalanced,
+  distributeRandom,
+  distributeRoundRobin,
+  type DistributionStrategy
+} from './bulk-random-assign-utils'
 
 type RandomAssignStep = 'ASSIGNEES' | 'PREVIEW' | 'CONFIRM'
 
@@ -14,8 +20,28 @@ interface Props {
   onClose: () => void
 }
 
-export function BulkRandomAssignModal({ count, onClose }: Props) {
+export function BulkRandomAssignModal({ count, onClose, itemIds }: Props) {
   const [step, setStep] = useState<RandomAssignStep>('ASSIGNEES')
+  const [strategy, setStrategy] = useState<DistributionStrategy>('balanced')
+  const [preview, setPreview] = useState<Map<string, string[]>>(new Map())
+  const [selectedAssignees] = useState<string[]>(['Alice', 'Bob'])
+
+  const generatePreview = () => {
+    const distributionFn =
+      strategy === 'balanced'
+        ? distributeBalanced
+        : strategy === 'random'
+        ? distributeRandom
+        : distributeRoundRobin
+    const result = distributionFn(itemIds, selectedAssignees)
+    setPreview(result)
+  }
+
+  useEffect(() => {
+    if (step === 'PREVIEW') {
+      generatePreview()
+    }
+  }, [step, strategy])
 
   const handleNext = () => {
     if (step === 'ASSIGNEES') setStep('PREVIEW')
@@ -38,9 +64,48 @@ export function BulkRandomAssignModal({ count, onClose }: Props) {
         )
       case 'PREVIEW':
         return (
-          <Box sx={{ p: 4 }}>
-            <Text>Step 2: Preview Assignments</Text>
-            {/* Preview list will go here in Wave 2 */}
+          <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Text sx={{ fontWeight: 'bold' }}>Strategy:</Text>
+                <Select
+                  value={strategy}
+                  onChange={(e) => setStrategy(e.target.value as DistributionStrategy)}
+                >
+                  <Select.Option value="balanced">Balanced</Select.Option>
+                  <Select.Option value="random">Random</Select.Option>
+                  <Select.Option value="round-robin">Round Robin</Select.Option>
+                </Select>
+              </Box>
+              <Button onClick={generatePreview}>Reshuffle</Button>
+            </Box>
+
+            <Box sx={{ p: 3, bg: 'canvas.subtle', borderRadius: 2, border: '1px solid', borderColor: 'border.default' }}>
+              <Text sx={{ fontWeight: 'bold', display: 'block', mb: 2 }}>Distribution Summary</Text>
+              <Text>
+                {Array.from(preview.entries())
+                  .map(([assignee, items]) => `${assignee}: ${items.length} items`)
+                  .join(' | ')}
+              </Text>
+            </Box>
+
+            <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+              {Array.from(preview.entries()).map(([assignee, items], index) => (
+                <Box
+                  key={assignee}
+                  sx={{
+                    p: 3,
+                    borderTop: index > 0 ? '1px solid' : 'none',
+                    borderColor: 'border.default',
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Text sx={{ fontWeight: 'bold' }}>{assignee}</Text>
+                  <Text color="fg.muted">{items.length} items</Text>
+                </Box>
+              ))}
+            </Box>
           </Box>
         )
       case 'CONFIRM':
