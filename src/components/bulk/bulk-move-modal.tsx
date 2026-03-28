@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Tippy from '../ui/tooltip'
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from '@primer/octicons-react'
-import { Box, Button, FormControl, Radio, RadioGroup, Spinner, Text, TextInput } from '@primer/react'
+import { Box, Button, FormControl, Radio, RadioGroup, Text, TextInput } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
 import { MoveIcon } from '../ui/primitives'
 import { ModalStepHeader } from '../ui/modal-step-header'
@@ -207,9 +207,27 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
       <Box sx={overlayStyle}>
         <Box sx={panelStyle}>
           <ModalStepHeader title="Move Items" icon={<MoveIcon size={16} />} onClose={onClose} />
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, py: 6 }}>
-            <Spinner size="large" />
-            <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Fetching project items…</Text>
+          <Box sx={{ px: 4, py: 3, flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 3, '@keyframes rgp-shimmer': { '0%': { backgroundPosition: '-200px 0' }, '100%': { backgroundPosition: '200px 0' } } }}>
+            {/* "Where to move" section label */}
+            <Box sx={{ height: 10, width: 100, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+            {/* Radio card skeletons */}
+            {([140, 110, 150, 125] as number[]).map((w, i) => (
+              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 3, py: '8px', borderRadius: 2, border: '1px solid', borderColor: 'border.default', bg: 'canvas.default' }}>
+                <Box sx={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                <Box sx={{ height: 12, width: w, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+              </Box>
+            ))}
+            {/* Preview label */}
+            <Box sx={{ height: 10, width: 65, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+            {/* Preview list rows */}
+            <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 1, overflow: 'hidden' }}>
+              {([65, 80, 50, 75, 60] as number[]).map((w, i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 2, px: 2, py: '6px', borderBottom: '1px solid', borderColor: 'border.muted', alignItems: 'center' }}>
+                  <Box sx={{ height: 10, width: 20, flexShrink: 0, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                  <Box sx={{ height: 10, width: `${w}%`, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                </Box>
+              ))}
+            </Box>
           </Box>
         </Box>
       </Box>

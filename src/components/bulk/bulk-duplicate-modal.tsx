@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Tippy from '../ui/tooltip'
-import { Box, Button, Checkbox, Flash, FormControl, Spinner, Text, TextInput } from '@primer/react'
+import { Box, Button, Checkbox, Flash, FormControl, Text, TextInput } from '@primer/react'
 import { sendMessage, type DuplicateItemPlan, type IssueRelationshipData, type ItemPreviewData } from '../../lib/messages'
 import { queueStore } from '../../lib/queue-store'
 import { flyToTracker } from './bulk-utils'
@@ -1197,9 +1197,37 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         {step === 'LOADING' && (
           <>
             <ModalStepHeader title="Deep Duplicate" icon={bulkDuplicateHeaderIcon} subtitle="Loading item details…" onClose={onClose} />
-            <Box sx={{ py: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, color: 'fg.muted' }}>
-              <Spinner size="large" />
-              <Text sx={{ fontSize: 1 }}>Loading item details…</Text>
+            <Box sx={{ px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {([
+                { labelWidth: 60, rows: [80, 65] },
+                { labelWidth: 70, rows: [75, 55] },
+                { labelWidth: 90, rows: [70] },
+              ] as { labelWidth: number; rows: number[] }[]).map((group, gi) => (
+                <Box key={gi} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{
+                    height: 10, width: group.labelWidth, borderRadius: 1,
+                    ...(gi === 0 ? {
+                      '@keyframes rgp-shimmer': {
+                        '0%': { backgroundPosition: '-200px 0' },
+                        '100%': { backgroundPosition: '200px 0' },
+                      },
+                    } : {}),
+                    background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }} />
+                  {group.rows.map((labelPct, ri) => (
+                    <Box key={ri} sx={{ display: 'flex', alignItems: 'center', gap: 3, px: 3, py: 2, borderRadius: 2, bg: 'canvas.subtle' }}>
+                      <Box sx={{ width: 16, height: 16, borderRadius: 1, flexShrink: 0, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
+                        <Box sx={{ height: 12, width: `${labelPct}%`, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                        <Box sx={{ height: 10, width: '45%', borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ))}
             </Box>
           </>
         )}

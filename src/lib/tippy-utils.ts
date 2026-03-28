@@ -10,6 +10,22 @@ export function ensureTippyCss(): void {
   document.head.appendChild(el)
 }
 
+const RGP_CARD_THEME_CSS = [
+  '.tippy-box[data-theme~="rgp-card"]{background-color:transparent;color:inherit;border-radius:0;font-size:inherit}',
+  '.tippy-box[data-theme~="rgp-card"]>.tippy-content{padding:0}',
+  '@keyframes rgp-shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}',
+  '.rgp-skeleton{background:linear-gradient(90deg,var(--color-border-muted,#d0d7de) 25%,var(--color-border-default,#d0d7de) 50%,var(--color-border-muted,#d0d7de) 75%);background-size:400px 100%;animation:rgp-shimmer 1.4s ease infinite;border-radius:4px}',
+  '@media(prefers-reduced-motion:reduce){.rgp-skeleton{animation:none;background:var(--color-border-muted,#d0d7de)}}',
+].join('')
+
+export function ensureRgpCardTheme(): void {
+  if (document.getElementById('rgp-tippy-card-theme')) return
+  const el = document.createElement('style')
+  el.id = 'rgp-tippy-card-theme'
+  el.textContent = RGP_CARD_THEME_CSS
+  document.head.appendChild(el)
+}
+
 export function getTippyDelayValue(
   delay: number | readonly [number | null | undefined, number | null | undefined] | null | undefined,
   index: 0 | 1,

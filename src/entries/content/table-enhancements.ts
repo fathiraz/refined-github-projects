@@ -221,6 +221,14 @@ export function injectTableEnhancementStyles() {
         transition: none !important;
       }
     }
+
+    .rgp-hier-host {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
   `
   document.head.appendChild(style)
 }

@@ -119,6 +119,27 @@ export interface SprintInfo {
   endDate: string
 }
 
+export interface SubIssueData {
+  number: number
+  title: string
+  repoOwner: string
+  repoName: string
+  state: 'OPEN' | 'CLOSED'
+}
+
+export interface HierarchyData {
+  resolvedItemId: string
+  issueNumber: number
+  repoOwner: string
+  repoName: string
+  parent?: IssueRelationshipData
+  subIssues: SubIssueData[]
+  totalSubIssues: number
+  completedSubIssues: number
+  blockedBy: IssueRelationshipData[]
+  blocking: IssueRelationshipData[]
+}
+
 interface ProtocolMap {
   duplicateItem(data: {
     itemId: string
@@ -272,6 +293,7 @@ interface ProtocolMap {
     label?: string
     allDomIds?: string[]
   }): void
+  getHierarchyData(data: { itemId: string; owner: string; number: number; isOrg: boolean }): HierarchyData
   cancelProcess(data: { processId: string }): void
   queueStateUpdate(data: {
     total: number

@@ -1,4 +1,4 @@
-import { onMessage, sendMessage, type BulkEditRelationshipsUpdate, type BulkRelationshipValidationResult, type DuplicateItemPlan, type IssueRelationshipData, type IssueSearchResultData, type ItemPreviewData } from '../../lib/messages'
+import { onMessage, sendMessage, type BulkEditRelationshipsUpdate, type BulkRelationshipValidationResult, type DuplicateItemPlan, type HierarchyData, type IssueRelationshipData, type IssueSearchResultData, type ItemPreviewData, type SubIssueData } from '../../lib/messages'
 import { logger, initDebugLogger } from '../../lib/debug-logger'
 import { gql } from '../../lib/graphql/client'
 import { GET_PROJECT_ITEM_DETAILS, GET_PROJECT_FIELDS, GET_PROJECT_ITEMS_FOR_RESOLUTION, GET_REPOSITORY_ID, GET_REPOSITORY_ISSUE_BY_NUMBER, GET_REPOSITORY_RECENT_OPEN_ISSUES, SEARCH_RELATIONSHIP_ISSUES } from '../../lib/graphql/queries'
@@ -44,6 +44,15 @@ const MAX_CONCURRENT_SPRINT_END = 1
 const RESOLVED_ITEM_CACHE_TTL_MS = 15_000
 const resolvedItemCache = new Map<string, { resolvedItems: ResolvedItem[]; expiresAt: number }>()
 
+const HIERARCHY_CACHE_TTL_MS = 30_000
+const hierarchyCache = new Map<string, { data: HierarchyData; expiresAt: number }>()
+
+const PREVIEW_CACHE_TTL_MS = 30_000
+const previewCache = new Map<string, { data: ItemPreviewData; expiresAt: number }>()
+
+const FIELDS_CACHE_TTL_MS = 60_000
+const fieldsCache = new Map<string, { data: FieldsResultProject; expiresAt: number }>()
+
 // ─── Types for Issue Types query ───────────────────────────────────────────────
 interface IssueTypeNode {
   id: string
@@ -82,6 +91,13 @@ interface RelationshipSearchResult {
   } | null
   search?: {
     nodes: Array<RelationshipSearchIssueNode | null>
+  }
+}
+
+function pruneExpiredCache<T>(cache: Map<string, { data: T; expiresAt: number }>): void {
+  const now = Date.now()
+  for (const [key, entry] of cache.entries()) {
+    if (entry.expiresAt <= now) cache.delete(key)
   }
 }
 
@@ -374,31 +390,24 @@ export default defineBackground(() => {
   onMessage('getItemPreview', async ({ data }) => {
     logger.log('[rgp:bg] getItemPreview received', data)
 
+    // Check preview cache first
+    const cacheKey = `${data.owner}/${data.number}/${data.itemId}`
+    const previewCached = previewCache.get(cacheKey)
+    if (previewCached && previewCached.expiresAt > Date.now()) return previewCached.data
+
     // 1. Fetch project field definitions first — also gives us the real projectV2.id
-    type FieldsDef = {
-      organization?: { projectV2: { id: string; fields: { nodes: FieldDefNode[] } } }
-      user?: { projectV2: { id: string; fields: { nodes: FieldDefNode[] } } }
-    }
-    type FieldDefNode = {
-      id: string
-      name: string
-      dataType: string
-      options?: { id: string; name: string; color: string }[]
-      configuration?: { iterations: { id: string; title: string; startDate: string; duration: number }[] }
-    }
-    const fieldsResult = await withRateLimitRetry(
-      () => gql<FieldsDef>(GET_PROJECT_FIELDS, { owner: data.owner, number: data.number, isOrg: data.isOrg }),
-    )
-    const projectV2 = fieldsResult.organization?.projectV2 || fieldsResult.user?.projectV2
-    const fieldDefs = new Map<string, FieldDefNode>(
+    const { project: projectV2 } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
+    const fieldDefs = new Map(
       (projectV2?.fields.nodes ?? []).filter(Boolean).map(f => [f.id, f])
     )
 
     // 2. Resolve DOM itemId (e.g. "issue:3960969873") → real ProjectV2Item node ID
     let resolvedItemId = data.itemId
-    if (/^issue[:-]\d+$/.test(data.itemId) && projectV2?.id) {
+    if (/^issue[:-]\d+$/.test(data.itemId)) {
+      if (!projectV2?.id) throw new Error('Could not fetch project fields — cannot resolve item ID')
       const resolved = await resolveProjectItemIds([data.itemId], projectV2.id)
-      if (resolved.length > 0) resolvedItemId = resolved[0].projectItemId
+      if (resolved.length === 0) throw new Error(`Item ${data.itemId} not found in project — it may belong to a different project`)
+      resolvedItemId = resolved[0].projectItemId
     }
 
     // 3. Fetch item details with the correct node ID
@@ -492,6 +501,8 @@ export default defineBackground(() => {
       },
     }
 
+    pruneExpiredCache(previewCache)
+    previewCache.set(cacheKey, { data: response, expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS })
     logger.log('[rgp:bg] getItemPreview returning', {
       fieldsCount: fields.length,
       relationships: {
@@ -501,6 +512,71 @@ export default defineBackground(() => {
       },
     })
     return response
+  })
+
+  onMessage('getHierarchyData', async ({ data }) => {
+    logger.log('[rgp:bg] getHierarchyData received', data)
+
+    // Check cache first (keyed by DOM item ID)
+    const cacheKey = `${data.owner}/${data.number}/${data.itemId}`
+    const cached = hierarchyCache.get(cacheKey)
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data
+    }
+
+    // Resolve DOM item ID (e.g. "issue:3960969873") → real ProjectV2Item node ID
+    let resolvedItemId = data.itemId
+    if (/^issue[:-]\d+$/.test(data.itemId)) {
+      const { project: projectV2 } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
+      if (!projectV2?.id) throw new Error('Could not fetch project fields — cannot resolve item ID')
+      const resolved = await resolveProjectItemIds([data.itemId], projectV2.id)
+      if (resolved.length === 0) throw new Error(`Item ${data.itemId} not found in project — it may belong to a different project`)
+      resolvedItemId = resolved[0].projectItemId
+    }
+
+    // Fetch item details for parent relationship (GraphQL)
+    const details = await withRateLimitRetry(
+      () => gql<ProjectItemDetails>(GET_PROJECT_ITEM_DETAILS, { itemId: resolvedItemId }),
+    )
+    const source = details.node
+    if (!source) throw new Error('Project item not found')
+    const issue = source.content
+    if (!issue?.title) throw new Error('Item is not a supported type')
+
+    // Fetch sub-issues, blockedBy, blocking concurrently (all GETs — safe to parallelize)
+    const [subIssues, blockedBy, blocking] = await Promise.all([
+      listSubIssuesSafe(issue.repository.owner.login, issue.repository.name, issue.number),
+      listIssueRelationshipsSafe('blocked_by', issue.repository.owner.login, issue.repository.name, issue.number),
+      listIssueRelationshipsSafe('blocking', issue.repository.owner.login, issue.repository.name, issue.number),
+    ])
+
+    const parent: IssueRelationshipData | undefined = issue.parent
+      ? {
+          nodeId: issue.parent.id,
+          databaseId: issue.parent.databaseId,
+          number: issue.parent.number,
+          title: issue.parent.title,
+          repoOwner: issue.parent.repository.owner.login,
+          repoName: issue.parent.repository.name,
+        }
+      : undefined
+
+    const result: HierarchyData = {
+      resolvedItemId,
+      issueNumber: issue.number,
+      repoOwner: issue.repository.owner.login,
+      repoName: issue.repository.name,
+      parent,
+      subIssues,
+      totalSubIssues: subIssues.length,
+      completedSubIssues: subIssues.filter((s) => s.state === 'CLOSED').length,
+      blockedBy,
+      blocking,
+    }
+
+    pruneExpiredCache(hierarchyCache)
+    hierarchyCache.set(cacheKey, { data: result, expiresAt: Date.now() + HIERARCHY_CACHE_TTL_MS })
+    return result
   })
 
   function formatDetailDate(iso: string): string {
@@ -1595,11 +1671,19 @@ async function getProjectFieldsData(
   number: number,
   isOrg: boolean,
 ): Promise<{ project: FieldsResultProject | undefined }> {
+  const cacheKey = `${owner}/${number}`
+  const cached = fieldsCache.get(cacheKey)
+  if (cached && cached.expiresAt > Date.now()) return { project: cached.data }
   const result = await gql<{
     organization?: { projectV2: FieldsResultProject }
     user?: { projectV2: FieldsResultProject }
   }>(GET_PROJECT_FIELDS, { owner, number, isOrg })
-  return { project: result.organization?.projectV2 || result.user?.projectV2 }
+  const project = result.organization?.projectV2 || result.user?.projectV2
+  if (project) {
+    pruneExpiredCache(fieldsCache)
+    fieldsCache.set(cacheKey, { data: project, expiresAt: Date.now() + FIELDS_CACHE_TTL_MS })
+  }
+  return { project }
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1916,6 +2000,38 @@ async function listIssueRelationshipsSafe(
     return await listIssueRelationships(kind, owner, repo, issueNumber, tabId)
   } catch (error) {
     console.warn('[rgp:bg] failed to load issue relationships', { kind, owner, repo, issueNumber, error })
+    return []
+  }
+}
+
+interface RestSubIssue {
+  number: number
+  title: string
+  state: string
+  repository?: { full_name?: string; owner?: { login?: string }; name?: string }
+}
+
+async function listSubIssuesSafe(
+  owner: string,
+  repo: string,
+  issueNumber: number,
+): Promise<SubIssueData[]> {
+  try {
+    const items = await withRateLimitRetry(
+      () => githubRest<RestSubIssue[]>(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/sub_issues?per_page=50`,
+      ),
+    )
+    if (!Array.isArray(items)) return []
+    return items.map((item) => ({
+      number: item.number,
+      title: item.title,
+      repoOwner: item.repository?.owner?.login ?? owner,
+      repoName: item.repository?.name ?? repo,
+      state: item.state?.toUpperCase() === 'CLOSED' ? 'CLOSED' : 'OPEN',
+    }))
+  } catch (error) {
+    console.warn('[rgp:bg] listSubIssuesSafe failed', { owner, repo, issueNumber, error })
     return []
   }
 }
