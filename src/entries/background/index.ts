@@ -384,7 +384,8 @@ export default defineBackground(() => {
     logger.log('[rgp:bg] getItemPreview received', data)
 
     // Check preview cache first
-    const previewCached = previewCache.get(data.itemId)
+    const cacheKey = `${data.owner}/${data.number}/${data.itemId}`
+    const previewCached = previewCache.get(cacheKey)
     if (previewCached && previewCached.expiresAt > Date.now()) return previewCached.data
 
     // 1. Fetch project field definitions first — also gives us the real projectV2.id
@@ -493,7 +494,7 @@ export default defineBackground(() => {
       },
     }
 
-    previewCache.set(data.itemId, { data: response, expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS })
+    previewCache.set(cacheKey, { data: response, expiresAt: Date.now() + PREVIEW_CACHE_TTL_MS })
     logger.log('[rgp:bg] getItemPreview returning', {
       fieldsCount: fields.length,
       relationships: {
@@ -509,7 +510,7 @@ export default defineBackground(() => {
     logger.log('[rgp:bg] getHierarchyData received', data)
 
     // Check cache first (keyed by DOM item ID)
-    const cacheKey = data.itemId
+    const cacheKey = `${data.owner}/${data.number}/${data.itemId}`
     const cached = hierarchyCache.get(cacheKey)
     if (cached && cached.expiresAt > Date.now()) {
       return cached.data

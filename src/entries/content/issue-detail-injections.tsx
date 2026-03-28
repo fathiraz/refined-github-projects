@@ -190,6 +190,8 @@ export function setupIssueDetailInjector(projectContext: ProjectContext): () => 
 
   document.addEventListener('click', handleRowClick, true)
 
+  scheduleCheck()
+
   return () => {
     observer.disconnect()
     window.removeEventListener('popstate', scheduleCheck)

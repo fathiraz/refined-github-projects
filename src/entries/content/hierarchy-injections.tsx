@@ -30,6 +30,8 @@ export function createHierarchyChipInjector(projectContext: ProjectContext): () 
         const titleCell = titleCellMap.get(span)
         if (!titleCell) continue
 
+        observer.unobserve(span)
+
         ReactDOM.createRoot(span).render(
           <StyleSheetManager shouldForwardProp={isPropValid}>
             <ShadowThemeProvider>

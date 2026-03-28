@@ -51,7 +51,6 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
           if (instance.state.isVisible) instance.popperInstance?.update()
         })
         .catch(() => {
-          hasFetchedRef.current = true
           setState({ status: 'error' })
         })
     },
@@ -115,7 +114,10 @@ function CardContent({ state }: { state: CardState }) {
   const { preview, hierarchy } = state
 
   const statusField = preview.fields.find(
-    (f) => f.dataType === 'SINGLE_SELECT' && f.optionName && !/priority/i.test(f.fieldName),
+    (f) =>
+      f.dataType === 'SINGLE_SELECT' &&
+      f.optionName &&
+      (/status/i.test(f.fieldName) || f.fieldName.toLowerCase() === 'status'),
   )
   const priorityField = preview.fields.find((f) => /priority/i.test(f.fieldName) && f.optionName)
   const iterationField = preview.fields.find((f) => f.dataType === 'ITERATION' && f.iterationTitle)

@@ -2,6 +2,7 @@ import { setupContentUi } from './content-ui'
 import { createSprintHeaderInjector, injectStatusBarSprintButton } from './sprint-injections'
 import { injectTableEnhancementStyles, initDragAndDrop, setupTableEnhancements } from './table-enhancements'
 import { createHierarchyChipInjector } from './hierarchy-injections'
+import { setupIssueDetailInjector } from './issue-detail-injections'
 import { selectionStore } from '../../lib/selection-store'
 import { logger, initDebugLogger } from '../../lib/debug-logger'
 import { extractProjectContext, fetchProjectFields } from '../../lib/github-project'
@@ -41,6 +42,7 @@ export default defineContentScript({
 
     const injectSprintHeaders = createSprintHeaderInjector(projectContext, getFields)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)
+    const cleanupIssueDetail = setupIssueDetailInjector(projectContext)
     const cleanupTableEnhancements = setupTableEnhancements([
       injectSprintHeaders,
       injectStatusBarSprintButton,
@@ -49,6 +51,7 @@ export default defineContentScript({
 
     ctx.onInvalidated(() => {
       cleanupTableEnhancements()
+      cleanupIssueDetail()
       document.removeEventListener('click', handleProjectItemOpen, true)
     })
   },

@@ -19,6 +19,7 @@ export function ProjectContextCard({ itemId, projectContext }: ProjectContextCar
 
   useEffect(() => {
     let cancelled = false
+    setState({ status: 'loading' })
 
     Promise.all([
       sendMessage('getItemPreview', {
