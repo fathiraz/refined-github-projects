@@ -73,6 +73,20 @@ export const ADD_ASSIGNEES = `
   }
 `
 
+export const REMOVE_ASSIGNEES = `
+  mutation RemoveAssignees($assignableId: ID!, $assigneeIds: [ID!]!) {
+    removeAssigneesFromAssignable(input: {
+      assignableId: $assignableId
+      assigneeIds: $assigneeIds
+    }) {
+      assignable {
+        ... on Issue { id }
+        ... on PullRequest { id }
+      }
+    }
+  }
+`
+
 export const ADD_LABELS = `
   mutation AddLabels($labelableId: ID!, $labelIds: [ID!]!) {
     addLabelsToLabelable(input: {

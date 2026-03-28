@@ -377,6 +377,34 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     setShowRandomAssignModal(true)
   }
 
+  async function handleConfirmRandomAssign(assignments: Map<string, string[]>) {
+    const itemIds = selectionStore.getAll()
+    setShowRandomAssignModal(false)
+
+    const assignmentsArray: Array<{ itemId: string; assigneeIds: string[] }> = []
+    const itemToAssignees = new Map<string, string[]>()
+
+    for (const [assigneeId, assignedItemIds] of assignments.entries()) {
+      for (const itemId of assignedItemIds) {
+        const existing = itemToAssignees.get(itemId) || []
+        itemToAssignees.set(itemId, [...existing, assigneeId])
+      }
+    }
+
+    for (const [itemId, assigneeIds] of itemToAssignees.entries()) {
+      assignmentsArray.push({ itemId, assigneeIds })
+    }
+
+    sendMessage('bulkRandomAssign', {
+      itemIds,
+      projectId: projectData?.id || projectId,
+      assignments: assignmentsArray,
+      strategy: 'balanced',
+    })
+
+    selectionStore.clear()
+  }
+
   async function handleBulkClose() {
     setMenuOpen(false)
     if (!await checkToken()) return
@@ -639,8 +667,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
           count={count}
           projectId={projectData?.id || projectId}
           owner={owner}
+          repoName={firstRepoName}
           itemIds={selectionStore.getAll()}
           onClose={() => setShowRandomAssignModal(false)}
+          onConfirm={handleConfirmRandomAssign}
         />
       )}
 

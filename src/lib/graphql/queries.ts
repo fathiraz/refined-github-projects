@@ -424,6 +424,23 @@ export const UPDATE_PROJECT_ITEM_POSITION = `
   }
 `
 
+export const GET_ISSUE_ASSIGNEES = `
+  query GetIssueAssignees($id: ID!) {
+    node(id: $id) {
+      ... on Issue {
+        assignees(first: 25) {
+          nodes { id }
+        }
+      }
+      ... on PullRequest {
+        assignees(first: 25) {
+          nodes { id }
+        }
+      }
+    }
+  }
+`
+
 export const GET_REPO_ISSUE_TYPES = `
   query GetRepoIssueTypes($owner: String!, $name: String!, $cursor: String) {
     repository(owner: $owner, name: $name) {
