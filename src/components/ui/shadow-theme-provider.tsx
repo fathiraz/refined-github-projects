@@ -9,7 +9,7 @@ function resolveMode(): 'day' | 'night' {
   if (mode === 'auto') {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day'
   }
-  return dark ? 'night' : 'day'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day'
 }
 
 export function ShadowThemeProvider({ children }: { children: React.ReactNode }) {

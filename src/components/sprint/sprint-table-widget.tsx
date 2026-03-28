@@ -88,7 +88,7 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
           sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, minHeight: '24px', boxShadow: 'none' }}
         >
           <Spinner size="small" srText="" aria-hidden="true" />
-          <Text sx={{ fontSize: 0, lineHeight: 1.5, color: 'fg.muted' }}>Checking sprint...</Text>
+          <Text sx={{ fontSize: 0, lineHeight: 1.5, color: 'fg.muted' }}>Checking sprint…</Text>
         </Box>
       )}
 
