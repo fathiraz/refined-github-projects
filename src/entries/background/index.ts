@@ -8,6 +8,7 @@ import {
   UPDATE_PROJECT_FIELD,
   ADD_SUB_ISSUE,
   ADD_ASSIGNEES,
+  REMOVE_ASSIGNEES,
   ADD_LABELS,
   UPDATE_ISSUE_MILESTONE,
   UPDATE_ISSUE_TYPE,
@@ -24,7 +25,7 @@ import {
   UPDATE_PR_BODY,
   ADD_COMMENT,
 } from '../../lib/graphql/mutations'
-import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, GET_VIEWER_REPOS_PAGE, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '../../lib/graphql/queries'
+import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, GET_VIEWER_REPOS_PAGE, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION, GET_ISSUE_ASSIGNEES } from '../../lib/graphql/queries'
 import { processQueue, cancelQueue, sleep } from '../../lib/queue'
 import { patStorage, usernameStorage, allSprintSettingsStorage } from '../../lib/storage'
 import { GET_PROJECT_ITEMS_WITH_FIELDS } from '../../lib/graphql/queries'
@@ -1112,6 +1113,77 @@ export default defineBackground(() => {
           status: state.completed < data.renames.length
             ? `Renaming item ${state.completed + 1} of ${data.renames.length}…`
             : `Renaming ${data.renames.length} item${data.renames.length !== 1 ? 's' : ''}…`,
+          processId,
+          label,
+        }, tabId)
+      }, processId)
+
+      await broadcastQueue({ total: 0, completed: 0, paused: false, status: 'Done!', processId, label }, tabId)
+    } finally {
+      activeBulkCount--
+    }
+  })
+
+  onMessage('bulkRandomAssign', async ({ data, sender }) => {
+    logger.log('[rgp:bg] bulkRandomAssign received', { itemCount: data.itemIds.length, strategy: data.strategy })
+
+    if (activeBulkCount >= MAX_CONCURRENT_BULK) {
+      console.warn('[rgp:bg] max concurrent bulk reached, rejecting bulkRandomAssign')
+      return
+    }
+
+    activeBulkCount++
+    const processId = `assign-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    const label = `Random assign · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const tabId = sender.tab?.id
+
+    try {
+      await broadcastQueue({ total: data.itemIds.length, completed: 0, paused: false, status: 'Resolving items...', processId, label }, tabId)
+      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
+
+      if (resolvedItems.length === 0) {
+        console.error('[rgp:bg] no valid items resolved for bulkRandomAssign, aborting')
+        await broadcastQueue({ total: 0, completed: 0, paused: false, status: 'No valid items found', processId, label }, tabId)
+        return
+      }
+
+      const itemToIssueMap = new Map(resolvedItems.map(r => [r.domId, r.issueNodeId]))
+      const tasks: import('../../lib/queue').QueueTask[] = []
+
+      for (const assignment of data.assignments) {
+        const issueNodeId = itemToIssueMap.get(assignment.itemId)
+        if (issueNodeId && assignment.assigneeIds.length > 0) {
+          tasks.push({
+            id: `assign-${assignment.itemId}`,
+            detail: 'Clearing and reassigning…',
+            run: async () => {
+              const res = await gql<{ node: { assignees?: { nodes: { id: string }[] } } }>(
+                GET_ISSUE_ASSIGNEES, { id: issueNodeId }
+              )
+              const currentIds = res.node?.assignees?.nodes?.map(n => n.id) ?? []
+              if (currentIds.length > 0) {
+                await gql(REMOVE_ASSIGNEES, { assignableId: issueNodeId, assigneeIds: currentIds })
+                await sleep(1000)
+              }
+              await gql(ADD_ASSIGNEES, {
+                assignableId: issueNodeId,
+                assigneeIds: assignment.assigneeIds,
+              })
+              await sleep(1000)
+            },
+          })
+        }
+      }
+
+      await processQueue(tasks, async state => {
+        await broadcastQueue({
+          total: state.total,
+          completed: state.completed,
+          paused: state.paused,
+          retryAfter: state.retryAfter,
+          status: state.completed < tasks.length
+            ? `Clearing and reassigning item ${state.completed + 1} of ${tasks.length}…`
+            : `Reassigned ${tasks.length} item${tasks.length !== 1 ? 's' : ''}…`,
           processId,
           label,
         }, tabId)
