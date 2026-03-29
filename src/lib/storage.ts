@@ -23,7 +23,12 @@ export interface SprintSettings {
   doneOptionId: string
   doneOptionName: string
   acknowledgedSprintId?: string
+  sprintSnapshotAt?: string
   excludeConditions?: ExcludeCondition[]
+  pointsFieldId?: string
+  pointsFieldName?: string
+  notStartedOptionId?: string
+  notStartedOptionName?: string
 }
 
 export const allSprintSettingsStorage = storage.defineItem<Record<string, SprintSettings>>(

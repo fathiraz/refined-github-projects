@@ -26,6 +26,7 @@ import { iterationEndDate, nextAfter, injectSprintFilter, SPRINT_FILTER } from '
 import type { Iteration } from '../../lib/sprint-utils'
 import type { ProjectData } from '../../lib/github-project'
 import { sprintConfirmEndStore } from './sprint-store'
+import { SprintProgressView } from './sprint-progress-view'
 
 // ── Shared helpers ───────────────────────────────────────────
 
@@ -103,6 +104,8 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
   const [excludeConditions, setExcludeConditions] = useState<ExcludeCondition[]>(
     currentSettings?.excludeConditions ?? []
   )
+  const [pointsFieldId, setPointsFieldId] = useState(currentSettings?.pointsFieldId ?? '')
+  const [notStartedOptionId, setNotStartedOptionId] = useState(currentSettings?.notStartedOptionId ?? '')
 
   useEffect(() => {
     sendMessage('getProjectFields', { owner, number, isOrg })
@@ -116,6 +119,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
   const selectedSprintField = iterationFields.find((f) => f.id === sprintFieldId)
   const selectedDoneField = doneFields.find((f) => f.id === doneFieldId)
   const excludableFields = doneFields.filter((f) => f.id !== sprintFieldId)
+  const numberFields = fields.filter((f) => f.dataType === 'NUMBER')
 
   const hasIncompleteExclude = excludeConditions.some((c) => {
     if (!c.fieldId) return true
@@ -150,6 +154,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       const doneField = doneFields.find((f) => f.id === doneFieldId)!
       const isDoneText = doneField.dataType === 'TEXT'
       const selectedOption = doneField.options?.find((o) => o.id === doneOptionId)
+      const selectedPointsField = numberFields.find((f) => f.id === pointsFieldId)
       const settings: SprintSettings = {
         sprintFieldId,
         sprintFieldName: sprintField.name,
@@ -160,6 +165,12 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
         doneOptionName: isDoneText ? doneTextValue.trim() : (selectedOption?.name ?? ''),
         acknowledgedSprintId: currentSettings?.acknowledgedSprintId,
         excludeConditions: excludeConditions.filter((c) => c.fieldId && (c.optionId || c.optionName.trim())),
+        pointsFieldId: selectedPointsField?.id,
+        pointsFieldName: selectedPointsField?.name,
+        notStartedOptionId: notStartedOptionId || undefined,
+        notStartedOptionName: notStartedOptionId
+          ? (selectedDoneField?.options?.find((o) => o.id === notStartedOptionId)?.name ?? undefined)
+          : undefined,
       }
       await sendMessage('saveSprintSettings', { projectId, settings })
       injectSprintFilter()
@@ -213,7 +224,7 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
         </FormControl.Label>
         <Select
           value={doneFieldId}
-          onChange={(e) => { setDoneFieldId(e.target.value); setDoneOptionId('') }}
+          onChange={(e) => { setDoneFieldId(e.target.value); setDoneOptionId(''); setNotStartedOptionId('') }}
           block
         >
           <Select.Option value="">Select a field…</Select.Option>
@@ -249,6 +260,39 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
             </Tippy>
           ))}
         </RadioGroup>
+      )}
+
+      {/* Not started option — items in this state are excluded from "done" count in sprint progress */}
+      {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
+        <FormControl>
+          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+            <Box sx={labelIconBoxSx}><OptionsSelectIcon size={16} /></Box>
+            Not started option <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
+          </FormControl.Label>
+          <Select
+            value={notStartedOptionId}
+            onChange={(e) => {
+              const selected = e.target.value
+              if (selected && selected === doneOptionId) {
+                setError('Not started option cannot be the same as the done option')
+                return
+              }
+              setError(null)
+              setNotStartedOptionId(selected)
+            }}
+            block
+          >
+            <Select.Option value="">None (only count exact done option)</Select.Option>
+            {selectedDoneField.options
+              .filter((opt) => opt.id !== doneOptionId)
+              .map((opt) => (
+                <Select.Option key={opt.id} value={opt.id}>{opt.name}</Select.Option>
+              ))}
+          </Select>
+          <FormControl.Caption>
+            When set, all statuses except this one count toward sprint progress — not just the done option.
+          </FormControl.Caption>
+        </FormControl>
       )}
 
       {/* Text input for TEXT done field */}
@@ -360,6 +404,23 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
           </Button>
         </Tippy>
       </Box>
+
+      {/* Story points field (optional) */}
+      {numberFields.length > 0 && (
+        <FormControl>
+          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
+            <Box sx={labelIconBoxSx}><SlidersIcon size={16} /></Box>
+            Story points field <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
+          </FormControl.Label>
+          <Select value={pointsFieldId} onChange={(e) => setPointsFieldId(e.target.value)} block>
+            <Select.Option value="">None</Select.Option>
+            {numberFields.map((f) => (
+              <Select.Option key={f.id} value={f.id}>{f.name}</Select.Option>
+            ))}
+          </Select>
+          <FormControl.Caption>Used to display point totals in the sprint progress view.</FormControl.Caption>
+        </FormControl>
+      )}
 
       {/* Footer */}
       <Box sx={{ pt: 2, borderTop: '1px solid', borderColor: 'border.default' }}>
@@ -694,26 +755,17 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                 </Box>
               )}
 
-              {state === 'active' && currentSprint && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.default' }}>{currentSprint.title}</Text>
-                  <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                    {fmt(currentSprint.startDate)} – {fmt(currentSprint.endDate)} · {daysLeft(currentSprint.endDate)} day{daysLeft(currentSprint.endDate) !== 1 ? 's' : ''} left
-                  </Text>
-                  <Box sx={{ height: '6px', borderRadius: '3px', bg: 'neutral.muted', overflow: 'hidden', mt: 1 }}>
-                    <Box sx={{ height: '100%', borderRadius: '3px', bg: 'accent.emphasis', width: `${sprintProgress(currentSprint.startDate, currentSprint.endDate)}%` }} />
-                  </Box>
-                  <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
-                    Filter{' '}
-                    <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>{SPRINT_FILTER}</Text>
-                    {' '}is applied automatically on save.
-                  </Text>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                    <Tippy content="End the current sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-                      <Button variant="danger" size="small" onClick={() => setConfirmingEnd(true)} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>End Sprint</Button>
-                    </Tippy>
-                  </Box>
-                </Box>
+              {state === 'active' && status?.activeSprint && status?.settings && (
+                <SprintProgressView
+                  activeSprint={status.activeSprint}
+                  settings={status.settings}
+                  projectId={projectId}
+                  owner={owner}
+                  number={number}
+                  isOrg={isOrg}
+                  onEndSprint={() => setConfirmingEnd(true)}
+                  onOpenSettings={() => setShowSettings(true)}
+                />
               )}
             </>
           )}
