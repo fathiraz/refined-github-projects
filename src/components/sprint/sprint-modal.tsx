@@ -269,11 +269,25 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
             <Box sx={labelIconBoxSx}><OptionsSelectIcon size={16} /></Box>
             Not started option <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
           </FormControl.Label>
-          <Select value={notStartedOptionId} onChange={(e) => setNotStartedOptionId(e.target.value)} block>
+          <Select
+            value={notStartedOptionId}
+            onChange={(e) => {
+              const selected = e.target.value
+              if (selected && selected === doneOptionId) {
+                setError('Not started option cannot be the same as the done option')
+                return
+              }
+              setError(null)
+              setNotStartedOptionId(selected)
+            }}
+            block
+          >
             <Select.Option value="">None (only count exact done option)</Select.Option>
-            {selectedDoneField.options.map((opt) => (
-              <Select.Option key={opt.id} value={opt.id}>{opt.name}</Select.Option>
-            ))}
+            {selectedDoneField.options
+              .filter((opt) => opt.id !== doneOptionId)
+              .map((opt) => (
+                <Select.Option key={opt.id} value={opt.id}>{opt.name}</Select.Option>
+              ))}
           </Select>
           <FormControl.Caption>
             When set, all statuses except this one count toward sprint progress — not just the done option.

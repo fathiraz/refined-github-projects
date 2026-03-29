@@ -100,6 +100,7 @@ export function SprintProgressView({
   const remaining = daysLeft(endDate)
 
   useEffect(() => {
+    let cancelled = false
     setLoadState('loading')
     setErrorMsg(null)
     sendMessage('getSprintProgress', {
@@ -112,13 +113,16 @@ export function SprintProgressView({
       settings,
     })
       .then((data) => {
+        if (cancelled) return
         setProgress(data)
         setLoadState('loaded')
       })
       .catch((e: unknown) => {
+        if (cancelled) return
         setErrorMsg(String(e))
         setLoadState('error')
       })
+    return () => { cancelled = true }
   }, [projectId, owner, number, isOrg, activeSprint.id, activeSprint.startDate, settings])
 
   return (

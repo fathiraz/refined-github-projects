@@ -1488,7 +1488,15 @@ export default defineBackground(() => {
   onMessage('getSprintProgress', async ({ data }) => {
     logger.log('[rgp:bg] getSprintProgress received', data)
 
-    const cacheKey = `${data.projectId}/${data.iterationId}`
+    const settingsHash = [
+      data.settings.sprintFieldId,
+      data.settings.doneFieldId,
+      data.settings.doneOptionId,
+      data.settings.notStartedOptionId,
+      data.settings.pointsFieldId,
+      data.settings.sprintSnapshotAt ?? data.sprintStartDate,
+    ].join('|')
+    const cacheKey = `${data.projectId}/${data.iterationId}/${settingsHash}`
     const cached = sprintProgressCache.get(cacheKey)
     if (cached && cached.expiresAt > Date.now()) {
       logger.log('[rgp:bg] getSprintProgress cache hit', cacheKey)
@@ -1592,14 +1600,12 @@ export default defineBackground(() => {
     let scopeAddedPoints = 0
     const recentlyAdded: SprintProgressData['recentlyAdded'] = []
 
-    const snapshotCutoff = data.settings.sprintSnapshotAt
-      ? data.settings.sprintSnapshotAt.slice(0, 10)
-      : data.sprintStartDate
+    const snapshotCutoff = data.settings.sprintSnapshotAt ?? data.sprintStartDate
 
     for (const item of sprintItems) {
       const points = getPoints(item)
       const done = isItemDone(item)
-      const addedAfterStart = item.createdAt.slice(0, 10) > snapshotCutoff
+      const addedAfterStart = item.createdAt > snapshotCutoff
 
       totalIssues++
       totalPoints += points

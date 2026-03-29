@@ -202,7 +202,7 @@ export const GET_SPRINT_PROGRESS_ITEMS = `
                 assignees(first: 5) { nodes { login avatarUrl } }
               }
             }
-            fieldValues(first: 20) {
+            fieldValues(first: 50) {
               nodes {
                 ... on ProjectV2ItemFieldIterationValue {
                   iterationId
