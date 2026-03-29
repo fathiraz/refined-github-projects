@@ -22,7 +22,7 @@ interface Props {
   repoName: string
   itemIds: string[]
   onClose: () => void
-  onConfirm?: (assignments: Map<string, string[]>) => void
+  onConfirm?: (assignments: Map<string, string[]>, strategy: DistributionStrategy) => void
 }
 
 export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owner, repoName }: Props) {
@@ -337,7 +337,7 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
           <Button
             variant="primary"
             disabled={step === 'ASSIGNEES' && selectedAssignees.length < 2}
-            onClick={step === 'CONFIRM' ? () => onConfirm?.(preview) : handleNext}
+            onClick={step === 'CONFIRM' ? () => onConfirm?.(preview, strategy) : handleNext}
             sx={{
               boxShadow: 'none',
               transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',

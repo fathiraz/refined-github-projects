@@ -377,7 +377,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     setShowRandomAssignModal(true)
   }
 
-  async function handleConfirmRandomAssign(assignments: Map<string, string[]>) {
+  async function handleConfirmRandomAssign(assignments: Map<string, string[]>, strategy: import('./bulk-random-assign-utils').DistributionStrategy) {
     const itemIds = selectionStore.getAll()
     setShowRandomAssignModal(false)
 
@@ -399,7 +399,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       itemIds,
       projectId: projectData?.id || projectId,
       assignments: assignmentsArray,
-      strategy: 'balanced',
+      strategy,
     })
 
     selectionStore.clear()
