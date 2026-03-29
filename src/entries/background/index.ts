@@ -1143,6 +1143,8 @@ export default defineBackground(() => {
 
       if (resolvedItems.length === 0) {
         console.error('[rgp:bg] no valid items resolved for bulkRandomAssign, aborting')
+        await broadcastQueue({ total: 0, completed: 0, paused: false, status: 'No valid items found', processId, label }, tabId)
+        activeBulkCount--
         return
       }
 

@@ -37,10 +37,20 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
   useEffect(() => {
     if (!repoName) return
     setIsLoadingAssignees(true)
+    const requestId = Date.now()
     const timer = setTimeout(() => {
+      const currentRequestId = requestId
       sendMessage('searchRepoMetadata', { owner, name: repoName, q: searchQuery, type: 'ASSIGNEES' })
-        .then(results => setAssignees(results.map(r => ({ id: r.id, name: r.name, avatarUrl: r.avatarUrl }))))
-        .finally(() => setIsLoadingAssignees(false))
+        .then(results => {
+          if (currentRequestId === requestId) {
+            setAssignees(results.map(r => ({ id: r.id, name: r.name, avatarUrl: r.avatarUrl })))
+          }
+        })
+        .finally(() => {
+          if (currentRequestId === requestId) {
+            setIsLoadingAssignees(false)
+          }
+        })
     }, searchQuery ? 300 : 0)
     return () => clearTimeout(timer)
   }, [owner, repoName, searchQuery])
@@ -137,6 +147,7 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
                   <Checkbox
                     checked={selectedAssignees.includes(assignee.id)}
                     onChange={() => toggleAssignee(assignee.id)}
+                    onClick={(e) => e.stopPropagation()}
                     aria-label={`Select ${assignee.name}`}
                   />
                   {assignee.avatarUrl

@@ -27,16 +27,20 @@ export function distributeBalanced(items: string[], assignees: string[]): Map<st
   const counts = new Map<string, number>(assignees.map(a => [a, 0]));
 
   for (const item of shuffledItems) {
-    // Find assignee with the lowest count
     let minCount = Infinity;
-    let targetAssignee = assignees[0];
+    const candidates: string[] = [];
 
     for (const [assignee, count] of counts.entries()) {
       if (count < minCount) {
         minCount = count;
-        targetAssignee = assignee;
+        candidates.length = 0;
+        candidates.push(assignee);
+      } else if (count === minCount) {
+        candidates.push(assignee);
       }
     }
+
+    const targetAssignee = candidates[Math.floor(Math.random() * candidates.length)];
 
     distribution.get(targetAssignee)!.push(item);
     counts.set(targetAssignee, minCount + 1);
