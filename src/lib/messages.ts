@@ -119,6 +119,23 @@ export interface SprintInfo {
   endDate: string
 }
 
+export interface SprintProgressData {
+  totalIssues: number
+  doneIssues: number
+  totalPoints: number
+  donePoints: number
+  hasPointsField: boolean
+  pointsFieldName: string
+  scopeAddedIssues: number
+  scopeAddedPoints: number
+  recentlyAdded: Array<{
+    id: string
+    title: string
+    points: number
+    assignees: Array<{ login: string; avatarUrl: string }>
+  }>
+}
+
 export interface SubIssueData {
   number: number
   title: string
@@ -238,6 +255,15 @@ interface ProtocolMap {
   }
   saveSprintSettings(data: { projectId: string; settings: SprintSettings }): { ok: boolean }
   acknowledgeUpcomingSprint(data: { projectId: string; iterationId: string }): { ok: boolean }
+  getSprintProgress(data: {
+    projectId: string
+    owner: string
+    number: number
+    isOrg: boolean
+    iterationId: string
+    sprintStartDate: string
+    settings: SprintSettings
+  }): SprintProgressData
   endSprint(data: {
     projectId: string
     owner: string

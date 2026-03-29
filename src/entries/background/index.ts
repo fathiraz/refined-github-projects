@@ -1,4 +1,4 @@
-import { onMessage, sendMessage, type BulkEditRelationshipsUpdate, type BulkRelationshipValidationResult, type DuplicateItemPlan, type HierarchyData, type IssueRelationshipData, type IssueSearchResultData, type ItemPreviewData, type SubIssueData } from '../../lib/messages'
+import { onMessage, sendMessage, type BulkEditRelationshipsUpdate, type BulkRelationshipValidationResult, type DuplicateItemPlan, type HierarchyData, type IssueRelationshipData, type IssueSearchResultData, type ItemPreviewData, type SprintProgressData, type SubIssueData } from '../../lib/messages'
 import { logger, initDebugLogger } from '../../lib/debug-logger'
 import { gql } from '../../lib/graphql/client'
 import { GET_PROJECT_ITEM_DETAILS, GET_PROJECT_FIELDS, GET_PROJECT_ITEMS_FOR_RESOLUTION, GET_REPOSITORY_ID, GET_REPOSITORY_ISSUE_BY_NUMBER, GET_REPOSITORY_RECENT_OPEN_ISSUES, SEARCH_RELATIONSHIP_ISSUES } from '../../lib/graphql/queries'
@@ -27,10 +27,9 @@ import {
 import { VALIDATE_TOKEN, GET_REPO_ASSIGNEES, GET_REPO_LABELS, GET_REPO_MILESTONES, GET_REPO_ISSUE_TYPES, SEARCH_OWNER_REPOS, GET_VIEWER_TOP_REPOS, GET_VIEWER_REPOS_PAGE, GET_POSSIBLE_TRANSFER_REPOS, GET_PROJECT_ITEMS_FOR_RENAME, GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '../../lib/graphql/queries'
 import { processQueue, cancelQueue, sleep } from '../../lib/queue'
 import { patStorage, usernameStorage, allSprintSettingsStorage } from '../../lib/storage'
-import { GET_PROJECT_ITEMS_WITH_FIELDS } from '../../lib/graphql/queries'
+import { GET_PROJECT_ITEMS_WITH_FIELDS, GET_SPRINT_PROGRESS_ITEMS } from '../../lib/graphql/queries'
 import { todayUtc, isActive, nearestUpcoming, nextAfter, iterationEndDate } from '../../lib/sprint-utils'
 import type { SprintInfo } from '../../lib/messages'
-
 // ─── Concurrency guards ───────────────────────────────────────────────────────
 let activeDuplicateCount = 0
 const MAX_CONCURRENT_DUPLICATES = 3
@@ -52,6 +51,9 @@ const previewCache = new Map<string, { data: ItemPreviewData; expiresAt: number 
 
 const FIELDS_CACHE_TTL_MS = 60_000
 const fieldsCache = new Map<string, { data: FieldsResultProject; expiresAt: number }>()
+
+const SPRINT_PROGRESS_CACHE_TTL_MS = 2 * 60_000
+const sprintProgressCache = new Map<string, { data: SprintProgressData; expiresAt: number }>()
 
 // ─── Types for Issue Types query ───────────────────────────────────────────────
 interface IssueTypeNode {
@@ -1478,9 +1480,164 @@ export default defineBackground(() => {
     if (!current) return { ok: false }
     await allSprintSettingsStorage.setValue({
       ...existing,
-      [data.projectId]: { ...current, acknowledgedSprintId: data.iterationId },
+      [data.projectId]: { ...current, acknowledgedSprintId: data.iterationId, sprintSnapshotAt: new Date().toISOString() },
     })
     return { ok: true }
+  })
+
+  onMessage('getSprintProgress', async ({ data }) => {
+    logger.log('[rgp:bg] getSprintProgress received', data)
+
+    const cacheKey = `${data.projectId}/${data.iterationId}`
+    const cached = sprintProgressCache.get(cacheKey)
+    if (cached && cached.expiresAt > Date.now()) {
+      logger.log('[rgp:bg] getSprintProgress cache hit', cacheKey)
+      return cached.data
+    }
+
+    const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
+    if (!project) throw new Error('Could not load project fields')
+    const realProjectId = project.id
+
+    interface ProgressItemNode {
+      id: string
+      createdAt: string
+      content: {
+        title?: string
+        assignees?: { nodes: { login: string; avatarUrl: string }[] }
+      } | null
+      fieldValues: {
+        nodes: (
+          | { iterationId: string; field: { id: string } | null }
+          | { optionId: string; field: { id: string } | null }
+          | { text: string; field: { id: string } | null }
+          | { number: number; field: { id: string } | null }
+        )[]
+      }
+    }
+    interface ProgressItemsResult {
+      node: {
+        items: {
+          pageInfo: { hasNextPage: boolean; endCursor: string | null }
+          nodes: ProgressItemNode[]
+        }
+      } | null
+    }
+
+    const sprintItemsSet = new Set<string>()
+    const sprintItems: ProgressItemNode[] = []
+    let cursor: string | null = null
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const page: ProgressItemsResult = await gql<ProgressItemsResult>(GET_SPRINT_PROGRESS_ITEMS, {
+        projectId: realProjectId,
+        cursor,
+      })
+      const itemsPage = page.node?.items
+      if (!itemsPage) break
+
+      for (const item of itemsPage.nodes) {
+        const inSprint = item.fieldValues.nodes.filter(Boolean).some(
+          (fv: { iterationId?: string; field: { id: string } | null }) =>
+            'iterationId' in fv &&
+            fv.field?.id === data.settings.sprintFieldId &&
+            fv.iterationId === data.iterationId,
+        )
+        if (inSprint && !sprintItemsSet.has(item.id)) {
+          sprintItemsSet.add(item.id)
+          sprintItems.push(item)
+        }
+      }
+
+      if (!itemsPage.pageInfo.hasNextPage) break
+      cursor = itemsPage.pageInfo.endCursor
+    }
+
+    const hasPointsField = !!data.settings.pointsFieldId
+    const pointsFieldId = data.settings.pointsFieldId ?? ''
+
+    type ProgressFv = { iterationId?: string; optionId?: string; text?: string; number?: number; field: { id: string } | null }
+
+    const getPoints = (item: ProgressItemNode): number => {
+      if (!hasPointsField) return 0
+      const fv = item.fieldValues.nodes.filter(Boolean).find(
+        (f: { field: { id: string } | null }) => f.field?.id === pointsFieldId
+      ) as ProgressFv | undefined
+      return (fv && 'number' in fv && typeof fv.number === 'number') ? fv.number : 0
+    }
+
+    const isItemDone = (item: ProgressItemNode): boolean => {
+      const fvNodes = item.fieldValues.nodes.filter(Boolean) as ProgressFv[]
+      const doneFieldValue = fvNodes.find((fv) => fv.field?.id === data.settings.doneFieldId)
+      if (!doneFieldValue) return false
+      if (data.settings.doneFieldType === 'SINGLE_SELECT' && 'optionId' in doneFieldValue) {
+        // If a "not started" option is configured, everything except that option counts as done
+        if (data.settings.notStartedOptionId) {
+          return doneFieldValue.optionId !== data.settings.notStartedOptionId
+        }
+        return doneFieldValue.optionId === data.settings.doneOptionId
+      }
+      if (data.settings.doneFieldType === 'TEXT' && 'text' in doneFieldValue) {
+        return doneFieldValue.text === data.settings.doneOptionName
+      }
+      return false
+    }
+
+    let totalIssues = 0
+    let doneIssues = 0
+    let totalPoints = 0
+    let donePoints = 0
+    let scopeAddedIssues = 0
+    let scopeAddedPoints = 0
+    const recentlyAdded: SprintProgressData['recentlyAdded'] = []
+
+    const snapshotCutoff = data.settings.sprintSnapshotAt
+      ? data.settings.sprintSnapshotAt.slice(0, 10)
+      : data.sprintStartDate
+
+    for (const item of sprintItems) {
+      const points = getPoints(item)
+      const done = isItemDone(item)
+      const addedAfterStart = item.createdAt.slice(0, 10) > snapshotCutoff
+
+      totalIssues++
+      totalPoints += points
+      if (done) {
+        doneIssues++
+        donePoints += points
+      }
+      if (addedAfterStart) {
+        scopeAddedIssues++
+        scopeAddedPoints += points
+        recentlyAdded.push({
+          id: item.id,
+          title: item.content?.title ?? '(no title)',
+          points,
+          assignees: item.content?.assignees?.nodes ?? [],
+        })
+      }
+    }
+
+    // Show most recently added first (reverse chronological via createdAt, approximate via array order)
+    recentlyAdded.reverse()
+
+    const result: SprintProgressData = {
+      totalIssues,
+      doneIssues,
+      totalPoints,
+      donePoints,
+      hasPointsField,
+      pointsFieldName: data.settings.pointsFieldName ?? '',
+      scopeAddedIssues,
+      scopeAddedPoints,
+      recentlyAdded,
+    }
+
+    pruneExpiredCache(sprintProgressCache)
+    sprintProgressCache.set(cacheKey, { data: result, expiresAt: Date.now() + SPRINT_PROGRESS_CACHE_TTL_MS })
+
+    return result
   })
 
   onMessage('endSprint', async ({ data, sender }) => {
@@ -1527,6 +1684,7 @@ export default defineBackground(() => {
         } | null
       }
 
+      const endSprintItemsSet = new Set<string>()
       const sprintItems: SprintItemNode[] = []
       let cursor: string | null = null
 
@@ -1548,7 +1706,10 @@ export default defineBackground(() => {
               fv.field?.id === data.sprintFieldId &&
               fv.iterationId === data.activeIterationId,
           )
-          if (inSprint) sprintItems.push(item)
+          if (inSprint && !endSprintItemsSet.has(item.id)) {
+            endSprintItemsSet.add(item.id)
+            sprintItems.push(item)
+          }
         }
 
         if (!itemsPage.pageInfo.hasNextPage) break

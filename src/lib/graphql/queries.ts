@@ -183,6 +183,52 @@ export const GET_PROJECT_ITEMS_WITH_FIELDS = `
   }
 `
 
+export const GET_SPRINT_PROGRESS_ITEMS = `
+  query GetSprintProgressItems($projectId: ID!, $cursor: String) {
+    node(id: $projectId) {
+      ... on ProjectV2 {
+        items(first: 100, after: $cursor) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            id
+            createdAt
+            content {
+              ... on Issue {
+                title
+                assignees(first: 5) { nodes { login avatarUrl } }
+              }
+              ... on PullRequest {
+                title
+                assignees(first: 5) { nodes { login avatarUrl } }
+              }
+            }
+            fieldValues(first: 20) {
+              nodes {
+                ... on ProjectV2ItemFieldIterationValue {
+                  iterationId
+                  field { ... on ProjectV2IterationField { id } }
+                }
+                ... on ProjectV2ItemFieldSingleSelectValue {
+                  optionId
+                  field { ... on ProjectV2SingleSelectField { id } }
+                }
+                ... on ProjectV2ItemFieldTextValue {
+                  text
+                  field { ... on ProjectV2Field { id } }
+                }
+                ... on ProjectV2ItemFieldNumberValue {
+                  number
+                  field { ... on ProjectV2Field { id } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
 export const GET_REPO_ASSIGNEES = `
   query GetRepoAssignees($owner: String!, $name: String!, $q: String!) {
     repository(owner: $owner, name: $name) {
