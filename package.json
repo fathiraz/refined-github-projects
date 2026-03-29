@@ -1,6 +1,6 @@
 {
   "name": "refined-github-projects",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Refined GitHub Projects — bulk edit, close, delete, and deep duplicate for GitHub Projects",
   "packageManager": "pnpm@10.32.1",
   "scripts": {

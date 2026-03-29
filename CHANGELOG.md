@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0](https://github.com/fathiraz/refined-github-projects/compare/v0.2.1...v0.3.0) (2026-03-29)
+
+
+### Features
+
+* **bulk:** add bulk random assign functionality ([#13](https://github.com/fathiraz/refined-github-projects/issues/13)) ([3026706](https://github.com/fathiraz/refined-github-projects/commit/3026706ab844d54757f4c1d0c37d8a89295b6841))
+* **hierarchy:** add issue hierarchy and project context support ([#11](https://github.com/fathiraz/refined-github-projects/issues/11)) ([7266693](https://github.com/fathiraz/refined-github-projects/commit/7266693be4301b589f59acc898185f273c583fae))
+* **sprint:** add sprint progress tracking with scope change visibility ([#14](https://github.com/fathiraz/refined-github-projects/issues/14)) ([081d956](https://github.com/fathiraz/refined-github-projects/commit/081d9566a02b3d92c3c064c9eebaaa8dbdcc26d5))
+
 ## [0.2.1](https://github.com/fathiraz/refined-github-projects/compare/v0.2.0...v0.2.1) (2026-03-26)
 
 
