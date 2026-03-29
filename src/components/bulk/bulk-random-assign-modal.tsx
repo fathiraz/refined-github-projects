@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Box, Button, Text, Select, TextInput, Checkbox, Avatar, Flash, Spinner } from '@primer/react'
 import { ModalStepHeader } from '../ui/modal-step-header'
 import { PersonIcon, SearchIcon } from '../ui/primitives'
@@ -33,21 +33,22 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
   const [searchQuery, setSearchQuery] = useState('')
   const [assignees, setAssignees] = useState<Assignee[]>([])
   const [isLoadingAssignees, setIsLoadingAssignees] = useState(false)
+  const latestRequestIdRef = useRef<number>(0)
 
   useEffect(() => {
     if (!repoName) return
     setIsLoadingAssignees(true)
     const requestId = Date.now()
+    latestRequestIdRef.current = requestId
     const timer = setTimeout(() => {
-      const currentRequestId = requestId
       sendMessage('searchRepoMetadata', { owner, name: repoName, q: searchQuery, type: 'ASSIGNEES' })
         .then(results => {
-          if (currentRequestId === requestId) {
+          if (requestId === latestRequestIdRef.current) {
             setAssignees(results.map(r => ({ id: r.id, name: r.name, avatarUrl: r.avatarUrl })))
           }
         })
         .finally(() => {
-          if (currentRequestId === requestId) {
+          if (requestId === latestRequestIdRef.current) {
             setIsLoadingAssignees(false)
           }
         })
