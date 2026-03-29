@@ -18,6 +18,7 @@ import { BulkPinModal } from './bulk-pin-modal'
 import { BulkUnpinModal } from './bulk-unpin-modal'
 import { BulkRenameModal } from './bulk-rename-modal'
 import { BulkMoveModal, type ReorderOp } from './bulk-move-modal'
+import { BulkRandomAssignModal } from './bulk-random-assign-modal'
 import {
   ArrowRightIcon,
   CircleSlashIcon,
@@ -27,6 +28,7 @@ import {
   LockIcon,
   MoveIcon,
   PencilIcon,
+  PersonIcon,
   PinIcon,
   SyncIcon,
   TrashIcon,
@@ -123,8 +125,9 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [showMoveModal, setShowMoveModal] = useState(false)
+  const [showRandomAssignModal, setShowRandomAssignModal] = useState(false)
   const anyModalOpen = showCloseModal || showOpenModal || showDeleteModal ||
-    showLockModal || showPinModal || showUnpinModal || showTransferModal || showDupModal || showRenameModal || showMoveModal
+    showLockModal || showPinModal || showUnpinModal || showTransferModal || showDupModal || showRenameModal || showMoveModal || showRandomAssignModal
 
   // Selection subscription
   useEffect(() => {
@@ -149,6 +152,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         setShowTransferModal(false)
         setShowRenameModal(false)
         setShowMoveModal(false)
+        setShowRandomAssignModal(false)
       }
     })
   }, [])
@@ -191,6 +195,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         setShowTransferModal(false)
         setShowRenameModal(false)
         setShowMoveModal(false)
+        setShowRandomAssignModal(false)
       } else if (step === 'CLOSED' && selectionStore.count() > 0) {
         selectionStore.clear()
       }
@@ -224,6 +229,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const bulkShortcutsRef = useRef<Record<string, (() => void) | undefined>>({})
   bulkShortcutsRef.current = {
     'Shift+KeyE': () => { setMenuOpen(false); handleFieldSelectionOpen() },
+    'Shift+KeyA': handleRandomAssign,
     'Shift+KeyX': handleBulkClose,
     'Shift+KeyO': handleBulkOpen,
     'Shift+KeyL': handleLock,
@@ -363,6 +369,40 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       setRelationshipSelection(createEmptyRelationshipSelection())
       setBulkUpdateValidationErrors([])
     }
+  }
+
+  async function handleRandomAssign() {
+    setMenuOpen(false)
+    if (!await checkToken()) return
+    setShowRandomAssignModal(true)
+  }
+
+  async function handleConfirmRandomAssign(assignments: Map<string, string[]>, strategy: import('./bulk-random-assign-utils').DistributionStrategy) {
+    const itemIds = selectionStore.getAll()
+    setShowRandomAssignModal(false)
+
+    const assignmentsArray: Array<{ itemId: string; assigneeIds: string[] }> = []
+    const itemToAssignees = new Map<string, string[]>()
+
+    for (const [assigneeId, assignedItemIds] of assignments.entries()) {
+      for (const itemId of assignedItemIds) {
+        const existing = itemToAssignees.get(itemId) || []
+        itemToAssignees.set(itemId, [...existing, assigneeId])
+      }
+    }
+
+    for (const [itemId, assigneeIds] of itemToAssignees.entries()) {
+      assignmentsArray.push({ itemId, assigneeIds })
+    }
+
+    sendMessage('bulkRandomAssign', {
+      itemIds,
+      projectId: projectData?.id || projectId,
+      assignments: assignmentsArray,
+      strategy,
+    })
+
+    selectionStore.clear()
   }
 
   async function handleBulkClose() {
@@ -621,6 +661,19 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         />
       )}
 
+      {/* Random Assign modal */}
+      {showRandomAssignModal && (
+        <BulkRandomAssignModal
+          count={count}
+          projectId={projectData?.id || projectId}
+          owner={owner}
+          repoName={firstRepoName}
+          itemIds={selectionStore.getAll()}
+          onClose={() => setShowRandomAssignModal(false)}
+          onConfirm={handleConfirmRandomAssign}
+        />
+      )}
+
       {/* ── Persistent bottom bar ── */}
       <Box sx={{
         position: 'fixed', left: '50%', bottom: 4,
@@ -710,6 +763,19 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
                     <ActionList.TrailingVisual>
                       <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
                         {shortcut('E')}
+                      </Box>
+                    </ActionList.TrailingVisual>
+                  </ActionList.Item>
+                  <ActionList.Item onSelect={handleRandomAssign}>
+                    <ActionList.LeadingVisual>
+                      <Box sx={{ width: 22, height: 22, borderRadius: 2, bg: 'accent.subtle', color: 'accent.fg', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <PersonIcon size={13} />
+                      </Box>
+                    </ActionList.LeadingVisual>
+                    Random Assign (beta)
+                    <ActionList.TrailingVisual>
+                      <Box as="kbd" sx={{ fontSize: 0, fontFamily: 'inherit', fontWeight: 500, px: '5px', py: '1px', borderRadius: 1, bg: 'canvas.inset', border: '1px solid', borderColor: 'border.default', color: 'fg.muted', cursor: 'default', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                        {shortcut('A')}
                       </Box>
                     </ActionList.TrailingVisual>
                   </ActionList.Item>
