@@ -13,12 +13,12 @@
   <a href="https://github.com/fathiraz/refined-github-projects/releases"><img src="https://img.shields.io/github/v/release/fathiraz/refined-github-projects?style=for-the-badge&color=238636&label=Latest+Release" alt="Latest Release" /></a>
   <a href="https://github.com/fathiraz/refined-github-projects/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License" /></a>
   <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-238636?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" /></a>
-  <a href="https://addons.mozilla.org"><img src="https://img.shields.io/badge/Firefox-Coming_Soon-yellow?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="Firefox Add-ons" /></a>
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/"><img src="https://img.shields.io/badge/Firefox_Add--ons-Live-238636?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="Firefox Add-ons" /></a>
 </p>
 
 <p align="center">
-  <strong>Now live on the <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg">Chrome Web Store</a>.</strong>
-  Manual install remains available for Edge, Firefox, and local builds.
+  <strong>Now live on <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg">Chrome Web Store</a> and <a href="https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/">Firefox Add-ons</a>.</strong>
+  Manual install remains available for Edge and local builds.
 </p>
 
 <p align="center">
@@ -158,43 +158,46 @@ Every bulk operation runs through a sequential background queue with 1-second de
 | Chrome | Chromium | ✅ Chrome Web Store |
 | Arc | Chromium | ✅ Chrome Web Store |
 | Microsoft Edge | Chromium | ✅ Manual install |
-| Firefox | Gecko | ✅ Manual install |
-| Zen | Firefox (Gecko) | ✅ Manual install |
+| Firefox | Gecko | ✅ Firefox Add-ons |
+| Zen | Firefox (Gecko) | ✅ Firefox Add-ons |
 
 ### For Humans
 
 1. **Chrome**: install directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg).
-2. **Edge / Firefox / local testing**: download the latest browser build package from [Releases](https://github.com/fathiraz/refined-github-projects/releases) and extract it on your machine.
-3. For manual installs, open your browser's extension page:
+2. **Firefox**: install directly from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/).
+3. **Edge / local testing**: download the latest browser build package from [Releases](https://github.com/fathiraz/refined-github-projects/releases) and extract it on your machine.
+4. For manual installs, open your browser's extension page:
    - **Chrome**: `chrome://extensions`
    - **Edge**: `edge://extensions`
    - **Firefox / Zen**: `about:debugging#/runtime/this-firefox`
-4. Load the extension manually when needed:
+5. Load the extension manually when needed:
    - **Chrome / Edge**: enable **Developer mode** → **Load unpacked** → select the extracted folder
    - **Firefox / Zen**: **Load Temporary Add-on** → select the manifest file in the extracted folder
-5. Click the extension icon, paste your GitHub PAT, and click **Validate and save**.
+6. Click the extension icon, paste your GitHub PAT, and click **Validate and save**.
 
-Done. Chrome installs in one click from the Chrome Web Store; Edge and Firefox remain available via manual install.
+Done. Chrome and Firefox install in one click from their respective stores; Edge remains available via manual install.
 
 ### For AI Agents
 
 Paste this into Cursor, Claude Code, or any coding agent:
 
 ```text
-Install Refined GitHub Projects from the Chrome Web Store:
-https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg
+Install Refined GitHub Projects:
 
-If you need Edge, Firefox, or a local build, use the latest GitHub release:
+Chrome: https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg
+Firefox: https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/
+
+If you need Edge or a local build, use the latest GitHub release:
 https://github.com/fathiraz/refined-github-projects/releases
 
 Steps:
 1. Chrome: install from the Chrome Web Store
-2. Edge/Firefox/manual installs: download the latest browser build package (not the source archive) and extract it
-3. Load as unpacked extension when needed:
+2. Firefox: install from Firefox Add-ons
+3. Edge/manual installs: download the latest browser build package (not the source archive) and extract it
+4. Load as unpacked extension when needed:
    - Chrome: chrome://extensions → Developer mode → Load unpacked → select extracted folder
    - Edge: edge://extensions → Developer mode → Load unpacked → select extracted folder
-   - Firefox: about:debugging#/runtime/this-firefox → Load Temporary Add-on → select manifest.json
-4. Click the extension icon → paste your GitHub PAT (scopes: repo, read:org, project) → Validate and save
+5. Click the extension icon → paste your GitHub PAT (scopes: repo, read:org, project) → Validate and save
 ```
 
 Or fetch these instructions directly:
@@ -325,7 +328,7 @@ If you want to use Safari manually, follow the [WXT Safari publishing guide](htt
 - [x] Task completion tracker in sprint group headers
 - [x] Live queue tracker with real-time progress
 - [x] Chrome Web Store release
-- [ ] Firefox Add-ons release
+- [x] Firefox Add-ons release
 
 ---
 
