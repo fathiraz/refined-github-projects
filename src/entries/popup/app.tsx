@@ -3,16 +3,36 @@ import { Box, Button, FormControl, Heading, Text, TextInput } from '@primer/reac
 import { sendMessage } from '../../lib/messages'
 import { useTokenSetup } from '../../components/token-setup'
 import { usernameStorage } from '../../lib/storage'
-import { AppShell, EyeIcon, EyeOffIcon, KeyboardHint, PanelCard, StatusBanner } from '../../components/ui/primitives'
+import {
+  AppShell,
+  EyeIcon,
+  EyeOffIcon,
+  KeyboardHint,
+  PanelCard,
+  StatusBanner,
+} from '../../components/ui/primitives'
 import { DebugSettingsCard } from '../../components/debug-settings-card'
 
 export default function App() {
-  const { token, setToken, loading, validating, error, setError, saved, savedLogin, hasToken, saveToken } = useTokenSetup()
+  const {
+    token,
+    setToken,
+    loading,
+    validating,
+    error,
+    setError,
+    saved,
+    savedLogin,
+    hasToken,
+    saveToken,
+  } = useTokenSetup()
   const [showPat, setShowPat] = React.useState(false)
   const [storedUsername, setStoredUsername] = React.useState('')
 
   React.useEffect(() => {
-    usernameStorage.getValue().then((v: string) => { if (v) setStoredUsername(v) })
+    usernameStorage.getValue().then((v: string) => {
+      if (v) setStoredUsername(v)
+    })
   }, [saved])
 
   const version = browser.runtime.getManifest().version
@@ -20,11 +40,31 @@ export default function App() {
 
   return (
     <AppShell>
-      <Box sx={{ width: 320, minHeight: 400, bg: 'canvas.default', p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box
+        sx={{
+          width: 320,
+          minHeight: 400,
+          bg: 'canvas.default',
+          p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}
+      >
         {/* Header */}
         <Box sx={{ pb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 2 }}>
-            <Heading as="h2" sx={{ fontSize: 4, fontWeight: 'bold', m: 0, letterSpacing: '-0.02em' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              gap: 2,
+            }}
+          >
+            <Heading
+              as="h2"
+              sx={{ fontSize: 4, fontWeight: 'bold', m: 0, letterSpacing: '-0.02em' }}
+            >
               Refined GitHub Projects
             </Heading>
             {version && (
@@ -40,9 +80,7 @@ export default function App() {
         <PanelCard variant="elevated" padding="medium">
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {connectedUser && !error && (
-              <StatusBanner variant="success">
-                Connected as @{connectedUser}
-              </StatusBanner>
+              <StatusBanner variant="success">Connected as @{connectedUser}</StatusBanner>
             )}
 
             {saved && !connectedUser && (
@@ -72,7 +110,7 @@ export default function App() {
                 block
                 trailingAction={
                   <TextInput.Action
-                    onClick={() => setShowPat(v => !v)}
+                    onClick={() => setShowPat((v) => !v)}
                     aria-label={showPat ? 'Hide token' : 'Show token'}
                     icon={showPat ? EyeOffIcon : EyeIcon}
                   />
@@ -81,7 +119,10 @@ export default function App() {
                   bg: 'canvas.default',
                   borderColor: error ? 'danger.emphasis' : 'border.default',
                   boxShadow: 'none',
-                  '&:focus-within': { boxShadow: 'none', borderColor: error ? 'danger.emphasis' : 'accent.emphasis' },
+                  '&:focus-within': {
+                    boxShadow: 'none',
+                    borderColor: error ? 'danger.emphasis' : 'accent.emphasis',
+                  },
                 }}
               />
               <FormControl.Caption>
@@ -89,9 +130,7 @@ export default function App() {
               </FormControl.Caption>
             </FormControl>
 
-            {loading && (
-              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>Loading saved token…</Text>
-            )}
+            {loading && <Text sx={{ fontSize: 0, color: 'fg.muted' }}>Loading saved token…</Text>}
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Button
@@ -121,10 +160,12 @@ export default function App() {
           <Text as="p" sx={{ fontSize: 0, color: 'fg.muted', m: 0, mb: 2, lineHeight: 1.5 }}>
             Open a GitHub Projects table to start.
           </Text>
-          <KeyboardHint shortcuts={[
-            { key: '⌘A', label: 'select all' },
-            { key: 'Esc', label: 'clear' },
-          ]} />
+          <KeyboardHint
+            shortcuts={[
+              { key: '⌘A', label: 'select all' },
+              { key: 'Esc', label: 'clear' },
+            ]}
+          />
         </PanelCard>
       </Box>
     </AppShell>

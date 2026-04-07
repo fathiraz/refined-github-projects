@@ -165,16 +165,22 @@ export interface BulkRandomAssignData {
 }
 
 interface ProtocolMap {
-  duplicateItem(data: {
+  duplicateItem(data: { itemId: string; projectId: string; plan?: DuplicateItemPlan }): void
+  getItemPreview(data: {
     itemId: string
-    projectId: string
-    plan?: DuplicateItemPlan
-  }): void
-  getItemPreview(data: { itemId: string; owner: string; number: number; isOrg: boolean }): ItemPreviewData
+    owner: string
+    number: number
+    isOrg: boolean
+  }): ItemPreviewData
   openOptions(data: {}): void
   getPatStatus(data: {}): { hasPat: boolean }
   validatePat(data: { token: string }): { valid: boolean; user?: string }
-  searchRepoMetadata(data: { owner: string; name: string; q: string; type: 'ASSIGNEES' | 'LABELS' | 'MILESTONES' | 'ISSUE_TYPES' }): { id: string; name: string; color?: string; avatarUrl?: string; description?: string }[]
+  searchRepoMetadata(data: {
+    owner: string
+    name: string
+    q: string
+    type: 'ASSIGNEES' | 'LABELS' | 'MILESTONES' | 'ISSUE_TYPES'
+  }): { id: string; name: string; color?: string; avatarUrl?: string; description?: string }[]
   searchRelationshipIssues(data: {
     q: string
     owner?: string
@@ -190,17 +196,26 @@ interface ProtocolMap {
     q: string
     firstItemId?: string
     projectId?: string
-  }): { id: string; name: string; nameWithOwner: string; isPrivate: boolean; description: string | null }[]
+  }): {
+    id: string
+    name: string
+    nameWithOwner: string
+    isPrivate: boolean
+    description: string | null
+  }[]
   bulkUpdate(data: {
     itemIds: string[]
     projectId: string
     updates: { fieldId: string; value: unknown }[]
     relationships?: BulkEditRelationshipsUpdate
-    fieldMeta?: Record<string, {
-      name: string
-      options?: { id: string; name: string }[]
-      iterations?: { id: string; title: string; startDate: string; duration: number }[]
-    }>
+    fieldMeta?: Record<
+      string,
+      {
+        name: string
+        options?: { id: string; name: string }[]
+        iterations?: { id: string; title: string; startDate: string; duration: number }[]
+      }
+    >
   }): void
   bulkClose(data: {
     itemIds: string[]
@@ -209,10 +224,7 @@ interface ProtocolMap {
   }): void
   /** Assigns multiple items to users based on a strategy */
   bulkRandomAssign(data: BulkRandomAssignData): void
-  bulkOpen(data: {
-    itemIds: string[]
-    projectId: string
-  }): void
+  bulkOpen(data: { itemIds: string[]; projectId: string }): void
   bulkTransfer(data: {
     itemIds: string[]
     projectId: string
@@ -224,18 +236,9 @@ interface ProtocolMap {
     projectId: string
     lockReason: 'OFF_TOPIC' | 'TOO_HEATED' | 'RESOLVED' | 'SPAM' | null
   }): void
-  bulkPin(data: {
-    itemIds: string[]
-    projectId: string
-  }): void
-  bulkUnpin(data: {
-    itemIds: string[]
-    projectId: string
-  }): void
-  bulkDelete(data: {
-    itemIds: string[]
-    projectId: string
-  }): void
+  bulkPin(data: { itemIds: string[]; projectId: string }): void
+  bulkUnpin(data: { itemIds: string[]; projectId: string }): void
+  bulkDelete(data: { itemIds: string[]; projectId: string }): void
   getProjectFields(data: { owner: string; number: number; isOrg: boolean }): {
     id: string
     title: string
@@ -249,12 +252,7 @@ interface ProtocolMap {
       }
     }[]
   }
-  getSprintStatus(data: {
-    projectId: string
-    owner: string
-    number: number
-    isOrg: boolean
-  }): {
+  getSprintStatus(data: { projectId: string; owner: string; number: number; isOrg: boolean }): {
     hasSettings: boolean
     activeSprint: SprintInfo | null
     nearestUpcoming: SprintInfo | null
@@ -287,14 +285,21 @@ interface ProtocolMap {
     doneOptionValue: string
     excludeConditions: ExcludeCondition[]
   }): void
-  getItemTitles(data: {
-    itemIds: string[]
-    projectId: string
-  }): Array<{ domId: string; issueNodeId: string; title: string; typename: 'Issue' | 'PullRequest' }>
+  getItemTitles(data: { itemIds: string[]; projectId: string }): Array<{
+    domId: string
+    issueNodeId: string
+    title: string
+    typename: 'Issue' | 'PullRequest'
+  }>
   bulkRename(data: {
     itemIds: string[]
     projectId: string
-    renames: Array<{ domId: string; issueNodeId: string; newTitle: string; typename: 'Issue' | 'PullRequest' }>
+    renames: Array<{
+      domId: string
+      issueNodeId: string
+      newTitle: string
+      typename: 'Issue' | 'PullRequest'
+    }>
   }): void
   getReorderContext(data: {
     itemIds: string[]
@@ -328,7 +333,12 @@ interface ProtocolMap {
     label?: string
     allDomIds?: string[]
   }): void
-  getHierarchyData(data: { itemId: string; owner: string; number: number; isOrg: boolean }): HierarchyData
+  getHierarchyData(data: {
+    itemId: string
+    owner: string
+    number: number
+    isOrg: boolean
+  }): HierarchyData
   cancelProcess(data: { processId: string }): void
   queueStateUpdate(data: {
     total: number
@@ -339,6 +349,8 @@ interface ProtocolMap {
     detail?: string
     processId?: string
     label?: string
+    failedItems?: Array<{ id: string; title: string; error: string }>
+    retryContext?: { messageType: string; data: Record<string, unknown> }
   }): void
 }
 
@@ -354,9 +366,7 @@ export const sendMessage: typeof _messaging.sendMessage = async (
   tabId?: number,
 ): Promise<any> => {
   const doSend = () =>
-    tabId != null
-      ? _messaging.sendMessage(type, data, tabId)
-      : _messaging.sendMessage(type, data)
+    tabId != null ? _messaging.sendMessage(type, data, tabId) : _messaging.sendMessage(type, data)
   try {
     return await doSend()
   } catch (err: unknown) {
@@ -371,4 +381,3 @@ export const sendMessage: typeof _messaging.sendMessage = async (
     throw err
   }
 }
-

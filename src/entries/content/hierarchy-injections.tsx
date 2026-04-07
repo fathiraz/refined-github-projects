@@ -35,11 +35,7 @@ export function createHierarchyChipInjector(projectContext: ProjectContext): () 
         ReactDOM.createRoot(span).render(
           <StyleSheetManager shouldForwardProp={isPropValid}>
             <ShadowThemeProvider>
-              <RowHoverCard
-                itemId={itemId}
-                projectContext={projectContext}
-                titleCell={titleCell}
-              />
+              <RowHoverCard itemId={itemId} projectContext={projectContext} titleCell={titleCell} />
             </ShadowThemeProvider>
           </StyleSheetManager>,
         )

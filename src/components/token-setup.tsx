@@ -1,5 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Flash, FormControl, Heading, Link, Spinner, Text, TextInput } from '@primer/react'
+import {
+  Box,
+  Button,
+  Flash,
+  FormControl,
+  Heading,
+  Link,
+  Spinner,
+  Text,
+  TextInput,
+} from '@primer/react'
 import { sendMessage } from '../lib/messages'
 import { patStorage } from '../lib/storage'
 import { CheckIcon, GearIcon, XIcon } from './ui/primitives'
@@ -99,12 +109,30 @@ const actionButtonSx = {
 } as const
 
 export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardProps) {
-  const { token, setToken, loading, validating, error, setError, saved, savedLogin, hasToken, saveToken } = useTokenSetup()
+  const {
+    token,
+    setToken,
+    loading,
+    validating,
+    error,
+    setError,
+    saved,
+    savedLogin,
+    hasToken,
+    saveToken,
+  } = useTokenSetup()
 
   if (loading) {
     return (
       <Box sx={cardSx}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: mode === 'compact' ? 3 : 5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            py: mode === 'compact' ? 3 : 5,
+          }}
+        >
           <Spinner size="small" />
         </Box>
       </Box>
@@ -142,7 +170,9 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
       <Box sx={{ p: mode === 'compact' ? 3 : 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
         {saved && (
           <Flash variant="success">
-            <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>Token saved</Text>
+            <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>
+              Token saved
+            </Text>
             <Text as="p" sx={{ m: 0, fontSize: 1 }}>
               {savedLogin ? `Authenticated as @${savedLogin}.` : 'Your token is ready to use.'}
             </Text>
@@ -152,8 +182,12 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
         {error && (
           <Flash variant="danger" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
             <Box sx={{ flex: 1 }}>
-              <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>Could not save token</Text>
-              <Text as="p" sx={{ m: 0, fontSize: 1 }}>{error}</Text>
+              <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>
+                Could not save token
+              </Text>
+              <Text as="p" sx={{ m: 0, fontSize: 1 }}>
+                {error}
+              </Text>
             </Box>
             <Button
               variant="invisible"
@@ -212,7 +246,17 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
             <Heading id="rgp-scopes-list" sx={{ fontSize: 1, mb: 2 }}>
               Required scopes
             </Heading>
-            <Box as="ul" sx={{ listStyle: 'none', pl: 0, m: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box
+              as="ul"
+              sx={{
+                listStyle: 'none',
+                pl: 0,
+                m: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              }}
+            >
               {requiredScopes.map((scope) => (
                 <Box as="li" key={scope} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <CheckIcon size={14} color="currentColor" />

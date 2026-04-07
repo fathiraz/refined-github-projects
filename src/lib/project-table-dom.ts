@@ -61,6 +61,7 @@ export function isEditableTarget(el: EventTarget | null): boolean {
   const tag = (el as Element).tagName
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
   if ((el as HTMLElement).isContentEditable) return true
-  if ((el as Element).closest?.('[role="textbox"], [role="combobox"], [role="searchbox"]')) return true
+  if ((el as Element).closest?.('[role="textbox"], [role="combobox"], [role="searchbox"]'))
+    return true
   return false
 }

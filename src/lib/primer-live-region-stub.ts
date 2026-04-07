@@ -6,7 +6,10 @@ export function announce(message: string, options?: { politeness?: 'polite' | 'a
   void options
 }
 
-export function announceFromElement(element: Element, options?: { delayMs?: number; politeness?: 'polite' | 'assertive' }): void {
+export function announceFromElement(
+  element: Element,
+  options?: { delayMs?: number; politeness?: 'polite' | 'assertive' },
+): void {
   void element
   void options
 }

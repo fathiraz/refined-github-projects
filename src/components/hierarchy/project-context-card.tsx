@@ -42,7 +42,9 @@ export function ProjectContextCard({ itemId, projectContext }: ProjectContextCar
         if (!cancelled) setState({ status: 'error' })
       })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [itemId, projectContext])
 
   if (state.status === 'loading') {
@@ -121,8 +123,7 @@ export function ProjectContextCard({ itemId, projectContext }: ProjectContextCar
               rel="noopener noreferrer"
               sx={{ fontSize: 0, color: 'fg.default' }}
             >
-              <Text sx={{ color: 'fg.muted' }}>#{hierarchy.parent.number}</Text>
-              {' '}
+              <Text sx={{ color: 'fg.muted' }}>#{hierarchy.parent.number}</Text>{' '}
               {hierarchy.parent.title}
             </Link>
           </CardRow>
@@ -130,7 +131,9 @@ export function ProjectContextCard({ itemId, projectContext }: ProjectContextCar
 
         {/* Sub-issues progress */}
         {hierarchy.totalSubIssues > 0 && (
-          <CardRow label={`Sub-issues (${hierarchy.completedSubIssues}/${hierarchy.totalSubIssues})`}>
+          <CardRow
+            label={`Sub-issues (${hierarchy.completedSubIssues}/${hierarchy.totalSubIssues})`}
+          >
             <ProgressBar
               progress={completedPct}
               sx={{ width: '100%', bg: 'border.default', boxShadow: 'none' }}
@@ -183,9 +186,7 @@ export function ProjectContextCard({ itemId, projectContext }: ProjectContextCar
 function CardRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Box>
-      <Text
-        sx={{ display: 'block', fontWeight: 'bold', color: 'fg.muted', mb: 1, fontSize: 0 }}
-      >
+      <Text sx={{ display: 'block', fontWeight: 'bold', color: 'fg.muted', mb: 1, fontSize: 0 }}>
         {label}
       </Text>
       {children}

@@ -151,7 +151,6 @@ export const GET_PROJECT_ITEMS_FOR_RESOLUTION = `
   }
 `
 
-
 export const GET_PROJECT_ITEMS_WITH_FIELDS = `
   query GetProjectItemsWithFields($projectId: ID!, $cursor: String) {
     node(id: $projectId) {

@@ -34,7 +34,8 @@ export function createSprintHeaderInjector(
 
       const hostSpan = document.createElement('span')
       hostSpan.className = 'rgp-sprint-hdr-widget'
-      hostSpan.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin-left:4px;vertical-align:middle'
+      hostSpan.style.cssText =
+        'display:inline-flex;align-items:center;gap:4px;margin-left:4px;vertical-align:middle'
       label.after(hostSpan)
 
       ReactDOM.createRoot(hostSpan).render(

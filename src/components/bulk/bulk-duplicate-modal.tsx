@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Tippy from '../ui/tooltip'
 import { Box, Button, Checkbox, Flash, FormControl, Text, TextInput } from '@primer/react'
-import { sendMessage, type DuplicateItemPlan, type IssueRelationshipData, type ItemPreviewData } from '../../lib/messages'
+import {
+  sendMessage,
+  type DuplicateItemPlan,
+  type IssueRelationshipData,
+  type ItemPreviewData,
+} from '../../lib/messages'
 import { queueStore } from '../../lib/queue-store'
 import { flyToTracker } from './bulk-utils'
 import { RepoMetadataSelectPanel, type RepoMetadataItem } from '../ui/repo-metadata-select-panel'
@@ -129,7 +134,9 @@ function fieldSectionId(fieldId: string): SectionId {
 }
 
 function relationshipKey(issue: IssueRelationshipData): string {
-  return issue.databaseId ? `db:${issue.databaseId}` : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
+  return issue.databaseId
+    ? `db:${issue.databaseId}`
+    : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
 }
 
 function getFieldIcon(dataType: EditableField['dataType']): React.ReactNode {
@@ -191,7 +198,9 @@ function summarizeFieldValue(field: EditableField): string {
   }
 
   if (field.dataType === 'NUMBER') {
-    return field.number === undefined || field.number === null ? 'None / Cleared' : String(field.number)
+    return field.number === undefined || field.number === null
+      ? 'None / Cleared'
+      : String(field.number)
   }
 
   if (field.dataType === 'DATE') {
@@ -207,9 +216,12 @@ function summarizeFieldValue(field: EditableField): string {
 
 function buildFieldValue(field: EditableField): Record<string, unknown> {
   if (field.dataType === 'TEXT') return { text: field.text ?? '' }
-  if (field.dataType === 'SINGLE_SELECT') return field.optionId ? { singleSelectOptionId: field.optionId } : {}
-  if (field.dataType === 'ITERATION') return field.iterationId ? { iterationId: field.iterationId } : {}
-  if (field.dataType === 'NUMBER') return field.number === undefined || field.number === null ? {} : { number: field.number }
+  if (field.dataType === 'SINGLE_SELECT')
+    return field.optionId ? { singleSelectOptionId: field.optionId } : {}
+  if (field.dataType === 'ITERATION')
+    return field.iterationId ? { iterationId: field.iterationId } : {}
+  if (field.dataType === 'NUMBER')
+    return field.number === undefined || field.number === null ? {} : { number: field.number }
   if (field.dataType === 'DATE') return field.date ? { date: field.date } : {}
   return {}
 }
@@ -231,7 +243,8 @@ function SelectSectionsStep({
   onClose: () => void
   onNext: () => void
 }) {
-  const allSelected = sections.length > 0 && sections.every(section => selectedSections.includes(section.id))
+  const allSelected =
+    sections.length > 0 && sections.every((section) => selectedSections.includes(section.id))
 
   return (
     <>
@@ -243,27 +256,54 @@ function SelectSectionsStep({
         totalSteps={3}
         onClose={onClose}
       />
-      <Box sx={{ px: 4, pt: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 3 }}>
-        <Button variant="invisible" size="small" onClick={allSelected ? onDeselectAll : onSelectAll} sx={{ p: 0, color: 'accent.fg', fontSize: 1, fontWeight: 'bold', ...buttonMotionSx }}>
+      <Box
+        sx={{
+          px: 4,
+          pt: 2,
+          pb: 1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 3,
+        }}
+      >
+        <Button
+          variant="invisible"
+          size="small"
+          onClick={allSelected ? onDeselectAll : onSelectAll}
+          sx={{ p: 0, color: 'accent.fg', fontSize: 1, fontWeight: 'bold', ...buttonMotionSx }}
+        >
           {allSelected ? 'Deselect all' : 'Select all'}
         </Button>
         <Text sx={{ fontSize: 0, color: 'fg.muted', textAlign: 'right' }}>
           If Title is skipped, the duplicate falls back to the original title.
         </Text>
       </Box>
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 2, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {sectionGroupOrder.map(group => {
-          const groupSections = sections.filter(section => section.group === group)
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          px: 4,
+          py: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
+      >
+        {sectionGroupOrder.map((group) => {
+          const groupSections = sections.filter((section) => section.group === group)
           if (groupSections.length === 0) return null
 
           return (
             <Box key={group} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Text sx={sectionLabel}>
-                <Box as="span" sx={prefixLabelIcon}>{sectionGroupMeta[group].icon}</Box>
+                <Box as="span" sx={prefixLabelIcon}>
+                  {sectionGroupMeta[group].icon}
+                </Box>
                 {sectionGroupMeta[group].label}
               </Text>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {groupSections.map(section => {
+                {groupSections.map((section) => {
                   const isSelected = selectedSections.includes(section.id)
                   return (
                     <Box
@@ -288,22 +328,56 @@ function SelectSectionsStep({
                         '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                       }}
                     >
-                      <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
-                      <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: isSelected ? 'accent.fg' : 'fg.default' }}>
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={() => {}}
+                        sx={{ pointerEvents: 'none' }}
+                      />
+                      <Box
+                        as="span"
+                        sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}
+                      >
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexShrink: 0,
+                            color: isSelected ? 'accent.fg' : 'fg.default',
+                          }}
+                        >
                           {section.icon}
                         </Box>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                          <Text sx={{ fontSize: 1, fontWeight: 'bold', color: isSelected ? 'accent.fg' : 'fg.default' }}>
+                        <Box
+                          sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}
+                        >
+                          <Text
+                            sx={{
+                              fontSize: 1,
+                              fontWeight: 'bold',
+                              color: isSelected ? 'accent.fg' : 'fg.default',
+                            }}
+                          >
                             {section.label}
                           </Text>
                           {section.helperText && (
-                            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{section.helperText}</Text>
+                            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+                              {section.helperText}
+                            </Text>
                           )}
                         </Box>
                       </Box>
                       {section.badge && (
-                        <Text sx={{ fontSize: 0, px: 1, py: '2px', bg: 'neutral.muted', color: 'fg.muted', borderRadius: 2, flexShrink: 0 }}>
+                        <Text
+                          sx={{
+                            fontSize: 0,
+                            px: 1,
+                            py: '2px',
+                            bg: 'neutral.muted',
+                            color: 'fg.muted',
+                            borderRadius: 2,
+                            flexShrink: 0,
+                          }}
+                        >
                           {section.badge}
                         </Text>
                       )}
@@ -315,7 +389,16 @@ function SelectSectionsStep({
           )
         })}
       </Box>
-      <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'flex-end' }}>
+      <Box
+        sx={{
+          px: 4,
+          py: 3,
+          borderTop: '1px solid',
+          borderColor: 'border.default',
+          display: 'flex',
+          justifyContent: 'flex-end',
+        }}
+      >
         <Button variant="primary" onClick={onNext} sx={buttonMotionSx}>
           Next: Edit Values →
         </Button>
@@ -341,15 +424,33 @@ function RelationshipListEditor({
 }) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
-      <Tippy content={duplicateValueTooltip(tooltipLabel)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-        <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
-          <Box as="span" sx={prefixLabelIcon}>{icon}</Box>
+      <Tippy
+        content={duplicateValueTooltip(tooltipLabel)}
+        delay={[400, 0]}
+        placement="top"
+        zIndex={Z_TOOLTIP}
+      >
+        <Text
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 2,
+            fontSize: 1,
+            fontWeight: 'bold',
+            color: 'fg.default',
+            width: 'fit-content',
+            cursor: 'help',
+          }}
+        >
+          <Box as="span" sx={prefixLabelIcon}>
+            {icon}
+          </Box>
           {label}
         </Text>
       </Tippy>
       <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{description}</Text>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {issues.map(issue => (
+        {issues.map((issue) => (
           <Box
             key={relationshipKey(issue)}
             sx={{
@@ -365,8 +466,12 @@ function RelationshipListEditor({
               bg: 'canvas.default',
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}>
-              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{issue.title}</Text>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}
+            >
+              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
+                {issue.title}
+              </Text>
               <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{formatIssueReference(issue)}</Text>
             </Box>
             <Button
@@ -409,20 +514,32 @@ function ValuesStep({
         onBack={onBack}
         onClose={onClose}
       />
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          px: 4,
+          py: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
+      >
         {sections.length === 0 ? (
           <Box sx={{ py: 6, textAlign: 'center', color: 'fg.muted', fontSize: 1 }}>
             No sections selected. The duplicate will use the original title only.
           </Box>
         ) : (
-          sectionGroupOrder.map(group => {
-            const groupSections = sections.filter(section => section.group === group)
+          sectionGroupOrder.map((group) => {
+            const groupSections = sections.filter((section) => section.group === group)
             if (groupSections.length === 0) return null
 
             return (
               <Box key={group} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Text sx={sectionLabel}>
-                  <Box as="span" sx={prefixLabelIcon}>{sectionGroupMeta[group].icon}</Box>
+                  <Box as="span" sx={prefixLabelIcon}>
+                    {sectionGroupMeta[group].icon}
+                  </Box>
                   {sectionGroupMeta[group].label}
                 </Text>
                 {groupSections.map(renderSection)}
@@ -431,9 +548,22 @@ function ValuesStep({
           })
         )}
       </Box>
-      <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'space-between' }}>
-        <Button variant="default" onClick={onBack} sx={buttonMotionSx}>← Back</Button>
-        <Button variant="primary" onClick={onNext} sx={buttonMotionSx}>Review Duplicate →</Button>
+      <Box
+        sx={{
+          px: 4,
+          py: 3,
+          borderTop: '1px solid',
+          borderColor: 'border.default',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Button variant="default" onClick={onBack} sx={buttonMotionSx}>
+          ← Back
+        </Button>
+        <Button variant="primary" onClick={onNext} sx={buttonMotionSx}>
+          Review Duplicate →
+        </Button>
       </Box>
     </>
   )
@@ -466,7 +596,15 @@ function ReviewStep({
         onClose={onClose}
       />
       <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
-        <Box sx={{ bg: 'canvas.subtle', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+        <Box
+          sx={{
+            bg: 'canvas.subtle',
+            border: '1px solid',
+            borderColor: 'border.default',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
           {rows.map((row, index) => (
             <Box
               key={row.id}
@@ -480,23 +618,51 @@ function ReviewStep({
                 borderColor: 'border.default',
               }}
             >
-              <Text sx={{ flex: 1, color: 'fg.muted', fontSize: 1, fontWeight: 500 }}>{row.label}</Text>
-              <Text sx={{ flex: 1.5, color: 'fg.default', fontSize: 1, fontWeight: 'bold', textAlign: 'right', wordBreak: 'break-word' }}>
+              <Text sx={{ flex: 1, color: 'fg.muted', fontSize: 1, fontWeight: 500 }}>
+                {row.label}
+              </Text>
+              <Text
+                sx={{
+                  flex: 1.5,
+                  color: 'fg.default',
+                  fontSize: 1,
+                  fontWeight: 'bold',
+                  textAlign: 'right',
+                  wordBreak: 'break-word',
+                }}
+              >
                 {row.value}
               </Text>
             </Box>
           ))}
         </Box>
       </Box>
-      <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box
+        sx={{
+          px: 4,
+          py: 3,
+          borderTop: '1px solid',
+          borderColor: 'border.default',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}
+      >
         {concurrentError && (
           <Flash variant="warning">
             3 duplications are already in progress. Wait for one to finish before starting another.
           </Flash>
         )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button variant="default" onClick={onBack} sx={buttonMotionSx}>← Back</Button>
-          <Button ref={duplicateBtnRef} variant="primary" onClick={onDuplicate} sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ...buttonMotionSx }}>
+          <Button variant="default" onClick={onBack} sx={buttonMotionSx}>
+            ← Back
+          </Button>
+          <Button
+            ref={duplicateBtnRef}
+            variant="primary"
+            onClick={onDuplicate}
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ...buttonMotionSx }}
+          >
             <CopyIcon size={14} />
             Duplicate Item →
           </Button>
@@ -506,7 +672,14 @@ function ReviewStep({
   )
 }
 
-export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNumber, onClose }: Props) {
+export function BulkDuplicateModal({
+  itemId,
+  projectId,
+  owner,
+  isOrg,
+  projectNumber,
+  onClose,
+}: Props) {
   const [step, setStep] = useState<Step>('LOADING')
   const [preview, setPreview] = useState<ItemPreviewData | null>(null)
   const [error, setError] = useState('')
@@ -528,11 +701,17 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
   useEffect(() => {
     sendMessage('getItemPreview', { itemId, owner, number: projectNumber, isOrg })
-      .then(data => {
+      .then((data) => {
         setPreview(data)
         setEditedTitle(data.title)
         setEditedBody(data.body)
-        setEditedAssignees(data.assignees.map(assignee => ({ id: assignee.id, name: assignee.login, avatarUrl: assignee.avatarUrl })))
+        setEditedAssignees(
+          data.assignees.map((assignee) => ({
+            id: assignee.id,
+            name: assignee.login,
+            avatarUrl: assignee.avatarUrl,
+          })),
+        )
         setEditedLabels(data.labels)
         setEditedFields(data.fields)
         setBlockedByRelationships(data.relationships.blockedBy)
@@ -543,7 +722,7 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
           ASSIGNEES_SECTION_ID,
           LABELS_SECTION_ID,
           ...(data.issueTypeName ? [ISSUE_TYPE_SECTION_ID] : []),
-          ...data.fields.map(field => fieldSectionId(field.fieldId)),
+          ...data.fields.map((field) => fieldSectionId(field.fieldId)),
           ...(data.relationships.parent ? [PARENT_SECTION_ID] : []),
           ...(data.relationships.blockedBy.length > 0 ? [BLOCKED_BY_SECTION_ID] : []),
           ...(data.relationships.blocking.length > 0 ? [BLOCKING_SECTION_ID] : []),
@@ -590,15 +769,17 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         badge: `${preview.labels.length}`,
       },
       ...(preview.issueTypeName
-        ? [{
-            id: ISSUE_TYPE_SECTION_ID,
-            label: 'Issue Type',
-            group: 'METADATA',
-            icon: <ShieldIcon size={14} />,
-            badge: preview.issueTypeName,
-          } satisfies DuplicateSection]
+        ? [
+            {
+              id: ISSUE_TYPE_SECTION_ID,
+              label: 'Issue Type',
+              group: 'METADATA',
+              icon: <ShieldIcon size={14} />,
+              badge: preview.issueTypeName,
+            } satisfies DuplicateSection,
+          ]
         : []),
-      ...preview.fields.map(field => ({
+      ...preview.fields.map((field) => ({
         id: fieldSectionId(field.fieldId),
         label: field.fieldName,
         group: 'PROJECT_FIELDS' as const,
@@ -606,36 +787,44 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         badge: field.dataType.toLowerCase(),
       })),
       ...(preview.relationships.parent
-        ? [{
-            id: PARENT_SECTION_ID,
-            label: 'Parent',
-            group: 'RELATIONSHIPS',
-            icon: <ProjectBoardIcon size={14} />,
-            badge: formatIssueReference(preview.relationships.parent),
-          } satisfies DuplicateSection]
+        ? [
+            {
+              id: PARENT_SECTION_ID,
+              label: 'Parent',
+              group: 'RELATIONSHIPS',
+              icon: <ProjectBoardIcon size={14} />,
+              badge: formatIssueReference(preview.relationships.parent),
+            } satisfies DuplicateSection,
+          ]
         : []),
       ...(preview.relationships.blockedBy.length > 0
-        ? [{
-            id: BLOCKED_BY_SECTION_ID,
-            label: 'Blocked by',
-            group: 'RELATIONSHIPS',
-            icon: <AlertIcon size={14} />,
-            badge: `${preview.relationships.blockedBy.length} issue${preview.relationships.blockedBy.length !== 1 ? 's' : ''}`,
-          } satisfies DuplicateSection]
+        ? [
+            {
+              id: BLOCKED_BY_SECTION_ID,
+              label: 'Blocked by',
+              group: 'RELATIONSHIPS',
+              icon: <AlertIcon size={14} />,
+              badge: `${preview.relationships.blockedBy.length} issue${preview.relationships.blockedBy.length !== 1 ? 's' : ''}`,
+            } satisfies DuplicateSection,
+          ]
         : []),
       ...(preview.relationships.blocking.length > 0
-        ? [{
-            id: BLOCKING_SECTION_ID,
-            label: 'Blocking',
-            group: 'RELATIONSHIPS',
-            icon: <ArrowRightIcon size={14} />,
-            badge: `${preview.relationships.blocking.length} issue${preview.relationships.blocking.length !== 1 ? 's' : ''}`,
-          } satisfies DuplicateSection]
+        ? [
+            {
+              id: BLOCKING_SECTION_ID,
+              label: 'Blocking',
+              group: 'RELATIONSHIPS',
+              icon: <ArrowRightIcon size={14} />,
+              badge: `${preview.relationships.blocking.length} issue${preview.relationships.blocking.length !== 1 ? 's' : ''}`,
+            } satisfies DuplicateSection,
+          ]
         : []),
     ]
   }, [preview])
 
-  const selectedSectionsInOrder = availableSections.filter(section => selectedSections.includes(section.id))
+  const selectedSectionsInOrder = availableSections.filter((section) =>
+    selectedSections.includes(section.id),
+  )
   const repoOwner = preview?.repoOwner || owner
   const repoName = preview?.repoName || ''
 
@@ -644,7 +833,9 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
   }
 
   function updateField(fieldId: string, patch: Partial<EditableField>) {
-    setEditedFields(previous => previous.map(field => field.fieldId === fieldId ? { ...field, ...patch } : field))
+    setEditedFields((previous) =>
+      previous.map((field) => (field.fieldId === fieldId ? { ...field, ...patch } : field)),
+    )
   }
 
   function restoreSection(sectionId: SectionId) {
@@ -661,36 +852,40 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
   function toggleSection(sectionId: SectionId) {
     if (isSectionSelected(sectionId)) {
-      setSelectedSections(previous => previous.filter(id => id !== sectionId))
+      setSelectedSections((previous) => previous.filter((id) => id !== sectionId))
       return
     }
 
     restoreSection(sectionId)
-    setSelectedSections(previous => [...previous, sectionId])
+    setSelectedSections((previous) => [...previous, sectionId])
   }
 
   function dismissSection(sectionId: SectionId) {
-    setSelectedSections(previous => previous.filter(id => id !== sectionId))
+    setSelectedSections((previous) => previous.filter((id) => id !== sectionId))
   }
 
   function selectAllSections() {
-    availableSections.forEach(section => {
+    availableSections.forEach((section) => {
       if (!selectedSections.includes(section.id)) {
         restoreSection(section.id)
       }
     })
-    setSelectedSections(availableSections.map(section => section.id))
+    setSelectedSections(availableSections.map((section) => section.id))
   }
 
   function removeRelationship(kind: 'blockedBy' | 'blocking', issue: IssueRelationshipData) {
     if (kind === 'blockedBy') {
-      const next = blockedByRelationships.filter(candidate => relationshipKey(candidate) !== relationshipKey(issue))
+      const next = blockedByRelationships.filter(
+        (candidate) => relationshipKey(candidate) !== relationshipKey(issue),
+      )
       setBlockedByRelationships(next)
       if (next.length === 0) dismissSection(BLOCKED_BY_SECTION_ID)
       return
     }
 
-    const next = blockingRelationships.filter(candidate => relationshipKey(candidate) !== relationshipKey(issue))
+    const next = blockingRelationships.filter(
+      (candidate) => relationshipKey(candidate) !== relationshipKey(issue),
+    )
     setBlockingRelationships(next)
     if (next.length === 0) dismissSection(BLOCKING_SECTION_ID)
   }
@@ -707,18 +902,18 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
       },
       assignees: {
         enabled: isSectionSelected(ASSIGNEES_SECTION_ID),
-        ids: editedAssignees.map(assignee => assignee.id),
+        ids: editedAssignees.map((assignee) => assignee.id),
       },
       labels: {
         enabled: isSectionSelected(LABELS_SECTION_ID),
-        ids: editedLabels.map(label => label.id),
+        ids: editedLabels.map((label) => label.id),
       },
       issueType: {
         enabled: isSectionSelected(ISSUE_TYPE_SECTION_ID),
         id: preview?.issueTypeId,
         name: preview?.issueTypeName,
       },
-      fieldValues: editedFields.map(field => ({
+      fieldValues: editedFields.map((field) => ({
         fieldId: field.fieldId,
         enabled: isSectionSelected(fieldSectionId(field.fieldId)),
         value: buildFieldValue(field),
@@ -741,12 +936,14 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
   }
 
   function buildReviewRows(): ReviewRow[] {
-    return availableSections.map(section => {
+    return availableSections.map((section) => {
       if (section.id === TITLE_SECTION_ID) {
         return {
           id: section.id,
           label: section.label,
-          value: isSectionSelected(section.id) ? summarizeText(editedTitle, 'Empty title') : 'Original title (fallback)',
+          value: isSectionSelected(section.id)
+            ? summarizeText(editedTitle, 'Empty title')
+            : 'Original title (fallback)',
         }
       }
 
@@ -763,7 +960,9 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
           id: section.id,
           label: section.label,
           value: isSectionSelected(section.id)
-            ? (editedAssignees.length > 0 ? editedAssignees.map(assignee => assignee.name).join(', ') : 'None / Cleared')
+            ? editedAssignees.length > 0
+              ? editedAssignees.map((assignee) => assignee.name).join(', ')
+              : 'None / Cleared'
             : 'Skipped',
         }
       }
@@ -773,7 +972,9 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
           id: section.id,
           label: section.label,
           value: isSectionSelected(section.id)
-            ? (editedLabels.length > 0 ? editedLabels.map(label => label.name).join(', ') : 'None / Cleared')
+            ? editedLabels.length > 0
+              ? editedLabels.map((label) => label.name).join(', ')
+              : 'None / Cleared'
             : 'Skipped',
         }
       }
@@ -782,7 +983,9 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         return {
           id: section.id,
           label: section.label,
-          value: isSectionSelected(section.id) ? (preview?.issueTypeName || 'None / Cleared') : 'Skipped',
+          value: isSectionSelected(section.id)
+            ? preview?.issueTypeName || 'None / Cleared'
+            : 'Skipped',
         }
       }
 
@@ -790,9 +993,10 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         return {
           id: section.id,
           label: 'Parent relationship',
-          value: isSectionSelected(section.id) && preview?.relationships.parent
-            ? formatIssueSummary(preview.relationships.parent)
-            : 'Skipped',
+          value:
+            isSectionSelected(section.id) && preview?.relationships.parent
+              ? formatIssueSummary(preview.relationships.parent)
+              : 'Skipped',
         }
       }
 
@@ -800,7 +1004,9 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         return {
           id: section.id,
           label: section.label,
-          value: isSectionSelected(section.id) ? summarizeIssueList(blockedByRelationships) : 'Skipped',
+          value: isSectionSelected(section.id)
+            ? summarizeIssueList(blockedByRelationships)
+            : 'Skipped',
         }
       }
 
@@ -808,11 +1014,15 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
         return {
           id: section.id,
           label: section.label,
-          value: isSectionSelected(section.id) ? summarizeIssueList(blockingRelationships) : 'Skipped',
+          value: isSectionSelected(section.id)
+            ? summarizeIssueList(blockingRelationships)
+            : 'Skipped',
         }
       }
 
-      const field = editedFields.find(candidate => fieldSectionId(candidate.fieldId) === section.id)
+      const field = editedFields.find(
+        (candidate) => fieldSectionId(candidate.fieldId) === section.id,
+      )
       return {
         id: section.id,
         label: section.label,
@@ -847,15 +1057,35 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
     if (section.id === TITLE_SECTION_ID) {
       return (
         <FormControl key={section.id} sx={{ width: '100%' }}>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
-            <Tippy content={duplicateValueTooltip('title')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontWeight: 'bold',
+              width: 'fit-content',
+              cursor: 'help',
+            }}
+          >
+            <Tippy
+              content={duplicateValueTooltip('title')}
+              delay={[400, 0]}
+              placement="top"
+              zIndex={Z_TOOLTIP}
+            >
               <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={prefixLabelIcon}><TextLineIcon size={14} /></Box>
+                <Box sx={prefixLabelIcon}>
+                  <TextLineIcon size={14} />
+                </Box>
                 Title
               </Box>
             </Tippy>
           </FormControl.Label>
-          <TextInput block value={editedTitle} onChange={event => setEditedTitle(event.target.value)} />
+          <TextInput
+            block
+            value={editedTitle}
+            onChange={(event) => setEditedTitle(event.target.value)}
+          />
         </FormControl>
       )
     }
@@ -863,10 +1093,26 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
     if (section.id === BODY_SECTION_ID) {
       return (
         <FormControl key={section.id} sx={{ width: '100%' }}>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
-            <Tippy content={duplicateValueTooltip('description')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontWeight: 'bold',
+              width: 'fit-content',
+              cursor: 'help',
+            }}
+          >
+            <Tippy
+              content={duplicateValueTooltip('description')}
+              delay={[400, 0]}
+              placement="top"
+              zIndex={Z_TOOLTIP}
+            >
               <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={prefixLabelIcon}><TextLineIcon size={14} /></Box>
+                <Box sx={prefixLabelIcon}>
+                  <TextLineIcon size={14} />
+                </Box>
                 Description
               </Box>
             </Tippy>
@@ -885,10 +1131,31 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
     if (section.id === ASSIGNEES_SECTION_ID) {
       return (
-        <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
-          <Tippy content={duplicateValueTooltip('assignees')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
-              <Box as="span" sx={prefixLabelIcon}><PersonIcon size={14} /></Box>
+        <Box
+          key={section.id}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}
+        >
+          <Tippy
+            content={duplicateValueTooltip('assignees')}
+            delay={[400, 0]}
+            placement="top"
+            zIndex={Z_TOOLTIP}
+          >
+            <Text
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 1,
+                fontWeight: 'bold',
+                color: 'fg.default',
+                width: 'fit-content',
+                cursor: 'help',
+              }}
+            >
+              <Box as="span" sx={prefixLabelIcon}>
+                <PersonIcon size={14} />
+              </Box>
               Assignees
             </Text>
           </Tippy>
@@ -908,10 +1175,31 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
     if (section.id === LABELS_SECTION_ID) {
       return (
-        <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
-          <Tippy content={duplicateValueTooltip('labels')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
-              <Box as="span" sx={prefixLabelIcon}><TagIcon size={14} /></Box>
+        <Box
+          key={section.id}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}
+        >
+          <Tippy
+            content={duplicateValueTooltip('labels')}
+            delay={[400, 0]}
+            placement="top"
+            zIndex={Z_TOOLTIP}
+          >
+            <Text
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 1,
+                fontWeight: 'bold',
+                color: 'fg.default',
+                width: 'fit-content',
+                cursor: 'help',
+              }}
+            >
+              <Box as="span" sx={prefixLabelIcon}>
+                <TagIcon size={14} />
+              </Box>
               Labels
             </Text>
           </Tippy>
@@ -931,10 +1219,31 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
     if (section.id === ISSUE_TYPE_SECTION_ID) {
       return (
-        <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
-          <Tippy content={duplicateValueTooltip('issue type')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
-              <Box as="span" sx={prefixLabelIcon}><ShieldIcon size={14} /></Box>
+        <Box
+          key={section.id}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}
+        >
+          <Tippy
+            content={duplicateValueTooltip('issue type')}
+            delay={[400, 0]}
+            placement="top"
+            zIndex={Z_TOOLTIP}
+          >
+            <Text
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 1,
+                fontWeight: 'bold',
+                color: 'fg.default',
+                width: 'fit-content',
+                cursor: 'help',
+              }}
+            >
+              <Box as="span" sx={prefixLabelIcon}>
+                <ShieldIcon size={14} />
+              </Box>
               Issue Type
             </Text>
           </Tippy>
@@ -945,18 +1254,60 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
     if (section.id === PARENT_SECTION_ID && preview.relationships.parent) {
       return (
-        <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
-          <Tippy content={duplicateValueTooltip('parent relationship')} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
-              <Box as="span" sx={prefixLabelIcon}><ProjectBoardIcon size={14} /></Box>
+        <Box
+          key={section.id}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
+        >
+          <Tippy
+            content={duplicateValueTooltip('parent relationship')}
+            delay={[400, 0]}
+            placement="top"
+            zIndex={Z_TOOLTIP}
+          >
+            <Text
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 1,
+                fontWeight: 'bold',
+                color: 'fg.default',
+                width: 'fit-content',
+                cursor: 'help',
+              }}
+            >
+              <Box as="span" sx={prefixLabelIcon}>
+                <ProjectBoardIcon size={14} />
+              </Box>
               Parent
             </Text>
           </Tippy>
-          <Text sx={{ fontSize: 0, color: 'fg.muted' }}>The duplicate will be linked as a sub-issue of this parent.</Text>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 3, px: 3, py: 2, border: '1px solid', borderColor: 'border.default', borderRadius: 2, bg: 'canvas.default' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}>
-              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{preview.relationships.parent.title}</Text>
-              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{formatIssueReference(preview.relationships.parent)}</Text>
+          <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+            The duplicate will be linked as a sub-issue of this parent.
+          </Text>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 3,
+              px: 3,
+              py: 2,
+              border: '1px solid',
+              borderColor: 'border.default',
+              borderRadius: 2,
+              bg: 'canvas.default',
+            }}
+          >
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}
+            >
+              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
+                {preview.relationships.parent.title}
+              </Text>
+              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+                {formatIssueReference(preview.relationships.parent)}
+              </Text>
             </Box>
             <Button
               variant="invisible"
@@ -980,7 +1331,7 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
           icon={<AlertIcon size={14} />}
           description="These issues will continue to block the duplicate. Remove any relationship you do not want to copy."
           issues={blockedByRelationships}
-          onRemoveIssue={issue => removeRelationship('blockedBy', issue)}
+          onRemoveIssue={(issue) => removeRelationship('blockedBy', issue)}
           tooltipLabel="blocked by relationships"
         />
       )
@@ -994,50 +1345,105 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
           icon={<ArrowRightIcon size={14} />}
           description="These issues will continue to be blocked by the duplicate. Remove any relationship you do not want to copy."
           issues={blockingRelationships}
-          onRemoveIssue={issue => removeRelationship('blocking', issue)}
+          onRemoveIssue={(issue) => removeRelationship('blocking', issue)}
           tooltipLabel="blocking relationships"
         />
       )
     }
 
-    const field = editedFields.find(candidate => fieldSectionId(candidate.fieldId) === section.id)
+    const field = editedFields.find((candidate) => fieldSectionId(candidate.fieldId) === section.id)
     if (!field) return null
 
     if (field.dataType === 'TEXT') {
       return (
         <FormControl key={section.id} sx={{ width: '100%' }}>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
-            <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontWeight: 'bold',
+              width: 'fit-content',
+              cursor: 'help',
+            }}
+          >
+            <Tippy
+              content={duplicateValueTooltip(field.fieldName)}
+              delay={[400, 0]}
+              placement="top"
+              zIndex={Z_TOOLTIP}
+            >
               <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                {getFieldIcon(field.dataType) && <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>}
+                {getFieldIcon(field.dataType) && (
+                  <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                )}
                 {field.fieldName}
               </Box>
             </Tippy>
           </FormControl.Label>
-          <TextInput block value={field.text ?? ''} onChange={event => updateField(field.fieldId, { text: event.target.value })} />
+          <TextInput
+            block
+            value={field.text ?? ''}
+            onChange={(event) => updateField(field.fieldId, { text: event.target.value })}
+          />
         </FormControl>
       )
     }
 
     if (field.dataType === 'SINGLE_SELECT' && field.options) {
       return (
-        <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
-          <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
-              {getFieldIcon(field.dataType) && <Box as="span" sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>}
+        <Box
+          key={section.id}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}
+        >
+          <Tippy
+            content={duplicateValueTooltip(field.fieldName)}
+            delay={[400, 0]}
+            placement="top"
+            zIndex={Z_TOOLTIP}
+          >
+            <Text
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 1,
+                fontWeight: 'bold',
+                color: 'fg.default',
+                width: 'fit-content',
+                cursor: 'help',
+              }}
+            >
+              {getFieldIcon(field.dataType) && (
+                <Box as="span" sx={prefixLabelIcon}>
+                  {getFieldIcon(field.dataType)}
+                </Box>
+              )}
               {field.fieldName}
             </Text>
           </Tippy>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {field.options.map(option => {
+            {field.options.map((option) => {
               const isSelected = field.optionId === option.id
               return (
-                <Tippy key={option.id} content={getFieldOptionTooltip(field.fieldName, option.name)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                <Tippy
+                  key={option.id}
+                  content={getFieldOptionTooltip(field.fieldName, option.name)}
+                  delay={[400, 0]}
+                  placement="top"
+                  zIndex={Z_TOOLTIP}
+                >
                   <Box
                     as="button"
                     type="button"
                     aria-pressed={isSelected}
-                    onClick={() => updateField(field.fieldId, { optionId: option.id, optionName: option.name, optionColor: option.color })}
+                    onClick={() =>
+                      updateField(field.fieldId, {
+                        optionId: option.id,
+                        optionName: option.name,
+                        optionColor: option.color,
+                      })
+                    }
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1054,8 +1460,19 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
                     }}
                   >
                     <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, bg: option.color ? undefined : 'border.default' }} style={option.color ? { backgroundColor: option.color } : undefined} />
-                      <Text sx={{ fontSize: 1, fontWeight: 500, color: 'fg.default' }}>{option.name}</Text>
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          flexShrink: 0,
+                          bg: option.color ? undefined : 'border.default',
+                        }}
+                        style={option.color ? { backgroundColor: option.color } : undefined}
+                      />
+                      <Text sx={{ fontSize: 1, fontWeight: 500, color: 'fg.default' }}>
+                        {option.name}
+                      </Text>
                     </Box>
                   </Box>
                 </Tippy>
@@ -1069,10 +1486,26 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
     if (field.dataType === 'NUMBER') {
       return (
         <FormControl key={section.id} sx={{ width: '100%' }}>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
-            <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontWeight: 'bold',
+              width: 'fit-content',
+              cursor: 'help',
+            }}
+          >
+            <Tippy
+              content={duplicateValueTooltip(field.fieldName)}
+              delay={[400, 0]}
+              placement="top"
+              zIndex={Z_TOOLTIP}
+            >
               <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                {getFieldIcon(field.dataType) && <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>}
+                {getFieldIcon(field.dataType) && (
+                  <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                )}
                 {field.fieldName}
               </Box>
             </Tippy>
@@ -1081,7 +1514,7 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
             type="number"
             block
             value={String(field.number ?? '')}
-            onChange={event => {
+            onChange={(event) => {
               const parsed = parseFloat(event.target.value)
               updateField(field.fieldId, { number: Number.isFinite(parsed) ? parsed : undefined })
             }}
@@ -1093,38 +1526,94 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
     if (field.dataType === 'DATE') {
       return (
         <FormControl key={section.id} sx={{ width: '100%' }}>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
-            <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontWeight: 'bold',
+              width: 'fit-content',
+              cursor: 'help',
+            }}
+          >
+            <Tippy
+              content={duplicateValueTooltip(field.fieldName)}
+              delay={[400, 0]}
+              placement="top"
+              zIndex={Z_TOOLTIP}
+            >
               <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                {getFieldIcon(field.dataType) && <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>}
+                {getFieldIcon(field.dataType) && (
+                  <Box sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>
+                )}
                 {field.fieldName}
               </Box>
             </Tippy>
           </FormControl.Label>
-          <TextInput type="date" block value={field.date ?? ''} onChange={event => updateField(field.fieldId, { date: event.target.value })} />
+          <TextInput
+            type="date"
+            block
+            value={field.date ?? ''}
+            onChange={(event) => updateField(field.fieldId, { date: event.target.value })}
+          />
         </FormControl>
       )
     }
 
     if (field.dataType === 'ITERATION' && field.iterations) {
       return (
-        <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
-          <Tippy content={duplicateValueTooltip(field.fieldName)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-            <Text sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'bold', color: 'fg.default', width: 'fit-content', cursor: 'help' }}>
-              {getFieldIcon(field.dataType) && <Box as="span" sx={prefixLabelIcon}>{getFieldIcon(field.dataType)}</Box>}
+        <Box
+          key={section.id}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}
+        >
+          <Tippy
+            content={duplicateValueTooltip(field.fieldName)}
+            delay={[400, 0]}
+            placement="top"
+            zIndex={Z_TOOLTIP}
+          >
+            <Text
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 1,
+                fontWeight: 'bold',
+                color: 'fg.default',
+                width: 'fit-content',
+                cursor: 'help',
+              }}
+            >
+              {getFieldIcon(field.dataType) && (
+                <Box as="span" sx={prefixLabelIcon}>
+                  {getFieldIcon(field.dataType)}
+                </Box>
+              )}
               {field.fieldName}
             </Text>
           </Tippy>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {field.iterations.map(iteration => {
+            {field.iterations.map((iteration) => {
               const isSelected = field.iterationId === iteration.id
               return (
-                <Tippy key={iteration.id} content={getFieldOptionTooltip(field.fieldName, iteration.title)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                <Tippy
+                  key={iteration.id}
+                  content={getFieldOptionTooltip(field.fieldName, iteration.title)}
+                  delay={[400, 0]}
+                  placement="top"
+                  zIndex={Z_TOOLTIP}
+                >
                   <Box
                     as="button"
                     type="button"
                     aria-pressed={isSelected}
-                    onClick={() => updateField(field.fieldId, { iterationId: iteration.id, iterationTitle: iteration.title, iterationStartDate: iteration.startDate })}
+                    onClick={() =>
+                      updateField(field.fieldId, {
+                        iterationId: iteration.id,
+                        iterationTitle: iteration.title,
+                        iterationStartDate: iteration.startDate,
+                      })
+                    }
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1140,9 +1629,16 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
                       '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                     }}
                   >
-                    <Box as="span" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{iteration.title}</Text>
-                      <Text sx={{ fontSize: 0, color: 'fg.muted', mt: '2px' }}>{iteration.startDate}</Text>
+                    <Box
+                      as="span"
+                      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
+                    >
+                      <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
+                        {iteration.title}
+                      </Text>
+                      <Text sx={{ fontSize: 0, color: 'fg.muted', mt: '2px' }}>
+                        {iteration.startDate}
+                      </Text>
                     </Box>
                     {isSelected && (
                       <Box sx={{ color: 'accent.fg' }}>
@@ -1180,49 +1676,110 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
       }}
       onKeyUp={(event: React.KeyboardEvent) => event.stopPropagation()}
     >
-      <Box sx={{
-        bg: 'canvas.overlay',
-        border: '1px solid',
-        borderColor: 'border.default',
-        borderRadius: 2,
-        width: 'min(680px, 92vw)',
-        maxHeight: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        boxShadow: 'none',
-        animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-      }}>
+      <Box
+        sx={{
+          bg: 'canvas.overlay',
+          border: '1px solid',
+          borderColor: 'border.default',
+          borderRadius: 2,
+          width: 'min(680px, 92vw)',
+          maxHeight: '80vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          boxShadow: 'none',
+          animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+        }}
+      >
         {step === 'LOADING' && (
           <>
-            <ModalStepHeader title="Deep Duplicate" icon={bulkDuplicateHeaderIcon} subtitle="Loading item details…" onClose={onClose} />
+            <ModalStepHeader
+              title="Deep Duplicate"
+              icon={bulkDuplicateHeaderIcon}
+              subtitle="Loading item details…"
+              onClose={onClose}
+            />
             <Box sx={{ px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {([
-                { labelWidth: 60, rows: [80, 65] },
-                { labelWidth: 70, rows: [75, 55] },
-                { labelWidth: 90, rows: [70] },
-              ] as { labelWidth: number; rows: number[] }[]).map((group, gi) => (
+              {(
+                [
+                  { labelWidth: 60, rows: [80, 65] },
+                  { labelWidth: 70, rows: [75, 55] },
+                  { labelWidth: 90, rows: [70] },
+                ] as { labelWidth: number; rows: number[] }[]
+              ).map((group, gi) => (
                 <Box key={gi} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box sx={{
-                    height: 10, width: group.labelWidth, borderRadius: 1,
-                    ...(gi === 0 ? {
-                      '@keyframes rgp-shimmer': {
-                        '0%': { backgroundPosition: '-200px 0' },
-                        '100%': { backgroundPosition: '200px 0' },
-                      },
-                    } : {}),
-                    background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
-                    backgroundSize: '400px 100%',
-                    animation: 'rgp-shimmer 1.4s ease infinite',
-                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-                  }} />
+                  <Box
+                    sx={{
+                      height: 10,
+                      width: group.labelWidth,
+                      borderRadius: 1,
+                      ...(gi === 0
+                        ? {
+                            '@keyframes rgp-shimmer': {
+                              '0%': { backgroundPosition: '-200px 0' },
+                              '100%': { backgroundPosition: '200px 0' },
+                            },
+                          }
+                        : {}),
+                      background:
+                        'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                      backgroundSize: '400px 100%',
+                      animation: 'rgp-shimmer 1.4s ease infinite',
+                      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    }}
+                  />
                   {group.rows.map((labelPct, ri) => (
-                    <Box key={ri} sx={{ display: 'flex', alignItems: 'center', gap: 3, px: 3, py: 2, borderRadius: 2, bg: 'canvas.subtle' }}>
-                      <Box sx={{ width: 16, height: 16, borderRadius: 1, flexShrink: 0, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                    <Box
+                      key={ri}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 3,
+                        px: 3,
+                        py: 2,
+                        borderRadius: 2,
+                        bg: 'canvas.subtle',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 1,
+                          flexShrink: 0,
+                          background:
+                            'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                          backgroundSize: '400px 100%',
+                          animation: 'rgp-shimmer 1.4s ease infinite',
+                          '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                        }}
+                      />
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
-                        <Box sx={{ height: 12, width: `${labelPct}%`, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                        <Box sx={{ height: 10, width: '45%', borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                        <Box
+                          sx={{
+                            height: 12,
+                            width: `${labelPct}%`,
+                            borderRadius: 1,
+                            background:
+                              'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                            backgroundSize: '400px 100%',
+                            animation: 'rgp-shimmer 1.4s ease infinite',
+                            '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            height: 10,
+                            width: '45%',
+                            borderRadius: 1,
+                            background:
+                              'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                            backgroundSize: '400px 100%',
+                            animation: 'rgp-shimmer 1.4s ease infinite',
+                            '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                          }}
+                        />
                       </Box>
                     </Box>
                   ))}
@@ -1234,12 +1791,28 @@ export function BulkDuplicateModal({ itemId, projectId, owner, isOrg, projectNum
 
         {step === 'ERROR' && (
           <>
-            <ModalStepHeader title="Deep Duplicate" icon={bulkDuplicateHeaderIcon} subtitle="Something went wrong while loading the item." onClose={onClose} />
-            <Box sx={{ px: 4, py: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <ModalStepHeader
+              title="Deep Duplicate"
+              icon={bulkDuplicateHeaderIcon}
+              subtitle="Something went wrong while loading the item."
+              onClose={onClose}
+            />
+            <Box
+              sx={{
+                px: 4,
+                py: 5,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
               <Flash variant="danger" sx={{ width: '100%' }}>
                 {error || 'An error occurred.'}
               </Flash>
-              <Button variant="default" onClick={onClose} sx={buttonMotionSx}>Close</Button>
+              <Button variant="default" onClick={onClose} sx={buttonMotionSx}>
+                Close
+              </Button>
             </Box>
           </>
         )}

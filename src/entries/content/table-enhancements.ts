@@ -1,5 +1,12 @@
-import { draggable, dropTargetForElements, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
-import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
+import {
+  draggable,
+  dropTargetForElements,
+  monitorForElements,
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import {
+  attachClosestEdge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import { extractItemId, getStoredItemId, INJECTED_ATTR } from '../../lib/project-table-dom'
 import { checkboxPortalStore } from '../../lib/checkbox-portal-store'
 import { selectionStore } from '../../lib/selection-store'
@@ -297,13 +304,17 @@ function isGroupHeaderRow(element: Element): boolean {
 }
 
 function getGroupItemIds(groupHeaderElement: Element): string[] {
-  const allGroupHeaders = Array.from(document.querySelectorAll<HTMLElement>('[role="row"]')).filter(isGroupHeaderRow)
+  const allGroupHeaders = Array.from(document.querySelectorAll<HTMLElement>('[role="row"]')).filter(
+    isGroupHeaderRow,
+  )
   const index = allGroupHeaders.indexOf(groupHeaderElement as HTMLElement)
   const nextHeader = allGroupHeaders[index + 1] ?? null
 
   return Array.from(document.querySelectorAll<HTMLElement>(`[role="row"][${INJECTED_ATTR}]`))
     .filter((row) => {
-      const afterThis = !!(groupHeaderElement.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING)
+      const afterThis = !!(
+        groupHeaderElement.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING
+      )
       if (!afterThis) return false
       if (!nextHeader) return true
       return !!(nextHeader.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_PRECEDING)
@@ -376,7 +387,9 @@ function getAllSortedRows(): Element[] {
 }
 
 function injectDragHandles() {
-  const rows = document.querySelectorAll<HTMLElement>(`[role="row"][${INJECTED_ATTR}]:not([${HANDLE_ATTR}])`)
+  const rows = document.querySelectorAll<HTMLElement>(
+    `[role="row"][${INJECTED_ATTR}]:not([${HANDLE_ATTR}])`,
+  )
 
   for (const row of rows) {
     const domId = row.getAttribute(INJECTED_ATTR)
@@ -427,7 +440,9 @@ function injectDragHandles() {
 
         for (const selectedId of selectedIds) {
           if (selectedId === domId) continue
-          const selectedRow = document.querySelector<HTMLElement>(`[${INJECTED_ATTR}="${selectedId}"]`)
+          const selectedRow = document.querySelector<HTMLElement>(
+            `[${INJECTED_ATTR}="${selectedId}"]`,
+          )
           if (selectedRow) selectedRow.style.opacity = '0.35'
         }
       },
@@ -510,12 +525,7 @@ function injectDragHandles() {
   }
 }
 
-export function initDragAndDrop(
-  projectId: string,
-  owner: string,
-  number: number,
-  isOrg: boolean,
-) {
+export function initDragAndDrop(projectId: string, owner: string, number: number, isOrg: boolean) {
   if (monitorCleanup) monitorCleanup()
 
   monitorCleanup = monitorForElements({
@@ -535,7 +545,9 @@ export function initDragAndDrop(
       if (selectedDomIds.length === 1 && draggedDomId === targetDomId) return
 
       const allRows = getAllSortedRows()
-      const targetIndex = allRows.findIndex((row) => row.getAttribute(INJECTED_ATTR) === targetDomId)
+      const targetIndex = allRows.findIndex(
+        (row) => row.getAttribute(INJECTED_ATTR) === targetDomId,
+      )
       let insertAfterDomId = targetDomId
 
       if (edge === 'top') {

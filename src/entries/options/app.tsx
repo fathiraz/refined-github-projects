@@ -24,7 +24,9 @@ export default function App() {
           justifyContent: 'center',
         }}
       >
-        <Box sx={{ width: '100%', maxWidth: 760, display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <Box
+          sx={{ width: '100%', maxWidth: 760, display: 'flex', flexDirection: 'column', gap: 5 }}
+        >
           {/* Hero — single column, bold */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Heading
@@ -43,7 +45,8 @@ export default function App() {
               Set up once. Then it just works.
             </Text>
             <Text as="p" sx={{ fontSize: 1, color: 'fg.muted', m: 0 }}>
-              Your token stays in your browser. API calls go directly to GitHub — no proxy, no tracking.
+              Your token stays in your browser. API calls go directly to GitHub — no proxy, no
+              tracking.
             </Text>
             <Box
               as="ul"

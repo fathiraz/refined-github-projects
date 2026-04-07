@@ -7,7 +7,7 @@ const focusListeners = new Set<() => void>()
 let selected = new Set<string>()
 
 function notify() {
-  listeners.forEach(fn => fn())
+  listeners.forEach((fn) => fn())
 }
 
 export const selectionStore = {
@@ -17,17 +17,22 @@ export const selectionStore = {
     } else {
       selected.delete(id)
     }
-    logger.log('[rgp:store] toggle', id, on ? '→ selected' : '→ deselected', `| total: ${selected.size}`)
+    logger.log(
+      '[rgp:store] toggle',
+      id,
+      on ? '→ selected' : '→ deselected',
+      `| total: ${selected.size}`,
+    )
     notify()
   },
 
   selectBatch(ids: string[]) {
-    ids.forEach(id => selected.add(id))
+    ids.forEach((id) => selected.add(id))
     notify()
   },
 
   deselectBatch(ids: string[]) {
-    ids.forEach(id => selected.delete(id))
+    ids.forEach((id) => selected.delete(id))
     notify()
   },
 
@@ -55,7 +60,7 @@ export const selectionStore = {
   },
 
   requestFocus() {
-    focusListeners.forEach(fn => fn())
+    focusListeners.forEach((fn) => fn())
   },
 
   onFocusRequest(fn: () => void): () => void {

@@ -53,14 +53,25 @@ export function DebugSettingsCard(): React.JSX.Element {
           </Text>
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 3 }}>
+        <Box
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 3 }}
+        >
           <Box>
-            <Text id="rgp-debug-label" sx={{ fontWeight: 'bold', fontSize: 1, display: 'block', mb: '2px', cursor: 'default' }}>
+            <Text
+              id="rgp-debug-label"
+              sx={{
+                fontWeight: 'bold',
+                fontSize: 1,
+                display: 'block',
+                mb: '2px',
+                cursor: 'default',
+              }}
+            >
               Enable debug console
             </Text>
             <Text sx={{ fontSize: 0, color: 'fg.muted', display: 'block' }}>
-              When enabled, all debug logs will be printed to the browser console.
-              Use this for troubleshooting or development purposes.
+              When enabled, all debug logs will be printed to the browser console. Use this for
+              troubleshooting or development purposes.
             </Text>
           </Box>
           <ToggleSwitch

@@ -2,8 +2,18 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Tippy from '../ui/tooltip'
 import { ensureTippyCss } from '../../lib/tippy-utils'
 import {
-  Box, Button, Flash, FormControl, Heading, Label, Radio, RadioGroup,
-  Select, Spinner, Text, TextInput,
+  Box,
+  Button,
+  Flash,
+  FormControl,
+  Heading,
+  Label,
+  Radio,
+  RadioGroup,
+  Select,
+  Spinner,
+  Text,
+  TextInput,
 } from '@primer/react'
 import { Z_MODAL, Z_TOOLTIP } from '../../lib/z-index'
 import {
@@ -22,7 +32,12 @@ import { ModalStepHeader } from '../ui/modal-step-header'
 import { sendMessage } from '../../lib/messages'
 import type { SprintInfo } from '../../lib/messages'
 import type { ExcludeCondition, SprintSettings } from '../../lib/storage'
-import { iterationEndDate, nextAfter, injectSprintFilter, SPRINT_FILTER } from '../../lib/sprint-utils'
+import {
+  iterationEndDate,
+  nextAfter,
+  injectSprintFilter,
+  SPRINT_FILTER,
+} from '../../lib/sprint-utils'
 import type { Iteration } from '../../lib/sprint-utils'
 import type { ProjectData } from '../../lib/github-project'
 import { sprintConfirmEndStore } from './sprint-store'
@@ -56,28 +71,47 @@ type FieldNode = {
   name: string
   dataType: string
   options?: { id: string; name: string; color: string }[]
-  configuration?: { iterations: { id: string; title: string; startDate: string; duration: number }[] }
+  configuration?: {
+    iterations: { id: string; title: string; startDate: string; duration: number }[]
+  }
 }
 
 function fmt(iso: string): string {
-  return new Date(iso + 'T00:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
 }
 
 function daysLeft(endDate: string): number {
   const today = new Date().toISOString().slice(0, 10)
-  return Math.max(0, Math.ceil(
-    (new Date(endDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) / 86_400_000
-  ))
+  return Math.max(
+    0,
+    Math.ceil(
+      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) /
+        86_400_000,
+    ),
+  )
 }
 
 function sprintProgress(startDate: string, endDate: string): number {
-  const total = Math.max(1, Math.ceil(
-    (new Date(endDate + 'T00:00:00Z').getTime() - new Date(startDate + 'T00:00:00Z').getTime()) / 86_400_000
-  ))
+  const total = Math.max(
+    1,
+    Math.ceil(
+      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(startDate + 'T00:00:00Z').getTime()) /
+        86_400_000,
+    ),
+  )
   return Math.min(100, Math.round(((total - daysLeft(endDate)) / total) * 100))
 }
 
-const labelIconBoxSx = { color: 'fg.muted', display: 'flex', alignItems: 'center', flexShrink: 0 } as const
+const labelIconBoxSx = {
+  color: 'fg.muted',
+  display: 'flex',
+  alignItems: 'center',
+  flexShrink: 0,
+} as const
 
 // ── Settings view ────────────────────────────────────────────
 
@@ -91,7 +125,15 @@ interface SettingsViewProps {
   onSaved: () => void
 }
 
-function SettingsView({ projectId, owner, isOrg, number, getFields, currentSettings, onSaved }: SettingsViewProps) {
+function SettingsView({
+  projectId,
+  owner,
+  isOrg,
+  number,
+  getFields,
+  currentSettings,
+  onSaved,
+}: SettingsViewProps) {
   const [fields, setFields] = useState<FieldNode[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -102,10 +144,12 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
   const [doneOptionId, setDoneOptionId] = useState(currentSettings?.doneOptionId ?? '')
   const [doneTextValue, setDoneTextValue] = useState(currentSettings?.doneOptionName ?? '')
   const [excludeConditions, setExcludeConditions] = useState<ExcludeCondition[]>(
-    currentSettings?.excludeConditions ?? []
+    currentSettings?.excludeConditions ?? [],
   )
   const [pointsFieldId, setPointsFieldId] = useState(currentSettings?.pointsFieldId ?? '')
-  const [notStartedOptionId, setNotStartedOptionId] = useState(currentSettings?.notStartedOptionId ?? '')
+  const [notStartedOptionId, setNotStartedOptionId] = useState(
+    currentSettings?.notStartedOptionId ?? '',
+  )
 
   useEffect(() => {
     sendMessage('getProjectFields', { owner, number, isOrg })
@@ -164,12 +208,15 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
         doneOptionId: isDoneText ? '' : doneOptionId,
         doneOptionName: isDoneText ? doneTextValue.trim() : (selectedOption?.name ?? ''),
         acknowledgedSprintId: currentSettings?.acknowledgedSprintId,
-        excludeConditions: excludeConditions.filter((c) => c.fieldId && (c.optionId || c.optionName.trim())),
+        excludeConditions: excludeConditions.filter(
+          (c) => c.fieldId && (c.optionId || c.optionName.trim()),
+        ),
         pointsFieldId: selectedPointsField?.id,
         pointsFieldName: selectedPointsField?.name,
         notStartedOptionId: notStartedOptionId || undefined,
         notStartedOptionName: notStartedOptionId
-          ? (selectedDoneField?.options?.find((o) => o.id === notStartedOptionId)?.name ?? undefined)
+          ? (selectedDoneField?.options?.find((o) => o.id === notStartedOptionId)?.name ??
+            undefined)
           : undefined,
       }
       await sendMessage('saveSprintSettings', { projectId, settings })
@@ -183,7 +230,11 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
   }
 
   if (loading) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><Spinner size="small" /></Box>
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+        <Spinner size="small" />
+      </Box>
+    )
   }
 
   if (iterationFields.length === 0) {
@@ -194,18 +245,35 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {error && <Flash variant="danger" sx={{ fontSize: 0 }}>{error}</Flash>}
+      {error && (
+        <Flash variant="danger" sx={{ fontSize: 0 }}>
+          {error}
+        </Flash>
+      )}
 
       {/* Sprint field */}
       <FormControl>
-        <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-          <Box sx={labelIconBoxSx}><IterationsIcon size={16} /></Box>
+        <FormControl.Label
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            fontSize: 1,
+            fontWeight: 'semibold',
+            color: 'fg.muted',
+          }}
+        >
+          <Box sx={labelIconBoxSx}>
+            <IterationsIcon size={16} />
+          </Box>
           Sprint field (Iteration)
         </FormControl.Label>
         <Select value={sprintFieldId} onChange={(e) => setSprintFieldId(e.target.value)} block>
           <Select.Option value="">Select a field…</Select.Option>
           {iterationFields.map((f) => (
-            <Select.Option key={f.id} value={f.id}>{f.name}</Select.Option>
+            <Select.Option key={f.id} value={f.id}>
+              {f.name}
+            </Select.Option>
           ))}
         </Select>
         {selectedSprintField?.configuration && (
@@ -218,13 +286,28 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
 
       {/* Done condition field */}
       <FormControl>
-        <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-          <Box sx={labelIconBoxSx}><IssueClosedIcon size={16} /></Box>
+        <FormControl.Label
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            fontSize: 1,
+            fontWeight: 'semibold',
+            color: 'fg.muted',
+          }}
+        >
+          <Box sx={labelIconBoxSx}>
+            <IssueClosedIcon size={16} />
+          </Box>
           Done condition field
         </FormControl.Label>
         <Select
           value={doneFieldId}
-          onChange={(e) => { setDoneFieldId(e.target.value); setDoneOptionId(''); setNotStartedOptionId('') }}
+          onChange={(e) => {
+            setDoneFieldId(e.target.value)
+            setDoneOptionId('')
+            setNotStartedOptionId('')
+          }}
           block
         >
           <Select.Option value="">Select a field…</Select.Option>
@@ -239,8 +322,19 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       {/* Radio options for SINGLE_SELECT done field */}
       {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
         <RadioGroup name="doneOption" onChange={(v) => setDoneOptionId(v ?? '')} sx={{ pl: 2 }}>
-          <RadioGroup.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-            <Box sx={labelIconBoxSx}><OptionsSelectIcon size={16} /></Box>
+          <RadioGroup.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontSize: 1,
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+            }}
+          >
+            <Box sx={labelIconBoxSx}>
+              <OptionsSelectIcon size={16} />
+            </Box>
             Done option
           </RadioGroup.Label>
           {selectedDoneField.options.map((opt) => (
@@ -253,7 +347,11 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
             >
               <Box>
                 <FormControl>
-                  <Radio value={opt.id} checked={doneOptionId === opt.id} onChange={() => setDoneOptionId(opt.id)} />
+                  <Radio
+                    value={opt.id}
+                    checked={doneOptionId === opt.id}
+                    onChange={() => setDoneOptionId(opt.id)}
+                  />
                   <FormControl.Label sx={{ fontSize: 1 }}>{opt.name}</FormControl.Label>
                 </FormControl>
               </Box>
@@ -265,9 +363,21 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       {/* Not started option — items in this state are excluded from "done" count in sprint progress */}
       {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
         <FormControl>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-            <Box sx={labelIconBoxSx}><OptionsSelectIcon size={16} /></Box>
-            Not started option <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontSize: 1,
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+            }}
+          >
+            <Box sx={labelIconBoxSx}>
+              <OptionsSelectIcon size={16} />
+            </Box>
+            Not started option{' '}
+            <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
           </FormControl.Label>
           <Select
             value={notStartedOptionId}
@@ -286,11 +396,14 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
             {selectedDoneField.options
               .filter((opt) => opt.id !== doneOptionId)
               .map((opt) => (
-                <Select.Option key={opt.id} value={opt.id}>{opt.name}</Select.Option>
+                <Select.Option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </Select.Option>
               ))}
           </Select>
           <FormControl.Caption>
-            When set, all statuses except this one count toward sprint progress — not just the done option.
+            When set, all statuses except this one count toward sprint progress — not just the done
+            option.
           </FormControl.Caption>
         </FormControl>
       )}
@@ -298,8 +411,19 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       {/* Text input for TEXT done field */}
       {selectedDoneField?.dataType === 'TEXT' && (
         <FormControl>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-            <Box sx={labelIconBoxSx}><TextLineIcon size={16} /></Box>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontSize: 1,
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+            }}
+          >
+            <Box sx={labelIconBoxSx}>
+              <TextLineIcon size={16} />
+            </Box>
             Done value
           </FormControl.Label>
           <TextInput
@@ -314,15 +438,27 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       {/* Exclude from migration */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={labelIconBoxSx}><FilterIcon size={16} /></Box>
+          <Box sx={labelIconBoxSx}>
+            <FilterIcon size={16} />
+          </Box>
           <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-            Exclude from migration <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
+            Exclude from migration{' '}
+            <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
           </Text>
         </Box>
         {excludeConditions.map((cond, idx) => {
           const selectedField = excludableFields.find((f) => f.id === cond.fieldId)
           return (
-            <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap', width: '100%' }}>
+            <Box
+              key={idx}
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 2,
+                flexWrap: 'wrap',
+                width: '100%',
+              }}
+            >
               <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
                 <Select
                   value={cond.fieldId}
@@ -353,13 +489,18 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
                     value={cond.optionId}
                     onChange={(e) => {
                       const opt = selectedField.options!.find((o) => o.id === e.target.value)
-                      updateExcludeCondition(idx, { optionId: e.target.value, optionName: opt?.name ?? '' })
+                      updateExcludeCondition(idx, {
+                        optionId: e.target.value,
+                        optionName: opt?.name ?? '',
+                      })
                     }}
                     block
                   >
                     <Select.Option value="">Select option…</Select.Option>
                     {selectedField.options.map((opt) => (
-                      <Select.Option key={opt.id} value={opt.id}>{opt.name}</Select.Option>
+                      <Select.Option key={opt.id} value={opt.id}>
+                        {opt.name}
+                      </Select.Option>
                     ))}
                   </Select>
                 </Box>
@@ -371,18 +512,37 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
                     block
                     placeholder="Exact text value"
                     value={cond.optionName}
-                    onChange={(e) => updateExcludeCondition(idx, { optionName: e.target.value, optionId: '' })}
+                    onChange={(e) =>
+                      updateExcludeCondition(idx, { optionName: e.target.value, optionId: '' })
+                    }
                   />
                 </Box>
               )}
 
-              <Tippy content="Remove exclusion rule" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+              <Tippy
+                content="Remove exclusion rule"
+                placement="top"
+                delay={[400, 0]}
+                zIndex={Z_TOOLTIP}
+              >
                 <Button
                   variant="invisible"
                   size="small"
                   aria-label="Remove exclusion"
                   onClick={() => removeExcludeCondition(idx)}
-                  sx={{ p: '5px', color: 'fg.muted', flexShrink: 0, boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
+                  sx={{
+                    p: '5px',
+                    color: 'fg.muted',
+                    flexShrink: 0,
+                    boxShadow: 'none',
+                    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                    '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                    '@media (prefers-reduced-motion: reduce)': {
+                      transition: 'none',
+                      '&:hover:not(:disabled)': { transform: 'none' },
+                    },
+                  }}
                 >
                   <XIcon size={12} />
                 </Button>
@@ -390,12 +550,28 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
             </Box>
           )
         })}
-        <Tippy content="Add a field exclusion rule" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+        <Tippy
+          content="Add a field exclusion rule"
+          placement="top"
+          delay={[400, 0]}
+          zIndex={Z_TOOLTIP}
+        >
           <Button
             variant="invisible"
             size="small"
             onClick={addExcludeCondition}
-            sx={{ alignSelf: 'flex-start', color: 'fg.muted', boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
+            sx={{
+              alignSelf: 'flex-start',
+              color: 'fg.muted',
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}
           >
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
               <PlusIcon size={12} />
@@ -408,17 +584,33 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       {/* Story points field (optional) */}
       {numberFields.length > 0 && (
         <FormControl>
-          <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-            <Box sx={labelIconBoxSx}><SlidersIcon size={16} /></Box>
-            Story points field <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
+          <FormControl.Label
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              fontSize: 1,
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+            }}
+          >
+            <Box sx={labelIconBoxSx}>
+              <SlidersIcon size={16} />
+            </Box>
+            Story points field{' '}
+            <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
           </FormControl.Label>
           <Select value={pointsFieldId} onChange={(e) => setPointsFieldId(e.target.value)} block>
             <Select.Option value="">None</Select.Option>
             {numberFields.map((f) => (
-              <Select.Option key={f.id} value={f.id}>{f.name}</Select.Option>
+              <Select.Option key={f.id} value={f.id}>
+                {f.name}
+              </Select.Option>
             ))}
           </Select>
-          <FormControl.Caption>Used to display point totals in the sprint progress view.</FormControl.Caption>
+          <FormControl.Caption>
+            Used to display point totals in the sprint progress view.
+          </FormControl.Caption>
         </FormControl>
       )}
 
@@ -426,12 +618,28 @@ function SettingsView({ projectId, owner, isOrg, number, getFields, currentSetti
       <Box sx={{ pt: 2, borderTop: '1px solid', borderColor: 'border.default' }}>
         <Flash variant="warning" sx={{ fontSize: 0, mb: 3 }}>
           Saving will automatically add{' '}
-          <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>{SPRINT_FILTER}</Text>
-          {' '}to the table filter if not already present.
+          <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>
+            {SPRINT_FILTER}
+          </Text>{' '}
+          to the table filter if not already present.
         </Flash>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Tippy content="Save sprint settings" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-            <Button variant="primary" disabled={!canSave || saving} onClick={handleSave} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
+            <Button
+              variant="primary"
+              disabled={!canSave || saving}
+              onClick={handleSave}
+              sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
+            >
               {saving ? <Spinner size="small" /> : 'Save Settings →'}
             </Button>
           </Tippy>
@@ -453,7 +661,15 @@ interface EndSprintViewProps {
   onComplete: () => void
 }
 
-function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings, onComplete }: EndSprintViewProps) {
+function EndSprintView({
+  projectId,
+  owner,
+  isOrg,
+  number,
+  activeSprint,
+  settings,
+  onComplete,
+}: EndSprintViewProps) {
   const [futureIterations, setFutureIterations] = useState<SprintInfo[]>([])
   const [selectedIterationId, setSelectedIterationId] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -463,18 +679,29 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
   useEffect(() => {
     sendMessage('getProjectFields', { owner, number, isOrg })
       .then((result) => {
-        const iterField = result.fields.find((field) => field.id === settings.sprintFieldId) as FieldNode | undefined
+        const iterField = result.fields.find((field) => field.id === settings.sprintFieldId) as
+          | FieldNode
+          | undefined
         const iters: Iteration[] = iterField?.configuration?.iterations ?? []
         const future: SprintInfo[] = iters
           .filter((i) => i.startDate >= activeSprint.endDate)
           .sort((a, b) => a.startDate.localeCompare(b.startDate))
-          .map((i) => ({ id: i.id, title: i.title, startDate: i.startDate, duration: i.duration, endDate: iterationEndDate(i) }))
+          .map((i) => ({
+            id: i.id,
+            title: i.title,
+            startDate: i.startDate,
+            duration: i.duration,
+            endDate: iterationEndDate(i),
+          }))
         setFutureIterations(future)
         const def = nextAfter(iters, activeSprint.endDate)
         setSelectedIterationId(def?.id ?? future[0]?.id ?? null)
         setLoaded(true)
       })
-      .catch((e) => { setError(String(e)); setLoaded(true) })
+      .catch((e) => {
+        setError(String(e))
+        setLoaded(true)
+      })
   }, [owner, number, isOrg, settings.sprintFieldId, activeSprint.endDate])
 
   const handleEnd = async () => {
@@ -483,7 +710,10 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
     setError(null)
     try {
       await sendMessage('endSprint', {
-        projectId, owner, number, isOrg,
+        projectId,
+        owner,
+        number,
+        isOrg,
         sprintFieldId: settings.sprintFieldId,
         activeIterationId: activeSprint.id,
         nextIterationId: selectedIterationId,
@@ -504,9 +734,17 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {!loaded && <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}><Spinner size="small" /></Box>}
+      {!loaded && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+          <Spinner size="small" />
+        </Box>
+      )}
 
-      {error && <Flash variant="danger" sx={{ fontSize: 0 }}>{error}</Flash>}
+      {error && (
+        <Flash variant="danger" sx={{ fontSize: 0 }}>
+          {error}
+        </Flash>
+      )}
 
       {hasNoFuture && (
         <Flash variant="warning" sx={{ fontSize: 0 }}>
@@ -517,8 +755,19 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
       {loaded && futureIterations.length > 0 && (
         <>
           <FormControl>
-            <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-              <Box sx={labelIconBoxSx}><IterationsIcon size={16} /></Box>
+            <FormControl.Label
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 1,
+                fontWeight: 'semibold',
+                color: 'fg.muted',
+              }}
+            >
+              <Box sx={labelIconBoxSx}>
+                <IterationsIcon size={16} />
+              </Box>
               Open items will be moved to
             </FormControl.Label>
             <Select
@@ -541,13 +790,35 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
       )}
 
       {/* Footer */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2, borderTop: '1px solid', borderColor: 'border.default' }}>
-        <Tippy content="Move open items to the next sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          pt: 2,
+          borderTop: '1px solid',
+          borderColor: 'border.default',
+        }}
+      >
+        <Tippy
+          content="Move open items to the next sprint"
+          placement="top"
+          delay={[400, 0]}
+          zIndex={Z_TOOLTIP}
+        >
           <Button
             variant="danger"
             disabled={!loaded || hasNoFuture || !selectedIterationId || ending}
             onClick={handleEnd}
-            sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
+            sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}
           >
             {ending ? 'Ending…' : 'End Sprint →'}
           </Button>
@@ -559,7 +830,15 @@ function EndSprintView({ projectId, owner, isOrg, number, activeSprint, settings
 
 // ── Main panel ───────────────────────────────────────────────
 
-export function SprintPanel({ projectId, owner, isOrg, number, getFields, visible, onClose }: Props) {
+export function SprintPanel({
+  projectId,
+  owner,
+  isOrg,
+  number,
+  getFields,
+  visible,
+  onClose,
+}: Props) {
   ensureTippyCss()
 
   const [state, setState] = useState<PanelState>('loading')
@@ -586,7 +865,9 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
     }
   }, [projectId, owner, number, isOrg])
 
-  useEffect(() => { fetchStatus() }, [fetchStatus])
+  useEffect(() => {
+    fetchStatus()
+  }, [fetchStatus])
 
   useEffect(() => {
     const unsub = sprintConfirmEndStore.subscribe((pending) => {
@@ -595,7 +876,9 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
         sprintConfirmEndStore.set(false)
       }
     })
-    return () => { unsub() }
+    return () => {
+      unsub()
+    }
   }, [state, showSettings])
 
   if (!visible) return null
@@ -604,7 +887,10 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
     if (!status?.nearestUpcoming) return
     setAcknowledging(true)
     try {
-      await sendMessage('acknowledgeUpcomingSprint', { projectId, iterationId: status.nearestUpcoming.id })
+      await sendMessage('acknowledgeUpcomingSprint', {
+        projectId,
+        iterationId: status.nearestUpcoming.id,
+      })
       await fetchStatus()
     } finally {
       setAcknowledging(false)
@@ -624,13 +910,34 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
 
   return (
     <Box
-      sx={{ position: 'fixed', inset: 0, bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        bg: 'rgba(27,31,36,0.5)',
+        zIndex: Z_MODAL,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
       onClick={onClose}
     >
       <Box
-        sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: 480, animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }}
+        sx={{
+          bg: 'canvas.overlay',
+          border: '1px solid',
+          borderColor: 'border.default',
+          borderRadius: 2,
+          overflow: 'hidden',
+          width: '100%',
+          maxWidth: 480,
+          animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+        }}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          e.stopPropagation()
+          if (e.key === 'Escape') onClose()
+        }}
         onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
       >
         {/* Header — switches between ModalStepHeader (sub-views) and custom (main) */}
@@ -650,19 +957,75 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
             onClose={onClose}
           />
         ) : (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 4,
+              py: 3,
+              borderBottom: '1px solid',
+              borderColor: 'border.default',
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <SprintIcon size={16} color="var(--fgColor-accent)" />
-              <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>Sprint</Heading>
+              <Heading as="h2" sx={{ fontSize: 3, fontWeight: 'bold', m: 0 }}>
+                Sprint
+              </Heading>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Tippy content="Sprint settings" placement="bottom-end" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-                <Button variant="invisible" size="small" onClick={() => setShowSettings((v) => !v)} aria-label="Sprint settings" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
+              <Tippy
+                content="Sprint settings"
+                placement="bottom-end"
+                delay={[400, 0]}
+                zIndex={Z_TOOLTIP}
+              >
+                <Button
+                  variant="invisible"
+                  size="small"
+                  onClick={() => setShowSettings((v) => !v)}
+                  aria-label="Sprint settings"
+                  sx={{
+                    p: '4px',
+                    color: 'fg.muted',
+                    boxShadow: 'none',
+                    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                    '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                    '@media (prefers-reduced-motion: reduce)': {
+                      transition: 'none',
+                      '&:hover:not(:disabled)': { transform: 'none' },
+                    },
+                  }}
+                >
                   <SlidersIcon size={16} />
                 </Button>
               </Tippy>
-              <Tippy content="Close sprint panel" placement="bottom-end" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-                <Button variant="invisible" size="small" onClick={onClose} aria-label="Close sprint panel" sx={{ p: '4px', color: 'fg.muted', boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
+              <Tippy
+                content="Close sprint panel"
+                placement="bottom-end"
+                delay={[400, 0]}
+                zIndex={Z_TOOLTIP}
+              >
+                <Button
+                  variant="invisible"
+                  size="small"
+                  onClick={onClose}
+                  aria-label="Close sprint panel"
+                  sx={{
+                    p: '4px',
+                    color: 'fg.muted',
+                    boxShadow: 'none',
+                    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                    '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                    '@media (prefers-reduced-motion: reduce)': {
+                      transition: 'none',
+                      '&:hover:not(:disabled)': { transform: 'none' },
+                    },
+                  }}
+                >
                   <XIcon size={16} />
                 </Button>
               </Tippy>
@@ -680,7 +1043,10 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
               number={number}
               getFields={getFields}
               currentSettings={status?.settings ?? null}
-              onSaved={async () => { setShowSettings(false); await fetchStatus() }}
+              onSaved={async () => {
+                setShowSettings(false)
+                await fetchStatus()
+              }}
             />
           ) : confirmingEnd && status?.activeSprint && status?.settings ? (
             <EndSprintView
@@ -690,24 +1056,56 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
               number={number}
               activeSprint={status.activeSprint}
               settings={status.settings}
-              onComplete={async () => { setConfirmingEnd(false); await fetchStatus() }}
+              onComplete={async () => {
+                setConfirmingEnd(false)
+                await fetchStatus()
+              }}
             />
           ) : (
             <>
               {state === 'loading' && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><Spinner size="small" /></Box>
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                  <Spinner size="small" />
+                </Box>
               )}
 
               {state === 'error' && (
-                <Flash variant="danger" sx={{ fontSize: 0 }}>{error ?? 'Failed to load sprint status.'}</Flash>
+                <Flash variant="danger" sx={{ fontSize: 0 }}>
+                  {error ?? 'Failed to load sprint status.'}
+                </Flash>
               )}
 
               {state === 'not-configured' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Sprint tracking isn't set up for this project yet.</Text>
-                  <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>Each GitHub project has its own sprint configuration.</Text>
-                  <Tippy content="Configure sprint tracking for this project" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-                    <Button variant="primary" size="small" onClick={() => setShowSettings(true)} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Set Up Sprint</Button>
+                  <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
+                    Sprint tracking isn't set up for this project yet.
+                  </Text>
+                  <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
+                    Each GitHub project has its own sprint configuration.
+                  </Text>
+                  <Tippy
+                    content="Configure sprint tracking for this project"
+                    placement="top"
+                    delay={[400, 0]}
+                    zIndex={Z_TOOLTIP}
+                  >
+                    <Button
+                      variant="primary"
+                      size="small"
+                      onClick={() => setShowSettings(true)}
+                      sx={{
+                        boxShadow: 'none',
+                        transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                        '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                        '@media (prefers-reduced-motion: reduce)': {
+                          transition: 'none',
+                          '&:hover:not(:disabled)': { transform: 'none' },
+                        },
+                      }}
+                    >
+                      Set Up Sprint
+                    </Button>
                   </Tippy>
                 </Box>
               )}
@@ -721,10 +1119,31 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                   {status?.nearestUpcoming && (
                     <>
                       <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                        Next: {status.nearestUpcoming.title} — starts {fmt(status.nearestUpcoming.startDate)}
+                        Next: {status.nearestUpcoming.title} — starts{' '}
+                        {fmt(status.nearestUpcoming.startDate)}
                       </Text>
-                      <Tippy content="Start tracking the upcoming sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-                        <Button variant="primary" size="small" disabled={acknowledging} onClick={handleAcknowledge} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
+                      <Tippy
+                        content="Start tracking the upcoming sprint"
+                        placement="top"
+                        delay={[400, 0]}
+                        zIndex={Z_TOOLTIP}
+                      >
+                        <Button
+                          variant="primary"
+                          size="small"
+                          disabled={acknowledging}
+                          onClick={handleAcknowledge}
+                          sx={{
+                            boxShadow: 'none',
+                            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                            '@media (prefers-reduced-motion: reduce)': {
+                              transition: 'none',
+                              '&:hover:not(:disabled)': { transform: 'none' },
+                            },
+                          }}
+                        >
                           {acknowledging ? <Spinner size="small" /> : 'Track Sprint'}
                         </Button>
                       </Tippy>
@@ -735,8 +1154,12 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
 
               {state === 'acknowledged' && currentSprint && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.default' }}>{currentSprint.title}</Text>
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.default' }}>
+                      {currentSprint.title}
+                    </Text>
                     <Label variant="attention">Upcoming</Label>
                   </Box>
                   <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
@@ -744,12 +1167,35 @@ export function SprintPanel({ projectId, owner, isOrg, number, getFields, visibl
                   </Text>
                   <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
                     Filter{' '}
-                    <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>{SPRINT_FILTER}</Text>
-                    {' '}is applied automatically on save.
+                    <Text as="code" sx={{ fontFamily: 'mono', fontSize: 0 }}>
+                      {SPRINT_FILTER}
+                    </Text>{' '}
+                    is applied automatically on save.
                   </Text>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                    <Tippy content="Stop tracking this sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-                      <Button variant="default" size="small" onClick={handleStopTracking} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Stop tracking</Button>
+                    <Tippy
+                      content="Stop tracking this sprint"
+                      placement="top"
+                      delay={[400, 0]}
+                      zIndex={Z_TOOLTIP}
+                    >
+                      <Button
+                        variant="default"
+                        size="small"
+                        onClick={handleStopTracking}
+                        sx={{
+                          boxShadow: 'none',
+                          transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                          '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                          '@media (prefers-reduced-motion: reduce)': {
+                            transition: 'none',
+                            '&:hover:not(:disabled)': { transform: 'none' },
+                          },
+                        }}
+                      >
+                        Stop tracking
+                      </Button>
                     </Tippy>
                   </Box>
                 </Box>

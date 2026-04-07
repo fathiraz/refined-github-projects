@@ -69,7 +69,7 @@ const Tooltip = React.forwardRef<Element, TippyProps>(function Tooltip(
   const childRef = childProps?.ref
   const childTypeKey = getChildTypeKey(children)
   const isControlled = controlledVisible !== undefined
-  const visible = disabled ? false : (isControlled ? controlledVisible : internalVisible)
+  const visible = disabled ? false : isControlled ? controlledVisible : internalVisible
 
   const clearShowTimeout = useCallback(() => {
     if (showTimeoutRef.current === null) return
@@ -131,11 +131,14 @@ const Tooltip = React.forwardRef<Element, TippyProps>(function Tooltip(
     setInternalVisible(false)
   }, [clearHideTimeout, clearShowTimeout, hideDelay, isControlled])
 
-  const handleReferenceRef = useCallback((node: Element | null) => {
-    fallbackReferenceRef.current = node
-    assignRef(childRef, node)
-    assignRef(forwardedRef, node)
-  }, [childRef, forwardedRef])
+  const handleReferenceRef = useCallback(
+    (node: Element | null) => {
+      fallbackReferenceRef.current = node
+      assignRef(childRef, node)
+      assignRef(forwardedRef, node)
+    },
+    [childRef, forwardedRef],
+  )
 
   useEffect(() => {
     mountedRef.current = true
@@ -182,19 +185,30 @@ const Tooltip = React.forwardRef<Element, TippyProps>(function Tooltip(
   }, [hideImmediately, isControlled, reference, scheduleHide, scheduleShow])
 
   const trigger = children
-    ? React.cloneElement(
-        children as React.ReactElement<TriggerElementProps>,
-        {
-          ref: handleReferenceRef,
-          onMouseEnter: reference ? childProps?.onMouseEnter : composeEventHandler(childProps?.onMouseEnter, () => scheduleShow()),
-          onMouseLeave: reference ? childProps?.onMouseLeave : composeEventHandler(childProps?.onMouseLeave, () => scheduleHide()),
-          onFocus: reference ? childProps?.onFocus : composeEventHandler(childProps?.onFocus, () => scheduleShow()),
-          onBlur: reference ? childProps?.onBlur : composeEventHandler(childProps?.onBlur, () => scheduleHide()),
-          onMouseDown: reference ? childProps?.onMouseDown : composeEventHandler(childProps?.onMouseDown, () => hideImmediately()),
-          onClick: reference ? childProps?.onClick : composeEventHandler(childProps?.onClick, () => hideImmediately()),
-          onTouchStart: reference ? childProps?.onTouchStart : composeEventHandler(childProps?.onTouchStart, () => hideImmediately()),
-        },
-      )
+    ? React.cloneElement(children as React.ReactElement<TriggerElementProps>, {
+        ref: handleReferenceRef,
+        onMouseEnter: reference
+          ? childProps?.onMouseEnter
+          : composeEventHandler(childProps?.onMouseEnter, () => scheduleShow()),
+        onMouseLeave: reference
+          ? childProps?.onMouseLeave
+          : composeEventHandler(childProps?.onMouseLeave, () => scheduleHide()),
+        onFocus: reference
+          ? childProps?.onFocus
+          : composeEventHandler(childProps?.onFocus, () => scheduleShow()),
+        onBlur: reference
+          ? childProps?.onBlur
+          : composeEventHandler(childProps?.onBlur, () => scheduleHide()),
+        onMouseDown: reference
+          ? childProps?.onMouseDown
+          : composeEventHandler(childProps?.onMouseDown, () => hideImmediately()),
+        onClick: reference
+          ? childProps?.onClick
+          : composeEventHandler(childProps?.onClick, () => hideImmediately()),
+        onTouchStart: reference
+          ? childProps?.onTouchStart
+          : composeEventHandler(childProps?.onTouchStart, () => hideImmediately()),
+      })
     : null
 
   return (

@@ -19,7 +19,10 @@ export function ShadowThemeProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const observer = new MutationObserver(() => setColorMode(resolveMode()))
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-color-mode', 'data-dark-theme', 'data-light-theme'] })
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-color-mode', 'data-dark-theme', 'data-light-theme'],
+    })
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = () => setColorMode(resolveMode())
     mq.addEventListener('change', handler)
