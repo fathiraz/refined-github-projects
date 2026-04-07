@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/fathiraz/refined-github-projects/compare/v0.3.0...v0.4.0) (2026-04-07)
+
+
+### Features
+
+* modular background architecture, keyboard shortcuts, and dev tooling (v0.4.0) ([#16](https://github.com/fathiraz/refined-github-projects/issues/16)) ([fa47701](https://github.com/fathiraz/refined-github-projects/commit/fa477019424f231dad2b66359aa31d6d52d298a5))
+
 ## [0.3.0](https://github.com/fathiraz/refined-github-projects/compare/v0.2.1...v0.3.0) (2026-03-29)
 
 
