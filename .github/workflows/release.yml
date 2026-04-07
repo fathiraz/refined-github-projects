@@ -73,7 +73,7 @@ jobs:
         with:
           files: release-zips/*.zip
 
-  submit-stores:
+  submit-chrome:
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -102,17 +102,51 @@ jobs:
           name: store-zips
           path: dist
 
-      - name: Submit to stores
+      - name: Submit to Chrome Web Store
         run: |
           pnpm wxt submit \
-            --chrome-zip dist/*-chrome.zip \
-            --firefox-zip dist/*-firefox.zip \
-            --firefox-sources-zip dist/*-sources.zip
+            --chrome-zip dist/*-chrome.zip
         env:
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+  submit-firefox:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download store submission artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: store-zips
+          path: dist
+
+      - name: Submit to Firefox Add-ons
+        run: |
+          pnpm wxt submit \
+            --firefox-zip dist/*-firefox.zip \
+            --firefox-sources-zip dist/*-sources.zip
+        env:
           FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
           FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
           FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
