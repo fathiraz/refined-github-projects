@@ -279,7 +279,7 @@ export function registerSprintHandlers(): void {
 
     if (isSprintEndFull()) {
       console.warn('[rgp:bg] max concurrent sprint end reached, rejecting')
-      return
+      return { error: 'Another sprint end is already in progress. Please wait and try again.' }
     }
 
     acquireSprintEnd()
@@ -386,7 +386,9 @@ export function registerSprintHandlers(): void {
         if (!doneFieldValue) return true // no done-field value → not done
 
         if (data.doneFieldType === 'SINGLE_SELECT' && 'optionId' in doneFieldValue) {
-          if (doneFieldValue.optionId === data.doneOptionId) return false
+          if (data.notStartedOptionId) {
+            if (doneFieldValue.optionId !== data.notStartedOptionId) return false
+          } else if (doneFieldValue.optionId === data.doneOptionId) return false
         } else if (data.doneFieldType === 'TEXT' && 'text' in doneFieldValue) {
           if (doneFieldValue.text === data.doneOptionValue) return false
         } else {

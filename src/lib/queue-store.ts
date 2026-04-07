@@ -109,8 +109,8 @@ onMessage('queueStateUpdate', ({ data }) => {
     status: data.status,
     detail: data.detail,
     done: false,
-    failedItems: data.failedItems ?? existing?.failedItems,
-    retryContext: data.retryContext ?? existing?.retryContext,
+    failedItems: data.failedItems ?? (existing?.done ? undefined : existing?.failedItems),
+    retryContext: data.retryContext ?? (existing?.done ? undefined : existing?.retryContext),
   })
   notify()
 })

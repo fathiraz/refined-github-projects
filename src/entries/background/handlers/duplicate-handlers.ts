@@ -64,18 +64,54 @@ async function runDeepDuplicate(
       )
     } catch (error) {
       console.error('[rgp:bg] failed to fetch item details', error)
+      await broadcastQueue(
+        {
+          total: 0,
+          completed: 0,
+          paused: false,
+          status: 'Done!',
+          processId,
+          label: 'Deep duplicate',
+        },
+        tabId,
+      )
+      releaseDuplicate()
       return
     }
 
     const source = details.node
     if (!source) {
       console.error('[rgp:bg] item not found')
+      await broadcastQueue(
+        {
+          total: 0,
+          completed: 0,
+          paused: false,
+          status: 'Done!',
+          processId,
+          label: 'Deep duplicate',
+        },
+        tabId,
+      )
+      releaseDuplicate()
       return
     }
 
     const issue = source.content
     if (!issue?.title) {
       console.error('[rgp:bg] item is not a GitHub Issue (Draft/PR)')
+      await broadcastQueue(
+        {
+          total: 0,
+          completed: 0,
+          paused: false,
+          status: 'Done!',
+          processId,
+          label: 'Deep duplicate',
+        },
+        tabId,
+      )
+      releaseDuplicate()
       return
     }
 

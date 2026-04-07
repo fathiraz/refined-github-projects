@@ -228,7 +228,7 @@ function ProcessCard({
                             ...ctx.data,
                             itemIds: failedIds,
                           } as any,
-                        )
+                        ).catch((err) => console.error('[rgp] retry failed', err))
                       }}
                       sx={{
                         boxShadow: 'none',

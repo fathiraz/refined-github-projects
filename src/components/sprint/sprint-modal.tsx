@@ -721,6 +721,7 @@ function EndSprintView({
         doneFieldType: settings.doneFieldType,
         doneOptionId: settings.doneOptionId,
         doneOptionValue: settings.doneOptionName,
+        notStartedOptionId: settings.notStartedOptionId,
         excludeConditions: settings.excludeConditions ?? [],
       })
       onComplete()

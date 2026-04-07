@@ -283,8 +283,9 @@ interface ProtocolMap {
     doneFieldType: 'SINGLE_SELECT' | 'TEXT'
     doneOptionId: string
     doneOptionValue: string
+    notStartedOptionId?: string
     excludeConditions: ExcludeCondition[]
-  }): void
+  }): void | { error: string }
   getItemTitles(data: { itemIds: string[]; projectId: string }): Array<{
     domId: string
     issueNodeId: string

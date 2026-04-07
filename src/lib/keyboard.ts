@@ -34,7 +34,7 @@ function matchesModifiers(e: KeyboardEvent, mods: ShortcutModifiers): boolean {
   const wantsAlt = mods.alt ?? false
 
   const metaPressed = isMac ? e.metaKey : e.ctrlKey
-  const ctrlPressed = isMac ? e.ctrlKey : false
+  const ctrlPressed = e.ctrlKey
 
   return (
     wantsMeta === metaPressed &&
@@ -79,10 +79,10 @@ export const shortcutRegistry = {
     for (const existing of registry.values()) {
       if (
         existing.key === def.key &&
-        existing.modifiers.meta === def.modifiers.meta &&
-        existing.modifiers.shift === def.modifiers.shift &&
-        existing.modifiers.ctrl === def.modifiers.ctrl &&
-        existing.modifiers.alt === def.modifiers.alt &&
+        !!existing.modifiers.meta === !!def.modifiers.meta &&
+        !!existing.modifiers.shift === !!def.modifiers.shift &&
+        !!existing.modifiers.ctrl === !!def.modifiers.ctrl &&
+        !!existing.modifiers.alt === !!def.modifiers.alt &&
         existing.id !== def.id
       ) {
         console.warn(`[rgp:keyboard] conflict: "${def.id}" vs "${existing.id}" on key="${def.key}"`)

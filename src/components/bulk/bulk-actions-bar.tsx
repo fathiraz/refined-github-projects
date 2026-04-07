@@ -267,7 +267,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       reg({
         id: 'help',
         key: '?',
-        modifiers: {},
+        modifiers: { shift: true },
         context: 'Global',
         label: 'Keyboard Shortcuts',
         action: () => setShowHelp(true),

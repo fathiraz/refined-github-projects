@@ -98,16 +98,17 @@ export function MarkdownTextarea({ value, onChange, placeholder, rows = 6 }: Pro
           background: 'var(--bgColor-muted, var(--color-canvas-subtle))',
         }}
       >
-        <button style={tabBtn('write')} onClick={() => handleTabChange('write')}>
+        <button type="button" style={tabBtn('write')} onClick={() => handleTabChange('write')}>
           Write
         </button>
-        <button style={tabBtn('preview')} onClick={() => handleTabChange('preview')}>
+        <button type="button" style={tabBtn('preview')} onClick={() => handleTabChange('preview')}>
           Preview
         </button>
         <div style={{ flex: 1 }} />
         {tab === 'write' &&
           TOOLBAR_ACTIONS.map((a) => (
             <button
+              type="button"
               key={a.label}
               title={a.label}
               style={toolBtn}

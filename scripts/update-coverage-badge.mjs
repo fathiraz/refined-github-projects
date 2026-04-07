@@ -56,7 +56,7 @@ const badgeUrl = `https://img.shields.io/badge/coverage-${encoded}-${color}?styl
 
 const readme = readFileSync(README, "utf-8");
 const updated = readme.replace(
-  /<!-- COVERAGE_BADGE_START -->.*?<!-- COVERAGE_BADGE_END -->/,
+  /<!-- COVERAGE_BADGE_START -->.*?<!-- COVERAGE_BADGE_END -->/s,
   `<!-- COVERAGE_BADGE_START --><img src="${badgeUrl}" alt="Coverage" /><!-- COVERAGE_BADGE_END -->`,
 );
 

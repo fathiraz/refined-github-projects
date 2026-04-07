@@ -71,18 +71,20 @@ export function registerHierarchyHandlers(): void {
     if (!source) throw new Error('Project item not found — ID resolution may have failed')
     const issue = source.content
     if (!issue?.title) throw new Error('Item is not a supported type (must be a GitHub Issue)')
-    const blockedBy = await listIssueRelationshipsSafe(
-      'blocked_by',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    )
-    const blocking = await listIssueRelationshipsSafe(
-      'blocking',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    )
+    const [blockedBy, blocking] = await Promise.all([
+      listIssueRelationshipsSafe(
+        'blocked_by',
+        issue.repository.owner.login,
+        issue.repository.name,
+        issue.number,
+      ),
+      listIssueRelationshipsSafe(
+        'blocking',
+        issue.repository.owner.login,
+        issue.repository.name,
+        issue.number,
+      ),
+    ])
 
     // 4. Correlate field values with definitions
     const fields: ItemPreviewData['fields'] = []

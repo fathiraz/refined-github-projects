@@ -1237,7 +1237,10 @@ export function registerBulkHandlers(): void {
               completed: state.completed,
               paused: state.paused,
               retryAfter: state.retryAfter,
-              status: `Moving item ${state.completed + 1} of ${reorderOps.length}…`,
+              status:
+                state.completed < reorderOps.length
+                  ? `Moving item ${state.completed + 1} of ${reorderOps.length}…`
+                  : `Moved ${reorderOps.length} items`,
               processId,
               label,
               failedItems: state.failedItems,
