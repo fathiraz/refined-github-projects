@@ -75,7 +75,6 @@ async function runDeepDuplicate(
         },
         tabId,
       )
-      releaseDuplicate()
       return
     }
 
@@ -93,7 +92,6 @@ async function runDeepDuplicate(
         },
         tabId,
       )
-      releaseDuplicate()
       return
     }
 
@@ -111,7 +109,6 @@ async function runDeepDuplicate(
         },
         tabId,
       )
-      releaseDuplicate()
       return
     }
 

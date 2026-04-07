@@ -34,7 +34,7 @@ function matchesModifiers(e: KeyboardEvent, mods: ShortcutModifiers): boolean {
   const wantsAlt = mods.alt ?? false
 
   const metaPressed = isMac ? e.metaKey : e.ctrlKey
-  const ctrlPressed = e.ctrlKey
+  const ctrlPressed = isMac ? e.ctrlKey : false
 
   return (
     wantsMeta === metaPressed &&
