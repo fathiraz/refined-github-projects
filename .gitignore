@@ -2,6 +2,7 @@
 node_modules/
 dist/
 .wxt/
+.output/
 
 
 # START Ruler Generated Files
