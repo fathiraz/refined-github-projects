@@ -6,6 +6,12 @@ export interface QueueTask {
   run: () => Promise<void>
 }
 
+export interface FailedItem {
+  id: string
+  title: string
+  error: string
+}
+
 export interface QueueState {
   total: number
   completed: number
@@ -13,6 +19,7 @@ export interface QueueState {
   retryAfter?: number
   status?: string
   detail?: string
+  failedItems?: FailedItem[]
 }
 
 type StateListener = (state: QueueState) => void
@@ -27,7 +34,7 @@ let currentState: QueueState = { total: 0, completed: 0, paused: false }
 
 function setState(update: Partial<QueueState>) {
   currentState = { ...currentState, ...update }
-  stateListeners.forEach(fn => fn(currentState))
+  stateListeners.forEach((fn) => fn(currentState))
 }
 
 export function subscribeQueueState(fn: StateListener): () => void {
@@ -40,7 +47,7 @@ export function getQueueState(): QueueState {
 }
 
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export async function processQueue(
@@ -55,6 +62,7 @@ export async function processQueue(
   let localPaused = false
   let localRetryAfter: number | undefined
   let localDetail: string | undefined
+  const localFailedItems: FailedItem[] = []
 
   const notify = () => {
     onStateChange?.({
@@ -63,6 +71,7 @@ export async function processQueue(
       paused: localPaused,
       retryAfter: localRetryAfter,
       detail: localDetail,
+      failedItems: localFailedItems.length > 0 ? [...localFailedItems] : undefined,
     })
   }
 
@@ -110,6 +119,8 @@ export async function processQueue(
           } else {
             // Non-rate-limit error: skip task
             console.error('[rgp:queue] task error (skipping)', task.id, err)
+            const errorMsg = err instanceof Error ? err.message : String(err)
+            localFailedItems.push({ id: task.id, title: task.detail ?? task.id, error: errorMsg })
             localCompleted++
             notify()
             break

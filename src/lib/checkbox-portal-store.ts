@@ -18,14 +18,14 @@ function cleanupEntries(): void {
 
 function notify(): void {
   cleanupEntries()
-  listeners.forEach(fn => fn(entries))
+  listeners.forEach((fn) => fn(entries))
 }
 
 export const checkboxPortalStore = {
   addRow(container: HTMLElement, itemId: string): void {
     cleanupEntries()
     entries = [
-      ...entries.filter(entry => entry.type !== 'row' || entry.itemId !== itemId),
+      ...entries.filter((entry) => entry.type !== 'row' || entry.itemId !== itemId),
       { type: 'row', container, itemId },
     ]
     notify()
@@ -34,7 +34,7 @@ export const checkboxPortalStore = {
   addGroup(container: HTMLElement, getItemIds: () => string[]): void {
     cleanupEntries()
     entries = [
-      ...entries.filter(entry => entry.type !== 'group' || entry.container !== container),
+      ...entries.filter((entry) => entry.type !== 'group' || entry.container !== container),
       { type: 'group', container, getItemIds },
     ]
     notify()
@@ -43,7 +43,7 @@ export const checkboxPortalStore = {
   addSelectAll(container: HTMLElement): void {
     cleanupEntries()
     entries = [
-      ...entries.filter(entry => entry.type !== 'selectall'),
+      ...entries.filter((entry) => entry.type !== 'selectall'),
       { type: 'selectall', container },
     ]
     notify()

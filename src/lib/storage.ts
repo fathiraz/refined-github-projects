@@ -10,8 +10,8 @@ export interface ExcludeCondition {
   fieldId: string
   fieldName: string
   fieldType: 'SINGLE_SELECT' | 'TEXT'
-  optionId: string    // SINGLE_SELECT: option node ID; TEXT: empty string
-  optionName: string  // SINGLE_SELECT: display label; TEXT: exact text value to match
+  optionId: string // SINGLE_SELECT: option node ID; TEXT: empty string
+  optionName: string // SINGLE_SELECT: display label; TEXT: exact text value to match
 }
 
 export interface SprintSettings {
@@ -41,7 +41,4 @@ export const onboardingDismissedStorage = storage.defineItem<boolean>(
   { defaultValue: false },
 )
 
-export const debugStorage = storage.defineItem<boolean>(
-  'local:rgp:debug',
-  { defaultValue: false },
-)
+export const debugStorage = storage.defineItem<boolean>('local:rgp:debug', { defaultValue: false })

@@ -73,7 +73,9 @@ function findSidebar(panel: Element): Element | null {
 
 function extractItemIdFromPanel(panel: Element): string | null {
   // Try to read a data-rgp-cb attr from the currently-active table row
-  const activeRow = document.querySelector<HTMLElement>(`[role="row"][${INJECTED_ATTR}][data-rgp-active]`)
+  const activeRow = document.querySelector<HTMLElement>(
+    `[role="row"][${INJECTED_ATTR}][data-rgp-active]`,
+  )
   if (activeRow) {
     const id = activeRow.getAttribute(INJECTED_ATTR)
     if (id && id !== '1') return id
@@ -184,7 +186,9 @@ export function setupIssueDetailInjector(projectContext: ProjectContext): () => 
   const handleRowClick = (e: Event) => {
     const row = (e.target as Element).closest<HTMLElement>(`[role="row"][${INJECTED_ATTR}]`)
     if (!row) return
-    document.querySelectorAll(`[role="row"][data-rgp-active]`).forEach((r) => r.removeAttribute('data-rgp-active'))
+    document
+      .querySelectorAll(`[role="row"][data-rgp-active]`)
+      .forEach((r) => r.removeAttribute('data-rgp-active'))
     row.setAttribute('data-rgp-active', '1')
   }
 

@@ -122,7 +122,9 @@ export function SprintProgressView({
         setErrorMsg(String(e))
         setLoadState('error')
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [projectId, owner, number, isOrg, activeSprint.id, activeSprint.startDate, settings])
 
   return (
@@ -158,7 +160,15 @@ export function SprintProgressView({
       {loadState === 'loaded' && progress && (
         <>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Text sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <Text
+              sx={{
+                fontSize: 0,
+                fontWeight: 'semibold',
+                color: 'fg.muted',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
               Sprint progress
             </Text>
             <MetricBar label="Issues" done={progress.doneIssues} total={progress.totalIssues} />
@@ -175,8 +185,23 @@ export function SprintProgressView({
           {/* Scope change */}
           {(progress.scopeAddedIssues > 0 || progress.scopeAddedPoints > 0) && (
             <Box sx={{ borderTop: '1px solid', borderColor: 'border.default', pt: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Text sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 2,
+                }}
+              >
+                <Text
+                  sx={{
+                    fontSize: 0,
+                    fontWeight: 'semibold',
+                    color: 'fg.muted',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
                   Scope change
                 </Text>
                 <Text sx={{ fontSize: 0, color: 'attention.fg', fontWeight: 'semibold' }}>
@@ -203,11 +228,22 @@ export function SprintProgressView({
                     <Box sx={{ display: 'flex', flexShrink: 0 }}>
                       {item.assignees.length > 0 ? (
                         item.assignees.slice(0, 2).map((a) => (
-                          <Tippy key={a.login} content={a.login} placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
+                          <Tippy
+                            key={a.login}
+                            content={a.login}
+                            placement="top"
+                            delay={[400, 0]}
+                            zIndex={Z_TOOLTIP}
+                          >
                             <Avatar
                               src={a.avatarUrl}
                               size={20}
-                              sx={{ border: '2px solid', borderColor: 'canvas.overlay', ml: '-4px', ':first-of-type': { ml: 0 } }}
+                              sx={{
+                                border: '2px solid',
+                                borderColor: 'canvas.overlay',
+                                ml: '-4px',
+                                ':first-of-type': { ml: 0 },
+                              }}
                             />
                           </Tippy>
                         ))

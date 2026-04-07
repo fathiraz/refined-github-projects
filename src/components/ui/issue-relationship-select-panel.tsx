@@ -51,9 +51,10 @@ export function IssueRelationshipSelectPanel({
   inputLabel = placeholderText,
   anchorAriaLabel = title,
 }: IssueRelationshipSelectPanelProps) {
-  const defaultSubtitle = owner && repoName
-    ? `Recent open issues from ${owner}/${repoName} appear first. Type a title, \`#123\`, or \`owner/repo#123\` to search more.`
-    : 'Type a title, `#123`, or `owner/repo#123` to search across repositories you can access.'
+  const defaultSubtitle =
+    owner && repoName
+      ? `Recent open issues from ${owner}/${repoName} appear first. Type a title, \`#123\`, or \`owner/repo#123\` to search more.`
+      : 'Type a title, `#123`, or `owner/repo#123` to search across repositories you can access.'
 
   const searchIssues = useCallback(
     (q: string) => sendMessage('searchRelationshipIssues', { q, owner, repoName }),
@@ -62,16 +63,29 @@ export function IssueRelationshipSelectPanel({
 
   const mapItem = useCallback(
     (item: IssueRelationshipItem): SearchSelectPanelOption<IssueRelationshipItem> => ({
-      id: item.databaseId ? `db:${item.databaseId}` : `${item.repoOwner}/${item.repoName}#${item.number}`,
+      id: item.databaseId
+        ? `db:${item.databaseId}`
+        : `${item.repoOwner}/${item.repoName}#${item.number}`,
       item,
       selectionText: formatIssueReference(item),
       panelItem: {
-        id: item.databaseId ? `db:${item.databaseId}` : `${item.repoOwner}/${item.repoName}#${item.number}`,
+        id: item.databaseId
+          ? `db:${item.databaseId}`
+          : `${item.repoOwner}/${item.repoName}#${item.number}`,
         text: item.title,
         description: `${formatIssueReference(item)}${item.state ? ` · ${item.state.toLowerCase()}` : ''}`,
         descriptionVariant: 'block',
         leadingVisual: () => (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, color: item.state === 'CLOSED' ? 'danger.fg' : 'accent.fg' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 16,
+              height: 16,
+              color: item.state === 'CLOSED' ? 'danger.fg' : 'accent.fg',
+            }}
+          >
             {leadingVisual(item)}
           </Box>
         ),
@@ -115,11 +129,5 @@ export function IssueRelationshipSelectPanel({
     )
   }
 
-  return (
-    <SearchSelectPanel
-      {...commonProps}
-      selected={value}
-      onSelectedChange={onChange}
-    />
-  )
+  return <SearchSelectPanel {...commonProps} selected={value} onSelectedChange={onChange} />
 }

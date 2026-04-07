@@ -2,7 +2,12 @@ import React, { useCallback, useRef, useState } from 'react'
 import Tippy from '@tippyjs/react'
 import type { Instance } from 'tippy.js'
 import { Avatar, Box, Link, ProgressBar, Text } from '@primer/react'
-import type { HierarchyData, IssueRelationshipData, ItemPreviewData, SubIssueData } from '../../lib/messages'
+import type {
+  HierarchyData,
+  IssueRelationshipData,
+  ItemPreviewData,
+  SubIssueData,
+} from '../../lib/messages'
 import { ensureTippyCss, ensureRgpCardTheme } from '../../lib/tippy-utils'
 import { Z_TOOLTIP } from '../../lib/z-index'
 import { sendMessage } from '../../lib/messages'
@@ -94,7 +99,10 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
       onShow={handleShow}
       maxWidth={360}
     >
-      <span style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true" />
+      <span
+        style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
+        aria-hidden="true"
+      />
     </Tippy>
   )
 }
@@ -164,7 +172,9 @@ function CardContent({ state }: { state: CardState }) {
             whiteSpace: 'nowrap',
           }}
         >
-          <Text sx={{ color: 'fg.muted', mr: 1, fontWeight: 'normal' }}>#{preview.issueNumber}</Text>
+          <Text sx={{ color: 'fg.muted', mr: 1, fontWeight: 'normal' }}>
+            #{preview.issueNumber}
+          </Text>
           {preview.title}
         </Link>
         {preview.issueTypeName && (
@@ -245,7 +255,9 @@ function CardContent({ state }: { state: CardState }) {
         )}
 
         {hasSubIssues && (
-          <FieldRow label={`Sub-issues · ${hierarchy.completedSubIssues}/${hierarchy.totalSubIssues}`}>
+          <FieldRow
+            label={`Sub-issues · ${hierarchy.completedSubIssues}/${hierarchy.totalSubIssues}`}
+          >
             <ProgressBar progress={subPct} sx={{ width: '100%', boxShadow: 'none' }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', mt: 1 }}>
               {hierarchy.subIssues.slice(0, 5).map((sub) => (
@@ -301,7 +313,10 @@ function LoadingSkeleton() {
         }}
       >
         <Box className="rgp-skeleton" sx={{ height: '12px', width: '70%', borderRadius: 1 }} />
-        <Box className="rgp-skeleton" sx={{ height: '10px', width: '35%', borderRadius: 1, mt: 1 }} />
+        <Box
+          className="rgp-skeleton"
+          sx={{ height: '10px', width: '35%', borderRadius: 1, mt: 1 }}
+        />
       </Box>
       <Box sx={{ px: 3, py: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Box className="rgp-skeleton" sx={{ height: '10px', width: '25%', borderRadius: 1 }} />
@@ -357,7 +372,13 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
   )
 }
 
-function IssueLink({ issue, color = 'fg.default' }: { issue: IssueRelationshipData; color?: string }) {
+function IssueLink({
+  issue,
+  color = 'fg.default',
+}: {
+  issue: IssueRelationshipData
+  color?: string
+}) {
   const href = `https://github.com/${issue.repoOwner}/${issue.repoName}/issues/${issue.number}`
   return (
     <Link

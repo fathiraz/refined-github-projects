@@ -102,18 +102,30 @@ const RELATIONSHIP_OPTIONS: Array<{ key: RelationshipKey; label: string; descrip
 
 function getFieldIcon(dataType: string): React.ReactNode {
   switch (dataType) {
-    case 'ASSIGNEES': return <PersonIcon />
-    case 'LABELS': return <TagIcon />
-    case 'ISSUE_TYPE': return <ShieldIcon />
-    case 'SINGLE_SELECT': return <OptionsSelectIcon />
-    case 'ITERATION': return <SyncIcon />
-    case 'NUMBER': return <HashIcon />
-    case 'DATE': return <CalendarIcon />
-    case 'TEXT': return <TextLineIcon />
-    case 'TITLE': return <PencilIcon />
-    case 'BODY': return <TextLineIcon />
-    case 'COMMENT': return <TextLineIcon />
-    default: return null
+    case 'ASSIGNEES':
+      return <PersonIcon />
+    case 'LABELS':
+      return <TagIcon />
+    case 'ISSUE_TYPE':
+      return <ShieldIcon />
+    case 'SINGLE_SELECT':
+      return <OptionsSelectIcon />
+    case 'ITERATION':
+      return <SyncIcon />
+    case 'NUMBER':
+      return <HashIcon />
+    case 'DATE':
+      return <CalendarIcon />
+    case 'TEXT':
+      return <TextLineIcon />
+    case 'TITLE':
+      return <PencilIcon />
+    case 'BODY':
+      return <TextLineIcon />
+    case 'COMMENT':
+      return <TextLineIcon />
+    default:
+      return null
   }
 }
 
@@ -138,7 +150,9 @@ function formatIssueReference(issue: IssueRelationshipData): string {
 }
 
 function issueKey(issue: IssueRelationshipData): string {
-  return issue.databaseId ? `db:${issue.databaseId}` : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
+  return issue.databaseId
+    ? `db:${issue.databaseId}`
+    : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
 }
 
 function issueTitle(issue: IssueRelationshipData): string {
@@ -149,14 +163,19 @@ function getRelationshipSelectionCount(selection: RelationshipSelectionState): n
   return Object.values(selection).filter(Boolean).length
 }
 
-function buildRelationshipSummaryRows(relationships: BulkEditRelationshipsUpdate): RelationshipSummaryRow[] {
+function buildRelationshipSummaryRows(
+  relationships: BulkEditRelationshipsUpdate,
+): RelationshipSummaryRow[] {
   const rows: RelationshipSummaryRow[] = []
 
   if (relationships.parent.clear) {
     rows.push({ label: 'Parent', value: 'Clear existing parent relationship' })
   }
   if (relationships.parent.set) {
-    rows.push({ label: 'Parent', value: `Set to ${formatIssueReference(relationships.parent.set)}` })
+    rows.push({
+      label: 'Parent',
+      value: `Set to ${formatIssueReference(relationships.parent.set)}`,
+    })
   }
 
   if (relationships.blockedBy.clear) {
@@ -200,7 +219,7 @@ function describeFieldValue(field: ProjectField, fieldValues: Record<string, unk
 
   const arr = valueObj.array as { name: string }[] | undefined
   if (arr && arr.length > 0) {
-    displayValue = arr.map(v => v.name).join(', ')
+    displayValue = arr.map((v) => v.name).join(', ')
   } else if (valueObj.date) {
     displayValue = new Date((valueObj.date as string) + 'T00:00:00').toLocaleDateString(undefined, {
       year: 'numeric',
@@ -212,10 +231,10 @@ function describeFieldValue(field: ProjectField, fieldValues: Record<string, unk
   } else if (valueObj.text) {
     displayValue = valueObj.text as string
   } else if (valueObj.singleSelectOptionId && field.options) {
-    const opt = field.options.find(option => option.id === valueObj.singleSelectOptionId)
+    const opt = field.options.find((option) => option.id === valueObj.singleSelectOptionId)
     if (opt) displayValue = opt.name
   } else if (valueObj.iterationId && field.configuration?.iterations) {
-    const iter = field.configuration.iterations.find(option => option.id === valueObj.iterationId)
+    const iter = field.configuration.iterations.find((option) => option.id === valueObj.iterationId)
     if (iter) displayValue = iter.title
   }
 
@@ -224,21 +243,68 @@ function describeFieldValue(field: ProjectField, fieldValues: Record<string, unk
 
 const bulkEditHeaderIcon = <ListCheckIcon size={16} />
 
-function TokenWarning({ onClose, onOpenOptions }: { onClose: () => void; onOpenOptions: () => void }) {
+function TokenWarning({
+  onClose,
+  onOpenOptions,
+}: {
+  onClose: () => void
+  onOpenOptions: () => void
+}) {
   return (
-    <Box sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center' }}>
+    <Box
+      sx={{
+        p: 5,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4,
+        textAlign: 'center',
+      }}
+    >
       <Box sx={{ color: 'attention.fg' }}>
         <AlertIcon size={40} />
       </Box>
       <Box>
-        <Heading as="h2" sx={{ m: 0, fontSize: 4, fontWeight: 'bold', mb: 2 }}>Token not set up</Heading>
+        <Heading as="h2" sx={{ m: 0, fontSize: 4, fontWeight: 'bold', mb: 2 }}>
+          Token not set up
+        </Heading>
         <Text as="p" sx={{ m: 0, fontSize: 1, color: 'fg.muted', maxWidth: 320 }}>
           Add your GitHub token to use bulk actions.
         </Text>
       </Box>
       <Box sx={{ display: 'flex', gap: 2 }}>
-        <Button variant="default" onClick={onClose} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Cancel</Button>
-        <Button variant="primary" onClick={onOpenOptions} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Set up token</Button>
+        <Button
+          variant="default"
+          onClick={onClose}
+          sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={onOpenOptions}
+          sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
+        >
+          Set up token
+        </Button>
       </Box>
     </Box>
   )
@@ -254,7 +320,14 @@ function RelationshipIssueList({
   if (items.length === 0) return null
 
   return (
-    <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+    <Box
+      sx={{
+        border: '1px solid',
+        borderColor: 'border.default',
+        borderRadius: 2,
+        overflow: 'hidden',
+      }}
+    >
       {items.map((issue, index) => (
         <Box
           key={issueKey(issue)}
@@ -327,7 +400,12 @@ function ParentRelationshipEditor({
       <FormControl sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
         <Checkbox
           checked={value.clear}
-          onChange={(event) => onChange({ set: event.target.checked ? undefined : value.set, clear: event.target.checked })}
+          onChange={(event) =>
+            onChange({
+              set: event.target.checked ? undefined : value.set,
+              clear: event.target.checked,
+            })
+          }
         />
         <FormControl.Label sx={{ m: 0, fontWeight: 400 }}>
           Clear existing parent relationship
@@ -350,7 +428,10 @@ function RelationshipCategoryEditor({
   value: BulkEditRelationshipsUpdate['blockedBy']
   onChange: (nextValue: BulkEditRelationshipsUpdate['blockedBy']) => void
 }) {
-  const addTitle = label === 'Blocked by' ? 'Issues that block the selected issues' : 'Issues the selected issues block'
+  const addTitle =
+    label === 'Blocked by'
+      ? 'Issues that block the selected issues'
+      : 'Issues the selected issues block'
   const removeTitle = label === 'Blocked by' ? 'Blockers to remove' : 'Blocked issues to remove'
 
   return (
@@ -368,7 +449,7 @@ function RelationshipCategoryEditor({
             onChange({
               ...value,
               add: nextAdd,
-              remove: value.remove.filter(issue => !nextAddKeys.has(issueKey(issue))),
+              remove: value.remove.filter((issue) => !nextAddKeys.has(issueKey(issue))),
             })
           }}
           title={`Add ${label.toLowerCase()} issues`}
@@ -381,11 +462,18 @@ function RelationshipCategoryEditor({
       </Box>
       <RelationshipIssueList
         items={value.add}
-        onRemove={(issue) => onChange({ ...value, add: value.add.filter(candidate => issueKey(candidate) !== issueKey(issue)) })}
+        onRemove={(issue) =>
+          onChange({
+            ...value,
+            add: value.add.filter((candidate) => issueKey(candidate) !== issueKey(issue)),
+          })
+        }
       />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Text sx={{ fontSize: 1, fontWeight: 400, color: 'fg.default' }}>Remove specific issues</Text>
+        <Text sx={{ fontSize: 1, fontWeight: 400, color: 'fg.default' }}>
+          Remove specific issues
+        </Text>
         <IssueRelationshipSelectPanel
           owner={owner}
           repoName={repoName}
@@ -395,7 +483,7 @@ function RelationshipCategoryEditor({
             onChange({
               ...value,
               remove: nextRemove,
-              add: value.add.filter(issue => !nextRemoveKeys.has(issueKey(issue))),
+              add: value.add.filter((issue) => !nextRemoveKeys.has(issueKey(issue))),
             })
           }}
           title={`Remove ${label.toLowerCase()} issues`}
@@ -408,13 +496,22 @@ function RelationshipCategoryEditor({
       </Box>
       <RelationshipIssueList
         items={value.remove}
-        onRemove={(issue) => onChange({ ...value, remove: value.remove.filter(candidate => issueKey(candidate) !== issueKey(issue)) })}
+        onRemove={(issue) =>
+          onChange({
+            ...value,
+            remove: value.remove.filter((candidate) => issueKey(candidate) !== issueKey(issue)),
+          })
+        }
       />
 
       <FormControl sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-        <Checkbox checked={value.clear} onChange={(event) => onChange({ ...value, clear: event.target.checked })} />
+        <Checkbox
+          checked={value.clear}
+          onChange={(event) => onChange({ ...value, clear: event.target.checked })}
+        />
         <FormControl.Label sx={{ m: 0, fontWeight: 400 }}>
-          Clear all current {label === 'Blocked by' ? 'blockers' : 'blocked issues'} before applying updates
+          Clear all current {label === 'Blocked by' ? 'blockers' : 'blocked issues'} before applying
+          updates
         </FormControl.Label>
       </FormControl>
     </Box>
@@ -439,7 +536,8 @@ function RelationshipsSection({
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Text sx={{ fontSize: 2, fontWeight: 'bold', color: 'fg.default' }}>Relationships</Text>
         <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-          Relationship updates apply only to issues. Pull requests in the selection are skipped automatically.
+          Relationship updates apply only to issues. Pull requests in the selection are skipped
+          automatically.
         </Text>
       </Box>
 
@@ -505,18 +603,32 @@ function FieldsStep({
   onNext,
 }: FieldsStepProps) {
   const defaultDataTypeKeys = ['ASSIGNEES', 'LABELS', 'ISSUE_TYPE', 'TITLE', 'BODY', 'COMMENT']
-  const FIELD_ORDER: Record<string, number> = { TITLE: 0, BODY: 1, COMMENT: 2, ASSIGNEES: 3, LABELS: 4, ISSUE_TYPE: 5 }
+  const FIELD_ORDER: Record<string, number> = {
+    TITLE: 0,
+    BODY: 1,
+    COMMENT: 2,
+    ASSIGNEES: 3,
+    LABELS: 4,
+    ISSUE_TYPE: 5,
+  }
   const projectFields = projectData?.fields ?? []
   const defaultFields = projectFields
-    .filter(field => defaultDataTypeKeys.includes(field.dataType) || field.name.toLowerCase() === 'type')
+    .filter(
+      (field) =>
+        defaultDataTypeKeys.includes(field.dataType) || field.name.toLowerCase() === 'type',
+    )
     .sort((a, b) => (FIELD_ORDER[a.dataType] ?? 99) - (FIELD_ORDER[b.dataType] ?? 99))
-  const customFields = projectFields.filter(field => !defaultFields.includes(field))
-  const eligibleCustomFields = customFields.filter(field => ['SINGLE_SELECT', 'ITERATION', 'TEXT', 'NUMBER', 'DATE'].includes(field.dataType))
+  const customFields = projectFields.filter((field) => !defaultFields.includes(field))
+  const eligibleCustomFields = customFields.filter((field) =>
+    ['SINGLE_SELECT', 'ITERATION', 'TEXT', 'NUMBER', 'DATE'].includes(field.dataType),
+  )
   const allEligibleFields = [...defaultFields, ...eligibleCustomFields]
-  const selectedFieldIds = new Set(selectedFields.map(field => field.id))
+  const selectedFieldIds = new Set(selectedFields.map((field) => field.id))
   const selectedRelationshipCount = getRelationshipSelectionCount(relationshipSelection)
   const totalSelectableCount = allEligibleFields.length + RELATIONSHIP_OPTIONS.length
-  const selectedSelectableCount = allEligibleFields.filter(field => selectedFieldIds.has(field.id)).length + selectedRelationshipCount
+  const selectedSelectableCount =
+    allEligibleFields.filter((field) => selectedFieldIds.has(field.id)).length +
+    selectedRelationshipCount
   const allSelected = totalSelectableCount > 0 && selectedSelectableCount === totalSelectableCount
   const canContinue = selectedFields.length > 0 || selectedRelationshipCount > 0
 
@@ -543,42 +655,102 @@ function FieldsStep({
           size="small"
           onClick={() => {
             onSetSelectedFields(allSelected ? [] : allEligibleFields)
-            onUpdateRelationshipSelection(allSelected
-              ? { parent: false, blockedBy: false, blocking: false }
-              : { parent: true, blockedBy: true, blocking: true })
+            onUpdateRelationshipSelection(
+              allSelected
+                ? { parent: false, blockedBy: false, blocking: false }
+                : { parent: true, blockedBy: true, blocking: true },
+            )
           }}
-          sx={{ p: 0, color: 'accent.fg', fontSize: 1, fontWeight: 'bold', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}
+          sx={{
+            p: 0,
+            color: 'accent.fg',
+            fontSize: 1,
+            fontWeight: 'bold',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
         >
           {allSelected ? 'Deselect all' : 'Select all'}
         </Button>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 2, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          px: 4,
+          py: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
+      >
         {projectData ? (
           <>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {defaultFields.map(field => {
+              {defaultFields.map((field) => {
                 const isSelected = selectedFieldIds.has(field.id)
                 return (
-                  <Tippy key={field.id} content={getFieldSelectionTooltip(field)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                  <Tippy
+                    key={field.id}
+                    content={getFieldSelectionTooltip(field)}
+                    delay={[400, 0]}
+                    placement="top"
+                    zIndex={Z_TOOLTIP}
+                  >
                     <Box
                       as="button"
                       type="button"
                       onClick={() => onToggleField(field)}
                       sx={{
-                        display: 'flex', alignItems: 'center', gap: 3, width: '100%',
-                        textAlign: 'left', border: 'none', borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 3,
+                        width: '100%',
+                        textAlign: 'left',
+                        border: 'none',
+                        borderRadius: 2,
                         bg: isSelected ? 'accent.subtle' : 'transparent',
-                        px: 3, py: 2, cursor: 'pointer',
+                        px: 3,
+                        py: 2,
+                        cursor: 'pointer',
                         transition: 'background-color 150ms ease',
                         ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
                         '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                       }}
                     >
-                      <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
-                      <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: isSelected ? 'accent.fg' : 'fg.default' }}>{getFieldIcon(field.dataType)}</Box>
-                        <Text sx={{ fontSize: 1, fontWeight: 'bold', color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={() => {}}
+                        sx={{ pointerEvents: 'none' }}
+                      />
+                      <Box
+                        as="span"
+                        sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}
+                      >
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexShrink: 0,
+                            color: isSelected ? 'accent.fg' : 'fg.default',
+                          }}
+                        >
+                          {getFieldIcon(field.dataType)}
+                        </Box>
+                        <Text
+                          sx={{
+                            fontSize: 1,
+                            fontWeight: 'bold',
+                            color: isSelected ? 'accent.fg' : 'fg.default',
+                            flex: 1,
+                          }}
+                        >
                           {field.name}
                         </Text>
                       </Box>
@@ -590,42 +762,121 @@ function FieldsStep({
 
             {eligibleCustomFields.length > 0 && (
               <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Custom Fields</Text>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: 2,
+                  }}
+                >
+                  <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
+                    Custom Fields
+                  </Text>
                   <GearIcon color="var(--fgColor-muted)" />
                 </Box>
-                <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
-                  <Box sx={{ bg: 'canvas.subtle', px: 3, py: 2, borderBottom: '1px solid', borderColor: 'border.default', display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'border.default',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      bg: 'canvas.subtle',
+                      px: 3,
+                      py: 2,
+                      borderBottom: '1px solid',
+                      borderColor: 'border.default',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
                     <ProjectBoardIcon color="var(--fgColor-muted)" />
-                    <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{projectData.title}</Text>
+                    <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
+                      {projectData.title}
+                    </Text>
                   </Box>
                   <Box sx={{ display: 'flex', flexDirection: 'column', p: 1 }}>
-                    {eligibleCustomFields.map(field => {
+                    {eligibleCustomFields.map((field) => {
                       const isSelected = selectedFieldIds.has(field.id)
                       return (
-                        <Tippy key={field.id} content={getFieldSelectionTooltip(field)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                        <Tippy
+                          key={field.id}
+                          content={getFieldSelectionTooltip(field)}
+                          delay={[400, 0]}
+                          placement="top"
+                          zIndex={Z_TOOLTIP}
+                        >
                           <Box
                             as="button"
                             type="button"
                             onClick={() => onToggleField(field)}
                             sx={{
-                              display: 'flex', alignItems: 'center', gap: 3, width: '100%',
-                              textAlign: 'left', border: 'none', borderRadius: 2,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 3,
+                              width: '100%',
+                              textAlign: 'left',
+                              border: 'none',
+                              borderRadius: 2,
                               bg: isSelected ? 'accent.subtle' : 'transparent',
-                              px: 2, py: 2, cursor: 'pointer',
+                              px: 2,
+                              py: 2,
+                              cursor: 'pointer',
                               transition: 'background-color 150ms ease',
                               ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
                               '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                             }}
                           >
-                            <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none' }} />
-                            <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}>
-                              <Box sx={{ display: 'flex', flexShrink: 0, color: isSelected ? 'accent.fg' : 'fg.default' }}>{getFieldIcon(field.dataType)}</Box>
-                              <Text sx={{ fontSize: 1, fontWeight: 500, color: isSelected ? 'accent.fg' : 'fg.default', flex: 1 }}>
+                            <Checkbox
+                              checked={isSelected}
+                              onChange={() => {}}
+                              sx={{ pointerEvents: 'none' }}
+                            />
+                            <Box
+                              as="span"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 3,
+                                flex: 1,
+                                minWidth: 0,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  flexShrink: 0,
+                                  color: isSelected ? 'accent.fg' : 'fg.default',
+                                }}
+                              >
+                                {getFieldIcon(field.dataType)}
+                              </Box>
+                              <Text
+                                sx={{
+                                  fontSize: 1,
+                                  fontWeight: 500,
+                                  color: isSelected ? 'accent.fg' : 'fg.default',
+                                  flex: 1,
+                                }}
+                              >
                                 {field.name}
                               </Text>
                             </Box>
-                            <Text sx={{ fontSize: 0, px: 1, py: '2px', bg: 'neutral.muted', color: 'fg.muted', borderRadius: 2 }}>
+                            <Text
+                              sx={{
+                                fontSize: 0,
+                                px: 1,
+                                py: '2px',
+                                bg: 'neutral.muted',
+                                color: 'fg.muted',
+                                borderRadius: 2,
+                              }}
+                            >
                               {field.dataType.toLowerCase()}
                             </Text>
                           </Box>
@@ -650,11 +901,24 @@ function FieldsStep({
               Choose which relationship categories to edit in the next step.
             </Text>
           </Box>
-          <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+          <Box
+            sx={{
+              border: '1px solid',
+              borderColor: 'border.default',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
             {RELATIONSHIP_OPTIONS.map((relationship, index) => {
               const isSelected = relationshipSelection[relationship.key]
               return (
-                <Tippy key={relationship.key} content={getRelationshipSelectionTooltip(relationship.label)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                <Tippy
+                  key={relationship.key}
+                  content={getRelationshipSelectionTooltip(relationship.label)}
+                  delay={[400, 0]}
+                  placement="top"
+                  zIndex={Z_TOOLTIP}
+                >
                   <Box
                     as="button"
                     type="button"
@@ -677,9 +941,20 @@ function FieldsStep({
                       '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                     }}
                   >
-                    <Checkbox checked={isSelected} onChange={() => {}} sx={{ pointerEvents: 'none', mt: '2px' }} />
+                    <Checkbox
+                      checked={isSelected}
+                      onChange={() => {}}
+                      sx={{ pointerEvents: 'none', mt: '2px' }}
+                    />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Text sx={{ display: 'block', fontSize: 1, fontWeight: 'bold', color: isSelected ? 'accent.fg' : 'fg.default' }}>
+                      <Text
+                        sx={{
+                          display: 'block',
+                          fontSize: 1,
+                          fontWeight: 'bold',
+                          color: isSelected ? 'accent.fg' : 'fg.default',
+                        }}
+                      >
                         {relationship.label}
                       </Text>
                       <Text sx={{ display: 'block', fontSize: 0, color: 'fg.muted', mt: 1 }}>
@@ -694,8 +969,31 @@ function FieldsStep({
         </Box>
       </Box>
 
-      <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="primary" disabled={!canContinue} onClick={onNext} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
+      <Box
+        sx={{
+          px: 4,
+          py: 3,
+          borderTop: '1px solid',
+          borderColor: 'border.default',
+          display: 'flex',
+          justifyContent: 'flex-end',
+        }}
+      >
+        <Button
+          variant="primary"
+          disabled={!canContinue}
+          onClick={onNext}
+          sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
+        >
           Next: Set Values →
         </Button>
       </Box>
@@ -747,34 +1045,71 @@ function ValuesStep({
         onBack={onBack}
         onClose={onClose}
       />
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {selectedFields.map(field => {
-          const isDefault = ['ASSIGNEES', 'LABELS', 'MILESTONE', 'ISSUE_TYPE'].includes(field.dataType) || field.name.toLowerCase() === 'type'
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          px: 4,
+          py: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
+      >
+        {selectedFields.map((field) => {
+          const isDefault =
+            ['ASSIGNEES', 'LABELS', 'MILESTONE', 'ISSUE_TYPE'].includes(field.dataType) ||
+            field.name.toLowerCase() === 'type'
           const value = (fieldValues[field.id] || {}) as Record<string, unknown>
           let inputContent: React.ReactNode = null
 
           if (field.dataType === 'SINGLE_SELECT' && field.options) {
             inputContent = (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                {field.options.map(opt => {
+                {field.options.map((opt) => {
                   const isSelected = value.singleSelectOptionId === opt.id
                   return (
-                    <Tippy key={opt.id} content={getFieldOptionTooltip(field.name, opt.name)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                    <Tippy
+                      key={opt.id}
+                      content={getFieldOptionTooltip(field.name, opt.name)}
+                      delay={[400, 0]}
+                      placement="top"
+                      zIndex={Z_TOOLTIP}
+                    >
                       <Box
                         as="button"
                         type="button"
-                        onClick={() => onUpdateFieldValue(field.id, { singleSelectOptionId: opt.id })}
+                        onClick={() =>
+                          onUpdateFieldValue(field.id, { singleSelectOptionId: opt.id })
+                        }
                         sx={{
-                          display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1,
-                          border: '1px solid', borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                          borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
-                          cursor: 'pointer', transition: 'all 150ms ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          px: 3,
+                          py: 1,
+                          border: '1px solid',
+                          borderColor: isSelected ? 'accent.emphasis' : 'border.default',
+                          borderRadius: 2,
+                          bg: isSelected ? 'canvas.subtle' : 'transparent',
+                          cursor: 'pointer',
+                          transition: 'all 150ms ease',
                           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                         }}
                       >
                         <Box as="span" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Box sx={{ width: 10, height: 10, borderRadius: '50%', bg: opt.color ? undefined : 'border.default' }} style={opt.color ? { backgroundColor: opt.color } : undefined} />
-                          <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 500 }}>{opt.name}</Text>
+                          <Box
+                            sx={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: '50%',
+                              bg: opt.color ? undefined : 'border.default',
+                            }}
+                            style={opt.color ? { backgroundColor: opt.color } : undefined}
+                          />
+                          <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 500 }}>
+                            {opt.name}
+                          </Text>
                         </Box>
                       </Box>
                     </Tippy>
@@ -785,26 +1120,49 @@ function ValuesStep({
           } else if (field.dataType === 'ITERATION' && field.configuration?.iterations) {
             inputContent = (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {field.configuration.iterations.map(iter => {
+                {field.configuration.iterations.map((iter) => {
                   const isSelected = value.iterationId === iter.id
                   return (
-                    <Tippy key={iter.id} content={getFieldOptionTooltip(field.name, iter.title)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                    <Tippy
+                      key={iter.id}
+                      content={getFieldOptionTooltip(field.name, iter.title)}
+                      delay={[400, 0]}
+                      placement="top"
+                      zIndex={Z_TOOLTIP}
+                    >
                       <Box
                         as="button"
                         type="button"
                         onClick={() => onUpdateFieldValue(field.id, { iterationId: iter.id })}
                         sx={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          px: 3, py: 2, border: '1px solid',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          px: 3,
+                          py: 2,
+                          border: '1px solid',
                           borderColor: isSelected ? 'accent.emphasis' : 'border.default',
-                          borderRadius: 2, bg: isSelected ? 'canvas.subtle' : 'transparent',
-                          cursor: 'pointer', transition: 'all 150ms ease',
+                          borderRadius: 2,
+                          bg: isSelected ? 'canvas.subtle' : 'transparent',
+                          cursor: 'pointer',
+                          transition: 'all 150ms ease',
                           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
                         }}
                       >
-                        <Box as="span" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                          <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 'bold' }}>{iter.title}</Text>
-                          <Text sx={{ color: 'fg.muted', fontSize: 0, mt: '2px' }}>{iter.startDate}</Text>
+                        <Box
+                          as="span"
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                          }}
+                        >
+                          <Text sx={{ color: 'fg.default', fontSize: 1, fontWeight: 'bold' }}>
+                            {iter.title}
+                          </Text>
+                          <Text sx={{ color: 'fg.muted', fontSize: 0, mt: '2px' }}>
+                            {iter.startDate}
+                          </Text>
                         </Box>
                         {isSelected && <CheckIcon size={14} color="var(--color-accent-fg)" />}
                       </Box>
@@ -820,8 +1178,15 @@ function ValuesStep({
                   type={field.dataType}
                   owner={owner}
                   repoName={firstRepoName}
-                  value={(value.array as { id: string; name: string; color?: string; avatarUrl?: string }[]) || []}
-                  onChange={arr => onUpdateFieldValue(field.id, { array: arr })}
+                  value={
+                    (value.array as {
+                      id: string
+                      name: string
+                      color?: string
+                      avatarUrl?: string
+                    }[]) || []
+                  }
+                  onChange={(arr) => onUpdateFieldValue(field.id, { array: arr })}
                   placeholder={`Select ${field.name.toLowerCase()}`}
                 />
               </Box>
@@ -833,9 +1198,26 @@ function ValuesStep({
                   type="ISSUE_TYPES"
                   owner={owner}
                   repoName={firstRepoName || ''}
-                  value={(value.array as { id: string; name: string; color?: string; description?: string }[]) || []}
-                  onChange={(arr) => onUpdateFieldValue(field.id, { ...(fieldValues[field.id] as Record<string, unknown> || {}), array: arr, dataType: 'ISSUE_TYPE' })}
-                  placeholder={firstRepoName ? 'Select issue type' : 'Repository not detected - please open a project with issues'}
+                  value={
+                    (value.array as {
+                      id: string
+                      name: string
+                      color?: string
+                      description?: string
+                    }[]) || []
+                  }
+                  onChange={(arr) =>
+                    onUpdateFieldValue(field.id, {
+                      ...((fieldValues[field.id] as Record<string, unknown>) || {}),
+                      array: arr,
+                      dataType: 'ISSUE_TYPE',
+                    })
+                  }
+                  placeholder={
+                    firstRepoName
+                      ? 'Select issue type'
+                      : 'Repository not detected - please open a project with issues'
+                  }
                   singleSelect
                   disabled={!firstRepoName}
                 />
@@ -847,7 +1229,7 @@ function ValuesStep({
                 block
                 type="date"
                 value={(value.date as string) || ''}
-                onChange={e => onUpdateFieldValue(field.id, { date: e.target.value })}
+                onChange={(e) => onUpdateFieldValue(field.id, { date: e.target.value })}
               />
             )
           } else if (field.dataType === 'NUMBER') {
@@ -857,7 +1239,11 @@ function ValuesStep({
                 type="number"
                 placeholder="Enter number..."
                 value={(value.number as number | '') ?? ''}
-                onChange={e => onUpdateFieldValue(field.id, { number: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  onUpdateFieldValue(field.id, {
+                    number: e.target.value === '' ? undefined : parseFloat(e.target.value),
+                  })
+                }
               />
             )
           } else if (field.dataType === 'TITLE') {
@@ -866,7 +1252,7 @@ function ValuesStep({
                 block
                 placeholder="New title for all selected items..."
                 value={(value.text as string) || ''}
-                onChange={e => onUpdateFieldValue(field.id, { text: e.target.value })}
+                onChange={(e) => onUpdateFieldValue(field.id, { text: e.target.value })}
               />
             )
           } else if (field.dataType === 'BODY') {
@@ -874,7 +1260,7 @@ function ValuesStep({
               <Box sx={{ width: '100%' }}>
                 <MarkdownTextarea
                   value={(value.text as string) || ''}
-                  onChange={text => onUpdateFieldValue(field.id, { text })}
+                  onChange={(text) => onUpdateFieldValue(field.id, { text })}
                   placeholder="Set description for all selected items (replaces existing)..."
                 />
               </Box>
@@ -884,7 +1270,7 @@ function ValuesStep({
               <Box sx={{ width: '100%' }}>
                 <MarkdownTextarea
                   value={(value.text as string) || ''}
-                  onChange={text => onUpdateFieldValue(field.id, { text })}
+                  onChange={(text) => onUpdateFieldValue(field.id, { text })}
                   placeholder="Comment to add to all selected items..."
                 />
               </Box>
@@ -895,18 +1281,34 @@ function ValuesStep({
                 block
                 placeholder={isDefault ? 'E.g. comma separated...' : 'Enter value...'}
                 value={(value.text as string) || ''}
-                onChange={e => onUpdateFieldValue(field.id, { text: e.target.value })}
+                onChange={(e) => onUpdateFieldValue(field.id, { text: e.target.value })}
               />
             )
           }
 
           return (
             <FormControl key={field.id} sx={{ width: '100%' }}>
-              <FormControl.Label sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold', width: 'fit-content', cursor: 'help' }}>
-                <Tippy content={getFieldValueStepTooltip(field, count)} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+              <FormControl.Label
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  fontWeight: 'bold',
+                  width: 'fit-content',
+                  cursor: 'help',
+                }}
+              >
+                <Tippy
+                  content={getFieldValueStepTooltip(field, count)}
+                  delay={[400, 0]}
+                  placement="top"
+                  zIndex={Z_TOOLTIP}
+                >
                   <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                     {getFieldIcon(field.dataType) && (
-                      <Box sx={{ color: 'fg.muted', display: 'flex' }}>{getFieldIcon(field.dataType)}</Box>
+                      <Box sx={{ color: 'fg.muted', display: 'flex' }}>
+                        {getFieldIcon(field.dataType)}
+                      </Box>
                     )}
                     {field.name}
                   </Box>
@@ -928,9 +1330,49 @@ function ValuesStep({
         )}
       </Box>
 
-      <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', justifyContent: 'space-between' }}>
-        <Button variant="default" onClick={onBack} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>← Back</Button>
-        <Button variant="primary" disabled={!hasChanges} onClick={onNext} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>Review Changes →</Button>
+      <Box
+        sx={{
+          px: 4,
+          py: 3,
+          borderTop: '1px solid',
+          borderColor: 'border.default',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Button
+          variant="default"
+          onClick={onBack}
+          sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
+        >
+          ← Back
+        </Button>
+        <Button
+          variant="primary"
+          disabled={!hasChanges}
+          onClick={onNext}
+          sx={{
+            boxShadow: 'none',
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+            '&:active': { transform: 'translateY(0)', transition: '100ms' },
+            '@media (prefers-reduced-motion: reduce)': {
+              transition: 'none',
+              '&:hover:not(:disabled)': { transform: 'none' },
+            },
+          }}
+        >
+          Review Changes →
+        </Button>
       </Box>
     </>
   )
@@ -964,7 +1406,10 @@ function SummaryStep({
   onApply,
 }: SummaryStepProps) {
   const rows: RelationshipSummaryRow[] = [
-    ...selectedFields.map(field => ({ label: field.name, value: describeFieldValue(field, fieldValues) })),
+    ...selectedFields.map((field) => ({
+      label: field.name,
+      value: describeFieldValue(field, fieldValues),
+    })),
     ...buildRelationshipSummaryRows(relationships),
   ]
 
@@ -981,18 +1426,41 @@ function SummaryStep({
       />
       <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
         {rows.length > 0 ? (
-          <Box sx={{ bg: 'canvas.subtle', border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+          <Box
+            sx={{
+              bg: 'canvas.subtle',
+              border: '1px solid',
+              borderColor: 'border.default',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
             {rows.map((row, index) => (
               <Box
                 key={`${row.label}-${row.value}-${index}`}
                 sx={{
-                  display: 'flex', alignItems: 'center', px: 3, py: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  px: 3,
+                  py: 3,
                   borderBottom: index < rows.length - 1 ? '1px solid' : 'none',
                   borderColor: 'border.default',
                 }}
               >
-                <Text sx={{ flex: 1, color: 'fg.muted', fontSize: 1, fontWeight: 500 }}>{row.label}</Text>
-                <Text sx={{ flex: 1, color: 'fg.default', fontSize: 1, fontWeight: 'bold', textAlign: 'right' }}>{row.value}</Text>
+                <Text sx={{ flex: 1, color: 'fg.muted', fontSize: 1, fontWeight: 500 }}>
+                  {row.label}
+                </Text>
+                <Text
+                  sx={{
+                    flex: 1,
+                    color: 'fg.default',
+                    fontSize: 1,
+                    fontWeight: 'bold',
+                    textAlign: 'right',
+                  }}
+                >
+                  {row.value}
+                </Text>
               </Box>
             ))}
           </Box>
@@ -1003,7 +1471,17 @@ function SummaryStep({
         )}
       </Box>
 
-      <Box sx={{ px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default', display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box
+        sx={{
+          px: 4,
+          py: 3,
+          borderTop: '1px solid',
+          borderColor: 'border.default',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}
+      >
         {validationErrors.length > 0 && (
           <Flash variant="danger">
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1011,14 +1489,15 @@ function SummaryStep({
                 Fix these relationship conflicts before applying:
               </Text>
               <Box as="ul" sx={{ m: 0, pl: 3 }}>
-                {validationErrors.slice(0, 5).map(error => (
+                {validationErrors.slice(0, 5).map((error) => (
                   <Box as="li" key={error} sx={{ mb: 1, fontSize: 0 }}>
                     {error}
                   </Box>
                 ))}
                 {validationErrors.length > 5 && (
                   <Box as="li" sx={{ fontSize: 0 }}>
-                    {validationErrors.length - 5} more conflict{validationErrors.length - 5 !== 1 ? 's' : ''}.
+                    {validationErrors.length - 5} more conflict
+                    {validationErrors.length - 5 !== 1 ? 's' : ''}.
                   </Box>
                 )}
               </Box>
@@ -1031,8 +1510,38 @@ function SummaryStep({
           </Flash>
         )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button variant="default" onClick={onBack} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>← Back</Button>
-          <Button ref={applyBtnRef} variant="primary" disabled={!hasChanges} onClick={onApply} sx={{ boxShadow: 'none', transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)', '&:hover:not(:disabled)': { transform: 'translateY(-1px)' }, '&:active': { transform: 'translateY(0)', transition: '100ms' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } } }}>
+          <Button
+            variant="default"
+            onClick={onBack}
+            sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}
+          >
+            ← Back
+          </Button>
+          <Button
+            ref={applyBtnRef}
+            variant="primary"
+            disabled={!hasChanges}
+            onClick={onApply}
+            sx={{
+              boxShadow: 'none',
+              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+              '&:active': { transform: 'translateY(0)', transition: '100ms' },
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+                '&:hover:not(:disabled)': { transform: 'none' },
+              },
+            }}
+          >
             Apply to {count} Item{count !== 1 ? 's' : ''}
           </Button>
         </Box>
@@ -1072,9 +1581,13 @@ export function BulkEditWizard({
   return (
     <Box
       sx={{
-        position: 'fixed', inset: 0,
-        bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'fixed',
+        inset: 0,
+        bg: 'rgba(27,31,36,0.5)',
+        zIndex: Z_MODAL,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
       onKeyDown={(e: React.KeyboardEvent) => {
         e.stopPropagation()
@@ -1082,14 +1595,22 @@ export function BulkEditWizard({
       }}
       onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
     >
-      <Box sx={{
-        bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
-        borderRadius: 2, width: 'min(720px, 92vw)', maxHeight: '82vh',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        boxShadow: 'none',
-        animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-      }}>
+      <Box
+        sx={{
+          bg: 'canvas.overlay',
+          border: '1px solid',
+          borderColor: 'border.default',
+          borderRadius: 2,
+          width: 'min(720px, 92vw)',
+          maxHeight: '82vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          boxShadow: 'none',
+          animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+        }}
+      >
         {step === 'TOKEN_WARNING' && (
           <TokenWarning onClose={onClose} onOpenOptions={onOpenOptions} />
         )}

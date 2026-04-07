@@ -36,7 +36,14 @@ const interactiveButtonSx = {
   },
 } as const
 
-export function BulkTransferModal({ count, owner, firstItemId, projectId, onClose, onConfirm }: Props) {
+export function BulkTransferModal({
+  count,
+  owner,
+  firstItemId,
+  projectId,
+  onClose,
+  onConfirm,
+}: Props) {
   useEffect(() => {
     ensureTippyCss()
     console.log('[TransferModal] mounted', { owner, firstItemId, projectId, count })
@@ -53,11 +60,16 @@ export function BulkTransferModal({ count, owner, firstItemId, projectId, onClos
       console.log('[TransferModal] searchRepos:request', { query, owner, firstItemId, projectId })
 
       try {
-        const items = await sendMessage('searchTransferTargets', { owner, q: query, firstItemId, projectId })
+        const items = await sendMessage('searchTransferTargets', {
+          owner,
+          q: query,
+          firstItemId,
+          projectId,
+        })
         console.log('[TransferModal] searchRepos:result', {
           query,
           resultCount: items.length,
-          sample: items.slice(0, 5).map(item => item.nameWithOwner),
+          sample: items.slice(0, 5).map((item) => item.nameWithOwner),
         })
         return items
       } catch (error) {
@@ -69,9 +81,10 @@ export function BulkTransferModal({ count, owner, firstItemId, projectId, onClos
   )
 
   const handleSelectedChange = useCallback((repo: RepoItem | undefined) => {
-    console.log('[TransferModal] onSelectedChange', repo
-      ? { id: repo.id, nameWithOwner: repo.nameWithOwner }
-      : { cleared: true })
+    console.log(
+      '[TransferModal] onSelectedChange',
+      repo ? { id: repo.id, nameWithOwner: repo.nameWithOwner } : { cleared: true },
+    )
     setSelected(repo)
   }, [])
 
@@ -102,11 +115,30 @@ export function BulkTransferModal({ count, owner, firstItemId, projectId, onClos
 
   return (
     <Box
-      sx={{ position: 'fixed', inset: 0, bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        bg: 'rgba(27,31,36,0.5)',
+        zIndex: Z_MODAL,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
       onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
       onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
     >
-      <Box sx={{ bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default', borderRadius: 2, width: '100%', maxWidth: 480, overflow: 'hidden', boxShadow: 'none' }}>
+      <Box
+        sx={{
+          bg: 'canvas.overlay',
+          border: '1px solid',
+          borderColor: 'border.default',
+          borderRadius: 2,
+          width: '100%',
+          maxWidth: 480,
+          overflow: 'hidden',
+          boxShadow: 'none',
+        }}
+      >
         <ModalStepHeader title="Transfer Issues" icon={<MoveIcon size={16} />} onClose={onClose} />
 
         <Box sx={{ px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -117,8 +149,15 @@ export function BulkTransferModal({ count, owner, firstItemId, projectId, onClos
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
             <FormControl>
               <FormControl.Label id="transfer-repo-label">
-                <Tippy content="Pick the destination repository. Top repositories load first; type to search all repos you can access." delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-                  <Box as="span" sx={{ cursor: 'help', width: 'fit-content' }}>Repository</Box>
+                <Tippy
+                  content="Pick the destination repository. Top repositories load first; type to search all repos you can access."
+                  delay={[400, 0]}
+                  placement="top"
+                  zIndex={Z_TOOLTIP}
+                >
+                  <Box as="span" sx={{ cursor: 'help', width: 'fit-content' }}>
+                    Repository
+                  </Box>
                 </Tippy>
               </FormControl.Label>
               <SearchSelectPanel

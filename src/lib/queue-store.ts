@@ -11,6 +11,8 @@ export interface ProcessEntry {
   status?: string
   detail?: string
   done: boolean
+  failedItems?: Array<{ id: string; title: string; error: string }>
+  retryContext?: { messageType: string; data: Record<string, unknown> }
 }
 
 type Listener = (entries: ProcessEntry[]) => void
@@ -21,7 +23,7 @@ const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 function notify() {
   const entries = Array.from(processes.values())
-  listeners.forEach(fn => fn(entries))
+  listeners.forEach((fn) => fn(entries))
 }
 
 function scheduleDismiss(processId: string) {
@@ -69,11 +71,22 @@ onMessage('queueStateUpdate', ({ data }) => {
   if (isDone) {
     const existing = processes.get(key)
     if (existing) {
-      processes.set(key, { ...existing, done: true, completed: existing.total, status: 'Done!' })
+      const mergedFailedItems = data.failedItems ?? existing.failedItems
+      processes.set(key, {
+        ...existing,
+        done: true,
+        completed: existing.total,
+        status: 'Done!',
+        failedItems: mergedFailedItems,
+        retryContext: data.retryContext ?? existing.retryContext,
+      })
       notify()
-      scheduleDismiss(key)
+      // Don't auto-dismiss when there are failures so the user can review them
+      if (!mergedFailedItems || mergedFailedItems.length === 0) {
+        scheduleDismiss(key)
+      }
       // Fire completion toast when ALL processes are done
-      const allDone = Array.from(processes.values()).every(e => e.done)
+      const allDone = Array.from(processes.values()).every((e) => e.done)
       if (allDone && processes.size > 0) {
         toastStore.show({
           message: 'All tasks complete — reload to see your changes.',
@@ -96,6 +109,8 @@ onMessage('queueStateUpdate', ({ data }) => {
     status: data.status,
     detail: data.detail,
     done: false,
+    failedItems: data.failedItems ?? (existing?.done ? undefined : existing?.failedItems),
+    retryContext: data.retryContext ?? (existing?.done ? undefined : existing?.retryContext),
   })
   notify()
 })

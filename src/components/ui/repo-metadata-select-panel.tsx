@@ -30,7 +30,16 @@ function metadataToLeadingVisual(item: RepoMetadataItem, type: RepoMetadataType)
     return item.avatarUrl ? (
       <Avatar src={item.avatarUrl} alt="" size={16} square={false} />
     ) : (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, color: 'fg.muted' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 16,
+          height: 16,
+          color: 'fg.muted',
+        }}
+      >
         <PersonIcon size={14} color="currentColor" />
       </Box>
     )
@@ -38,7 +47,16 @@ function metadataToLeadingVisual(item: RepoMetadataItem, type: RepoMetadataType)
 
   if (type === 'ISSUE_TYPES') {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, color: item.color || 'fg.muted' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 16,
+          height: 16,
+          color: item.color || 'fg.muted',
+        }}
+      >
         <ShieldIcon size={14} color="currentColor" />
       </Box>
     )
@@ -115,7 +133,9 @@ function getEmptyState(type: RepoMetadataType, filterQuery: string) {
   if (type === 'ISSUE_TYPES') {
     return {
       title: 'No issue types found',
-      body: filterQuery.trim() ? 'Try a different search.' : 'This repository has no issue types available.',
+      body: filterQuery.trim()
+        ? 'Try a different search.'
+        : 'This repository has no issue types available.',
       variant: 'empty' as const,
     }
   }
@@ -191,11 +211,5 @@ export function RepoMetadataSelectPanel({
     )
   }
 
-  return (
-    <SearchSelectPanel
-      {...commonProps}
-      selected={value}
-      onSelectedChange={onChange}
-    />
-  )
+  return <SearchSelectPanel {...commonProps} selected={value} onSelectedChange={onChange} />
 }

@@ -31,7 +31,14 @@ interface Props {
   projectId: string
   itemIds: string[]
   onClose: () => void
-  onConfirm: (renames: Array<{ domId: string; issueNodeId: string; newTitle: string; typename: 'Issue' | 'PullRequest' }>) => void
+  onConfirm: (
+    renames: Array<{
+      domId: string
+      issueNodeId: string
+      newTitle: string
+      typename: 'Issue' | 'PullRequest'
+    }>,
+  ) => void
 }
 
 function applyRule(original: string, rule: RuleState): string {
@@ -67,43 +74,60 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
 
   useEffect(() => {
     sendMessage('getItemTitles', { itemIds, projectId })
-      .then(resolved => {
-        setItems(resolved.map(r => ({
-          domId: r.domId,
-          issueNodeId: r.issueNodeId,
-          title: r.title,
-          typename: r.typename,
-        })))
+      .then((resolved) => {
+        setItems(
+          resolved.map((r) => ({
+            domId: r.domId,
+            issueNodeId: r.issueNodeId,
+            title: r.title,
+            typename: r.typename,
+          })),
+        )
         setStage('CONFIGURE')
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('[BulkRenameModal] getItemTitles failed', err)
         setErrorMsg(String(err?.message ?? 'Failed to fetch item titles.'))
         setStage('ERROR')
       })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const previewed = items.map(item => ({ ...item, newTitle: applyRule(item.title, rule) }))
-  const changedCount = previewed.filter(p => p.newTitle !== p.title).length
+  const previewed = items.map((item) => ({ ...item, newTitle: applyRule(item.title, rule) }))
+  const changedCount = previewed.filter((p) => p.newTitle !== p.title).length
 
   function handleConfirm() {
     const renames = previewed
-      .filter(p => p.newTitle !== p.title)
-      .map(p => ({ domId: p.domId, issueNodeId: p.issueNodeId, newTitle: p.newTitle, typename: p.typename }))
+      .filter((p) => p.newTitle !== p.title)
+      .map((p) => ({
+        domId: p.domId,
+        issueNodeId: p.issueNodeId,
+        newTitle: p.newTitle,
+        typename: p.typename,
+      }))
     onConfirm(renames)
   }
 
   const overlayStyle = {
-    position: 'fixed' as const, inset: 0,
-    bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    position: 'fixed' as const,
+    inset: 0,
+    bg: 'rgba(27,31,36,0.5)',
+    zIndex: Z_MODAL,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 
   const panelStyle = {
-    bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
-    borderRadius: 2, width: 'min(680px, 90vw)', maxHeight: '85vh',
-    display: 'flex', flexDirection: 'column' as const, overflow: 'hidden',
+    bg: 'canvas.overlay',
+    border: '1px solid',
+    borderColor: 'border.default',
+    borderRadius: 2,
+    width: 'min(680px, 90vw)',
+    maxHeight: '85vh',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    overflow: 'hidden',
   }
 
   const inputLabelStyle = {
@@ -125,37 +149,223 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
   // ── LOADING ──────────────────────────────────────────────────────────────────
   if (stage === 'LOADING') {
     return (
-      <Box sx={overlayStyle} onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }} onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}>
+      <Box
+        sx={overlayStyle}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          e.stopPropagation()
+          if (e.key === 'Escape') onClose()
+        }}
+        onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
+      >
         <Box sx={panelStyle}>
-          <ModalStepHeader title="Rename Titles" icon={<PencilIcon size={16} />} onClose={onClose} />
-          <Box sx={{ px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3, '@keyframes rgp-shimmer': { '0%': { backgroundPosition: '-200px 0' }, '100%': { backgroundPosition: '200px 0' } } }}>
+          <ModalStepHeader
+            title="Rename Titles"
+            icon={<PencilIcon size={16} />}
+            onClose={onClose}
+          />
+          <Box
+            sx={{
+              px: 4,
+              py: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 3,
+              '@keyframes rgp-shimmer': {
+                '0%': { backgroundPosition: '-200px 0' },
+                '100%': { backgroundPosition: '200px 0' },
+              },
+            }}
+          >
             {/* Tab bar skeleton */}
-            <Box sx={{ display: 'flex', gap: 2, pb: 2, borderBottom: '1px solid', borderColor: 'border.default' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                pb: 2,
+                borderBottom: '1px solid',
+                borderColor: 'border.default',
+              }}
+            >
               {([110, 100] as number[]).map((w, i) => (
-                <Box key={i} sx={{ height: 24, width: w, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                <Box
+                  key={i}
+                  sx={{
+                    height: 24,
+                    width: w,
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
               ))}
             </Box>
             {/* Input group skeletons */}
             {([{ label: 50 }, { label: 95 }] as { label: number }[]).map((g, i) => (
               <Box key={i} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ height: 10, width: g.label, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                <Box sx={{ height: 32, width: '100%', borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                <Box
+                  sx={{
+                    height: 10,
+                    width: g.label,
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
+                <Box
+                  sx={{
+                    height: 32,
+                    width: '100%',
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
               </Box>
             ))}
             {/* Preview table skeleton */}
-            <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 1, overflow: 'hidden' }}>
-              <Box sx={{ display: 'flex', gap: 2, px: 2, py: 1, bg: 'canvas.subtle', borderBottom: '1px solid', borderColor: 'border.default', alignItems: 'center' }}>
-                <Box sx={{ height: 10, width: 16, flexShrink: 0, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                <Box sx={{ height: 10, flex: 1, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                <Box sx={{ height: 10, width: 16, flexShrink: 0, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                <Box sx={{ height: 10, flex: 1, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'border.default',
+                borderRadius: 1,
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  px: 2,
+                  py: 1,
+                  bg: 'canvas.subtle',
+                  borderBottom: '1px solid',
+                  borderColor: 'border.default',
+                  alignItems: 'center',
+                }}
+              >
+                <Box
+                  sx={{
+                    height: 10,
+                    width: 16,
+                    flexShrink: 0,
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
+                <Box
+                  sx={{
+                    height: 10,
+                    flex: 1,
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
+                <Box
+                  sx={{
+                    height: 10,
+                    width: 16,
+                    flexShrink: 0,
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
+                <Box
+                  sx={{
+                    height: 10,
+                    flex: 1,
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
               </Box>
               {([70, 85, 55] as number[]).map((w, i) => (
-                <Box key={i} sx={{ display: 'flex', gap: 2, px: 2, py: '7px', borderBottom: '1px solid', borderColor: 'border.muted', alignItems: 'center' }}>
-                  <Box sx={{ height: 10, width: 16, flexShrink: 0, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                  <Box sx={{ height: 10, width: `${w}%`, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                  <Box sx={{ height: 10, width: 16, flexShrink: 0, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                  <Box sx={{ height: 10, width: `${100 - w}%`, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                <Box
+                  key={i}
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    px: 2,
+                    py: '7px',
+                    borderBottom: '1px solid',
+                    borderColor: 'border.muted',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      height: 10,
+                      width: 16,
+                      flexShrink: 0,
+                      borderRadius: 1,
+                      background:
+                        'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                      backgroundSize: '400px 100%',
+                      animation: 'rgp-shimmer 1.4s ease infinite',
+                      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      height: 10,
+                      width: `${w}%`,
+                      borderRadius: 1,
+                      background:
+                        'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                      backgroundSize: '400px 100%',
+                      animation: 'rgp-shimmer 1.4s ease infinite',
+                      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      height: 10,
+                      width: 16,
+                      flexShrink: 0,
+                      borderRadius: 1,
+                      background:
+                        'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                      backgroundSize: '400px 100%',
+                      animation: 'rgp-shimmer 1.4s ease infinite',
+                      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      height: 10,
+                      width: `${100 - w}%`,
+                      borderRadius: 1,
+                      background:
+                        'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                      backgroundSize: '400px 100%',
+                      animation: 'rgp-shimmer 1.4s ease infinite',
+                      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    }}
+                  />
                 </Box>
               ))}
             </Box>
@@ -168,25 +378,52 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
   // ── ERROR ─────────────────────────────────────────────────────────────────────
   if (stage === 'ERROR') {
     return (
-      <Box sx={overlayStyle} onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }} onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}>
+      <Box
+        sx={overlayStyle}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          e.stopPropagation()
+          if (e.key === 'Escape') onClose()
+        }}
+        onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
+      >
         <Box sx={panelStyle}>
-          <ModalStepHeader title="Rename Titles" icon={<PencilIcon size={16} />} onClose={onClose} />
+          <ModalStepHeader
+            title="Rename Titles"
+            icon={<PencilIcon size={16} />}
+            onClose={onClose}
+          />
           <Box sx={{ px: 4, py: 3 }}>
-            <Box sx={{ p: 3, borderRadius: 2, bg: 'danger.subtle', border: '1px solid', borderColor: 'danger.muted', color: 'danger.fg', fontSize: 1 }}>
+            <Box
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                bg: 'danger.subtle',
+                border: '1px solid',
+                borderColor: 'danger.muted',
+                color: 'danger.fg',
+                fontSize: 1,
+              }}
+            >
               {errorMsg || 'Failed to fetch item titles.'}
             </Box>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 4, pb: 3 }}>
-            <Button variant="default" onClick={onClose} sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}>Close</Button>
+            <Button
+              variant="default"
+              onClick={onClose}
+              sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
+            >
+              Close
+            </Button>
           </Box>
         </Box>
       </Box>
@@ -196,7 +433,14 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
   // ── PREVIEW (Step 2/2) ────────────────────────────────────────────────────────
   if (stage === 'PREVIEW') {
     return (
-      <Box sx={overlayStyle} onKeyDown={(e: React.KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose() }} onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}>
+      <Box
+        sx={overlayStyle}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          e.stopPropagation()
+          if (e.key === 'Escape') onClose()
+        }}
+        onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
+      >
         <Box sx={panelStyle}>
           <ModalStepHeader
             title="Rename Titles"
@@ -213,17 +457,31 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
           </Box>
 
           {/* Footer */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
-            <Button variant="primary" onClick={handleConfirm} sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              px: 4,
+              py: 3,
+              borderTop: '1px solid',
+              borderColor: 'border.default',
+            }}
+          >
+            <Button
+              variant="primary"
+              onClick={handleConfirm}
+              sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
+            >
               Rename {changedCount} item{changedCount !== 1 ? 's' : ''}
             </Button>
           </Box>
@@ -245,18 +503,40 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
         />
 
         {/* Body */}
-        <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflow: 'auto',
+            px: 4,
+            py: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3,
+          }}
+        >
           {/* Tab bar */}
-          <Box sx={{ display: 'flex', borderBottom: '1px solid', borderColor: 'border.default', gap: 0 }}>
-            {(['FIND_REPLACE', 'PREFIX_SUFFIX'] as RenameTab[]).map(tab => (
+          <Box
+            sx={{
+              display: 'flex',
+              borderBottom: '1px solid',
+              borderColor: 'border.default',
+              gap: 0,
+            }}
+          >
+            {(['FIND_REPLACE', 'PREFIX_SUFFIX'] as RenameTab[]).map((tab) => (
               <Box
                 key={tab}
                 as="button"
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 sx={{
-                  px: 3, py: 2, fontSize: 1, fontWeight: activeTab === tab ? 'semibold' : 'normal',
-                  bg: 'transparent', border: 'none', cursor: 'pointer',
+                  px: 3,
+                  py: 2,
+                  fontSize: 1,
+                  fontWeight: activeTab === tab ? 'semibold' : 'normal',
+                  bg: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
                   color: activeTab === tab ? 'fg.default' : 'fg.muted',
                   borderBottom: activeTab === tab ? '2px solid' : '2px solid transparent',
                   borderColor: activeTab === tab ? 'accent.emphasis' : 'transparent',
@@ -287,11 +567,19 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFindText(e.target.value)}
                   placeholder="Text to find…"
                   sx={{
-                    px: 2, py: '6px', fontSize: 1, borderRadius: 1,
-                    border: '1px solid', borderColor: 'border.default',
-                    bg: 'canvas.default', color: 'fg.default',
+                    px: 2,
+                    py: '6px',
+                    fontSize: 1,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'border.default',
+                    bg: 'canvas.default',
+                    color: 'fg.default',
                     outline: 'none',
-                    ':focus': { borderColor: 'accent.emphasis', boxShadow: '0 0 0 2px rgba(9,105,218,0.15)' },
+                    ':focus': {
+                      borderColor: 'accent.emphasis',
+                      boxShadow: '0 0 0 2px rgba(9,105,218,0.15)',
+                    },
                     width: '100%',
                   }}
                 />
@@ -308,31 +596,58 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
                   id="bulk-rename-replace-input"
                   type="text"
                   value={replaceText}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReplaceText(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setReplaceText(e.target.value)
+                  }
                   placeholder="Replacement text…"
                   sx={{
-                    px: 2, py: '6px', fontSize: 1, borderRadius: 1,
-                    border: '1px solid', borderColor: 'border.default',
-                    bg: 'canvas.default', color: 'fg.default',
+                    px: 2,
+                    py: '6px',
+                    fontSize: 1,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'border.default',
+                    bg: 'canvas.default',
+                    color: 'fg.default',
                     outline: 'none',
-                    ':focus': { borderColor: 'accent.emphasis', boxShadow: '0 0 0 2px rgba(9,105,218,0.15)' },
+                    ':focus': {
+                      borderColor: 'accent.emphasis',
+                      boxShadow: '0 0 0 2px rgba(9,105,218,0.15)',
+                    },
                     width: '100%',
                   }}
                 />
               </Box>
               <Box
                 as="label"
-                sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, cursor: 'pointer', userSelect: 'none', fontSize: 1, color: 'fg.muted' }}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  fontSize: 1,
+                  color: 'fg.muted',
+                }}
               >
                 <Box
                   as="input"
                   type="checkbox"
                   checked={caseSensitive}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCaseSensitive(e.target.checked)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setCaseSensitive(e.target.checked)
+                  }
                   sx={{ cursor: 'pointer' }}
                 />
-                <Tippy content="Match uppercase/lowercase letters exactly when finding text." delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
-                  <Box as="span" tabIndex={0} sx={{ outline: 'none' }}>Case sensitive</Box>
+                <Tippy
+                  content="Match uppercase/lowercase letters exactly when finding text."
+                  delay={[400, 0]}
+                  placement="top"
+                  zIndex={Z_TOOLTIP}
+                >
+                  <Box as="span" tabIndex={0} sx={{ outline: 'none' }}>
+                    Case sensitive
+                  </Box>
                 </Tippy>
               </Box>
             </Box>
@@ -353,11 +668,19 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrefix(e.target.value)}
                   placeholder="Text to prepend…"
                   sx={{
-                    px: 2, py: '6px', fontSize: 1, borderRadius: 1,
-                    border: '1px solid', borderColor: 'border.default',
-                    bg: 'canvas.default', color: 'fg.default',
+                    px: 2,
+                    py: '6px',
+                    fontSize: 1,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'border.default',
+                    bg: 'canvas.default',
+                    color: 'fg.default',
                     outline: 'none',
-                    ':focus': { borderColor: 'accent.emphasis', boxShadow: '0 0 0 2px rgba(9,105,218,0.15)' },
+                    ':focus': {
+                      borderColor: 'accent.emphasis',
+                      boxShadow: '0 0 0 2px rgba(9,105,218,0.15)',
+                    },
                     width: '100%',
                   }}
                 />
@@ -377,11 +700,19 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSuffix(e.target.value)}
                   placeholder="Text to append…"
                   sx={{
-                    px: 2, py: '6px', fontSize: 1, borderRadius: 1,
-                    border: '1px solid', borderColor: 'border.default',
-                    bg: 'canvas.default', color: 'fg.default',
+                    px: 2,
+                    py: '6px',
+                    fontSize: 1,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'border.default',
+                    bg: 'canvas.default',
+                    color: 'fg.default',
                     outline: 'none',
-                    ':focus': { borderColor: 'accent.emphasis', boxShadow: '0 0 0 2px rgba(9,105,218,0.15)' },
+                    ':focus': {
+                      borderColor: 'accent.emphasis',
+                      boxShadow: '0 0 0 2px rgba(9,105,218,0.15)',
+                    },
                     width: '100%',
                   }}
                 />
@@ -390,7 +721,14 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
           )}
 
           {/* Live preview table */}
-          <Box sx={{ overflow: 'hidden', border: '1px solid', borderColor: 'border.default', borderRadius: 1 }}>
+          <Box
+            sx={{
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'border.default',
+              borderRadius: 1,
+            }}
+          >
             <Box sx={{ maxHeight: 240, overflowY: 'auto' }}>
               <PreviewTable items={previewed} />
             </Box>
@@ -398,35 +736,51 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
         </Box>
 
         {/* Footer */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            px: 4,
+            py: 3,
+            borderTop: '1px solid',
+            borderColor: 'border.default',
+          }}
+        >
           <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
             {changedCount} of {count} title{count !== 1 ? 's' : ''} will change
           </Text>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button variant="default" onClick={onClose} sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}>Cancel</Button>
+            <Button
+              variant="default"
+              onClick={onClose}
+              sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               variant="primary"
               disabled={changedCount === 0}
               onClick={() => setStage('PREVIEW')}
               sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
             >
               <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                 Preview
@@ -445,12 +799,65 @@ function PreviewTable({ items }: { items: Array<TitleItem & { newTitle: string }
     <Box as="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 0 }}>
       <Box as="thead" sx={{ bg: 'canvas.subtle', position: 'sticky', top: 0 }}>
         <Box as="tr">
-          <Box as="th" sx={{ px: 2, py: 1, textAlign: 'left', fontWeight: 'semibold', color: 'fg.muted', width: 32, borderBottom: '1px solid', borderColor: 'border.default' }}>#</Box>
-          <Box as="th" sx={{ px: 2, py: 1, textAlign: 'left', fontWeight: 'semibold', color: 'fg.muted', borderBottom: '1px solid', borderColor: 'border.default' }}>Original Title</Box>
-          <Box as="th" aria-label="Rename direction" sx={{ px: 2, py: 1, textAlign: 'center', fontWeight: 'semibold', color: 'fg.muted', width: 24, borderBottom: '1px solid', borderColor: 'border.default' }}>
+          <Box
+            as="th"
+            sx={{
+              px: 2,
+              py: 1,
+              textAlign: 'left',
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+              width: 32,
+              borderBottom: '1px solid',
+              borderColor: 'border.default',
+            }}
+          >
+            #
+          </Box>
+          <Box
+            as="th"
+            sx={{
+              px: 2,
+              py: 1,
+              textAlign: 'left',
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+              borderBottom: '1px solid',
+              borderColor: 'border.default',
+            }}
+          >
+            Original Title
+          </Box>
+          <Box
+            as="th"
+            aria-label="Rename direction"
+            sx={{
+              px: 2,
+              py: 1,
+              textAlign: 'center',
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+              width: 24,
+              borderBottom: '1px solid',
+              borderColor: 'border.default',
+            }}
+          >
             <ArrowRightIcon size={14} />
           </Box>
-          <Box as="th" sx={{ px: 2, py: 1, textAlign: 'left', fontWeight: 'semibold', color: 'fg.muted', borderBottom: '1px solid', borderColor: 'border.default' }}>New Title</Box>
+          <Box
+            as="th"
+            sx={{
+              px: 2,
+              py: 1,
+              textAlign: 'left',
+              fontWeight: 'semibold',
+              color: 'fg.muted',
+              borderBottom: '1px solid',
+              borderColor: 'border.default',
+            }}
+          >
+            New Title
+          </Box>
         </Box>
       </Box>
       <Box as="tbody">
@@ -458,12 +865,64 @@ function PreviewTable({ items }: { items: Array<TitleItem & { newTitle: string }
           const unchanged = item.newTitle === item.title
           return (
             <Box as="tr" key={item.domId} sx={{ opacity: unchanged ? 0.5 : 1 }}>
-              <Box as="td" sx={{ px: 2, py: 1, color: 'fg.muted', borderBottom: '1px solid', borderColor: 'border.muted' }}>{i + 1}</Box>
-              <Box as="td" sx={{ px: 2, py: 1, color: unchanged ? 'fg.muted' : 'fg.default', borderBottom: '1px solid', borderColor: 'border.muted', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</Box>
-              <Box as="td" sx={{ px: 2, py: 1, color: 'fg.muted', textAlign: 'center', borderBottom: '1px solid', borderColor: 'border.muted' }}>
+              <Box
+                as="td"
+                sx={{
+                  px: 2,
+                  py: 1,
+                  color: 'fg.muted',
+                  borderBottom: '1px solid',
+                  borderColor: 'border.muted',
+                }}
+              >
+                {i + 1}
+              </Box>
+              <Box
+                as="td"
+                sx={{
+                  px: 2,
+                  py: 1,
+                  color: unchanged ? 'fg.muted' : 'fg.default',
+                  borderBottom: '1px solid',
+                  borderColor: 'border.muted',
+                  maxWidth: 200,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {item.title}
+              </Box>
+              <Box
+                as="td"
+                sx={{
+                  px: 2,
+                  py: 1,
+                  color: 'fg.muted',
+                  textAlign: 'center',
+                  borderBottom: '1px solid',
+                  borderColor: 'border.muted',
+                }}
+              >
                 <ArrowRightIcon size={14} />
               </Box>
-              <Box as="td" sx={{ px: 2, py: 1, color: unchanged ? 'fg.muted' : 'fg.default', fontWeight: unchanged ? 'normal' : 'semibold', borderBottom: '1px solid', borderColor: 'border.muted', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.newTitle}</Box>
+              <Box
+                as="td"
+                sx={{
+                  px: 2,
+                  py: 1,
+                  color: unchanged ? 'fg.muted' : 'fg.default',
+                  fontWeight: unchanged ? 'normal' : 'semibold',
+                  borderBottom: '1px solid',
+                  borderColor: 'border.muted',
+                  maxWidth: 200,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {item.newTitle}
+              </Box>
             </Box>
           )
         })}

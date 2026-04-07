@@ -28,7 +28,6 @@ interface SprintStatus {
   settings: SprintSettings | null
 }
 
-
 export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFields }: Props) {
   ensureTippyCss()
   const [state, setState] = useState<WidgetState>('loading')
@@ -85,7 +84,13 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
         <Box
           role="status"
           aria-live="polite"
-          sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, minHeight: '24px', boxShadow: 'none' }}
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 2,
+            minHeight: '24px',
+            boxShadow: 'none',
+          }}
         >
           <Spinner size="small" srText="" aria-hidden="true" />
           <Text sx={{ fontSize: 0, lineHeight: 1.5, color: 'fg.muted' }}>Checking sprint…</Text>
@@ -96,13 +101,27 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
         <Box
           role="alert"
           aria-live="assertive"
-          sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, minHeight: '24px', maxWidth: '240px', boxShadow: 'none' }}
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 2,
+            minHeight: '24px',
+            maxWidth: '240px',
+            boxShadow: 'none',
+          }}
         >
           <Label variant="danger" sx={{ fontSize: 0 }}>
             Issue
           </Label>
           <Text
-            sx={{ fontSize: 0, lineHeight: 1.5, color: 'danger.fg', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            sx={{
+              fontSize: 0,
+              lineHeight: 1.5,
+              color: 'danger.fg',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
             title={normalizedError}
             aria-label={normalizedError}
           >
@@ -133,7 +152,10 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                   transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
                   '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
                   '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                  '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
+                  '@media (prefers-reduced-motion: reduce)': {
+                    transition: 'none',
+                    '&:hover:not(:disabled)': { transform: 'none' },
+                  },
                 }}
               >
                 {acknowledging ? <Spinner size="small" /> : 'Start Sprint'}
@@ -155,9 +177,16 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                 borderRadius: 1,
                 boxShadow: 'none',
                 transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
+                '&:hover:not(:disabled)': {
+                  transform: 'translateY(-1px)',
+                  color: 'fg.default',
+                  bg: 'canvas.subtle',
+                },
                 '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
               }}
             >
               <SlidersIcon size={14} />
@@ -189,7 +218,10 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                 transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
                 '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
               }}
             >
               End Sprint
@@ -210,9 +242,16 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                 borderRadius: 1,
                 boxShadow: 'none',
                 transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': { transform: 'translateY(-1px)', color: 'fg.default', bg: 'canvas.subtle' },
+                '&:hover:not(:disabled)': {
+                  transform: 'translateY(-1px)',
+                  color: 'fg.default',
+                  bg: 'canvas.subtle',
+                },
                 '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover:not(:disabled)': { transform: 'none' } },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
               }}
             >
               <SlidersIcon size={14} />

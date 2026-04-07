@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Box, Button, Text, Select, TextInput, Checkbox, Avatar, Flash, Spinner } from '@primer/react'
+import {
+  Box,
+  Button,
+  Text,
+  Select,
+  TextInput,
+  Checkbox,
+  Avatar,
+  Flash,
+  Spinner,
+} from '@primer/react'
 import { ModalStepHeader } from '../ui/modal-step-header'
 import { PersonIcon, SearchIcon } from '../ui/primitives'
 import { Z_MODAL } from '../../lib/z-index'
@@ -8,7 +18,7 @@ import {
   distributeBalanced,
   distributeRandom,
   distributeRoundRobin,
-  type DistributionStrategy
+  type DistributionStrategy,
 } from './bulk-random-assign-utils'
 
 type Assignee = { id: string; name: string; avatarUrl?: string }
@@ -25,7 +35,14 @@ interface Props {
   onConfirm?: (assignments: Map<string, string[]>, strategy: DistributionStrategy) => void
 }
 
-export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owner, repoName }: Props) {
+export function BulkRandomAssignModal({
+  count,
+  onClose,
+  itemIds,
+  onConfirm,
+  owner,
+  repoName,
+}: Props) {
   const [step, setStep] = useState<RandomAssignStep>('ASSIGNEES')
   const [strategy, setStrategy] = useState<DistributionStrategy>('balanced')
   const [preview, setPreview] = useState<Map<string, string[]>>(new Map())
@@ -40,29 +57,37 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
     setIsLoadingAssignees(true)
     const requestId = Date.now()
     latestRequestIdRef.current = requestId
-    const timer = setTimeout(() => {
-      sendMessage('searchRepoMetadata', { owner, name: repoName, q: searchQuery, type: 'ASSIGNEES' })
-        .then(results => {
-          if (requestId === latestRequestIdRef.current) {
-            setAssignees(results.map(r => ({ id: r.id, name: r.name, avatarUrl: r.avatarUrl })))
-          }
+    const timer = setTimeout(
+      () => {
+        sendMessage('searchRepoMetadata', {
+          owner,
+          name: repoName,
+          q: searchQuery,
+          type: 'ASSIGNEES',
         })
-        .finally(() => {
-          if (requestId === latestRequestIdRef.current) {
-            setIsLoadingAssignees(false)
-          }
-        })
-    }, searchQuery ? 300 : 0)
+          .then((results) => {
+            if (requestId === latestRequestIdRef.current) {
+              setAssignees(results.map((r) => ({ id: r.id, name: r.name, avatarUrl: r.avatarUrl })))
+            }
+          })
+          .finally(() => {
+            if (requestId === latestRequestIdRef.current) {
+              setIsLoadingAssignees(false)
+            }
+          })
+      },
+      searchQuery ? 300 : 0,
+    )
     return () => clearTimeout(timer)
   }, [owner, repoName, searchQuery])
 
   const toggleAssignee = (id: string) => {
-    setSelectedAssignees(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    setSelectedAssignees((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     )
   }
 
-  const selectAll = () => setSelectedAssignees(assignees.map(a => a.id))
+  const selectAll = () => setSelectedAssignees(assignees.map((a) => a.id))
   const deselectAll = () => setSelectedAssignees([])
 
   const generatePreview = () => {
@@ -70,8 +95,8 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
       strategy === 'balanced'
         ? distributeBalanced
         : strategy === 'random'
-        ? distributeRandom
-        : distributeRoundRobin
+          ? distributeRandom
+          : distributeRoundRobin
     const result = distributionFn(itemIds, selectedAssignees)
     setPreview(result)
   }
@@ -92,7 +117,7 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
     else if (step === 'CONFIRM') setStep('PREVIEW')
   }
 
-  const idToLogin = Object.fromEntries(assignees.map(a => [a.id, a.name]))
+  const idToLogin = Object.fromEntries(assignees.map((a) => [a.id, a.name]))
 
   const renderStep = () => {
     switch (step) {
@@ -108,18 +133,24 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
                 sx={{ width: '100%', maxWidth: '300px' }}
               />
               <Box sx={{ display: 'flex', gap: 2 }}>
-                <Button size="small" onClick={selectAll}>Select All</Button>
-                <Button size="small" onClick={deselectAll}>Deselect All</Button>
+                <Button size="small" onClick={selectAll}>
+                  Select All
+                </Button>
+                <Button size="small" onClick={deselectAll}>
+                  Deselect All
+                </Button>
               </Box>
             </Box>
 
-            <Box sx={{
-              border: '1px solid',
-              borderColor: 'border.default',
-              borderRadius: 2,
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }}>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'border.default',
+                borderRadius: 2,
+                maxHeight: '300px',
+                overflowY: 'auto',
+              }}
+            >
               {isLoadingAssignees && assignees.length === 0 && (
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'center' }}>
                   <Spinner size="small" />
@@ -127,7 +158,9 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
               )}
               {!isLoadingAssignees && assignees.length === 0 && (
                 <Box sx={{ p: 3, textAlign: 'center', color: 'fg.muted' }}>
-                  {searchQuery ? `No assignees found matching "${searchQuery}"` : 'No assignees found'}
+                  {searchQuery
+                    ? `No assignees found matching "${searchQuery}"`
+                    : 'No assignees found'}
                 </Box>
               )}
               {assignees.map((assignee, index) => (
@@ -141,7 +174,7 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
                     borderTop: index > 0 ? '1px solid' : 'none',
                     borderColor: 'border.default',
                     cursor: 'pointer',
-                    '&:hover': { bg: 'canvas.subtle' }
+                    '&:hover': { bg: 'canvas.subtle' },
                   }}
                   onClick={() => toggleAssignee(assignee.id)}
                 >
@@ -151,10 +184,20 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Select ${assignee.name}`}
                   />
-                  {assignee.avatarUrl
-                    ? <Avatar src={assignee.avatarUrl} size={20} />
-                    : <Box sx={{ width: 20, height: 20, borderRadius: '50%', bg: 'canvas.subtle', border: '1px solid', borderColor: 'border.default' }} />
-                  }
+                  {assignee.avatarUrl ? (
+                    <Avatar src={assignee.avatarUrl} size={20} />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        bg: 'canvas.subtle',
+                        border: '1px solid',
+                        borderColor: 'border.default',
+                      }}
+                    />
+                  )}
                   <Text>{assignee.name}</Text>
                 </Box>
               ))}
@@ -185,7 +228,15 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
               <Button onClick={generatePreview}>Reshuffle</Button>
             </Box>
 
-            <Box sx={{ p: 3, bg: 'canvas.subtle', borderRadius: 2, border: '1px solid', borderColor: 'border.default' }}>
+            <Box
+              sx={{
+                p: 3,
+                bg: 'canvas.subtle',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'border.default',
+              }}
+            >
               <Text sx={{ fontWeight: 'bold', display: 'block', mb: 2 }}>Distribution Summary</Text>
               <Text>
                 {Array.from(preview.entries())
@@ -194,7 +245,14 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
               </Text>
             </Box>
 
-            <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, overflow: 'hidden' }}>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'border.default',
+                borderRadius: 2,
+                overflow: 'hidden',
+              }}
+            >
               {Array.from(preview.entries()).map(([id, items], index) => (
                 <Box
                   key={id}
@@ -203,7 +261,7 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
                     borderTop: index > 0 ? '1px solid' : 'none',
                     borderColor: 'border.default',
                     display: 'flex',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
                   }}
                 >
                   <Text sx={{ fontWeight: 'bold' }}>{idToLogin[id] ?? id}</Text>
@@ -217,17 +275,29 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
         return (
           <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Flash variant="warning">
-              <Text sx={{ fontWeight: 'bold', display: 'block', mb: 1 }}>Sequential Execution Warning</Text>
+              <Text sx={{ fontWeight: 'bold', display: 'block', mb: 1 }}>
+                Sequential Execution Warning
+              </Text>
               <Text sx={{ fontSize: 1 }}>
-                To comply with GitHub API rate limits, these {count} assignments will be processed sequentially.
-                Please keep this window open until the process completes.
+                To comply with GitHub API rate limits, these {count} assignments will be processed
+                sequentially. Please keep this window open until the process completes.
               </Text>
             </Flash>
 
-            <Box sx={{ p: 3, bg: 'canvas.subtle', borderRadius: 2, border: '1px solid', borderColor: 'border.default' }}>
+            <Box
+              sx={{
+                p: 3,
+                bg: 'canvas.subtle',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'border.default',
+              }}
+            >
               <Text sx={{ fontWeight: 'bold', display: 'block', mb: 2 }}>Assignment Summary</Text>
               <Text sx={{ display: 'block', mb: 3 }}>
-                Assigning <strong>{count}</strong> items to <strong>{selectedAssignees.length}</strong> assignees using the <strong>{strategy}</strong> strategy.
+                Assigning <strong>{count}</strong> items to{' '}
+                <strong>{selectedAssignees.length}</strong> assignees using the{' '}
+                <strong>{strategy}</strong> strategy.
               </Text>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -247,11 +317,23 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
   const getStepInfo = () => {
     switch (step) {
       case 'ASSIGNEES':
-        return { title: 'Select Assignees', step: 1, subtitle: `Choose users to randomly assign to ${count} items.` }
+        return {
+          title: 'Select Assignees',
+          step: 1,
+          subtitle: `Choose users to randomly assign to ${count} items.`,
+        }
       case 'PREVIEW':
-        return { title: 'Preview Assignments', step: 2, subtitle: 'Review the random distribution before applying.' }
+        return {
+          title: 'Preview Assignments',
+          step: 2,
+          subtitle: 'Review the random distribution before applying.',
+        }
       case 'CONFIRM':
-        return { title: 'Confirm & Apply', step: 3, subtitle: 'Finalize and execute the bulk assignment.' }
+        return {
+          title: 'Confirm & Apply',
+          step: 3,
+          subtitle: 'Finalize and execute the bulk assignment.',
+        }
     }
   }
 
@@ -304,9 +386,7 @@ export function BulkRandomAssignModal({ count, onClose, itemIds, onConfirm, owne
           onBack={step !== 'ASSIGNEES' ? handleBack : undefined}
         />
 
-        <Box sx={{ flex: 1, overflowY: 'auto' }}>
-          {renderStep()}
-        </Box>
+        <Box sx={{ flex: 1, overflowY: 'auto' }}>{renderStep()}</Box>
 
         <Box
           sx={{

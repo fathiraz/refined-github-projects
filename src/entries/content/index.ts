@@ -1,6 +1,10 @@
 import { setupContentUi } from './content-ui'
 import { createSprintHeaderInjector, injectStatusBarSprintButton } from './sprint-injections'
-import { injectTableEnhancementStyles, initDragAndDrop, setupTableEnhancements } from './table-enhancements'
+import {
+  injectTableEnhancementStyles,
+  initDragAndDrop,
+  setupTableEnhancements,
+} from './table-enhancements'
 import { createHierarchyChipInjector } from './hierarchy-injections'
 import { setupIssueDetailInjector } from './issue-detail-injections'
 import { selectionStore } from '../../lib/selection-store'
@@ -8,10 +12,7 @@ import { logger, initDebugLogger } from '../../lib/debug-logger'
 import { extractProjectContext, fetchProjectFields } from '../../lib/github-project'
 
 export default defineContentScript({
-  matches: [
-    'https://github.com/orgs/*/projects/*',
-    'https://github.com/*/projects/*',
-  ],
+  matches: ['https://github.com/orgs/*/projects/*', 'https://github.com/*/projects/*'],
   cssInjectionMode: 'ui',
 
   async main(ctx) {
@@ -38,7 +39,12 @@ export default defineContentScript({
 
     document.addEventListener('click', handleProjectItemOpen, true)
 
-    initDragAndDrop(projectContext.projectId, projectContext.owner, projectContext.number, projectContext.isOrg)
+    initDragAndDrop(
+      projectContext.projectId,
+      projectContext.owner,
+      projectContext.number,
+      projectContext.isOrg,
+    )
 
     const injectSprintHeaders = createSprintHeaderInjector(projectContext, getFields)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)

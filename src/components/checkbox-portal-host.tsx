@@ -25,7 +25,13 @@ function useSelectionVersion() {
   }, [])
 }
 
-function SelectionControl({ checked, indeterminate = false, label, onToggle, variant = 'row' }: SelectionControlProps) {
+function SelectionControl({
+  checked,
+  indeterminate = false,
+  label,
+  onToggle,
+  variant = 'row',
+}: SelectionControlProps) {
   ensureTippyCss()
 
   return (
