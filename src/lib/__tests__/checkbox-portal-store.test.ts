@@ -15,7 +15,7 @@ function makeContainer(connected = true): HTMLElement {
 
 describe('checkboxPortalStore', () => {
   it('addRow adds a row entry and notifies subscribers', () => {
-    const snapshots: readonly PortalEntry[][] = []
+    const snapshots: PortalEntry[][] = []
     const unsub = checkboxPortalStore.subscribe((e) => snapshots.push([...e]))
 
     const container = makeContainer()
@@ -27,7 +27,7 @@ describe('checkboxPortalStore', () => {
   })
 
   it('addRow replaces existing entry with same itemId', () => {
-    const snapshots: readonly PortalEntry[][] = []
+    const snapshots: PortalEntry[][] = []
     const unsub = checkboxPortalStore.subscribe((e) => snapshots.push([...e]))
 
     const c1 = makeContainer()
@@ -46,7 +46,7 @@ describe('checkboxPortalStore', () => {
   // ---------------------------------------------------------------------------
 
   it('addGroup adds a group entry', () => {
-    const snapshots: readonly PortalEntry[][] = []
+    const snapshots: PortalEntry[][] = []
     const unsub = checkboxPortalStore.subscribe((e) => snapshots.push([...e]))
 
     const container = makeContainer()
@@ -62,7 +62,7 @@ describe('checkboxPortalStore', () => {
   // ---------------------------------------------------------------------------
 
   it('addSelectAll adds a selectall entry', () => {
-    const snapshots: readonly PortalEntry[][] = []
+    const snapshots: PortalEntry[][] = []
     const unsub = checkboxPortalStore.subscribe((e) => snapshots.push([...e]))
 
     const container = makeContainer()
@@ -81,7 +81,7 @@ describe('checkboxPortalStore', () => {
     const container = makeContainer()
     checkboxPortalStore.addRow(container, 'pre-existing')
 
-    const received: readonly PortalEntry[][] = []
+    const received: PortalEntry[][] = []
     const unsub = checkboxPortalStore.subscribe((e) => received.push([...e]))
 
     expect(received.length).toBeGreaterThanOrEqual(1)
