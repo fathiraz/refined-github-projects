@@ -16,7 +16,7 @@ const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 function notify() {
   const snapshot = [...toasts]
-  listeners.forEach(fn => fn(snapshot))
+  listeners.forEach((fn) => fn(snapshot))
 }
 
 function scheduleDismiss(id: string) {
@@ -40,10 +40,13 @@ export const toastStore = {
   },
 
   dismiss(id: string): void {
-    const idx = toasts.findIndex(t => t.id === id)
+    const idx = toasts.findIndex((t) => t.id === id)
     if (idx !== -1) toasts.splice(idx, 1)
     const timer = dismissTimers.get(id)
-    if (timer) { clearTimeout(timer); dismissTimers.delete(id) }
+    if (timer) {
+      clearTimeout(timer)
+      dismissTimers.delete(id)
+    }
     notify()
   },
 

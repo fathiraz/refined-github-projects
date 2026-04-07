@@ -41,15 +41,23 @@ export function injectSprintFilter(): void {
   const input = document.getElementById('filter-bar-component-input') as HTMLInputElement | null
   if (!input || input.value.includes(SPRINT_FILTER)) return
 
-  const newValue = input.value.trim()
-    ? `${input.value.trim()} ${SPRINT_FILTER}`
-    : SPRINT_FILTER
+  const newValue = input.value.trim() ? `${input.value.trim()} ${SPRINT_FILTER}` : SPRINT_FILTER
 
   input.focus()
 
   const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
   nativeSetter?.call(input, newValue)
   input.dispatchEvent(new Event('input', { bubbles: true }))
-  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }))
-  input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }))
+  input.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      keyCode: 13,
+      bubbles: true,
+      cancelable: true,
+    }),
+  )
+  input.dispatchEvent(
+    new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }),
+  )
 }

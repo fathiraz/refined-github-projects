@@ -20,7 +20,7 @@ export function OnboardingCoach() {
   const driverRef = useRef<ReturnType<typeof driver> | null>(null)
 
   useEffect(() => {
-    onboardingDismissedStorage.getValue().then(val => setDismissed(val))
+    onboardingDismissedStorage.getValue().then((val) => setDismissed(val))
 
     sendMessage('getPatStatus', {})
       .then((result) => {
@@ -71,22 +71,27 @@ export function OnboardingCoach() {
         {
           popover: {
             title: 'Welcome to Refined GitHub Projects',
-            description: 'This quick tour covers the two main features: bulk row actions and sprint tracking.',
+            description:
+              'This quick tour covers the two main features: bulk row actions and sprint tracking.',
             nextBtnText: 'Show me →',
           },
         },
         {
-          element: () => document.querySelector<HTMLElement>('.rgp-cb-cell:not(.rgp-cb-cell--header)') ?? document.body,
+          element: () =>
+            document.querySelector<HTMLElement>('.rgp-cb-cell:not(.rgp-cb-cell--header)') ??
+            document.body,
           popover: {
             title: 'Select rows',
-            description: 'Click a checkbox to select an item. Use <kbd>⌘A</kbd> to select all, <kbd>Esc</kbd> to clear.',
+            description:
+              'Click a checkbox to select an item. Use <kbd>⌘A</kbd> to select all, <kbd>Esc</kbd> to clear.',
             side: 'bottom',
             align: 'start',
             onNextClick: () => {
               selectionStore.selectBatch(getAllInjectedItemIds())
               const s = document.createElement('div')
               s.id = 'rgp-bulk-sentinel'
-              s.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);width:min(760px,calc(100vw - 32px));height:56px;pointer-events:none;z-index:-1'
+              s.style.cssText =
+                'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);width:min(760px,calc(100vw - 32px));height:56px;pointer-events:none;z-index:-1'
               document.body.appendChild(s)
               setTimeout(() => driverRef.current?.moveNext(), 150)
             },
@@ -96,7 +101,8 @@ export function OnboardingCoach() {
           element: () => document.querySelector<HTMLElement>('#rgp-bulk-sentinel') ?? document.body,
           popover: {
             title: 'Bulk Actions Bar',
-            description: 'Select any items and this bar appears. Edit fields, close/reopen issues, export CSV, duplicate, and more — all with keyboard shortcuts.',
+            description:
+              'Select any items and this bar appears. Edit fields, close/reopen issues, export CSV, duplicate, and more — all with keyboard shortcuts.',
             side: 'top',
             align: 'start',
             onNextClick: () => {
@@ -107,10 +113,12 @@ export function OnboardingCoach() {
           },
         },
         {
-          element: () => document.querySelector<HTMLElement>('[data-rgp-sprint-btn]') ?? document.body,
+          element: () =>
+            document.querySelector<HTMLElement>('[data-rgp-sprint-btn]') ?? document.body,
           popover: {
             title: 'Sprint Panel',
-            description: 'Track active sprints, configure your sprint field, and manage iteration handoffs — all without leaving the project view.',
+            description:
+              'Track active sprints, configure your sprint field, and manage iteration handoffs — all without leaving the project view.',
             side: 'bottom',
             align: 'start',
             doneBtnText: 'Got it!',
@@ -126,10 +134,20 @@ export function OnboardingCoach() {
   if (dismissed === null || dismissed || count > 0 || tourRunning) return null
 
   return (
-    <Box sx={{ position: 'fixed', bottom: 4, left: '50%', transform: 'translateX(-50%)', zIndex: Z_OVERLAY, width: 'min(560px, calc(100vw - 32px))', animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }}>
+    <Box
+      sx={{
+        position: 'fixed',
+        bottom: 4,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: Z_OVERLAY,
+        width: 'min(560px, calc(100vw - 32px))',
+        animation: 'fadeSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+      }}
+    >
       <Box sx={{ position: 'relative' }}>
         <PanelCard variant="elevated" padding="large">
-
           <Box sx={{ position: 'absolute', top: 3, right: 3 }}>
             <Button
               variant="invisible"
@@ -193,10 +211,12 @@ export function OnboardingCoach() {
             </Button>
           </Box>
 
-          <KeyboardHint shortcuts={[
-            { key: '⌘A', label: 'select all' },
-            { key: 'Esc', label: 'clear' },
-          ]} />
+          <KeyboardHint
+            shortcuts={[
+              { key: '⌘A', label: 'select all' },
+              { key: 'Esc', label: 'clear' },
+            ]}
+          />
 
           {hasToken === false && (
             <Box sx={{ mt: 3 }}>
@@ -208,11 +228,14 @@ export function OnboardingCoach() {
 
           {hasToken && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
-              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bg: 'success.fg', flexShrink: 0 }} />
-              <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Token ready — select items to start.</Text>
+              <Box
+                sx={{ width: 8, height: 8, borderRadius: '50%', bg: 'success.fg', flexShrink: 0 }}
+              />
+              <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
+                Token ready — select items to start.
+              </Text>
             </Box>
           )}
-
         </PanelCard>
       </Box>
     </Box>

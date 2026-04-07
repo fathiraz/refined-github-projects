@@ -27,7 +27,11 @@ export function ensureRgpCardTheme(): void {
 }
 
 export function getTippyDelayValue(
-  delay: number | readonly [number | null | undefined, number | null | undefined] | null | undefined,
+  delay:
+    | number
+    | readonly [number | null | undefined, number | null | undefined]
+    | null
+    | undefined,
   index: 0 | 1,
 ): number {
   if (delay == null) return 0

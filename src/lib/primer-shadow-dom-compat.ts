@@ -80,7 +80,10 @@ function scheduleTrackedMousedownClear(): void {
  * @param portalHost - The element with data-rgp-primer-portal attribute
  * @param shadowRoot - The shadow root containing the portal host
  */
-export function installPrimerShadowDomCompat(portalHost: HTMLElement, shadowRoot: ShadowRoot): () => void {
+export function installPrimerShadowDomCompat(
+  portalHost: HTMLElement,
+  shadowRoot: ShadowRoot,
+): () => void {
   // Capture mousedown at document level BEFORE Primer's listener
   // This ensures we have the current event target/composedPath available when
   // Primer does its contains(event.target) outside-click check.
@@ -153,7 +156,11 @@ export function installPrimerShadowDomCompat(portalHost: HTMLElement, shadowRoot
   }
 }
 
-function patchPortalOverlaySubtree(root: HTMLElement, portalHost: HTMLElement, shadowHost: Element): void {
+function patchPortalOverlaySubtree(
+  root: HTMLElement,
+  portalHost: HTMLElement,
+  shadowHost: Element,
+): void {
   const queue: HTMLElement[] = [root]
 
   while (queue.length > 0) {
@@ -172,7 +179,11 @@ function patchPortalOverlaySubtree(root: HTMLElement, portalHost: HTMLElement, s
  * Patch the contains method on an overlay element to use composedPath
  * for Shadow DOM compatibility.
  */
-function patchOverlayContains(overlay: HTMLElement, portalHost: HTMLElement, shadowHost: Element): void {
+function patchOverlayContains(
+  overlay: HTMLElement,
+  portalHost: HTMLElement,
+  shadowHost: Element,
+): void {
   if (patchedOverlays.has(overlay)) return
   patchedOverlays.add(overlay)
 

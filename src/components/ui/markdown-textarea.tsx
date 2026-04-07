@@ -16,11 +16,11 @@ interface ToolbarAction {
 }
 
 const TOOLBAR_ACTIONS: ToolbarAction[] = [
-  { label: 'Bold',   prefix: '**', suffix: '**',     icon: 'B' },
-  { label: 'Italic', prefix: '_',  suffix: '_',      icon: 'I' },
-  { label: 'Quote',  prefix: '> ', suffix: '',       icon: '❝' },
-  { label: 'Code',   prefix: '`',  suffix: '`',      icon: '<>' },
-  { label: 'Link',   prefix: '[',  suffix: '](url)', icon: '🔗' },
+  { label: 'Bold', prefix: '**', suffix: '**', icon: 'B' },
+  { label: 'Italic', prefix: '_', suffix: '_', icon: 'I' },
+  { label: 'Quote', prefix: '> ', suffix: '', icon: '❝' },
+  { label: 'Code', prefix: '`', suffix: '`', icon: '<>' },
+  { label: 'Link', prefix: '[', suffix: '](url)', icon: '🔗' },
 ]
 
 export function MarkdownTextarea({ value, onChange, placeholder, rows = 6 }: Props) {
@@ -53,16 +53,17 @@ export function MarkdownTextarea({ value, onChange, placeholder, rows = 6 }: Pro
     })
   }
 
-  const tabBtn = (t: 'write' | 'preview') => ({
-    background: tab === t ? 'var(--bgColor-default, #fff)' : 'transparent',
-    border: tab === t ? '1px solid var(--borderColor-default)' : '1px solid transparent',
-    borderRadius: 6,
-    padding: '2px 12px',
-    cursor: 'pointer',
-    fontSize: 13,
-    color: 'var(--fgColor-default)',
-    fontFamily: 'inherit',
-  } as React.CSSProperties)
+  const tabBtn = (t: 'write' | 'preview') =>
+    ({
+      background: tab === t ? 'var(--bgColor-default, #fff)' : 'transparent',
+      border: tab === t ? '1px solid var(--borderColor-default)' : '1px solid transparent',
+      borderRadius: 6,
+      padding: '2px 12px',
+      cursor: 'pointer',
+      fontSize: 13,
+      color: 'var(--fgColor-default)',
+      fontFamily: 'inherit',
+    }) as React.CSSProperties
 
   const toolBtn = {
     background: 'transparent',
@@ -78,21 +79,44 @@ export function MarkdownTextarea({ value, onChange, placeholder, rows = 6 }: Pro
   } as React.CSSProperties
 
   return (
-    <div style={{ border: '1px solid var(--borderColor-default)', borderRadius: 6, overflow: 'hidden', width: '100%' }}>
+    <div
+      style={{
+        border: '1px solid var(--borderColor-default)',
+        borderRadius: 6,
+        overflow: 'hidden',
+        width: '100%',
+      }}
+    >
       {/* Tab bar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px',
-        borderBottom: '1px solid var(--borderColor-muted)',
-        background: 'var(--bgColor-muted, var(--color-canvas-subtle))',
-      }}>
-        <button style={tabBtn('write')} onClick={() => handleTabChange('write')}>Write</button>
-        <button style={tabBtn('preview')} onClick={() => handleTabChange('preview')}>Preview</button>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          padding: '4px 8px',
+          borderBottom: '1px solid var(--borderColor-muted)',
+          background: 'var(--bgColor-muted, var(--color-canvas-subtle))',
+        }}
+      >
+        <button type="button" style={tabBtn('write')} onClick={() => handleTabChange('write')}>
+          Write
+        </button>
+        <button type="button" style={tabBtn('preview')} onClick={() => handleTabChange('preview')}>
+          Preview
+        </button>
         <div style={{ flex: 1 }} />
-        {tab === 'write' && TOOLBAR_ACTIONS.map(a => (
-          <button key={a.label} title={a.label} style={toolBtn} onClick={() => applyAction(a.prefix, a.suffix)}>
-            {a.icon}
-          </button>
-        ))}
+        {tab === 'write' &&
+          TOOLBAR_ACTIONS.map((a) => (
+            <button
+              type="button"
+              key={a.label}
+              title={a.label}
+              style={toolBtn}
+              onClick={() => applyAction(a.prefix, a.suffix)}
+            >
+              {a.icon}
+            </button>
+          ))}
       </div>
 
       {/* Write */}
@@ -100,14 +124,21 @@ export function MarkdownTextarea({ value, onChange, placeholder, rows = 6 }: Pro
         <textarea
           ref={taRef}
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
           style={{
-            width: '100%', boxSizing: 'border-box', display: 'block',
-            padding: '8px 12px', resize: 'vertical', fontFamily: 'inherit', fontSize: 14,
-            background: 'var(--bgColor-default, #fff)', color: 'var(--fgColor-default)',
-            border: 'none', outline: 'none',
+            width: '100%',
+            boxSizing: 'border-box',
+            display: 'block',
+            padding: '8px 12px',
+            resize: 'vertical',
+            fontFamily: 'inherit',
+            fontSize: 14,
+            background: 'var(--bgColor-default, #fff)',
+            color: 'var(--fgColor-default)',
+            border: 'none',
+            outline: 'none',
           }}
         />
       )}
@@ -123,7 +154,6 @@ export function MarkdownTextarea({ value, onChange, placeholder, rows = 6 }: Pro
             lineHeight: 1.6,
           }}
           // marked parses user-authored markdown; output is sandboxed inside Shadow DOM
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html: previewHtml || '<em style="color:var(--fgColor-muted)">Nothing to preview</em>',
           }}

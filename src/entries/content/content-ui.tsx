@@ -12,7 +12,10 @@ import { CheckboxPortalHost } from '../../components/checkbox-portal-host'
 import { SprintPanel } from '../../components/sprint/sprint-modal'
 import { ErrorBoundary } from '../../components/ui/error-boundary'
 import { ShadowThemeProvider } from '../../components/ui/shadow-theme-provider'
-import { BULK_BAR_PRIMER_PORTAL_NAME, installPrimerShadowDomCompat } from '../../lib/primer-shadow-dom-compat'
+import {
+  BULK_BAR_PRIMER_PORTAL_NAME,
+  installPrimerShadowDomCompat,
+} from '../../lib/primer-shadow-dom-compat'
 import { Z_MODAL_PORTAL } from '../../lib/z-index'
 import { queueStore } from '../../lib/queue-store'
 import { sprintPanelStore } from '../../components/sprint/sprint-store'
@@ -30,13 +33,7 @@ function SprintPanelDriver(props: SprintPanelProps) {
     }
   }, [])
 
-  return (
-    <SprintPanel
-      {...props}
-      visible={visible}
-      onClose={() => sprintPanelStore.set(false)}
-    />
-  )
+  return <SprintPanel {...props} visible={visible} onClose={() => sprintPanelStore.set(false)} />
 }
 
 function PrimerPortalRootHost({ shadowRoot }: { shadowRoot: ShadowRoot }) {

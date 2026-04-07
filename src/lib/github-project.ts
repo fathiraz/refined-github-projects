@@ -55,12 +55,15 @@ function createProjectContext(owner: string, rawNumber: string, isOrg: boolean):
   }
 }
 
-export function extractProjectContext(pathname: string = window.location.pathname): ProjectContext | null {
+export function extractProjectContext(
+  pathname: string = window.location.pathname,
+): ProjectContext | null {
   const orgMatch = pathname.match(ORG_PROJECT_PATH_RE)
   if (orgMatch) return createProjectContext(orgMatch[1], orgMatch[2], true)
 
   const userNamespaceMatch = pathname.match(USER_NAMESPACE_PROJECT_PATH_RE)
-  if (userNamespaceMatch) return createProjectContext(userNamespaceMatch[1], userNamespaceMatch[2], false)
+  if (userNamespaceMatch)
+    return createProjectContext(userNamespaceMatch[1], userNamespaceMatch[2], false)
 
   const userMatch = pathname.match(USER_PROJECT_PATH_RE)
   if (userMatch) return createProjectContext(userMatch[1], userMatch[2], false)

@@ -14,6 +14,18 @@
   <a href="https://github.com/fathiraz/refined-github-projects/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License" /></a>
   <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-238636?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" /></a>
   <a href="https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/"><img src="https://img.shields.io/badge/Firefox_Add--ons-Live-238636?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="Firefox Add-ons" /></a>
+  <!-- COVERAGE_BADGE_START --><img src="https://img.shields.io/badge/coverage-13.98%25-red?style=for-the-badge" alt="Coverage" /><!-- COVERAGE_BADGE_END -->
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/WXT-333333?style=for-the-badge&logoColor=white" alt="WXT" />
+  <img src="https://img.shields.io/badge/Manifest_V3-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3" />
+  <img src="https://img.shields.io/badge/GraphQL-E10098?style=for-the-badge&logo=graphql&logoColor=white" alt="GraphQL" />
+  <img src="https://img.shields.io/badge/Primer-0366D6?style=for-the-badge&logo=github&logoColor=white" alt="Primer CSS" />
+  <img src="https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white" alt="pnpm" />
+  <img src="https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest" />
 </p>
 
 <p align="center">
@@ -28,8 +40,23 @@
 
 ---
 
+## 📥 Downloads
+
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg">
+    <img src="src/assets/images/chrome-webstore.png" alt="Available in the Chrome Web Store" height="58" />
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/">
+    <img src="src/assets/images/firefox-addon.svg" alt="Get the Add-on for Firefox" height="58" />
+  </a>
+</p>
+
+---
+
 ## 📋 Table of Contents
 
+- [Downloads](#-downloads)
 - [Why This Exists](#-why-this-exists)
 - [Features](#-features)
 - [Installation](#-installation)

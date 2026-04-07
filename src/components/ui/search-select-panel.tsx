@@ -20,7 +20,13 @@ export type SearchSelectPanelOption<T> = {
 
 type SearchSelectPanelWidth = 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge' | 'auto'
 type SelectedPlacement = 'selected-first' | 'selected-first-when-filter-empty' | 'results-only'
-type SelectPanelGesture = 'anchor-click' | 'anchor-key-press' | 'click-outside' | 'escape' | 'selection' | 'cancel'
+type SelectPanelGesture =
+  | 'anchor-click'
+  | 'anchor-key-press'
+  | 'click-outside'
+  | 'escape'
+  | 'selection'
+  | 'cancel'
 
 const anchorButtonSx = {
   boxShadow: 'none',
@@ -115,16 +121,19 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
   const [panelOpen, setPanelOpen] = useState(false)
   const requestGen = useRef(0)
 
-  const log = useCallback((message: string, payload?: unknown) => {
-    if (!debugName) return
+  const log = useCallback(
+    (message: string, payload?: unknown) => {
+      if (!debugName) return
 
-    if (typeof payload === 'undefined') {
-      console.log(`[${debugName}] ${message}`)
-      return
-    }
+      if (typeof payload === 'undefined') {
+        console.log(`[${debugName}] ${message}`)
+        return
+      }
 
-    console.log(`[${debugName}] ${message}`, payload)
-  }, [debugName])
+      console.log(`[${debugName}] ${message}`, payload)
+    },
+    [debugName],
+  )
 
   const isMultiSelect = Array.isArray(props.selected)
   const selectedValues = useMemo(() => mapSelectedValues(props.selected), [props.selected])
@@ -147,10 +156,13 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
     return next
   }, [resultOptions, selectedOptions])
 
-  const selectedIds = useMemo(() => new Set(selectedOptions.map(option => option.id)), [selectedOptions])
+  const selectedIds = useMemo(
+    () => new Set(selectedOptions.map((option) => option.id)),
+    [selectedOptions],
+  )
 
   const panelOptions = useMemo(() => {
-    const remainingResults = resultOptions.filter(option => !selectedIds.has(option.id))
+    const remainingResults = resultOptions.filter((option) => !selectedIds.has(option.id))
 
     if (selectedPlacement === 'results-only') return resultOptions
     if (selectedPlacement === 'selected-first-when-filter-empty' && filterQuery.trim() !== '') {
@@ -160,16 +172,18 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
     return [...selectedOptions, ...remainingResults]
   }, [filterQuery, resultOptions, selectedIds, selectedOptions, selectedPlacement])
 
-  const panelItems = useMemo(() => panelOptions.map(option => option.panelItem), [panelOptions])
+  const panelItems = useMemo(() => panelOptions.map((option) => option.panelItem), [panelOptions])
 
   const selectedPanelItems = useMemo(() => {
-    const currentPanelItemsById = new Map(panelOptions.map(option => [option.id, option.panelItem]))
-    return selectedOptions.map(option => currentPanelItemsById.get(option.id) ?? option.panelItem)
+    const currentPanelItemsById = new Map(
+      panelOptions.map((option) => [option.id, option.panelItem]),
+    )
+    return selectedOptions.map((option) => currentPanelItemsById.get(option.id) ?? option.panelItem)
   }, [panelOptions, selectedOptions])
 
   const selectedAnchorText = useMemo(() => {
     if (selectedOptions.length === 0) return undefined
-    return selectedOptions.map(option => option.selectionText ?? option.panelItem.text).join(', ')
+    return selectedOptions.map((option) => option.selectionText ?? option.panelItem.text).join(', ')
   }, [selectedOptions])
 
   const message = useMemo(() => {
@@ -199,21 +213,27 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
     }
   }, [fetchError, fetching, panelItems.length])
 
-  const handleOpenChange = useCallback((open: boolean, gesture?: SelectPanelGesture) => {
-    log('onOpenChange', { open, gesture })
-    setPanelOpen(open)
+  const handleOpenChange = useCallback(
+    (open: boolean, gesture?: SelectPanelGesture) => {
+      log('onOpenChange', { open, gesture })
+      setPanelOpen(open)
 
-    if (!open) {
-      requestGen.current += 1
-      setFilterQuery('')
-      setFetchError(null)
-    }
-  }, [log])
+      if (!open) {
+        requestGen.current += 1
+        setFilterQuery('')
+        setFetchError(null)
+      }
+    },
+    [log],
+  )
 
-  const handleFilterChange = useCallback((nextFilterQuery: string) => {
-    log('onFilterChange', { filterQuery: nextFilterQuery })
-    setFilterQuery(nextFilterQuery)
-  }, [log])
+  const handleFilterChange = useCallback(
+    (nextFilterQuery: string) => {
+      log('onFilterChange', { filterQuery: nextFilterQuery })
+      setFilterQuery(nextFilterQuery)
+    },
+    [log],
+  )
 
   useEffect(() => {
     if (!panelOpen || disabled) return
@@ -227,7 +247,7 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
       setFetchError(null)
 
       search(trimmedQuery)
-        .then(items => {
+        .then((items) => {
           if (requestGen.current !== gen) return
           log('search:success', {
             filterQuery: trimmedQuery,
@@ -278,7 +298,16 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
         block
         sx={anchorButtonSx}
       >
-        <Text as="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'left' }}>
+        <Text
+          as="span"
+          sx={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            width: '100%',
+            textAlign: 'left',
+          }}
+        >
           {selectedAnchorText ?? children ?? placeholder}
         </Text>
       </Button>
@@ -333,11 +362,11 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
           selected={selectedPanelItems}
           onSelectedChange={(items: SelectPanelItemInput[]) => {
             const nextSelected = items
-              .map(item => getOptionValue(item.id))
+              .map((item) => getOptionValue(item.id))
               .filter((item): item is T => typeof item !== 'undefined')
 
             log('onSelectedChange:multi', {
-              rawItems: items.map(item => ({ id: item.id, text: item.text })),
+              rawItems: items.map((item) => ({ id: item.id, text: item.text })),
               resolvedItems: summarizeDebugValue(nextSelected),
             })
 
@@ -359,7 +388,9 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
           const nextSelected = getOptionValue(item?.id)
 
           log('onSelectedChange:single', {
-            rawItem: item ? { id: item.id, text: item.text, description: item.description } : undefined,
+            rawItem: item
+              ? { id: item.id, text: item.text, description: item.description }
+              : undefined,
             resolvedItem: summarizeDebugValue(nextSelected),
           })
 

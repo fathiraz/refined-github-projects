@@ -7,26 +7,28 @@ export function exportSelectedToCSV(): void {
 
   // Column headers — skip col 0 (injected checkbox cell has no header text)
   const headerEls = document.querySelectorAll<HTMLElement>('[role="columnheader"]')
-  const headers = [...headerEls].slice(1).map(el => el.textContent?.trim() ?? '')
+  const headers = [...headerEls].slice(1).map((el) => el.textContent?.trim() ?? '')
 
   // For each selected ID, scrape its row's gridcells
   const rows: string[][] = []
   for (const id of ids) {
     const row = document.querySelector<HTMLElement>(
-      `[role="row"][${INJECTED_ATTR}="${CSS.escape(id)}"]`
+      `[role="row"][${INJECTED_ATTR}="${CSS.escape(id)}"]`,
     )
     if (!row) continue
     const cells = [...row.querySelectorAll<HTMLElement>('[role="gridcell"]')]
       .slice(1) // skip injected checkbox cell
-      .map(el => el.textContent?.trim().replace(/\n+/g, ' ') ?? '')
+      .map((el) => el.textContent?.trim().replace(/\n+/g, ' ') ?? '')
     rows.push(cells)
   }
 
   // Build CSV — double-quote every field, escape internal quotes
-  function csvCell(v: string) { return `"${v.replace(/"/g, '""')}"` }
+  function csvCell(v: string) {
+    return `"${v.replace(/"/g, '""')}"`
+  }
   const lines = [
     headers.map(csvCell).join(','),
-    ...rows.map(cells => cells.map(csvCell).join(',')),
+    ...rows.map((cells) => cells.map(csvCell).join(',')),
   ]
   const csv = lines.join('\r\n')
 
@@ -66,10 +68,16 @@ export function flyToTracker(startRect: DOMRect): void {
   const dx = targetX - startX
   const dy = targetY - startY
 
-  orb.animate([
-    { transform: 'translate(0,0) scale(1)',                                opacity: 1,   offset: 0    },
-    { transform: `translate(${dx * 0.6}px,${dy * 0.25}px) scale(0.75)`,  opacity: 0.9, offset: 0.45 },
-    { transform: `translate(${dx}px,${dy}px) scale(0.3)`,                 opacity: 0,   offset: 1    },
-  ], { duration: 520, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' })
-    .onfinish = () => orb.remove()
+  orb.animate(
+    [
+      { transform: 'translate(0,0) scale(1)', opacity: 1, offset: 0 },
+      {
+        transform: `translate(${dx * 0.6}px,${dy * 0.25}px) scale(0.75)`,
+        opacity: 0.9,
+        offset: 0.45,
+      },
+      { transform: `translate(${dx}px,${dy}px) scale(0.3)`, opacity: 0, offset: 1 },
+    ],
+    { duration: 520, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' },
+  ).onfinish = () => orb.remove()
 }

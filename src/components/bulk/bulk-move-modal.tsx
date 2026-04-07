@@ -33,38 +33,29 @@ interface Props {
   onConfirm: (ops: ReorderOp[], projectId: string, label: string) => void
 }
 
-
 function computeNewOrder(
   allItems: OrderedItem[],
   selectedMemexIds: Set<number>,
   action: MoveAction,
   targetMemexId: number | null,
 ): OrderedItem[] {
-  const selected = allItems.filter(i => selectedMemexIds.has(i.memexItemId))
-  const nonSelected = allItems.filter(i => !selectedMemexIds.has(i.memexItemId))
+  const selected = allItems.filter((i) => selectedMemexIds.has(i.memexItemId))
+  const nonSelected = allItems.filter((i) => !selectedMemexIds.has(i.memexItemId))
 
   if (action === 'TOP') return [...selected, ...nonSelected]
   if (action === 'BOTTOM') return [...nonSelected, ...selected]
 
   if (targetMemexId == null) return allItems
 
-  const targetIdx = nonSelected.findIndex(i => i.memexItemId === targetMemexId)
+  const targetIdx = nonSelected.findIndex((i) => i.memexItemId === targetMemexId)
   if (targetIdx === -1) return allItems
 
   if (action === 'BEFORE') {
-    return [
-      ...nonSelected.slice(0, targetIdx),
-      ...selected,
-      ...nonSelected.slice(targetIdx),
-    ]
+    return [...nonSelected.slice(0, targetIdx), ...selected, ...nonSelected.slice(targetIdx)]
   }
 
   // AFTER
-  return [
-    ...nonSelected.slice(0, targetIdx + 1),
-    ...selected,
-    ...nonSelected.slice(targetIdx + 1),
-  ]
+  return [...nonSelected.slice(0, targetIdx + 1), ...selected, ...nonSelected.slice(targetIdx + 1)]
 }
 
 function buildOps(newOrder: OrderedItem[], selectedMemexIds: Set<number>): ReorderOp[] {
@@ -86,7 +77,10 @@ function PreviewList({
   selectedMemexIds: Set<number>
 }) {
   return (
-    <Box as="ol" sx={{ listStyle: 'none', m: 0, p: 0, display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <Box
+      as="ol"
+      sx={{ listStyle: 'none', m: 0, p: 0, display: 'flex', flexDirection: 'column', gap: 0 }}
+    >
       {items.map((item, i) => {
         const isSel = selectedMemexIds.has(item.memexItemId)
         return (
@@ -94,28 +88,53 @@ function PreviewList({
             as="li"
             key={item.memexItemId}
             sx={{
-              display: 'flex', alignItems: 'center', gap: 2,
-              px: 2, py: '5px', borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              px: 2,
+              py: '5px',
+              borderRadius: 1,
               bg: isSel ? 'accent.subtle' : 'transparent',
-              borderBottom: '1px solid', borderColor: 'border.muted',
+              borderBottom: '1px solid',
+              borderColor: 'border.muted',
             }}
           >
-            <Text sx={{ fontSize: 0, color: 'fg.muted', minWidth: 20, textAlign: 'right', flexShrink: 0 }}>
+            <Text
+              sx={{
+                fontSize: 0,
+                color: 'fg.muted',
+                minWidth: 20,
+                textAlign: 'right',
+                flexShrink: 0,
+              }}
+            >
               {i + 1}
             </Text>
-            <Text sx={{
-              fontSize: 0, color: isSel ? 'accent.fg' : 'fg.default',
-              fontWeight: isSel ? 'semibold' : 'normal',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
+            <Text
+              sx={{
+                fontSize: 0,
+                color: isSel ? 'accent.fg' : 'fg.default',
+                fontWeight: isSel ? 'semibold' : 'normal',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {item.title || '(no title)'}
             </Text>
             {isSel && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'accent.fg', flexShrink: 0, ml: 'auto' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  color: 'accent.fg',
+                  flexShrink: 0,
+                  ml: 'auto',
+                }}
+              >
                 <ArrowUpIcon size={12} />
-                <Text sx={{ fontSize: 0, color: 'accent.fg', fontWeight: 'semibold' }}>
-                  moving
-                </Text>
+                <Text sx={{ fontSize: 0, color: 'accent.fg', fontWeight: 'semibold' }}>moving</Text>
               </Box>
             )}
           </Box>
@@ -127,7 +146,16 @@ function PreviewList({
 
 // ─── Modal ─────────────────────────────────────────────────────────────────────
 
-export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg, onClose, onConfirm }: Props) {
+export function BulkMoveModal({
+  count,
+  projectId,
+  itemIds,
+  owner,
+  number,
+  isOrg,
+  onClose,
+  onConfirm,
+}: Props) {
   ensureTippyCss()
 
   const [stage, setStage] = useState<Stage>('LOADING')
@@ -145,22 +173,22 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
   // Fetch data on mount
   useEffect(() => {
     const allDomIds = Array.from(document.querySelectorAll('[data-rgp-cb]'))
-      .map(el => el.getAttribute('data-rgp-cb') ?? '')
+      .map((el) => el.getAttribute('data-rgp-cb') ?? '')
       .filter(Boolean)
 
     sendMessage('getReorderContext', { itemIds, projectId, owner, number, isOrg, allDomIds })
-      .then(result => {
+      .then((result) => {
         setAllOrderedItems(result.allOrderedItems)
-        setSelectedMemexIds(new Set(result.selectedItems.map(s => s.memexItemId)))
+        setSelectedMemexIds(new Set(result.selectedItems.map((s) => s.memexItemId)))
         setResolvedProjectId(result.projectId)
         setStage('CONFIGURE')
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('[BulkMoveModal] getReorderContext failed', err)
         setErrorMsg(String(err?.message ?? 'Failed to fetch project items.'))
         setStage('ERROR')
       })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Close dropdown on outside click
@@ -174,9 +202,9 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
     return () => window.removeEventListener('mousedown', handle)
   }, [dropdownOpen])
 
-  const nonSelectedItems = allOrderedItems.filter(i => !selectedMemexIds.has(i.memexItemId))
-  const filteredTargets = nonSelectedItems.filter(i =>
-    !targetSearch || i.title.toLowerCase().includes(targetSearch.toLowerCase())
+  const nonSelectedItems = allOrderedItems.filter((i) => !selectedMemexIds.has(i.memexItemId))
+  const filteredTargets = nonSelectedItems.filter(
+    (i) => !targetSearch || i.title.toLowerCase().includes(targetSearch.toLowerCase()),
   )
   const needsTarget = action === 'BEFORE' || action === 'AFTER'
   const canProceed = !needsTarget || targetMemexId != null
@@ -190,15 +218,25 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
   }
 
   const overlayStyle = {
-    position: 'fixed' as const, inset: 0,
-    bg: 'rgba(27,31,36,0.5)', zIndex: Z_MODAL,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    position: 'fixed' as const,
+    inset: 0,
+    bg: 'rgba(27,31,36,0.5)',
+    zIndex: Z_MODAL,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 
   const panelStyle = {
-    bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
-    borderRadius: 2, width: 'min(640px, 90vw)', maxHeight: '85vh',
-    display: 'flex', flexDirection: 'column' as const, overflow: 'hidden',
+    bg: 'canvas.overlay',
+    border: '1px solid',
+    borderColor: 'border.default',
+    borderRadius: 2,
+    width: 'min(640px, 90vw)',
+    maxHeight: '85vh',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    overflow: 'hidden',
   }
 
   // ── LOADING ─────────────────────────────────────────────────────────────────
@@ -207,24 +245,137 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
       <Box sx={overlayStyle}>
         <Box sx={panelStyle}>
           <ModalStepHeader title="Move Items" icon={<MoveIcon size={16} />} onClose={onClose} />
-          <Box sx={{ px: 4, py: 3, flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 3, '@keyframes rgp-shimmer': { '0%': { backgroundPosition: '-200px 0' }, '100%': { backgroundPosition: '200px 0' } } }}>
+          <Box
+            sx={{
+              px: 4,
+              py: 3,
+              flex: 1,
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 3,
+              '@keyframes rgp-shimmer': {
+                '0%': { backgroundPosition: '-200px 0' },
+                '100%': { backgroundPosition: '200px 0' },
+              },
+            }}
+          >
             {/* "Where to move" section label */}
-            <Box sx={{ height: 10, width: 100, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+            <Box
+              sx={{
+                height: 10,
+                width: 100,
+                borderRadius: 1,
+                background:
+                  'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                backgroundSize: '400px 100%',
+                animation: 'rgp-shimmer 1.4s ease infinite',
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+              }}
+            />
             {/* Radio card skeletons */}
             {([140, 110, 150, 125] as number[]).map((w, i) => (
-              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 3, py: '8px', borderRadius: 2, border: '1px solid', borderColor: 'border.default', bg: 'canvas.default' }}>
-                <Box sx={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                <Box sx={{ height: 12, width: w, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+              <Box
+                key={i}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  px: 3,
+                  py: '8px',
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'border.default',
+                  bg: 'canvas.default',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    flexShrink: 0,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
+                <Box
+                  sx={{
+                    height: 12,
+                    width: w,
+                    borderRadius: 1,
+                    background:
+                      'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                    backgroundSize: '400px 100%',
+                    animation: 'rgp-shimmer 1.4s ease infinite',
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }}
+                />
               </Box>
             ))}
             {/* Preview label */}
-            <Box sx={{ height: 10, width: 65, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+            <Box
+              sx={{
+                height: 10,
+                width: 65,
+                borderRadius: 1,
+                background:
+                  'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                backgroundSize: '400px 100%',
+                animation: 'rgp-shimmer 1.4s ease infinite',
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+              }}
+            />
             {/* Preview list rows */}
-            <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 1, overflow: 'hidden' }}>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'border.default',
+                borderRadius: 1,
+                overflow: 'hidden',
+              }}
+            >
               {([65, 80, 50, 75, 60] as number[]).map((w, i) => (
-                <Box key={i} sx={{ display: 'flex', gap: 2, px: 2, py: '6px', borderBottom: '1px solid', borderColor: 'border.muted', alignItems: 'center' }}>
-                  <Box sx={{ height: 10, width: 20, flexShrink: 0, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
-                  <Box sx={{ height: 10, width: `${w}%`, borderRadius: 1, background: 'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)', backgroundSize: '400px 100%', animation: 'rgp-shimmer 1.4s ease infinite', '@media (prefers-reduced-motion: reduce)': { animation: 'none' } }} />
+                <Box
+                  key={i}
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    px: 2,
+                    py: '6px',
+                    borderBottom: '1px solid',
+                    borderColor: 'border.muted',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      height: 10,
+                      width: 20,
+                      flexShrink: 0,
+                      borderRadius: 1,
+                      background:
+                        'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                      backgroundSize: '400px 100%',
+                      animation: 'rgp-shimmer 1.4s ease infinite',
+                      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      height: 10,
+                      width: `${w}%`,
+                      borderRadius: 1,
+                      background:
+                        'linear-gradient(90deg, var(--color-border-muted) 25%, var(--color-border-default) 50%, var(--color-border-muted) 75%)',
+                      backgroundSize: '400px 100%',
+                      animation: 'rgp-shimmer 1.4s ease infinite',
+                      '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                    }}
+                  />
                 </Box>
               ))}
             </Box>
@@ -241,21 +392,37 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
         <Box sx={panelStyle}>
           <ModalStepHeader title="Move Items" icon={<MoveIcon size={16} />} onClose={onClose} />
           <Box sx={{ px: 4, py: 3 }}>
-            <Box sx={{ p: 3, borderRadius: 2, bg: 'danger.subtle', border: '1px solid', borderColor: 'danger.muted', color: 'danger.fg', fontSize: 1 }}>
+            <Box
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                bg: 'danger.subtle',
+                border: '1px solid',
+                borderColor: 'danger.muted',
+                color: 'danger.fg',
+                fontSize: 1,
+              }}
+            >
               {errorMsg || 'Failed to fetch project items.'}
             </Box>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 4, pb: 3 }}>
-            <Button variant="default" onClick={onClose} sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}>Close</Button>
+            <Button
+              variant="default"
+              onClick={onClose}
+              sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
+            >
+              Close
+            </Button>
           </Box>
         </Box>
       </Box>
@@ -277,22 +444,43 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
           />
 
           <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3 }}>
-            <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 1, overflow: 'hidden' }}>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'border.default',
+                borderRadius: 1,
+                overflow: 'hidden',
+              }}
+            >
               <PreviewList items={newOrder} selectedMemexIds={selectedMemexIds} />
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
-            <Button variant="primary" onClick={handleConfirm} sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              px: 4,
+              py: 3,
+              borderTop: '1px solid',
+              borderColor: 'border.default',
+            }}
+          >
+            <Button
+              variant="primary"
+              onClick={handleConfirm}
+              sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
+            >
               Move {count} item{count !== 1 ? 's' : ''}
             </Button>
           </Box>
@@ -308,13 +496,33 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
     description: string
     icon: React.ComponentType<{ size?: number; fill?: string }>
   }> = [
-    { value: 'TOP', label: 'Move to top', description: 'Place selected items at the top of the list.', icon: ArrowUpIcon },
-    { value: 'BOTTOM', label: 'Move to bottom', description: 'Place selected items at the bottom of the list.', icon: ArrowDownIcon },
-    { value: 'BEFORE', label: 'Move before', description: 'Place selected items right before a chosen item.', icon: ArrowUpIcon },
-    { value: 'AFTER', label: 'Move after', description: 'Place selected items right after a chosen item.', icon: ArrowDownIcon },
+    {
+      value: 'TOP',
+      label: 'Move to top',
+      description: 'Place selected items at the top of the list.',
+      icon: ArrowUpIcon,
+    },
+    {
+      value: 'BOTTOM',
+      label: 'Move to bottom',
+      description: 'Place selected items at the bottom of the list.',
+      icon: ArrowDownIcon,
+    },
+    {
+      value: 'BEFORE',
+      label: 'Move before',
+      description: 'Place selected items right before a chosen item.',
+      icon: ArrowUpIcon,
+    },
+    {
+      value: 'AFTER',
+      label: 'Move after',
+      description: 'Place selected items right after a chosen item.',
+      icon: ArrowDownIcon,
+    },
   ]
 
-  const selectedTargetItem = nonSelectedItems.find(i => i.memexItemId === targetMemexId)
+  const selectedTargetItem = nonSelectedItems.find((i) => i.memexItemId === targetMemexId)
 
   return (
     <Box sx={overlayStyle}>
@@ -328,7 +536,17 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
         />
 
         {/* Body */}
-        <Box sx={{ flex: 1, overflow: 'auto', px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflow: 'auto',
+            px: 4,
+            py: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3,
+          }}
+        >
           {/* Action selector */}
           <RadioGroup
             name="moveAction"
@@ -343,12 +561,18 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
               Where to move
             </RadioGroup.Label>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {actionOptions.map(opt => {
+              {actionOptions.map((opt) => {
                 const isSelected = action === opt.value
                 const Icon = opt.icon
 
                 return (
-                  <Tippy key={opt.value} content={opt.description} delay={[400, 0]} placement="top" zIndex={Z_TOOLTIP}>
+                  <Tippy
+                    key={opt.value}
+                    content={opt.description}
+                    delay={[400, 0]}
+                    placement="top"
+                    zIndex={Z_TOOLTIP}
+                  >
                     <FormControl
                       sx={{
                         display: 'flex',
@@ -373,7 +597,15 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
                           if (opt.value === 'TOP' || opt.value === 'BOTTOM') setTargetMemexId(null)
                         }}
                       />
-                      <FormControl.Label sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, cursor: 'help' }}>
+                      <FormControl.Label
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          flex: 1,
+                          minWidth: 0,
+                          cursor: 'help',
+                        }}
+                      >
                         <Box
                           as="span"
                           sx={{
@@ -410,41 +642,81 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
                     setTargetMemexId(null)
                     setDropdownOpen(true)
                   }}
-                  onFocus={() => { setTargetSearch(''); setDropdownOpen(true) }}
+                  onFocus={() => {
+                    setTargetSearch('')
+                    setDropdownOpen(true)
+                  }}
                   placeholder="Search items…"
                   sx={{
-                    px: 2, py: '6px', fontSize: 1, borderRadius: 1,
-                    border: '1px solid', borderColor: dropdownOpen ? 'accent.emphasis' : 'border.default',
-                    bg: 'canvas.default', color: 'fg.default', outline: 'none',
-                    ':focus': { borderColor: 'accent.emphasis', boxShadow: '0 0 0 2px rgba(9,105,218,0.15)' },
+                    px: 2,
+                    py: '6px',
+                    fontSize: 1,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: dropdownOpen ? 'accent.emphasis' : 'border.default',
+                    bg: 'canvas.default',
+                    color: 'fg.default',
+                    outline: 'none',
+                    ':focus': {
+                      borderColor: 'accent.emphasis',
+                      boxShadow: '0 0 0 2px rgba(9,105,218,0.15)',
+                    },
                   }}
                 />
                 {dropdownOpen && (
-                  <Box sx={{
-                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
-                    bg: 'canvas.overlay', border: '1px solid', borderColor: 'border.default',
-                    borderRadius: 1, mt: '2px', maxHeight: 200, overflowY: 'auto',
-                  }}>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 10,
+                      bg: 'canvas.overlay',
+                      border: '1px solid',
+                      borderColor: 'border.default',
+                      borderRadius: 1,
+                      mt: '2px',
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                    }}
+                  >
                     {filteredTargets.length === 0 ? (
-                      <Text sx={{ display: 'block', px: 2, py: 2, fontSize: 0, color: 'fg.muted' }}>No items found</Text>
-                    ) : filteredTargets.map(item => (
-                      <Box
-                        key={item.memexItemId}
-                        as="button"
-                        type="button"
-                        onClick={() => { setTargetMemexId(item.memexItemId); setDropdownOpen(false); setTargetSearch('') }}
-                        sx={{
-                          display: 'block', width: '100%', textAlign: 'left',
-                          px: 2, py: '5px', fontSize: 0, color: 'fg.default',
-                          bg: item.memexItemId === targetMemexId ? 'accent.subtle' : 'transparent',
-                          border: 'none', cursor: 'pointer',
-                          ':hover': { bg: 'canvas.subtle' },
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {item.title || '(no title)'}
-                      </Box>
-                    ))}
+                      <Text sx={{ display: 'block', px: 2, py: 2, fontSize: 0, color: 'fg.muted' }}>
+                        No items found
+                      </Text>
+                    ) : (
+                      filteredTargets.map((item) => (
+                        <Box
+                          key={item.memexItemId}
+                          as="button"
+                          type="button"
+                          onClick={() => {
+                            setTargetMemexId(item.memexItemId)
+                            setDropdownOpen(false)
+                            setTargetSearch('')
+                          }}
+                          sx={{
+                            display: 'block',
+                            width: '100%',
+                            textAlign: 'left',
+                            px: 2,
+                            py: '5px',
+                            fontSize: 0,
+                            color: 'fg.default',
+                            bg:
+                              item.memexItemId === targetMemexId ? 'accent.subtle' : 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            ':hover': { bg: 'canvas.subtle' },
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {item.title || '(no title)'}
+                        </Box>
+                      ))
+                    )}
                   </Box>
                 )}
               </Box>
@@ -454,7 +726,14 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
           {/* Live preview */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Text sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>Preview</Text>
-            <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 1, overflow: 'hidden' }}>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'border.default',
+                borderRadius: 1,
+                overflow: 'hidden',
+              }}
+            >
               <Box sx={{ maxHeight: 220, overflowY: 'auto' }}>
                 <PreviewList items={newOrder} selectedMemexIds={selectedMemexIds} />
               </Box>
@@ -463,33 +742,51 @@ export function BulkMoveModal({ count, projectId, itemIds, owner, number, isOrg,
         </Box>
 
         {/* Footer */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 4, py: 3, borderTop: '1px solid', borderColor: 'border.default' }}>
-          <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{count} item{count !== 1 ? 's' : ''} will move</Text>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            px: 4,
+            py: 3,
+            borderTop: '1px solid',
+            borderColor: 'border.default',
+          }}
+        >
+          <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+            {count} item{count !== 1 ? 's' : ''} will move
+          </Text>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button variant="default" onClick={onClose} sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}>Cancel</Button>
+            <Button
+              variant="default"
+              onClick={onClose}
+              sx={{
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               variant="primary"
               disabled={!canProceed}
               onClick={() => setStage('PREVIEW')}
               sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}
+                boxShadow: 'none',
+                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)', transition: '100ms' },
+                '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
+                  '&:hover:not(:disabled)': { transform: 'none' },
+                },
+              }}
             >
               <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                 Preview

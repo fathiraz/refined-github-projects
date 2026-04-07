@@ -1,6 +1,6 @@
 {
   "name": "refined-github-projects",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Refined GitHub Projects — bulk edit, close, delete, and deep duplicate for GitHub Projects",
   "packageManager": "pnpm@10.32.1",
   "scripts": {
@@ -22,7 +22,23 @@
     "publish:firefox": "wxt build --browser firefox && wxt zip --browser firefox",
     "publish:edge": "wxt build --browser edge && wxt zip --browser edge",
     "publish:safari": "wxt build --browser safari && wxt zip --browser safari",
-    "publish:all": "pnpm run publish:chrome && pnpm run publish:firefox && pnpm run publish:edge && pnpm run publish:safari"
+    "publish:all": "pnpm run publish:chrome && pnpm run publish:firefox && pnpm run publish:edge && pnpm run publish:safari",
+    "check:manifest": "node -e \"const m=require('./dist/chrome-mv3/manifest.json');const allowed=['storage'];const extra=(m.permissions||[]).filter(p=>!allowed.includes(p));if(extra.length){console.error('Extra permissions:',extra);process.exit(1);}else{console.log('Manifest permissions OK:',m.permissions);}\"",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write 'src/**/*.{ts,tsx}'",
+    "format:check": "prettier --check 'src/**/*.{ts,tsx}'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage-badge": "node scripts/update-coverage-badge.mjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.9",
@@ -46,10 +62,20 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.2",
     "@wxt-dev/module-react": "^1.2.2",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "happy-dom": "^20.8.9",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.58.0",
     "vite": "^8.0.1",
     "vite-node": "^6.0.0",
+    "vitest": "^4.1.2",
     "wxt": "^0.20.20"
   }
 }

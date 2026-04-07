@@ -22,19 +22,38 @@ type ModalStepHeaderProps =
       totalSteps: number
     }
 
-export function ModalStepHeader({ title, onClose, icon, step, totalSteps, subtitle, onBack }: ModalStepHeaderProps) {
+export function ModalStepHeader({
+  title,
+  onClose,
+  icon,
+  step,
+  totalSteps,
+  subtitle,
+  onBack,
+}: ModalStepHeaderProps) {
   return (
-    <Box sx={{
-      display: 'flex', alignItems: 'flex-start', gap: 3,
-      px: 4, py: 3, borderBottom: '1px solid', borderColor: 'border.default', flexShrink: 0,
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 3,
+        px: 4,
+        py: 3,
+        borderBottom: '1px solid',
+        borderColor: 'border.default',
+        flexShrink: 0,
+      }}
+    >
       {onBack && (
         <Button
           variant="default"
           size="small"
           onClick={onBack}
           sx={{
-            mt: '2px', boxShadow: 'none', px: 2, flexShrink: 0,
+            mt: '2px',
+            boxShadow: 'none',
+            px: 2,
+            flexShrink: 0,
             transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
             '&:active': { transform: 'translateY(0)', transition: '100ms' },
@@ -54,17 +73,23 @@ export function ModalStepHeader({ title, onClose, icon, step, totalSteps, subtit
               {icon}
             </Box>
           )}
-          <Heading as="h2" sx={{ m: 0, fontSize: 3, fontWeight: 'bold' }}>{title}</Heading>
+          <Heading as="h2" sx={{ m: 0, fontSize: 3, fontWeight: 'bold' }}>
+            {title}
+          </Heading>
         </Box>
         {subtitle && (
-          <Text as="p" sx={{ m: 0, mt: 1, fontSize: 1, color: 'fg.muted' }}>{subtitle}</Text>
+          <Text as="p" sx={{ m: 0, mt: 1, fontSize: 1, color: 'fg.muted' }}>
+            {subtitle}
+          </Text>
         )}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0, mt: '2px' }}>
         {step !== undefined && totalSteps !== undefined && (
           <>
             <StepIndicator current={step} total={totalSteps} />
-            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>Step {step} of {totalSteps}</Text>
+            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+              Step {step} of {totalSteps}
+            </Text>
           </>
         )}
         <Button
@@ -73,7 +98,10 @@ export function ModalStepHeader({ title, onClose, icon, step, totalSteps, subtit
           onClick={onClose}
           aria-label="Close"
           sx={{
-            p: '4px', minWidth: 'unset', color: 'fg.muted', boxShadow: 'none',
+            p: '4px',
+            minWidth: 'unset',
+            color: 'fg.muted',
+            boxShadow: 'none',
             transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
             '&:active': { transform: 'translateY(0)', transition: '100ms' },
