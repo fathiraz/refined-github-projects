@@ -16,9 +16,12 @@ beforeEach(() => {
 
 describe('logger', () => {
   it('error always logs regardless of debug flag', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const groupSpy = vi.spyOn(console, 'group').mockImplementation(() => {})
+    vi.spyOn(console, 'groupEnd').mockImplementation(() => {})
     logger.error('test error')
-    expect(spy).toHaveBeenCalledWith('test error')
+    expect(groupSpy).toHaveBeenCalled()
+    // first arg to console.group includes the error message
+    expect(String(groupSpy.mock.calls[0]?.[0])).toContain('test error')
   })
 
   it('log does not output when debug is disabled', () => {

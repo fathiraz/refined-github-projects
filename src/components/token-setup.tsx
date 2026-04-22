@@ -11,14 +11,61 @@ import {
   TextInput,
 } from '@primer/react'
 import { sendMessage } from '../lib/messages'
+import type { PatError, PatErrorType } from '../lib/errors'
 import { patStorage } from '../lib/storage'
 import { CheckIcon, GearIcon, XIcon } from './ui/primitives'
+
+const PAT_URL =
+  'https://github.com/settings/tokens/new?scopes=project,read:org,repo&description=Refined+GitHub+Projects'
+
+function buildPatError(type?: PatErrorType, message?: string): PatError {
+  const isExpired =
+    type === 'expired_or_invalid' && (message ?? '').toLowerCase().includes('expired')
+  switch (type) {
+    case 'expired_or_invalid':
+      return {
+        type,
+        title: isExpired ? 'Token expired' : 'Invalid token',
+        message: isExpired
+          ? 'Your GitHub PAT has expired. Generate a new one to continue.'
+          : 'Token is invalid. Check it and make sure it has the right scopes.',
+        actionLabel: 'Generate new token',
+        actionHref: PAT_URL,
+      }
+    case 'missing_scopes':
+      return {
+        type,
+        title: 'Missing permissions',
+        message: 'Token needs project, read:org, and repo scopes.',
+        actionLabel: 'Generate token with correct scopes',
+        actionHref: PAT_URL,
+      }
+    case 'rate_limit':
+      return {
+        type,
+        title: 'Rate limited',
+        message: 'GitHub API rate limit hit. Wait a moment and try again.',
+      }
+    case 'network':
+      return {
+        type,
+        title: 'Connection error',
+        message: 'Unable to reach GitHub. Check your internet connection.',
+      }
+    default:
+      return {
+        type: 'unknown',
+        title: 'Validation failed',
+        message: message ?? 'Please try again.',
+      }
+  }
+}
 
 export function useTokenSetup() {
   const [token, setToken] = useState('')
   const [loading, setLoading] = useState(true)
   const [validating, setValidating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<PatError | null>(null)
   const [savedLogin, setSavedLogin] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -49,7 +96,7 @@ export function useTokenSetup() {
     try {
       const result = await sendMessage('validatePat', { token: value })
       if (!result.valid) {
-        setError('Invalid token. Make sure it includes project, read:org, and repo scopes.')
+        setError(buildPatError(result.errorType, result.errorMessage))
         return false
       }
 
@@ -59,7 +106,7 @@ export function useTokenSetup() {
       window.setTimeout(() => setSaved(false), 2500)
       return true
     } catch {
-      setError('Token validation failed. Please try again.')
+      setError(buildPatError())
       return false
     } finally {
       setValidating(false)
@@ -183,11 +230,21 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
           <Flash variant="danger" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>
-                Could not save token
+                {error.title}
               </Text>
               <Text as="p" sx={{ m: 0, fontSize: 1 }}>
-                {error}
+                {error.message}
               </Text>
+              {error.actionLabel && error.actionHref && (
+                <Link
+                  href={error.actionHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  sx={{ fontSize: 1, mt: 1, display: 'inline-block' }}
+                >
+                  {error.actionLabel} →
+                </Link>
+              )}
             </Box>
             <Button
               variant="invisible"
@@ -293,11 +350,7 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
 
         <Text sx={{ fontSize: 1, color: 'fg.muted' }}>
           Need one?{' '}
-          <Link
-            href="https://github.com/settings/tokens/new?scopes=project,read:org,repo&description=Refined+GitHub+Projects"
-            target="_blank"
-            rel="noreferrer"
-          >
+          <Link href={PAT_URL} target="_blank" rel="noreferrer">
             Generate a PAT with the right scopes
           </Link>
           .

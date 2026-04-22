@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Button, FormControl, Heading, Text, TextInput } from '@primer/react'
+import { Box, Button, Flash, FormControl, Heading, Link, Text, TextInput } from '@primer/react'
 import { sendMessage } from '../../lib/messages'
 import { useTokenSetup } from '../../components/token-setup'
 import { usernameStorage } from '../../lib/storage'
@@ -10,6 +10,7 @@ import {
   KeyboardHint,
   PanelCard,
   StatusBanner,
+  XIcon,
 } from '../../components/ui/primitives'
 import { DebugSettingsCard } from '../../components/debug-settings-card'
 
@@ -90,9 +91,34 @@ export default function App() {
             )}
 
             {error && (
-              <StatusBanner variant="error" onDismiss={() => setError(null)}>
-                {error}
-              </StatusBanner>
+              <Flash variant="danger" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                <Box sx={{ flex: 1 }}>
+                  <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px', fontSize: 1 }}>
+                    {error.title}
+                  </Text>
+                  <Text as="p" sx={{ m: 0, fontSize: 0, color: 'fg.default' }}>
+                    {error.message}
+                  </Text>
+                  {error.actionLabel && error.actionHref && (
+                    <Link
+                      href={error.actionHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      sx={{ fontSize: 0, mt: 1, display: 'inline-block' }}
+                    >
+                      {error.actionLabel} →
+                    </Link>
+                  )}
+                </Box>
+                <Button
+                  variant="invisible"
+                  aria-label="Dismiss"
+                  onClick={() => setError(null)}
+                  sx={{ color: 'fg.muted', p: 1, flexShrink: 0, boxShadow: 'none' }}
+                >
+                  <XIcon size={14} />
+                </Button>
+              </Flash>
             )}
 
             <FormControl>

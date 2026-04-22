@@ -5,7 +5,7 @@ vi.mock('../../storage', () => ({
 }))
 
 vi.mock('../../debug-logger', () => ({
-  logger: { log: vi.fn() },
+  logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
 }))
 
 import { GqlError, gql } from '../client'
@@ -21,16 +21,16 @@ beforeEach(() => {
 
 describe('GqlError', () => {
   it('has the correct name, message, status, and retryAfter properties', () => {
-    const error = new GqlError('Rate limited', 429, 60)
+    const error = new GqlError({ message: 'Rate limited', status: 429, retryAfter: 60 })
 
-    expect(error.name).toBe('GqlError')
+    expect(error.name).toBe('GithubHttpError')
     expect(error.message).toBe('Rate limited')
     expect(error.status).toBe(429)
     expect(error.retryAfter).toBe(60)
   })
 
   it('is an instanceof Error', () => {
-    const error = new GqlError('Forbidden', 403, 30)
+    const error = new GqlError({ message: 'Forbidden', status: 403, retryAfter: 30 })
 
     expect(error).toBeInstanceOf(Error)
   })
@@ -106,10 +106,8 @@ describe('gql', () => {
       })
       await gql('query Bad { foo }', {})
     } catch (error) {
-      expect(error).toBeInstanceOf(GqlError)
-      const gqlError = error as GqlError
-      expect(gqlError.status).toBe(200)
-      expect(gqlError.retryAfter).toBe(0)
+      expect(error).toBeInstanceOf(Error)
+      expect((error as Error).message).toBe('Field "foo" not found')
     }
   })
 
