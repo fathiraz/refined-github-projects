@@ -68,7 +68,7 @@ describe('processQueue', () => {
 
     await runToCompletion(processQueue(tasks))
 
-    expect(order).toEqual(['a', 'b', 'c'])
+    expect(order).toEqualValue(['a', 'b', 'c'])
   })
 
   it('calls onStateChange with correct total and completed counts', async () => {
@@ -111,7 +111,7 @@ describe('processQueue', () => {
     await runToCompletion(processQueue(tasks, (s) => states.push({ ...s })))
 
     // The failing task is skipped but counted as completed
-    expect(order).toEqual(['ok'])
+    expect(order).toEqualValue(['ok'])
     const last = states[states.length - 1]
     expect(last).toMatchObject({ total: 2, completed: 2 })
   })
@@ -147,7 +147,7 @@ describe('processQueue', () => {
 
     // Only the first task should have run; cancellation is checked before
     // each subsequent task.
-    expect(order).toEqual(['first'])
+    expect(order).toEqualValue(['first'])
   })
 
   it('completes immediately with an empty task array', async () => {
