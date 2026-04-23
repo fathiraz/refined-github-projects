@@ -1,0 +1,37 @@
+scripts/update-coverage-badge.mjs
+  fc809a244cbcc314 36-42,69-79,95-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "cf28e24b0157d31da1d6dd7af8c0ab3d7d6fc235",
+  "prompts": {
+    "db0351000fa29bec": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247835c7cffexx62TTKwy5eh2p-1d17799e-198e-4079-9606-894b153c9da5",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "fc809a244cbcc314": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "e134fe1f-6db6-49ea-92a8-902af1b58b67",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 5,
+      "accepted_lines": 22,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/2f7957709885d866e2e1ddead985e76198c71edcdd99e89eba05d04096c7446d"
+    }
+  }
+}
