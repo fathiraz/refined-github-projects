@@ -1,0 +1,176 @@
+src/lib/__tests__/errors.test.ts
+  2fc83dcf6f3867ec 1-103
+src/lib/__tests__/queue.test.ts
+  2fc83dcf6f3867ec 71,114,150
+src/lib/graphql/__tests__/client.test.ts
+  2fc83dcf6f3867ec 54,174-205
+src/lib/__tests__/effect-assert.ts
+  2fc83dcf6f3867ec 1-64
+src/lib/__tests__/queue-store.test.ts
+  2fc83dcf6f3867ec 1-15,17-176
+  ead3fd0f9dd687d1 16
+src/lib/__tests__/debug-logger.test.ts
+  2fc83dcf6f3867ec 2,5,8,13,59-88,90-130
+  ead3fd0f9dd687d1 89
+src/components/bulk/__tests__/bulk-random-assign-utils.test.ts
+  2fc83dcf6f3867ec 48,57,74,86,106,124-126,146,155,166,168,170
+vitest.config.ts
+  2fc83dcf6f3867ec 13
+src/lib/__tests__/project-table-dom.test.ts
+  2fc83dcf6f3867ec 84,88,97
+src/lib/__tests__/selection-store.test.ts
+  2fc83dcf6f3867ec 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "85002c66ee3044ccefe1aaf0789284844124812d",
+  "prompts": {
+    "1610490f66c930a5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247835c7cffexx62TTKwy5eh2p-12d9f975-c579-41f5-af6c-31689b929b96",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 1,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    },
+    "1827a1adf17d146e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_247b241acffeiFKOFwsg6rVu2W",
+        "model": "opencode-go/kimi-k2.5"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 11,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/e885764e1b580ad17dc1e955417ac169f4a8287a1a01888f7369d190a315e445"
+    },
+    "2fc83dcf6f3867ec": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "cad2cd44-6616-4f21-bcd4-aee53139f116",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 500,
+      "total_deletions": 44,
+      "accepted_lines": 471,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/a6f2c0d0f40928561c6e41842c5f6d88bcc53b33ea358844a8a25010e30e8d2b"
+    },
+    "5c877e2927b50af1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_2488299f1ffe72MI6SNFfA87UV-ab2cd8ed-c787-46b9-b334-ef0cd93e3328",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 971,
+      "overriden_lines": 0
+    },
+    "723efba6af478aa2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247a949e8ffe3Upus1lmJ5TbyI-ce4cb82a-b7dd-4337-9b65-53576fe8f9dd",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "7f3aee94aa750049": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247a949e8ffe3Upus1lmJ5TbyI-470d56f0-ce5b-433d-a0e3-fd3d4f3428bf",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 1,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "c9d19e33438a418a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247a949e8ffe3Upus1lmJ5TbyI-4a92c23b-cd14-4ec8-93af-911b998fd7f5",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 1,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "daca83c8239b395b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247a949e8ffe3Upus1lmJ5TbyI-1b99e153-05d2-404a-9eeb-0d67c0e2862a",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 1,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "e8160d029cfcbfae": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247b241acffeiFKOFwsg6rVu2W-96f281b6-ec73-44b4-9e7b-ee2e269c2bf4",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 1
+    },
+    "ead3fd0f9dd687d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_247835c7cffexx62TTKwy5eh2p",
+        "model": "opencode-go/kimi-k2.5"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 8,
+      "accepted_lines": 2,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/c494dde745bceb7601d89cd819879b578bc8c7cf3cae614e8413198847c95818"
+    },
+    "eeaa701e8ef72715": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247a949e8ffe3Upus1lmJ5TbyI-61eb070d-60f3-4984-bc2b-d15775b7aac4",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    }
+  }
+}
