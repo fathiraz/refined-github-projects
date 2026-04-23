@@ -33,7 +33,13 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--from-summary") args.fromSummary = true;
-    else if (a === "--from-markdown") args.fromMarkdown = argv[++i];
+    else if (a === "--from-markdown") {
+      args.fromMarkdown = argv[++i];
+      if (!args.fromMarkdown) {
+        console.error("--from-markdown requires a file path argument.");
+        process.exit(1);
+      }
+    }
   }
   return args;
 }
@@ -60,6 +66,17 @@ function coverageFromVitestText() {
   };
 }
 
+function pctOrFail(total, key) {
+  const pct = total?.[key]?.pct;
+  if (typeof pct !== "number" || Number.isNaN(pct)) {
+    console.error(
+      `coverage-summary.json total.${key}.pct is not a number (got ${JSON.stringify(pct)}).`,
+    );
+    process.exit(1);
+  }
+  return pct;
+}
+
 function coverageFromJsonSummary() {
   if (!existsSync(SUMMARY_JSON)) {
     console.error(
@@ -75,10 +92,10 @@ function coverageFromJsonSummary() {
     process.exit(1);
   }
   return {
-    statements: total.statements?.pct ?? 0,
-    branches: total.branches?.pct ?? 0,
-    functions: total.functions?.pct ?? 0,
-    lines: total.lines?.pct ?? 0,
+    statements: pctOrFail(total, "statements"),
+    branches: pctOrFail(total, "branches"),
+    functions: pctOrFail(total, "functions"),
+    lines: pctOrFail(total, "lines"),
   };
 }
 
