@@ -182,6 +182,13 @@ export async function processQueue(
       }
     }
   } finally {
-    if (processId) activeFibers.delete(processId)
+    if (processId) {
+      activeFibers.delete(processId)
+      // Always clear any residual cancellation flag: when cancelQueue interrupts
+      // the fiber, the in-loop `cancelledProcesses.delete(processId)` never runs
+      // and would otherwise cause the next invocation with the same processId
+      // to cancel immediately. Cleaning up here guarantees a fresh slate.
+      cancelledProcesses.delete(processId)
+    }
   }
 }
