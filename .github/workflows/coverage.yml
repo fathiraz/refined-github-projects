@@ -1,0 +1,74 @@
+name: Coverage on main
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'coverage/**'
+      - '.github/workflows/coverage.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coverage-main
+  cancel-in-progress: false
+
+jobs:
+  coverage:
+    # irongut/CodeCoverageSummary is a Docker action; Linux runners only.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          # Reuse the release-please PAT so the auto-commit can push to a
+          # potentially branch-protected `main`.
+          token: ${{ secrets.TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        # Writes coverage/cobertura-coverage.xml and coverage/coverage-summary.json
+        # in addition to the existing text + lcov reporters.
+        run: pnpm test:coverage
+
+      - name: Code Coverage Summary Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage/cobertura-coverage.xml
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '50 75'
+
+      - name: Update README badge + summary
+        run: node scripts/update-coverage-badge.mjs --from-summary --from-markdown code-coverage-results.md
+
+      - name: Commit updated README
+        uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          commit_message: 'chore(coverage): update README coverage summary [skip ci]'
+          file_pattern: README.md
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
