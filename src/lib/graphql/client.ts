@@ -1,33 +1,7 @@
-import { Effect, Logger, HashMap, Exit, Cause } from 'effect'
+import { Effect, Exit, Cause } from 'effect'
 import { patStorage } from '../storage'
-import { logger } from '../debug-logger'
+import { RgpLoggerLive } from '../debug-logger'
 import { GithubHttpError, GithubGraphQLError, GithubNetworkError } from '../errors'
-
-const effectLoggerLayer = Logger.replace(
-  Logger.defaultLogger,
-  Logger.make(({ logLevel, message, annotations }) => {
-    const msg = [message].flat().map(String).join(' ')
-    const ctx = HashMap.isEmpty(annotations)
-      ? undefined
-      : Object.fromEntries(HashMap.entries(annotations))
-    const args: unknown[] = ctx ? [msg, ctx] : [msg]
-    switch (logLevel.label) {
-      case 'ERROR':
-      case 'FATAL':
-        logger.error(...args)
-        break
-      case 'WARN':
-        logger.warn(...args)
-        break
-      case 'DEBUG':
-      case 'TRACE':
-        logger.debug(...args)
-        break
-      default:
-        logger.log(...args)
-    }
-  }),
-)
 
 function operationName(query: string): string {
   return query.match(/(?:query|mutation)\s+(\w+)/)?.[1] ?? 'unknown'
@@ -101,7 +75,7 @@ export async function gql<T = unknown>(
   options?: { silent?: boolean },
 ): Promise<T> {
   const exit = await Effect.runPromiseExit(
-    gqlEffect<T>(query, variables, options).pipe(Effect.provide(effectLoggerLayer)),
+    gqlEffect<T>(query, variables, options).pipe(Effect.provide(RgpLoggerLive)),
   )
   if (Exit.isSuccess(exit)) return exit.value
   const cause = exit.cause
