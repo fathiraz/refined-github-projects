@@ -21,23 +21,58 @@ const MAX_SETUP_ENTRIES = 500
 // Stores Promise<CachedEffect> per item key.
 // Set synchronously before first await to prevent concurrent-request races.
 // Entries are evicted after their TTL expires and capped at MAX_SETUP_ENTRIES
-// (FIFO) to prevent unbounded memory growth for distinct keys.
+// (FIFO) to prevent unbounded memory growth for distinct keys. Each entry has
+// an associated timer tracked in the sibling timer Map so that re-insertions
+// (after a cap-eviction or failure-invalidation) cancel the stale timer and
+// never accidentally delete a newer entry for the same key.
 const _previewSetup = new Map<string, Promise<Effect.Effect<ItemPreviewData>>>()
 const _hierarchySetup = new Map<string, Promise<Effect.Effect<HierarchyData>>>()
+const _previewTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const _hierarchyTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
-function scheduleSetupEviction<V>(map: Map<string, V>, key: string, ttlMs: number): void {
+function clearSetupTimer(timers: Map<string, ReturnType<typeof setTimeout>>, key: string): void {
+  const t = timers.get(key)
+  if (t !== undefined) {
+    clearTimeout(t)
+    timers.delete(key)
+  }
+}
+
+function scheduleSetupEviction<V>(
+  map: Map<string, V>,
+  timers: Map<string, ReturnType<typeof setTimeout>>,
+  key: string,
+  ttlMs: number,
+): void {
+  clearSetupTimer(timers, key)
   const t = setTimeout(() => {
+    timers.delete(key)
     map.delete(key)
   }, ttlMs)
   ;(t as unknown as { unref?: () => void }).unref?.()
+  timers.set(key, t)
 }
 
-function capSetupMap<V>(map: Map<string, V>, max: number): void {
+function capSetupMap<V>(
+  map: Map<string, V>,
+  timers: Map<string, ReturnType<typeof setTimeout>>,
+  max: number,
+): void {
   while (map.size >= max) {
     const oldest = map.keys().next().value
     if (oldest === undefined) break
     map.delete(oldest)
+    clearSetupTimer(timers, oldest)
   }
+}
+
+function invalidateSetupEntry<V>(
+  map: Map<string, V>,
+  timers: Map<string, ReturnType<typeof setTimeout>>,
+  key: string,
+): void {
+  map.delete(key)
+  clearSetupTimer(timers, key)
 }
 
 export async function getOrCachePreview(
@@ -45,14 +80,20 @@ export async function getOrCachePreview(
   fetchFn: () => Promise<ItemPreviewData>,
 ): Promise<ItemPreviewData> {
   if (!_previewSetup.has(key)) {
-    capSetupMap(_previewSetup, MAX_SETUP_ENTRIES)
+    capSetupMap(_previewSetup, _previewTimers, MAX_SETUP_ENTRIES)
     _previewSetup.set(
       key,
       Effect.runPromise(Effect.cachedWithTTL(Effect.promise(fetchFn), PREVIEW_TTL)),
     )
-    scheduleSetupEviction(_previewSetup, key, PREVIEW_TTL_MS)
+    scheduleSetupEviction(_previewSetup, _previewTimers, key, PREVIEW_TTL_MS)
   }
-  return Effect.runPromise(await _previewSetup.get(key)!)
+  try {
+    return await Effect.runPromise(await _previewSetup.get(key)!)
+  } catch (err) {
+    // Never cache transient fetch failures — invalidate so subsequent callers retry.
+    invalidateSetupEntry(_previewSetup, _previewTimers, key)
+    throw err
+  }
 }
 
 export async function getOrCacheHierarchy(
@@ -60,14 +101,19 @@ export async function getOrCacheHierarchy(
   fetchFn: () => Promise<HierarchyData>,
 ): Promise<HierarchyData> {
   if (!_hierarchySetup.has(key)) {
-    capSetupMap(_hierarchySetup, MAX_SETUP_ENTRIES)
+    capSetupMap(_hierarchySetup, _hierarchyTimers, MAX_SETUP_ENTRIES)
     _hierarchySetup.set(
       key,
       Effect.runPromise(Effect.cachedWithTTL(Effect.promise(fetchFn), HIERARCHY_TTL)),
     )
-    scheduleSetupEviction(_hierarchySetup, key, HIERARCHY_TTL_MS)
+    scheduleSetupEviction(_hierarchySetup, _hierarchyTimers, key, HIERARCHY_TTL_MS)
   }
-  return Effect.runPromise(await _hierarchySetup.get(key)!)
+  try {
+    return await Effect.runPromise(await _hierarchySetup.get(key)!)
+  } catch (err) {
+    invalidateSetupEntry(_hierarchySetup, _hierarchyTimers, key)
+    throw err
+  }
 }
 
 export const FIELDS_CACHE_TTL_MS = 60_000
