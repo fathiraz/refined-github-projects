@@ -61,7 +61,18 @@ export function registerConfigHandlers(): void {
       }
     }
 
-    const json = await res.json()
+    const json = (await res.json().catch(() => null)) as {
+      data?: { viewer?: { login?: string } }
+      errors?: { message?: string }[]
+    } | null
+    if (!json) {
+      logger.warn('[rgp:config] validatePat invalid JSON response')
+      return {
+        valid: false as const,
+        errorType: 'unknown' as PatErrorType,
+        errorMessage: 'Invalid response payload',
+      }
+    }
     if (json.errors?.length) {
       const errMsg: string = json.errors[0].message ?? ''
       const isScope =
@@ -74,7 +85,7 @@ export function registerConfigHandlers(): void {
       }
     }
 
-    const login: string = json.data?.viewer?.login
+    const login = json.data?.viewer?.login
     if (login) await usernameStorage.setValue(login)
     logger.verbose('[rgp:config] validatePat success', { login })
     return { valid: true as const, user: login ?? '' }
