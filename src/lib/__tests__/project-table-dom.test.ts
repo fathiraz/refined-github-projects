@@ -81,11 +81,11 @@ describe('getAllInjectedItemIds', () => {
     document.body.appendChild(row2)
 
     const ids = getAllInjectedItemIds()
-    expect(ids).toEqual(['id-1', 'id-2'])
+    expect(ids).toEqualValue(['id-1', 'id-2'])
   })
 
   it('returns empty array when no injected rows', () => {
-    expect(getAllInjectedItemIds()).toEqual([])
+    expect(getAllInjectedItemIds()).toEqualValue([])
   })
 
   it('skips rows with value "1"', () => {
@@ -94,7 +94,7 @@ describe('getAllInjectedItemIds', () => {
     row.setAttribute(INJECTED_ATTR, '1')
     document.body.appendChild(row)
 
-    expect(getAllInjectedItemIds()).toEqual([])
+    expect(getAllInjectedItemIds()).toEqualValue([])
   })
 })
 

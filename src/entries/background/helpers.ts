@@ -18,6 +18,7 @@ import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { patStorage } from '@/lib/storage'
 import { logger } from '@/lib/debug-logger'
+import { GithubHttpError } from '@/lib/errors'
 
 import type {
   FieldsResultProject,
@@ -124,16 +125,7 @@ export function mapIssueNodeToRelationshipSearchResult(
 
 // ─── GitHubRequestError ──────────────────────────────────────────────────────
 
-export class GitHubRequestError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public retryAfter: number,
-  ) {
-    super(message)
-    this.name = 'GitHubRequestError'
-  }
-}
+export { GithubHttpError as GitHubRequestError } from '@/lib/errors'
 
 // ─── parseRepoFromUrl ────────────────────────────────────────────────────────
 
@@ -242,7 +234,7 @@ export async function githubRest<T>(path: string, init: RequestInit = {}): Promi
       // Ignore JSON parse failures and fall back to status text.
     }
 
-    throw new GitHubRequestError(message, res.status, retryAfter)
+    throw new GithubHttpError({ message, status: res.status, retryAfter })
   }
 
   if (res.status === 204) {
@@ -315,7 +307,7 @@ export async function getCurrentParentRelationship(
 
     return normalizeIssueRelationship(response) ?? undefined
   } catch (error) {
-    if (error instanceof GitHubRequestError && error.status === 404) {
+    if (error instanceof GithubHttpError && error.status === 404) {
       return undefined
     }
 
@@ -335,7 +327,7 @@ export async function listIssueRelationshipsSafe(
   try {
     return await listIssueRelationships(kind, owner, repo, issueNumber, tabId)
   } catch (error) {
-    console.warn('[rgp:bg] failed to load issue relationships', {
+    logger.warn('[rgp:bg] failed to load issue relationships', {
       kind,
       owner,
       repo,
@@ -368,7 +360,7 @@ export async function listSubIssuesSafe(
       state: item.state?.toUpperCase() === 'CLOSED' ? 'CLOSED' : 'OPEN',
     }))
   } catch (error) {
-    console.warn('[rgp:bg] listSubIssuesSafe failed', { owner, repo, issueNumber, error })
+    logger.warn('[rgp:bg] listSubIssuesSafe failed', { owner, repo, issueNumber, error })
     return []
   }
 }
@@ -563,7 +555,7 @@ export function buildBulkRelationshipTasks(
           (await getCurrentParentRelationship(item.repoOwner, item.repoName, issueNumber, tabId))
 
         if (!currentParent) {
-          console.warn('[rgp:bg] parent clear requested but no current parent could be resolved', {
+          logger.warn('[rgp:bg] parent clear requested but no current parent could be resolved', {
             domId: item.domId,
             repoOwner: item.repoOwner,
             repoName: item.repoName,
@@ -586,7 +578,7 @@ export function buildBulkRelationshipTasks(
           )
           await sleep(1000)
         } catch (error) {
-          console.error('[rgp:bg] failed to clear parent relationship', {
+          logger.error('[rgp:bg] failed to clear parent relationship', {
             domId: item.domId,
             repoOwner: item.repoOwner,
             repoName: item.repoName,
@@ -594,7 +586,7 @@ export function buildBulkRelationshipTasks(
             currentParent,
             error,
           })
-          if (!(error instanceof GitHubRequestError) || error.status !== 404) {
+          if (!(error instanceof GithubHttpError) || error.status !== 404) {
             throw error
           }
         }
@@ -771,7 +763,7 @@ export async function resolveProjectItemIds(
       databaseIdMap.set(parseInt(dashMatch[1], 10), domId)
       continue
     }
-    console.warn('[rgp:bg] could not parse DOM ID:', domId)
+    logger.warn('[rgp:bg] could not parse DOM ID:', domId)
   }
 
   if (databaseIdMap.size === 0) return []
@@ -824,7 +816,7 @@ export async function resolveProjectItemIds(
 
     const items = page.node?.items
     if (!items) {
-      console.warn('[rgp:bg] project node returned null items')
+      logger.warn('[rgp:bg] project node returned null items')
       break
     }
 
@@ -864,7 +856,7 @@ export async function resolveProjectItemIds(
   }
 
   if (remaining.size > 0) {
-    console.warn('[rgp:bg] could not resolve these database IDs:', [...remaining])
+    logger.warn('[rgp:bg] could not resolve these database IDs:', [...remaining])
   }
 
   return results
@@ -895,7 +887,7 @@ export async function resolveProjectItemIdsWithTitles(
       databaseIdMap.set(parseInt(dashMatch[1], 10), domId)
       continue
     }
-    console.warn('[rgp:bg] could not parse DOM ID:', domId)
+    logger.warn('[rgp:bg] could not parse DOM ID:', domId)
   }
 
   if (databaseIdMap.size === 0) return []
@@ -929,7 +921,7 @@ export async function resolveProjectItemIdsWithTitles(
 
     const items = page.node?.items
     if (!items) {
-      console.warn('[rgp:bg] project node returned null items')
+      logger.warn('[rgp:bg] project node returned null items')
       break
     }
 
@@ -957,7 +949,7 @@ export async function resolveProjectItemIdsWithTitles(
   }
 
   if (remaining.size > 0) {
-    console.warn('[rgp:bg] could not resolve these database IDs for rename:', [...remaining])
+    logger.warn('[rgp:bg] could not resolve these database IDs for rename:', [...remaining])
   }
 
   return results
@@ -984,7 +976,7 @@ export async function broadcastQueue(
     await sendMessage('queueStateUpdate', state, tabId)
   } catch (err) {
     // Swallow errors - tab may have navigated away while job was running
-    console.warn('[rgp:bg] broadcastQueue failed (tab may be gone):', err)
+    logger.warn('[rgp:bg] broadcastQueue failed (tab may be gone):', err)
   }
 }
 
@@ -1000,18 +992,17 @@ export async function withRateLimitRetry<T>(fn: () => Promise<T>, tabId?: number
       const e = err as { status?: number; retryAfter?: number }
       if (e.status === 403 || e.status === 429) {
         const retryAfter = e.retryAfter ?? 60
-        console.warn(
-          '[rgp:bg] rate limited, retrying in',
+        logger.warn('[rgp:bg] rate limited, retrying in', {
           retryAfter,
-          's (attempt',
-          attempt + 1,
-          '/ 3)',
-        )
+          attempt: attempt + 1,
+          maxAttempts: 3,
+        })
+        logger.verbose(`⏸ paused ${retryAfter}s — attempt ${attempt + 1}/3`)
         await broadcastQueue({ total: 0, completed: 0, paused: true, retryAfter }, tabId)
         await sleep(retryAfter * 1000)
         await broadcastQueue({ total: 0, completed: 0, paused: false }, tabId)
       } else {
-        console.error('[rgp:bg] task failed permanently', err)
+        logger.error('[rgp:bg] task failed permanently', err)
         throw err
       }
     }
