@@ -1,0 +1,24 @@
+src/entries/background/handlers/config-handlers.ts
+  7125a438d3d75bd8 53-58,62-63,67,86-101,104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "6745de66d3c18996cee39e62eddd288caded1211",
+  "prompts": {
+    "7125a438d3d75bd8": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "5673521c-05d6-4966-ba1f-cd37f040efbc",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 5,
+      "accepted_lines": 26,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/a8161cf6639050dc07c58648c5b47d102ac3d8ea7abf0365900e22f5cb19c012"
+    }
+  }
+}
