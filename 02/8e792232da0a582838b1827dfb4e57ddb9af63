@@ -1,0 +1,110 @@
+scripts/update-coverage-badge.mjs
+  9b0efe7e2ff83c0e 82-84,91-100
+.github/workflows/coverage.yml
+  cc053299a1b9ccf6 1-74
+README.md
+  c00cc094b32bd2fa 67,363-367
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "028e792232da0a582838b1827dfb4e57ddb9af63",
+  "prompts": {
+    "9b0efe7e2ff83c0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "26bf0b56-b3c8-4f60-91bb-c9450abf6bed",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 104,
+      "total_deletions": 1,
+      "accepted_lines": 77,
+      "overriden_lines": 20,
+      "messages_url": "https://usegitai.com/cas/95539dfd4a52d1557ebe8fafc306e91da1de1c842248e72a647d824b83a99c52"
+    },
+    "a3ff959714c8fc7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b8f00b44-4dc9-4f1c-bc7a-d12eed1552d1",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 1,
+      "accepted_lines": 2,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/677ac2be12f0908615c22d37efe65737273a59f76d5a7a8fdb12d33be371b818"
+    },
+    "c00cc094b32bd2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247835c7cffexx62TTKwy5eh2p-e7023c3e-4771-48fb-816d-c0c39e0ad58d",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 1,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    },
+    "cc053299a1b9ccf6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_247835c7cffexx62TTKwy5eh2p-7f8ef6eb-4c69-4c9e-9f07-c0029fe33d7a",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 74,
+      "total_deletions": 0,
+      "accepted_lines": 74,
+      "overriden_lines": 0
+    },
+    "de5614e7b861f62f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "edca90a9-0fbe-4290-ad5c-eb8e6f034ee3",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1023,
+      "total_deletions": 52,
+      "accepted_lines": 971,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/a1dfb80d3f4768472e3b8a64cc13aa1c7c8697675cdcd393c4db01b58a909ebd"
+    },
+    "ed2a7747a2c83e53": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b411313-cc12-4bec-a8c9-b08f416f5370",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 970,
+      "total_deletions": 6,
+      "accepted_lines": 934,
+      "overriden_lines": 16,
+      "messages_url": "https://usegitai.com/cas/448369176791304e87754c0840c3c3b7b465682de31c7575a0488203ff2721f1"
+    },
+    "f0a54134bb855858": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca7b74b2-c38f-4cff-9435-99f64fed0192",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 4860,
+      "total_deletions": 3241,
+      "accepted_lines": 4942,
+      "overriden_lines": 313,
+      "messages_url": "https://usegitai.com/cas/d188eee38ef2bb5a0bc591b4c7aeb96fa091f11b87d039a49bed083b66a4fb51"
+    }
+  }
+}
