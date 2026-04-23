@@ -1,5 +1,6 @@
 import { defineExtensionMessaging } from '@webext-core/messaging'
 import type { ExcludeCondition, SprintSettings } from './storage'
+import type { PatErrorType } from './errors'
 
 export interface IssueRelationshipData {
   nodeId?: string
@@ -174,7 +175,11 @@ interface ProtocolMap {
   }): ItemPreviewData
   openOptions(data: {}): void
   getPatStatus(data: {}): { hasPat: boolean }
-  validatePat(data: { token: string }): { valid: boolean; user?: string }
+  validatePat(data: {
+    token: string
+  }):
+    | { valid: true; user: string }
+    | { valid: false; errorType?: PatErrorType; errorMessage?: string }
   searchRepoMetadata(data: {
     owner: string
     name: string

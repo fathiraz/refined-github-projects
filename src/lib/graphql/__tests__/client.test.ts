@@ -4,9 +4,17 @@ vi.mock('../../storage', () => ({
   patStorage: { getValue: vi.fn().mockResolvedValue('test-token') },
 }))
 
-vi.mock('../../debug-logger', () => ({
-  logger: { log: vi.fn() },
-}))
+vi.mock('../../debug-logger', async () => {
+  const { Logger } = await import('effect')
+  return {
+    logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
+    // Provide an inert layer so client.ts still has a Logger to provide.
+    RgpLoggerLive: Logger.replace(
+      Logger.defaultLogger,
+      Logger.make(() => {}),
+    ),
+  }
+})
 
 import { GqlError, gql } from '../client'
 
@@ -21,16 +29,16 @@ beforeEach(() => {
 
 describe('GqlError', () => {
   it('has the correct name, message, status, and retryAfter properties', () => {
-    const error = new GqlError('Rate limited', 429, 60)
+    const error = new GqlError({ message: 'Rate limited', status: 429, retryAfter: 60 })
 
-    expect(error.name).toBe('GqlError')
+    expect(error.name).toBe('GithubHttpError')
     expect(error.message).toBe('Rate limited')
     expect(error.status).toBe(429)
     expect(error.retryAfter).toBe(60)
   })
 
   it('is an instanceof Error', () => {
-    const error = new GqlError('Forbidden', 403, 30)
+    const error = new GqlError({ message: 'Forbidden', status: 403, retryAfter: 30 })
 
     expect(error).toBeInstanceOf(Error)
   })
@@ -51,7 +59,7 @@ describe('gql', () => {
       {},
     )
 
-    expect(result).toEqual(expectedData)
+    expect(result).toEqualValue(expectedData)
   })
 
   it('throws GqlError with status and retryAfter on HTTP error', async () => {
@@ -106,10 +114,8 @@ describe('gql', () => {
       })
       await gql('query Bad { foo }', {})
     } catch (error) {
-      expect(error).toBeInstanceOf(GqlError)
-      const gqlError = error as GqlError
-      expect(gqlError.status).toBe(200)
-      expect(gqlError.retryAfter).toBe(0)
+      expect(error).toBeInstanceOf(Error)
+      expect((error as Error).message).toBe('Field "foo" not found')
     }
   })
 
@@ -172,5 +178,37 @@ describe('gql', () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled()
 
     consoleErrorSpy.mockRestore()
+  })
+
+  it('propagates network error when fetch rejects', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('network down'))
+
+    await expect(gql('query Test { test }', {})).rejects.toBeDefined()
+  })
+
+  it('defaults retryAfter to 0 when header is missing', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Server Error',
+      headers: { get: () => null },
+    })
+
+    try {
+      await gql('query Test { test }', {})
+      throw new Error('should have thrown')
+    } catch (error) {
+      const gqlError = error as GqlError
+      expect(gqlError).toBeInstanceOf(GqlError)
+      expect(gqlError.status).toBe(500)
+      expect(gqlError.retryAfter).toBe(0)
+    }
+  })
+
+  it('two identical GqlError instances are Equal.equals', async () => {
+    const { Equal } = await import('effect')
+    const a = new GqlError({ status: 429, message: 'Rate', retryAfter: 30 })
+    const b = new GqlError({ status: 429, message: 'Rate', retryAfter: 30 })
+    expect(Equal.equals(a, b)).toBe(true)
   })
 })

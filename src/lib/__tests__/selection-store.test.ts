@@ -53,7 +53,7 @@ describe('selectionStore', () => {
     selectionStore.selectBatch(['x', 'y'])
     selectionStore.clear()
     expect(selectionStore.count()).toBe(0)
-    expect(selectionStore.getAll()).toEqual([])
+    expect(selectionStore.getAll()).toEqualValue([])
   })
 
   // ---------------------------------------------------------------------------

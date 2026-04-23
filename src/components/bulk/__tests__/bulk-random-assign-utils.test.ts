@@ -45,7 +45,7 @@ describe('distributeBalanced', () => {
     const result = distributeBalanced(items, assignees)
 
     expect(result.get('solo')).toHaveLength(3)
-    expect(collectAllValues(result).sort()).toEqual(items.sort())
+    expect(collectAllValues(result).sort()).toEqualValue(items.sort())
   })
 
   it('returns empty arrays for all assignees when items is empty', () => {
@@ -54,7 +54,7 @@ describe('distributeBalanced', () => {
     const result = distributeBalanced([], assignees)
 
     for (const assignee of assignees) {
-      expect(result.get(assignee)).toEqual([])
+      expect(result.get(assignee)).toEqualValue([])
     }
   })
 
@@ -71,7 +71,7 @@ describe('distributeBalanced', () => {
     const result = distributeBalanced(items, assignees)
 
     const allDistributed = collectAllValues(result)
-    expect(allDistributed.sort()).toEqual([...items].sort())
+    expect(allDistributed.sort()).toEqualValue([...items].sort())
   })
 })
 
@@ -83,7 +83,7 @@ describe('distributeRandom', () => {
     const result = distributeRandom(items, assignees)
 
     const allDistributed = collectAllValues(result)
-    expect(allDistributed.sort()).toEqual([...items].sort())
+    expect(allDistributed.sort()).toEqualValue([...items].sort())
   })
 
   it('has an entry for each assignee in the result', () => {
@@ -103,7 +103,7 @@ describe('distributeRandom', () => {
     const result = distributeRandom([], assignees)
 
     for (const assignee of assignees) {
-      expect(result.get(assignee)).toEqual([])
+      expect(result.get(assignee)).toEqualValue([])
     }
   })
 
@@ -121,9 +121,9 @@ describe('distributeRoundRobin', () => {
 
     const result = distributeRoundRobin(items, assignees)
 
-    expect(result.get('a1')).toEqual(['i1', 'i4'])
-    expect(result.get('a2')).toEqual(['i2', 'i5'])
-    expect(result.get('a3')).toEqual(['i3', 'i6'])
+    expect(result.get('a1')).toEqualValue(['i1', 'i4'])
+    expect(result.get('a2')).toEqualValue(['i2', 'i5'])
+    expect(result.get('a3')).toEqualValue(['i3', 'i6'])
   })
 
   it('distributes 7 items among 3 assignees — first gets 3, others get 2', () => {
@@ -143,7 +143,7 @@ describe('distributeRoundRobin', () => {
 
     const result = distributeRoundRobin(items, assignees)
 
-    expect(result.get('solo')).toEqual(['i1', 'i2', 'i3'])
+    expect(result.get('solo')).toEqualValue(['i1', 'i2', 'i3'])
   })
 
   it('returns empty arrays when items is empty', () => {
@@ -152,7 +152,7 @@ describe('distributeRoundRobin', () => {
     const result = distributeRoundRobin([], assignees)
 
     for (const assignee of assignees) {
-      expect(result.get(assignee)).toEqual([])
+      expect(result.get(assignee)).toEqualValue([])
     }
   })
 
@@ -163,10 +163,10 @@ describe('distributeRoundRobin', () => {
     const result = distributeRoundRobin(items, assignees)
 
     // a1 gets items at indices 0, 3, 6 → i1, i4, i7
-    expect(result.get('a1')).toEqual(['i1', 'i4', 'i7'])
+    expect(result.get('a1')).toEqualValue(['i1', 'i4', 'i7'])
     // a2 gets items at indices 1, 4, 7 → i2, i5, i8
-    expect(result.get('a2')).toEqual(['i2', 'i5', 'i8'])
+    expect(result.get('a2')).toEqualValue(['i2', 'i5', 'i8'])
     // a3 gets items at indices 2, 5, 8 → i3, i6, i9
-    expect(result.get('a3')).toEqual(['i3', 'i6', 'i9'])
+    expect(result.get('a3')).toEqualValue(['i3', 'i6', 'i9'])
   })
 })
