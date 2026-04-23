@@ -107,9 +107,20 @@ export function registerConfigHandlers(): void {
     }
 
     const login = json.data?.viewer?.login
-    if (login) await usernameStorage.setValue(login)
+    if (!login) {
+      // A 2xx response with no viewer.login indicates an unusable token
+      // (e.g. revoked fine-grained PAT that returns an empty data payload).
+      // Refusing to persist it prevents the UI from marking the PAT as valid.
+      logger.warn('[rgp:config] validatePat missing viewer login in response')
+      return {
+        valid: false as const,
+        errorType: 'unknown' as PatErrorType,
+        errorMessage: 'Missing viewer login in response',
+      }
+    }
+    await usernameStorage.setValue(login)
     logger.verbose('[rgp:config] validatePat success', { login })
-    return { valid: true as const, user: login ?? '' }
+    return { valid: true as const, user: login }
   })
 
   onMessage('cancelProcess', ({ data }) => {
