@@ -1,0 +1,24 @@
+src/lib/debug-logger.ts
+  7125a438d3d75bd8 1,37-39,41,67-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "b6b9635ce99102a550984493865b1f2eb3ae9f91",
+  "prompts": {
+    "7125a438d3d75bd8": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "5673521c-05d6-4966-ba1f-cd37f040efbc",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 46,
+      "total_deletions": 31,
+      "accepted_lines": 46,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/7de7b4fc2d4c12fce9ed37f5a8eb5e34f9d96651a300e25adbcd0d40958ad6c1"
+    }
+  }
+}
