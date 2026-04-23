@@ -1,4 +1,4 @@
-import { Duration, Effect, Either, Fiber, Queue } from 'effect'
+import { Cause, Chunk, Duration, Effect, Either, Exit, Fiber, Option, Queue } from 'effect'
 
 import { logger } from './debug-logger'
 
@@ -161,8 +161,26 @@ export async function processQueue(
   if (processId) activeFibers.set(processId, fiber)
 
   try {
-    // Fiber.await never rejects — returns Exit<E,A> — so interrupted queues return cleanly
-    await Effect.runPromise(Fiber.await(fiber))
+    // Fiber.await never rejects — returns Exit<E, A>. We inspect it so that
+    // unexpected defects (e.g. thrown errors from notify() / onStateChange)
+    // surface to the caller instead of being silently swallowed. Interrupts
+    // are expected (e.g. cancelQueue) and must still return cleanly.
+    const exit = await Effect.runPromise(Fiber.await(fiber))
+    if (Exit.isFailure(exit)) {
+      const cause = exit.cause
+      if (!Cause.isInterruptedOnly(cause)) {
+        const firstDefect = Chunk.head(Cause.defects(cause))
+        if (Option.isSome(firstDefect)) {
+          const d = firstDefect.value
+          throw d instanceof Error ? d : new Error(String(d))
+        }
+        const firstFailure = Chunk.head(Cause.failures(cause))
+        if (Option.isSome(firstFailure)) {
+          const f: unknown = firstFailure.value
+          throw f instanceof Error ? f : new Error(String(f))
+        }
+      }
+    }
   } finally {
     if (processId) activeFibers.delete(processId)
   }

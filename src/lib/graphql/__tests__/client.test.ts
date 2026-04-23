@@ -4,9 +4,17 @@ vi.mock('../../storage', () => ({
   patStorage: { getValue: vi.fn().mockResolvedValue('test-token') },
 }))
 
-vi.mock('../../debug-logger', () => ({
-  logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
-}))
+vi.mock('../../debug-logger', async () => {
+  const { Logger } = await import('effect')
+  return {
+    logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
+    // Provide an inert layer so client.ts still has a Logger to provide.
+    RgpLoggerLive: Logger.replace(
+      Logger.defaultLogger,
+      Logger.make(() => {}),
+    ),
+  }
+})
 
 import { GqlError, gql } from '../client'
 
