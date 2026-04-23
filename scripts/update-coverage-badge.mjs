@@ -1,14 +1,24 @@
 #!/usr/bin/env node
 
 /**
- * Parses the vitest coverage text output and updates the coverage badge in README.md.
+ * Updates the coverage badge (and optionally the coverage summary block) in README.md.
  *
- * Usage:
- *   pnpm test:coverage-badge          # runs coverage + updates badge
- *   node scripts/update-coverage-badge.mjs   # updates badge from existing coverage/
+ * Modes:
+ *   1. Local default (no flags):
+ *        pnpm test:coverage-badge
+ *      Runs `npx vitest run --coverage --reporter=default`, parses the text
+ *      "All files" row, and swaps the COVERAGE_BADGE markers.
+ *
+ *   2. CI-friendly (recommended in workflows):
+ *        node scripts/update-coverage-badge.mjs --from-summary [--from-markdown <path>]
+ *      Reads `coverage/coverage-summary.json` (written by vitest json-summary
+ *      reporter) without re-running the test suite, swaps the COVERAGE_BADGE
+ *      markers, and — if `--from-markdown` is given — injects the contents of
+ *      the irongut/CodeCoverageSummary markdown file between the
+ *      COVERAGE_REPORT markers.
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
@@ -16,16 +26,31 @@ import { execSync } from "node:child_process";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const README = resolve(ROOT, "README.md");
+const SUMMARY_JSON = resolve(ROOT, "coverage", "coverage-summary.json");
 
-function getCoveragePercentage() {
-  // Run vitest with coverage and capture output
+function parseArgs(argv) {
+  const args = { fromSummary: false, fromMarkdown: null };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--from-summary") args.fromSummary = true;
+    else if (a === "--from-markdown") {
+      args.fromMarkdown = argv[++i];
+      if (!args.fromMarkdown) {
+        console.error("--from-markdown requires a file path argument.");
+        process.exit(1);
+      }
+    }
+  }
+  return args;
+}
+
+function coverageFromVitestText() {
   const output = execSync("npx vitest run --coverage --reporter=default", {
     cwd: ROOT,
     encoding: "utf-8",
     stdio: ["pipe", "pipe", "pipe"],
   });
 
-  // Match the "All files" row: | All files | XX.XX | ...
   const match = output.match(
     /All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/,
   );
@@ -33,12 +58,44 @@ function getCoveragePercentage() {
     console.error("Could not parse coverage from vitest output.");
     process.exit(1);
   }
-
   return {
     statements: parseFloat(match[1]),
     branches: parseFloat(match[2]),
     functions: parseFloat(match[3]),
     lines: parseFloat(match[4]),
+  };
+}
+
+function pctOrFail(total, key) {
+  const pct = total?.[key]?.pct;
+  if (typeof pct !== "number" || Number.isNaN(pct)) {
+    console.error(
+      `coverage-summary.json total.${key}.pct is not a number (got ${JSON.stringify(pct)}).`,
+    );
+    process.exit(1);
+  }
+  return pct;
+}
+
+function coverageFromJsonSummary() {
+  if (!existsSync(SUMMARY_JSON)) {
+    console.error(
+      `coverage-summary.json not found at ${SUMMARY_JSON}. ` +
+        "Run `pnpm test:coverage` first (vitest must include the 'json-summary' reporter).",
+    );
+    process.exit(1);
+  }
+  const data = JSON.parse(readFileSync(SUMMARY_JSON, "utf-8"));
+  const total = data.total;
+  if (!total) {
+    console.error("coverage-summary.json is missing a `total` block.");
+    process.exit(1);
+  }
+  return {
+    statements: pctOrFail(total, "statements"),
+    branches: pctOrFail(total, "branches"),
+    functions: pctOrFail(total, "functions"),
+    lines: pctOrFail(total, "lines"),
   };
 }
 
@@ -48,28 +105,75 @@ function badgeColor(pct) {
   return "red";
 }
 
-const coverage = getCoveragePercentage();
-const pct = coverage.statements;
-const color = badgeColor(pct);
-const encoded = `${pct}%25`;
-const badgeUrl = `https://img.shields.io/badge/coverage-${encoded}-${color}?style=for-the-badge`;
-
-const readme = readFileSync(README, "utf-8");
-const updated = readme.replace(
-  /<!-- COVERAGE_BADGE_START -->.*?<!-- COVERAGE_BADGE_END -->/s,
-  `<!-- COVERAGE_BADGE_START --><img src="${badgeUrl}" alt="Coverage" /><!-- COVERAGE_BADGE_END -->`,
-);
-
-const hasMarkers = /<!-- COVERAGE_BADGE_START -->/.test(readme);
-if (!hasMarkers) {
-  console.error("No coverage badge markers found in README.md — nothing to update.");
-  process.exit(1);
+function buildBadgeBlock(pct) {
+  const color = badgeColor(pct);
+  const encoded = `${pct}%25`;
+  const badgeUrl = `https://img.shields.io/badge/coverage-${encoded}-${color}?style=for-the-badge`;
+  return {
+    html: `<!-- COVERAGE_BADGE_START --><img src="${badgeUrl}" alt="Coverage" /><!-- COVERAGE_BADGE_END -->`,
+    color,
+  };
 }
 
-if (updated === readme) {
+function replaceBadge(readme, pct) {
+  const hasMarkers = /<!-- COVERAGE_BADGE_START -->/.test(readme);
+  if (!hasMarkers) {
+    console.error("No coverage badge markers found in README.md.");
+    process.exit(1);
+  }
+  const { html, color } = buildBadgeBlock(pct);
+  const updated = readme.replace(
+    /<!-- COVERAGE_BADGE_START -->.*?<!-- COVERAGE_BADGE_END -->/s,
+    html,
+  );
+  return { readme: updated, color };
+}
+
+function replaceReportBlock(readme, markdownPath) {
+  if (!existsSync(markdownPath)) {
+    console.error(`Coverage markdown file not found at ${markdownPath}.`);
+    process.exit(1);
+  }
+  if (!/<!-- COVERAGE_REPORT_START -->/.test(readme)) {
+    console.warn(
+      "No COVERAGE_REPORT markers in README.md — skipping summary block.",
+    );
+    return readme;
+  }
+  const markdown = readFileSync(markdownPath, "utf-8").trim();
+  const block = [
+    "<!-- COVERAGE_REPORT_START -->",
+    "",
+    markdown,
+    "",
+    "<!-- COVERAGE_REPORT_END -->",
+  ].join("\n");
+  return readme.replace(
+    /<!-- COVERAGE_REPORT_START -->[\s\S]*?<!-- COVERAGE_REPORT_END -->/,
+    block,
+  );
+}
+
+const args = parseArgs(process.argv.slice(2));
+
+const coverage = args.fromSummary ? coverageFromJsonSummary() : coverageFromVitestText();
+const pct = coverage.statements;
+
+const original = readFileSync(README, "utf-8");
+let next = original;
+
+const { readme: withBadge, color } = replaceBadge(next, pct);
+next = withBadge;
+
+if (args.fromMarkdown) {
+  next = replaceReportBlock(next, resolve(ROOT, args.fromMarkdown));
+}
+
+if (next === original) {
   console.log(`Coverage badge already up to date: ${pct}% (${color})`);
   process.exit(0);
 }
 
-writeFileSync(README, updated, "utf-8");
+writeFileSync(README, next, "utf-8");
 console.log(`Updated coverage badge: ${pct}% (${color})`);
+if (args.fromMarkdown) console.log(`Updated coverage summary block from ${args.fromMarkdown}.`);

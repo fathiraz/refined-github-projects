@@ -64,6 +64,7 @@
 - [Architecture](#️-architecture)
 - [Tech Stack](#️-tech-stack)
 - [Roadmap](#️-roadmap)
+- [Test Coverage](#-test-coverage)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -356,6 +357,14 @@ If you want to use Safari manually, follow the [WXT Safari publishing guide](htt
 - [x] Live queue tracker with real-time progress
 - [x] Chrome Web Store release
 - [x] Firefox Add-ons release
+
+---
+
+## 📊 Test Coverage
+
+<!-- COVERAGE_REPORT_START -->
+_Coverage summary is generated automatically on every merge to `main` by the [Code Coverage Summary](https://github.com/marketplace/actions/code-coverage-summary) action._
+<!-- COVERAGE_REPORT_END -->
 
 ---
 
