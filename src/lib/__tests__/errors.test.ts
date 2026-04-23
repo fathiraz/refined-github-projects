@@ -29,16 +29,15 @@ describe('GithubHttpError', () => {
     expect(Equal.equals(a, b)).toBe(false)
   })
 
-  it('ignores the inherited Error.message property (compared by enumerable own keys only)', () => {
-    // Data.TaggedError stores `message` via the Error super constructor, which
-    // makes it a NON-enumerable own property. The default StructuralPrototype
-    // equality iterates `Object.keys`, so two instances with different
-    // messages but identical `status` + `retryAfter` are still Equal.equals.
-    // We keep this as an explicit behavioural contract so regressions surface.
+  it('Equal.equals returns false when message differs', () => {
+    // `message` is part of the TaggedError payload contract, so differing
+    // messages must make the errors unequal. The class constructor redefines
+    // `message` as an enumerable own property specifically so that it
+    // participates in structural equality.
     const a = new GithubHttpError({ status: 403, message: 'Forbidden', retryAfter: 0 })
     const b = new GithubHttpError({ status: 403, message: 'Blocked', retryAfter: 0 })
 
-    expect(Equal.equals(a, b)).toBe(true)
+    expect(Equal.equals(a, b)).toBe(false)
     expect(a.message).not.toBe(b.message)
   })
 
@@ -66,11 +65,11 @@ describe('GithubGraphQLError', () => {
     expect(Equal.equals(a, b)).toBe(true)
   })
 
-  it('Equal.equals stays true across differing messages (see HttpError note)', () => {
+  it('Equal.equals returns false when message differs', () => {
     const a = new GithubGraphQLError({ message: 'one' })
     const b = new GithubGraphQLError({ message: 'two' })
 
-    expect(Equal.equals(a, b)).toBe(true)
+    expect(Equal.equals(a, b)).toBe(false)
   })
 })
 
