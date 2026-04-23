@@ -1,0 +1,24 @@
+src/lib/graphql/client.ts
+  7125a438d3d75bd8 1,3,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "7b93e9a3ea493b2c12868d30877e485fcb0cf6d0",
+  "prompts": {
+    "7125a438d3d75bd8": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "5673521c-05d6-4966-ba1f-cd37f040efbc",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 29,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/8f4d88b332ad977173065d8564284bb7c86826d1963725124b3eb5cda3392617"
+    }
+  }
+}
