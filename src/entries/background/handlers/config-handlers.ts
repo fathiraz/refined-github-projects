@@ -50,13 +50,21 @@ export function registerConfigHandlers(): void {
     }
 
     if (!res.ok) {
+      // GitHub surfaces both abuse rate limits (HTTP 403) and secondary rate
+      // limits (HTTP 429). Distinguish rate-limit 403s from permission 403s by
+      // checking the X-RateLimit-Remaining header, which is `0` only when the
+      // token is throttled. Fall back to `unknown` when we cannot tell.
+      const rateLimitRemaining = res.headers.get('X-RateLimit-Remaining')
+      const isRateLimit = res.status === 429 || (res.status === 403 && rateLimitRemaining === '0')
       logger.warn('[rgp:config] validatePat non-ok response', {
         status: res.status,
         statusText: res.statusText,
+        rateLimitRemaining,
+        isRateLimit,
       })
       return {
         valid: false as const,
-        errorType: 'unknown' as PatErrorType,
+        errorType: (isRateLimit ? 'rate_limit' : 'unknown') as PatErrorType,
         errorMessage: res.statusText,
       }
     }
@@ -75,12 +83,25 @@ export function registerConfigHandlers(): void {
     }
     if (json.errors?.length) {
       const errMsg: string = json.errors[0].message ?? ''
-      const isScope =
-        errMsg.toLowerCase().includes('scope') || errMsg.toLowerCase().includes('permission')
-      logger.warn('[rgp:config] validatePat GraphQL error', { errMsg, isScope })
+      const lower = errMsg.toLowerCase()
+      const isScope = lower.includes('scope') || lower.includes('permission')
+      // GitHub returns HTTP 200 with a GraphQL error body when the PAT is
+      // secondary-rate-limited, so classify those messages as rate_limit
+      // instead of burying them under `unknown`.
+      const isRateLimit = lower.includes('rate limit') || lower.includes('abuse')
+      logger.warn('[rgp:config] validatePat GraphQL error', {
+        errMsg,
+        isScope,
+        isRateLimit,
+      })
+      const errorType: PatErrorType = isScope
+        ? 'missing_scopes'
+        : isRateLimit
+          ? 'rate_limit'
+          : 'unknown'
       return {
         valid: false as const,
-        errorType: (isScope ? 'missing_scopes' : 'unknown') as PatErrorType,
+        errorType,
         errorMessage: errMsg,
       }
     }
