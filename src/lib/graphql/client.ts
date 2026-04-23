@@ -40,8 +40,8 @@ function gqlEffect<T>(
       yield* Effect.logError('HTTP error').pipe(
         Effect.annotateLogs({ op, status: res.status, statusText: res.statusText, retryAfter }),
       )
-      yield* Effect.logDebug('QUERY').pipe(Effect.annotateLogs({ query }))
-      yield* Effect.logDebug('VARIABLES').pipe(Effect.annotateLogs({ variables }))
+      yield* Effect.logError('QUERY').pipe(Effect.annotateLogs({ query }))
+      yield* Effect.logError('VARIABLES').pipe(Effect.annotateLogs({ variables }))
       return yield* Effect.fail(
         new GithubHttpError({ message: res.statusText, status: res.status, retryAfter }),
       )
@@ -59,8 +59,8 @@ function gqlEffect<T>(
         yield* Effect.logError('GraphQL errors').pipe(
           Effect.annotateLogs({ op, errors: json.errors }),
         )
-        yield* Effect.logDebug('QUERY').pipe(Effect.annotateLogs({ query }))
-        yield* Effect.logDebug('VARIABLES').pipe(Effect.annotateLogs({ variables }))
+        yield* Effect.logError('QUERY').pipe(Effect.annotateLogs({ query }))
+        yield* Effect.logError('VARIABLES').pipe(Effect.annotateLogs({ variables }))
       }
       return yield* Effect.fail(new GithubGraphQLError({ message: json.errors[0].message }))
     }
