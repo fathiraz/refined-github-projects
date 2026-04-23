@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/fathiraz/refined-github-projects/compare/v0.4.0...v0.5.0) (2026-04-23)
+
+
+### Features
+
+* integrate Effect library for functional error handling and GraphQL client ([#18](https://github.com/fathiraz/refined-github-projects/issues/18)) ([7219cd5](https://github.com/fathiraz/refined-github-projects/commit/7219cd5d4bd131026255b0d456eef5b25411260c))
+
 ## [0.4.0](https://github.com/fathiraz/refined-github-projects/compare/v0.3.0...v0.4.0) (2026-04-07)
 
 
