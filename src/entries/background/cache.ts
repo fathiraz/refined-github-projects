@@ -1,5 +1,6 @@
 import type { HierarchyData, ItemPreviewData, SprintProgressData } from '@/lib/messages'
 import type { FieldsResultProject, ResolvedItem } from './types'
+import { Duration, Effect } from 'effect'
 
 export const RESOLVED_ITEM_CACHE_TTL_MS = 15_000
 export const resolvedItemCache = new Map<
@@ -7,11 +8,43 @@ export const resolvedItemCache = new Map<
   { resolvedItems: ResolvedItem[]; expiresAt: number }
 >()
 
-export const HIERARCHY_CACHE_TTL_MS = 30_000
-export const hierarchyCache = new Map<string, { data: HierarchyData; expiresAt: number }>()
+// ===== Effect-based hover tooltip caches (preview + hierarchy) =====
+// cachedWithTTL wraps each fetch Effect and handles TTL automatically.
+// No manual expiry checking or pruning needed.
 
-export const PREVIEW_CACHE_TTL_MS = 30_000
-export const previewCache = new Map<string, { data: ItemPreviewData; expiresAt: number }>()
+const PREVIEW_TTL = Duration.minutes(1)
+const HIERARCHY_TTL = Duration.minutes(1)
+
+// Stores Promise<CachedEffect> per item key.
+// Set synchronously before first await to prevent concurrent-request races.
+const _previewSetup = new Map<string, Promise<Effect.Effect<ItemPreviewData>>>()
+const _hierarchySetup = new Map<string, Promise<Effect.Effect<HierarchyData>>>()
+
+export async function getOrCachePreview(
+  key: string,
+  fetchFn: () => Promise<ItemPreviewData>,
+): Promise<ItemPreviewData> {
+  if (!_previewSetup.has(key)) {
+    _previewSetup.set(
+      key,
+      Effect.runPromise(Effect.cachedWithTTL(Effect.promise(fetchFn), PREVIEW_TTL)),
+    )
+  }
+  return Effect.runPromise(await _previewSetup.get(key)!)
+}
+
+export async function getOrCacheHierarchy(
+  key: string,
+  fetchFn: () => Promise<HierarchyData>,
+): Promise<HierarchyData> {
+  if (!_hierarchySetup.has(key)) {
+    _hierarchySetup.set(
+      key,
+      Effect.runPromise(Effect.cachedWithTTL(Effect.promise(fetchFn), HIERARCHY_TTL)),
+    )
+  }
+  return Effect.runPromise(await _hierarchySetup.get(key)!)
+}
 
 export const FIELDS_CACHE_TTL_MS = 60_000
 export const fieldsCache = new Map<string, { data: FieldsResultProject; expiresAt: number }>()

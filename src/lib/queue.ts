@@ -1,3 +1,5 @@
+import { Duration, Effect, Either, Fiber, Queue } from 'effect'
+
 import { logger } from './debug-logger'
 
 export interface QueueTask {
@@ -25,11 +27,9 @@ export interface QueueState {
 type StateListener = (state: QueueState) => void
 
 const stateListeners = new Set<StateListener>()
+const activeFibers = new Map<string, Fiber.RuntimeFiber<void, never>>()
 const cancelledProcesses = new Set<string>()
 
-export function cancelQueue(processId: string): void {
-  cancelledProcesses.add(processId)
-}
 let currentState: QueueState = { total: 0, completed: 0, paused: false }
 
 function setState(update: Partial<QueueState>) {
@@ -48,6 +48,16 @@ export function getQueueState(): QueueState {
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export function cancelQueue(processId: string): void {
+  cancelledProcesses.add(processId)
+  const fiber = activeFibers.get(processId)
+  if (fiber) {
+    // Interrupt fiber immediately — works for long rate-limit sleeps
+    Effect.runFork(Fiber.interrupt(fiber))
+    activeFibers.delete(processId)
+  }
 }
 
 export async function processQueue(
@@ -77,59 +87,83 @@ export async function processQueue(
 
   notify() // initial broadcast (completed = 0)
 
-  try {
+  if (tasks.length === 0) return
+
+  const program = Effect.gen(function* () {
+    const q = yield* Queue.unbounded<QueueTask>()
+    yield* Queue.offerAll(q, tasks)
+
     for (let i = 0; i < tasks.length; i++) {
+      // Flag check: fast-path cancellation, guaranteed even if fiber interrupt races
       if (processId && cancelledProcesses.has(processId)) {
         cancelledProcesses.delete(processId)
         break
       }
-      const task = tasks[i]
+      const task = yield* Queue.take(q)
       logger.log('[rgp:queue] task start', task.id, `(${i + 1}/${tasks.length})`)
+
       let attempts = 0
       const MAX_ATTEMPTS = 3
+      let taskDone = false
 
-      while (attempts < MAX_ATTEMPTS) {
-        try {
-          localDetail = task.detail
-          notify()
-          await task.run()
+      while (attempts < MAX_ATTEMPTS && !taskDone) {
+        localDetail = task.detail
+        notify()
+
+        const result = yield* Effect.tryPromise({
+          try: () => task.run(),
+          catch: (err) => err as unknown,
+        }).pipe(Effect.either)
+
+        if (Either.isRight(result)) {
           localCompleted++
           localDetail = undefined
           notify()
           logger.log('[rgp:queue] task done', task.id)
           if (i < tasks.length - 1) {
             logger.log('[rgp:queue] sleeping 1s before next task')
+            yield* Effect.sleep(Duration.millis(1000))
           }
-          await sleep(1000)
-          break
-        } catch (err: unknown) {
-          const e = err as { status?: number; retryAfter?: number }
-          if (e.status === 403 || e.status === 429) {
-            const retryAfter = e.retryAfter ?? 60
+          taskDone = true
+        } else {
+          const err = result.left as { status?: number; retryAfter?: number }
+          if ((err.status === 403 || err.status === 429) && attempts < MAX_ATTEMPTS - 1) {
+            const retryAfter = err.retryAfter ?? 60
             console.warn('[rgp:queue] rate limited — sleeping', retryAfter, 's')
             localPaused = true
             localRetryAfter = retryAfter
             notify()
-            await sleep(retryAfter * 1000)
+            yield* Effect.sleep(Duration.millis(retryAfter * 1000))
             logger.log('[rgp:queue] resuming after rate limit')
             localPaused = false
             localRetryAfter = undefined
             notify()
             attempts++
           } else {
-            // Non-rate-limit error: skip task
-            console.error('[rgp:queue] task error (skipping)', task.id, err)
-            const errorMsg = err instanceof Error ? err.message : String(err)
+            // Non-rate-limit error OR max retries exhausted: skip task
+            const errVal = result.left
+            const errorMsg = errVal instanceof Error ? errVal.message : String(errVal)
+            console.error('[rgp:queue] task error (skipping)', task.id, errVal)
             localFailedItems.push({ id: task.id, title: task.detail ?? task.id, error: errorMsg })
             localCompleted++
+            localDetail = undefined
             notify()
-            break
+            taskDone = true
           }
         }
       }
     }
-  } finally {
+
     logger.log('[rgp:queue] all tasks done')
-    // Final Done! broadcast is handled by background.ts after processQueue returns
+  })
+
+  const fiber = Effect.runFork(program)
+  if (processId) activeFibers.set(processId, fiber)
+
+  try {
+    // Fiber.await never rejects — returns Exit<E,A> — so interrupted queues return cleanly
+    await Effect.runPromise(Fiber.await(fiber))
+  } finally {
+    if (processId) activeFibers.delete(processId)
   }
 }
