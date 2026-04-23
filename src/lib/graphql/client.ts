@@ -40,8 +40,12 @@ function gqlEffect<T>(
       yield* Effect.logError('HTTP error').pipe(
         Effect.annotateLogs({ op, status: res.status, statusText: res.statusText, retryAfter }),
       )
-      yield* Effect.logError('QUERY').pipe(Effect.annotateLogs({ query }))
-      yield* Effect.logError('VARIABLES').pipe(Effect.annotateLogs({ variables }))
+      // Query/variables may contain user data — keep at debug level so they are
+      // gated by the debug flag (see RgpLoggerLive) and never emitted in
+      // production. RgpLoggerLive's minimum log level is Debug so Effect does
+      // not filter these out before the gate is applied.
+      yield* Effect.logDebug('QUERY').pipe(Effect.annotateLogs({ query }))
+      yield* Effect.logDebug('VARIABLES').pipe(Effect.annotateLogs({ variables }))
       return yield* Effect.fail(
         new GithubHttpError({ message: res.statusText, status: res.status, retryAfter }),
       )
@@ -59,8 +63,9 @@ function gqlEffect<T>(
         yield* Effect.logError('GraphQL errors').pipe(
           Effect.annotateLogs({ op, errors: json.errors }),
         )
-        yield* Effect.logError('QUERY').pipe(Effect.annotateLogs({ query }))
-        yield* Effect.logError('VARIABLES').pipe(Effect.annotateLogs({ variables }))
+        // Gate full query/variables behind the debug flag (see RgpLoggerLive).
+        yield* Effect.logDebug('QUERY').pipe(Effect.annotateLogs({ query }))
+        yield* Effect.logDebug('VARIABLES').pipe(Effect.annotateLogs({ variables }))
       }
       return yield* Effect.fail(new GithubGraphQLError({ message: json.errors[0].message }))
     }
