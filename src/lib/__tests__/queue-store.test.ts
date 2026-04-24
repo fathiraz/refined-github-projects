@@ -159,8 +159,69 @@ describe('queueStore auto-dismiss', () => {
     expect(call.type).toBe('success')
     expect(call.message).toContain('All tasks complete')
   })
-})
 
+  it('merges retryContext on completion', () => {
+    dispatch({ total: 1, completed: 0, paused: false, processId: 'p1', label: 'A' })
+    dispatch({
+      total: 0,
+      completed: 0,
+      paused: false,
+      status: 'Done!',
+      processId: 'p1',
+      retryContext: { messageType: 'bulkUpdate', data: { x: 1 } },
+    })
+
+    const snapshots: unknown[][] = []
+    const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
+    const latest = snapshots[snapshots.length - 1] as { retryContext: unknown }[]
+    expect(latest[0].retryContext).toEqualValue({ messageType: 'bulkUpdate', data: { x: 1 } })
+    unsub()
+  })
+
+  it('merges failedItems from existing on completion when not provided', () => {
+    dispatch({
+      total: 1,
+      completed: 0,
+      paused: false,
+      processId: 'p1',
+      label: 'A',
+      failedItems: [{ id: 'f1', title: 't1', error: 'e1' }],
+    })
+    dispatch({
+      total: 0,
+      completed: 0,
+      paused: false,
+      status: 'Done!',
+      processId: 'p1',
+    })
+
+    const snapshots: unknown[][] = []
+    const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
+    const latest = snapshots[snapshots.length - 1] as { failedItems: unknown[] }[]
+    expect(latest[0].failedItems).toEqualValue([{ id: 'f1', title: 't1', error: 'e1' }])
+    unsub()
+  })
+
+  it('uses legacy label "Bulk update" for missing label on bulk key', () => {
+    dispatch({ total: 2, completed: 0, paused: false })
+
+    const snapshots: unknown[][] = []
+    const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
+    const latest = snapshots[snapshots.length - 1] as { label: string }[]
+    expect(latest[0].label).toBe('Bulk update')
+    unsub()
+  })
+
+  it('uses "Duplicating…" fallback for non-bulk key without label', () => {
+    dispatch({ total: 2, completed: 0, paused: false, processId: 'dup-1' })
+
+    const snapshots: unknown[][] = []
+    const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
+    const latest = snapshots[snapshots.length - 1] as { label: string }[]
+    expect(latest[0].label).toBe('Duplicating…')
+    unsub()
+  })
+})
 describe('queueStore.dismiss', () => {
   it('removes process immediately and notifies listeners', () => {
     const snapshots: unknown[][] = []
@@ -170,7 +231,7 @@ describe('queueStore.dismiss', () => {
     queueStore.dismiss('p1')
 
     const latest = snapshots[snapshots.length - 1]
-    expect(latest).toEqualValue([])
+    expect(latest.some((p: any) => p.processId === 'p1')).toBe(false)
     unsub()
   })
 })

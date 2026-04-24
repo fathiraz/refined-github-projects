@@ -97,4 +97,35 @@ describe('checkboxPortalStore', () => {
     checkboxPortalStore.addRow(makeContainer(), 'after-unsub')
     expect(listener).not.toHaveBeenCalled()
   })
+
+  it('filters out disconnected elements', () => {
+    const connected = makeContainer(true)
+    const disconnected = makeContainer(false)
+
+    checkboxPortalStore.addRow(connected, 'connected-item')
+    checkboxPortalStore.addRow(disconnected, 'disconnected-item')
+
+    const snapshots: PortalEntry[][] = []
+    const unsub = checkboxPortalStore.subscribe((e) => snapshots.push([...e]))
+
+    const latest = snapshots[snapshots.length - 1]
+    expect(latest.some((e) => e.type === 'row' && e.itemId === 'disconnected-item')).toBe(false)
+    expect(latest.some((e) => e.type === 'row' && e.itemId === 'connected-item')).toBe(true)
+    unsub()
+  })
+
+  it('addGroup replaces existing group with same container', () => {
+    const snapshots: PortalEntry[][] = []
+    const unsub = checkboxPortalStore.subscribe((e) => snapshots.push([...e]))
+
+    const c1 = makeContainer()
+    checkboxPortalStore.addGroup(c1, () => ['a'])
+    checkboxPortalStore.addGroup(c1, () => ['b'])
+
+    const latest = snapshots[snapshots.length - 1]
+    const groupEntries = latest.filter((e) => e.type === 'group' && e.container === c1)
+    expect(groupEntries).toHaveLength(1)
+    expect((groupEntries[0] as { getItemIds: () => string[] }).getItemIds()).toEqual(['b'])
+    unsub()
+  })
 })
