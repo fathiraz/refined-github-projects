@@ -53,7 +53,19 @@ describe('toastStore', () => {
     toastStore.show({ message: 'd', type: 'info' })
 
     const latest = entries[entries.length - 1]
-    expect(latest.length).toBeLessThanOrEqual(3)
+    expect(latest.length).toBe(3)
+  })
+
+  it('does not trim when at exactly MAX_TOASTS', () => {
+    const entries: ToastEntry[][] = []
+    toastStore.subscribe((e) => entries.push([...e]))
+
+    toastStore.show({ message: 'a', type: 'info' })
+    toastStore.show({ message: 'b', type: 'info' })
+    toastStore.show({ message: 'c', type: 'info' })
+
+    const latest = entries[entries.length - 1]
+    expect(latest.length).toBe(3)
   })
 
   // ---------------------------------------------------------------------------
@@ -69,6 +81,43 @@ describe('toastStore', () => {
 
     const latest = entries[entries.length - 1]
     expect(latest.find((t) => t.id === id)).toBeUndefined()
+  })
+
+  it('dismiss is a no-op for unknown id', () => {
+    const entries: ToastEntry[][] = []
+    toastStore.subscribe((e) => entries.push([...e]))
+
+    const id = toastStore.show({ message: 'exists', type: 'info' })
+    const countBefore = entries.length
+    toastStore.dismiss('non-existent-id')
+
+    const latest = entries[entries.length - 1]
+    expect(latest.find((t) => t.id === id)).toBeDefined()
+    // notify still fires even for no-op dismiss
+    expect(entries.length).toBe(countBefore + 1)
+  })
+
+  it('resets dismiss timer when showing with duplicate id', () => {
+    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(12345)
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
+
+    const entries: ToastEntry[][] = []
+    toastStore.subscribe((e) => entries.push([...e]))
+
+    const id = toastStore.show({ message: 'dup', type: 'info' })
+    toastStore.show({ message: 'dup', type: 'info' })
+
+    // Two toasts with same id exist
+    expect(entries[entries.length - 1].filter((t) => t.id === id)).toHaveLength(2)
+
+    // Advance to auto-dismiss — only one timer should fire because line 24 cleared the first
+    vi.advanceTimersByTime(6000)
+
+    // Only one dismiss occurred, so one toast with that id should remain
+    expect(entries[entries.length - 1].filter((t) => t.id === id)).toHaveLength(1)
+
+    dateSpy.mockRestore()
+    randomSpy.mockRestore()
   })
 
   // ---------------------------------------------------------------------------
@@ -90,6 +139,23 @@ describe('toastStore', () => {
 
     const afterDismiss = entries[entries.length - 1]
     expect(afterDismiss.find((t) => t.id === id)).toBeUndefined()
+  })
+
+  it('dismiss after auto-dismiss is a no-op', () => {
+    const entries: ToastEntry[][] = []
+    toastStore.subscribe((e) => entries.push([...e]))
+
+    const id = toastStore.show({ message: 'temp', type: 'info' })
+    vi.advanceTimersByTime(6000)
+
+    // Toast already auto-dismissed
+    const afterAutoDismiss = entries[entries.length - 1]
+    expect(afterAutoDismiss.find((t) => t.id === id)).toBeUndefined()
+
+    // Manual dismiss should not bring the toast back
+    toastStore.dismiss(id)
+    const afterManualDismiss = entries[entries.length - 1]
+    expect(afterManualDismiss.find((t) => t.id === id)).toBeUndefined()
   })
 
   // ---------------------------------------------------------------------------
