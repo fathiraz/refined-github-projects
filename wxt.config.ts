@@ -24,7 +24,10 @@ export default defineConfig({
       alias: {
         // Stub out @primer/live-region-element to prevent customElements error in content scripts
         // Content scripts run in isolated world where customElements is null
-        '@primer/live-region-element': path.resolve(__dirname, 'src/lib/primer-live-region-stub.ts'),
+        '@primer/live-region-element': path.resolve(
+          __dirname,
+          'src/lib/primer-live-region-stub.ts',
+        ),
       },
     },
   }),
@@ -34,18 +37,18 @@ export default defineConfig({
         // Step 1: Clean each entry - remove use_dynamic_url from CSS files, dedupe matches
         const cleaned = manifest.web_accessible_resources.map((resource: any) => {
           const cleanedResource = { ...resource }
-          
+
           // Remove use_dynamic_url for CSS files (only needed for JS)
           const isCssOnly = resource.resources.every((r: string) => r.endsWith('.css'))
           if (isCssOnly && cleanedResource.use_dynamic_url) {
             delete cleanedResource.use_dynamic_url
           }
-          
+
           // Deduplicate matches array
           if (cleanedResource.matches && Array.isArray(cleanedResource.matches)) {
             cleanedResource.matches = [...new Set(cleanedResource.matches)]
           }
-          
+
           return cleanedResource
         })
 
@@ -65,16 +68,20 @@ export default defineConfig({
 
         manifest.web_accessible_resources = Array.from(byResources.values())
       }
-    }
+
+      // Replace options_ui (embedded modal) with options_page (full browser tab)
+      if (manifest.options_ui) {
+        manifest.options_page = (manifest.options_ui as any).page
+        delete manifest.options_ui
+      }
+    },
   },
   manifest: ({ browser }) => ({
     name: 'Refined GitHub Projects',
-    description: 'GitHub Projects, but the way it should work. Bulk edit, close, delete, and deep duplicate items — all from the table.',
+    description:
+      'GitHub Projects, but the way it should work. Bulk edit, close, delete, and deep duplicate items — all from the table.',
     permissions: ['storage'],
-    host_permissions: [
-      'https://api.github.com/*',
-      'https://github.com/*',
-    ],
+    host_permissions: ['https://api.github.com/*', 'https://github.com/*'],
     web_accessible_resources: [
       {
         resources: ['content-scripts/content.css'],

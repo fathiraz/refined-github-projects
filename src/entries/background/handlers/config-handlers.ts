@@ -7,7 +7,7 @@ import { logger } from '@/lib/debug-logger'
 
 export function registerConfigHandlers(): void {
   onMessage('openOptions', () => {
-    browser.runtime.openOptionsPage()
+    browser.tabs.create({ url: browser.runtime.getURL('/options.html') })
   })
 
   onMessage('getPatStatus', async () => {
