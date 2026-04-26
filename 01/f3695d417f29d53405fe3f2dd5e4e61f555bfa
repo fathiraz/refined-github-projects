@@ -1,0 +1,369 @@
+src/entries/background/handlers/config-handlers.ts
+  319b800400432846 10
+src/entries/background/index.ts
+  319b800400432846 14
+wxt.config.ts
+  049976037409432e 71-76
+src/components/bulk/bulk-actions-bar.tsx
+  319b800400432846 265-266,280-290
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "01f3695d417f29d53405fe3f2dd5e4e61f555bfa",
+  "prompts": {
+    "049976037409432e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fd27a2ba-fa72-4cea-bc17-77363347d437",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 0,
+      "accepted_lines": 6,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/c27968baf7ba93d45db638fc396f74b4887856cb37cf28b0a680632b0b133051"
+    },
+    "09b9987fbcc5cf94": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-c9166307-f7dc-4050-b018-cec9a7931394",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "0ba35964d2d506fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_234320f56ffeXsevh9m7Gt9US3-8618f8f0-013c-4353-95b8-a016fe3e47f6",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "0c564822cb81ab1b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-166dec3d-9260-4dca-a0fd-2f8be727b323",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "1630d3a5b841b23b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-60a2cdbb-94cb-45e4-831a-76456865ff8d",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "2412d1cda55e7b45": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-ba769abd-86ad-4576-854e-8e3abb61c675",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 1
+    },
+    "29adbea5c399ccd7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-4699187f-da94-476b-8af8-0c91f52abd30",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "2e0694581444de9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_234320f56ffeXsevh9m7Gt9US3-06524b50-35bb-44ea-b825-0d80f79662e7",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "313a6092e77f6fba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-294e6872-1008-4d8f-911b-8a7b937d4024",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "319b800400432846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1510fb40-076a-4959-aedb-bfa51860940e",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 16,
+      "accepted_lines": 16,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/5a96f429788d29180058dc523671a8be530d6f790c49b980ac3b926873115aa4"
+    },
+    "322c08f7b7f4e0bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-d723607e-ca47-4b3c-8b8e-fd938a069d93",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "36d7b6c6a1a618bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-bb7d1c28-66bd-4b63-8aeb-13b369d5d609",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "4ccf5ef3a50d64be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-169c6f33-dafa-49bd-9495-62d14dfe0092",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "77145c8bb1810020": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-f24c4eb2-ca46-40f7-a59f-5e3d05d88d6d",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1042,
+      "total_deletions": 0,
+      "accepted_lines": 1042,
+      "overriden_lines": 0
+    },
+    "7f65abb34aa9e94c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240c202f0ffeahxEvB0ST6pPce-d12bb433-3a12-4db7-86c4-1184c1c22af8",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "85d77b31f596a8e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-b85231d1-f82b-4e1b-88ec-ebd70ee9d6d7",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "937a6445f13a22a5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_234320f56ffeXsevh9m7Gt9US3-48369ded-6a1e-4be4-b0fb-765f595215b2",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    },
+    "966395e2643f5697": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-9d985478-9299-45cf-8670-e12513b96f75",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "a390ee3afd201c1c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea2c018ffeXvdRGvEa7iLmOe-4ebb54b7-3a53-45a5-a987-149f349ba034",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "a9d9624979deaf85": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-11959b97-1f58-4e5e-a44e-d4eddb28e837",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 0,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    },
+    "b3f9c735dbe705c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-34a8b7cb-79c2-4869-8733-e051a2c6283f",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "be7b2063619ad441": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-64777f63-ab85-4f10-9927-50e3486e76c8",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "d004d8f53e80b103": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-524cec4d-3d0e-4bc8-8cc1-1cd51ec8540e",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "d7aa5ffe6e830f7e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-c5268f2d-ee1d-478b-920c-8dc2479c4584",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "d8f85fae499bd956": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-2b477c3e-147e-4d1a-85f6-b64f42975b5d",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "e6301b8d3eb12a03": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_240fecdd0ffeAZoYrBQtsK5jWT-85f03b76-ec19-4b85-9b77-dd2c4fdcaa5a",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "e7a1a18a38aa95c9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_23ea3d2a1ffek9nGHy5BudqGMA-57e99360-8ddb-4452-9ba6-63950fc6c2ec",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
