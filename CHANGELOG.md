@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/fathiraz/refined-github-projects/compare/v0.5.0...v0.6.0) (2026-04-27)
+
+
+### Features
+
+* switch options page to full tab and fix select-all shortcut ([#22](https://github.com/fathiraz/refined-github-projects/issues/22)) ([b5d5b6d](https://github.com/fathiraz/refined-github-projects/commit/b5d5b6d3895169ed17427a0557bc72de484f8a03))
+
 ## [0.5.0](https://github.com/fathiraz/refined-github-projects/compare/v0.4.0...v0.5.0) (2026-04-23)
 
 
