@@ -262,18 +262,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       },
     })
 
-    if (count > 0 && step === 'CLOSED' && !anyModalOpen) {
-      // Help
-      reg({
-        id: 'help',
-        key: '?',
-        modifiers: { shift: true },
-        context: 'Global',
-        label: 'Keyboard Shortcuts',
-        action: () => setShowHelp(true),
-      })
-
-      // Select all
+    if (step === 'CLOSED' && !anyModalOpen) {
+      // Select all — works even with zero selection
       reg({
         id: 'select-all',
         key: 'a',
@@ -286,6 +276,18 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             selectionStore.selectBatch(allIds)
           }
         },
+      })
+    }
+
+    if (count > 0 && step === 'CLOSED' && !anyModalOpen) {
+      // Help
+      reg({
+        id: 'help',
+        key: '?',
+        modifiers: { shift: true },
+        context: 'Global',
+        label: 'Keyboard Shortcuts',
+        action: () => setShowHelp(true),
       })
 
       // Focus actions menu

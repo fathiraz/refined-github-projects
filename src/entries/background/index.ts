@@ -11,7 +11,7 @@ export default defineBackground(() => {
 
   browser.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
-      browser.runtime.openOptionsPage()
+      browser.tabs.create({ url: browser.runtime.getURL('/options.html') })
     }
   })
 
