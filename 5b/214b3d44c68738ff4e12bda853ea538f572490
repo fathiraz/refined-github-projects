@@ -1,0 +1,24 @@
+src/components/bulk/bulk-random-assign-modal.tsx
+  e4559ce378c6835d 52,71-81,131-145,184,191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "5b214b3d44c68738ff4e12bda853ea538f572490",
+  "prompts": {
+    "e4559ce378c6835d": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "01a22a5f-ac61-4344-a7d0-856ac681beaa",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 29,
+      "total_deletions": 4,
+      "accepted_lines": 29,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/a7afe7564777aad18deda4568678bc62bbf4218e9e4affbc7209afe425d9c47d"
+    }
+  }
+}
