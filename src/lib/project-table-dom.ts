@@ -2,6 +2,8 @@
  * Shared DOM utilities for extracting data from GitHub Projects table rows.
  * Used by both the content script and React components (e.g. SelectAllCheckbox).
  */
+import type { ProjectItemDomId } from './effect/schemas/branded'
+import { decodeProjectItemDomId } from './effect/schemas/decode'
 
 /** Attribute set on rows that have been injected with a checkbox.
  *  The VALUE is the item ID stored at injection time, guaranteeing
@@ -16,14 +18,14 @@ export const INJECTED_ATTR = 'data-rgp-cb'
  *  1. `data-hovercard-subject-tag` attribute on the row itself (board view).
  *  2. Scrape the issue number from an `<a href="…/issues/NNN">` link inside the row.
  */
-export function extractItemId(row: Element | null): string | null {
+export function extractItemId(row: Element | null): ProjectItemDomId | null {
   if (!row) return null
   const tag = row.getAttribute('data-hovercard-subject-tag')
-  if (tag) return tag
+  if (tag) return decodeProjectItemDomId(tag)
   const issueLink = row.querySelector<HTMLAnchorElement>('a[href*="/issues/"]')
   if (issueLink) {
     const m = issueLink.href.match(/\/issues\/(\d+)/)
-    if (m) return `issue-${m[1]}`
+    if (m) return decodeProjectItemDomId(`issue-${m[1]}`)
   }
   return null
 }
@@ -32,18 +34,18 @@ export function extractItemId(row: Element | null): string | null {
  * Read the item ID that was stored on the row at injection time.
  * This is always consistent with what RowCheckbox has in selectionStore.
  */
-export function getStoredItemId(row: Element): string | null {
+export function getStoredItemId(row: Element): ProjectItemDomId | null {
   const val = row.getAttribute(INJECTED_ATTR)
-  return val && val !== '1' ? val : null
+  return val && val !== '1' ? decodeProjectItemDomId(val) : null
 }
 
 /**
  * Collect all item IDs from rows that have been checkbox-injected.
  * Reads the stored ID (not re-extracted) so it always matches selectionStore.
  */
-export function getAllInjectedItemIds(): string[] {
+export function getAllInjectedItemIds(): ProjectItemDomId[] {
   const rows = document.querySelectorAll<HTMLElement>(`[role="row"][${INJECTED_ATTR}]`)
-  const ids: string[] = []
+  const ids: ProjectItemDomId[] = []
   for (const row of rows) {
     const id = getStoredItemId(row)
     if (id) ids.push(id)
