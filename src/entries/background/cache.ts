@@ -1,6 +1,6 @@
 import type { HierarchyData, ItemPreviewData, SprintProgressData } from '@/lib/messages'
 import type { FieldsResultProject, ResolvedItem } from './types'
-import { Duration, Effect } from 'effect'
+import { Duration, Effect, Fiber } from 'effect'
 
 export const RESOLVED_ITEM_CACHE_TTL_MS = 15_000
 export const resolvedItemCache = new Map<
@@ -14,48 +14,59 @@ export const resolvedItemCache = new Map<
 
 const PREVIEW_TTL = Duration.minutes(1)
 const HIERARCHY_TTL = Duration.minutes(1)
-const PREVIEW_TTL_MS = Duration.toMillis(PREVIEW_TTL)
-const HIERARCHY_TTL_MS = Duration.toMillis(HIERARCHY_TTL)
 const MAX_SETUP_ENTRIES = 500
 
 // Stores Promise<CachedEffect> per item key.
 // Set synchronously before first await to prevent concurrent-request races.
 // Entries are evicted after their TTL expires and capped at MAX_SETUP_ENTRIES
 // (FIFO) to prevent unbounded memory growth for distinct keys. Each entry has
-// an associated timer tracked in the sibling timer Map so that re-insertions
-// (after a cap-eviction or failure-invalidation) cancel the stale timer and
-// never accidentally delete a newer entry for the same key.
+// an associated eviction fiber tracked in the sibling fiber Map so that
+// re-insertions (after a cap-eviction or failure-invalidation) interrupt the
+// stale fiber and never accidentally delete a newer entry for the same key.
+//
+// Using `Effect.sleep` + `Fiber.interrupt` instead of `setTimeout`/`clearTimeout`
+// keeps eviction on the Effect runtime (TestClock-friendly) and gives us
+// structured cancellation semantics.
 const _previewSetup = new Map<string, Promise<Effect.Effect<ItemPreviewData>>>()
 const _hierarchySetup = new Map<string, Promise<Effect.Effect<HierarchyData>>>()
-const _previewTimers = new Map<string, ReturnType<typeof setTimeout>>()
-const _hierarchyTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const _previewTimers = new Map<string, Fiber.RuntimeFiber<void>>()
+const _hierarchyTimers = new Map<string, Fiber.RuntimeFiber<void>>()
 
-function clearSetupTimer(timers: Map<string, ReturnType<typeof setTimeout>>, key: string): void {
-  const t = timers.get(key)
-  if (t !== undefined) {
-    clearTimeout(t)
+function clearSetupTimer(timers: Map<string, Fiber.RuntimeFiber<void>>, key: string): void {
+  const fiber = timers.get(key)
+  if (fiber !== undefined) {
+    Effect.runFork(Fiber.interrupt(fiber))
     timers.delete(key)
   }
 }
 
 function scheduleSetupEviction<V>(
   map: Map<string, V>,
-  timers: Map<string, ReturnType<typeof setTimeout>>,
+  timers: Map<string, Fiber.RuntimeFiber<void>>,
   key: string,
-  ttlMs: number,
+  ttl: Duration.Duration,
 ): void {
   clearSetupTimer(timers, key)
-  const t = setTimeout(() => {
-    timers.delete(key)
-    map.delete(key)
-  }, ttlMs)
-  ;(t as unknown as { unref?: () => void }).unref?.()
-  timers.set(key, t)
+  const fiber = Effect.runFork(
+    Effect.sleep(ttl).pipe(
+      Effect.tap(() =>
+        Effect.sync(() => {
+          // Only evict if this fiber is still the active timer for the key —
+          // a re-insertion since scheduling will have replaced the entry.
+          if (timers.get(key) === fiber) {
+            timers.delete(key)
+            map.delete(key)
+          }
+        }),
+      ),
+    ),
+  )
+  timers.set(key, fiber)
 }
 
 function capSetupMap<V>(
   map: Map<string, V>,
-  timers: Map<string, ReturnType<typeof setTimeout>>,
+  timers: Map<string, Fiber.RuntimeFiber<void>>,
   max: number,
 ): void {
   while (map.size >= max) {
@@ -68,7 +79,7 @@ function capSetupMap<V>(
 
 function invalidateSetupEntry<V>(
   map: Map<string, V>,
-  timers: Map<string, ReturnType<typeof setTimeout>>,
+  timers: Map<string, Fiber.RuntimeFiber<void>>,
   key: string,
 ): void {
   map.delete(key)
@@ -85,7 +96,7 @@ export async function getOrCachePreview(
       key,
       Effect.runPromise(Effect.cachedWithTTL(Effect.promise(fetchFn), PREVIEW_TTL)),
     )
-    scheduleSetupEviction(_previewSetup, _previewTimers, key, PREVIEW_TTL_MS)
+    scheduleSetupEviction(_previewSetup, _previewTimers, key, PREVIEW_TTL)
   }
   try {
     return await Effect.runPromise(await _previewSetup.get(key)!)
@@ -106,7 +117,7 @@ export async function getOrCacheHierarchy(
       key,
       Effect.runPromise(Effect.cachedWithTTL(Effect.promise(fetchFn), HIERARCHY_TTL)),
     )
-    scheduleSetupEviction(_hierarchySetup, _hierarchyTimers, key, HIERARCHY_TTL_MS)
+    scheduleSetupEviction(_hierarchySetup, _hierarchyTimers, key, HIERARCHY_TTL)
   }
   try {
     return await Effect.runPromise(await _hierarchySetup.get(key)!)

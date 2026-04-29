@@ -1,4 +1,7 @@
 import { initDebugLogger } from '../../lib/debug-logger'
+// Importing the runtime ensures the ManagedRuntime is created exactly once at
+// SW startup, before any onMessage handler runs.
+import '../../lib/effect/runtime'
 import { registerConfigHandlers } from './handlers/config-handlers'
 import { registerFieldHandlers } from './handlers/field-handlers'
 import { registerHierarchyHandlers } from './handlers/hierarchy-handlers'
