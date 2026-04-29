@@ -1,0 +1,79 @@
+package.json
+  05173596be51847b 46-47,55
+vitest.config.ts
+  c7627ec5f4f8a16e 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "0214232ee03caf1916c164ffe80e65346f6ca57f",
+  "prompts": {
+    "05173596be51847b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_225dff219ffeEA0WOcdw1Kg13X",
+        "model": "opencode-go/kimi-k2.6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 316,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/907c7738ebac3e3d2359280a4279df07cb464b870ed428f1e4dde47aa6c4085f"
+    },
+    "c7627ec5f4f8a16e": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "12f5b381-98d3-440b-95f9-57e8fb6fba1e",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 2399,
+      "total_deletions": 585,
+      "accepted_lines": 2028,
+      "overriden_lines": 2,
+      "messages_url": "https://usegitai.com/cas/3267da2ac89e18b846534ca3b1d9536d3106ffcc0ad4d41a75fc68ce52a83bd6"
+    },
+    "de991f3c6956b653": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_225dff219ffeEA0WOcdw1Kg13X-5dbf77fe-e21f-4517-9f47-42146f28613a",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1042,
+      "total_deletions": 0,
+      "accepted_lines": 971,
+      "overriden_lines": 0
+    },
+    "ea7259325901d339": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_225dff219ffeEA0WOcdw1Kg13X-8aa02965-f968-4c7a-92fa-eb9c35747fe7",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "f592484217ec7797": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_225dff219ffeEA0WOcdw1Kg13X-b7b0bc56-ceb8-4225-a1ce-1354b8310064",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
