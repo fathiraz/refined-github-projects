@@ -18,7 +18,16 @@ import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { patStorage } from '@/lib/storage'
 import { logger } from '@/lib/debug-logger'
-import { GithubHttpError } from '@/lib/errors'
+import { GithubClientError, classifyHttpError } from '@/lib/errors'
+import {
+  decodeIssueDatabaseId,
+  decodeIssueNodeId,
+  decodeIssueNumber,
+  decodeProjectItemDomId,
+  decodeProjectItemId,
+  decodeRepoName,
+  decodeRepoOwner,
+} from '@/lib/effect/schemas/decode'
 
 import type {
   FieldsResultProject,
@@ -122,10 +131,6 @@ export function mapIssueNodeToRelationshipSearchResult(
     state: issue.state,
   }
 }
-
-// ─── GitHubRequestError ──────────────────────────────────────────────────────
-
-export { GithubHttpError as GitHubRequestError } from '@/lib/errors'
 
 // ─── parseRepoFromUrl ────────────────────────────────────────────────────────
 
@@ -234,7 +239,15 @@ export async function githubRest<T>(path: string, init: RequestInit = {}): Promi
       // Ignore JSON parse failures and fall back to status text.
     }
 
-    throw new GithubHttpError({ message, status: res.status, retryAfter })
+    const rateLimitRemainingHeader = res.headers.get('X-RateLimit-Remaining')
+    const rateLimitRemaining =
+      rateLimitRemainingHeader === null ? undefined : Number(rateLimitRemainingHeader)
+    throw classifyHttpError({
+      message,
+      status: res.status,
+      retryAfter,
+      rateLimitRemaining,
+    })
   }
 
   if (res.status === 204) {
@@ -307,7 +320,7 @@ export async function getCurrentParentRelationship(
 
     return normalizeIssueRelationship(response) ?? undefined
   } catch (error) {
-    if (error instanceof GithubHttpError && error.status === 404) {
+    if (error instanceof GithubClientError && error.status === 404) {
       return undefined
     }
 
@@ -586,7 +599,7 @@ export function buildBulkRelationshipTasks(
             currentParent,
             error,
           })
-          if (!(error instanceof GithubHttpError) || error.status !== 404) {
+          if (!(error instanceof GithubClientError) || error.status !== 404) {
             throw error
           }
         }
@@ -826,13 +839,14 @@ export async function resolveProjectItemIds(
       if (remaining.has(dbId)) {
         const domId = databaseIdMap.get(dbId)!
         results.push({
-          domId,
-          issueNodeId: item.content.id,
-          projectItemId: item.id,
-          repoOwner: item.content.repository?.owner?.login || '',
-          repoName: item.content.repository?.name || '',
-          issueDatabaseId: item.content.databaseId,
-          issueNumber: item.content.number,
+          domId: decodeProjectItemDomId(domId),
+          issueNodeId: decodeIssueNodeId(item.content.id),
+          projectItemId: decodeProjectItemId(item.id),
+          repoOwner: decodeRepoOwner(item.content.repository?.owner?.login || ''),
+          repoName: decodeRepoName(item.content.repository?.name || ''),
+          issueDatabaseId: decodeIssueDatabaseId(item.content.databaseId),
+          issueNumber:
+            item.content.number !== undefined ? decodeIssueNumber(item.content.number) : undefined,
           currentParent: item.content.parent
             ? {
                 nodeId: item.content.parent.id,
@@ -931,11 +945,11 @@ export async function resolveProjectItemIdsWithTitles(
       if (remaining.has(dbId)) {
         const domId = databaseIdMap.get(dbId)!
         results.push({
-          domId,
-          issueNodeId: item.content.id,
-          projectItemId: item.id,
-          repoOwner: item.content.repository?.owner?.login || '',
-          repoName: item.content.repository?.name || '',
+          domId: decodeProjectItemDomId(domId),
+          issueNodeId: decodeIssueNodeId(item.content.id),
+          projectItemId: decodeProjectItemId(item.id),
+          repoOwner: decodeRepoOwner(item.content.repository?.owner?.login || ''),
+          repoName: decodeRepoName(item.content.repository?.name || ''),
           title: item.content.title,
           typename: item.content.__typename === 'PullRequest' ? 'PullRequest' : 'Issue',
         })
@@ -981,23 +995,38 @@ export async function broadcastQueue(
 }
 
 // ─── withRateLimitRetry ──────────────────────────────────────────────────────
+//
+// `GithubGraphQL.request` (the service that backs `gql(...)`) now retries
+// rate-limit failures internally via Schedule.exponential.jittered ⨯
+// recurs(2). This helper stays as the place that pushes the "paused —
+// retrying in N seconds" UI broadcast for any *remaining* rate-limit error
+// that escapes the service's own retries. We keep one extra attempt so the
+// UI gets to show the pause; if the call still fails we surface the error.
 
 export async function withRateLimitRetry<T>(fn: () => Promise<T>, tabId?: number): Promise<T> {
   let lastErr: unknown
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       return await fn()
     } catch (err) {
       lastErr = err
-      const e = err as { status?: number; retryAfter?: number }
-      if (e.status === 403 || e.status === 429) {
+      // Accept either the new tagged `GithubRateLimitError` or the legacy
+      // `{ status, retryAfter }` shape (still used by direct fetch callers
+      // such as `validatePat`).
+      const e = err as {
+        _tag?: string
+        status?: number
+        retryAfter?: number
+      }
+      const isRateLimit = e._tag === 'GithubRateLimitError' || e.status === 403 || e.status === 429
+      if (isRateLimit) {
         const retryAfter = e.retryAfter ?? 60
-        logger.warn('[rgp:bg] rate limited, retrying in', {
+        logger.warn('[rgp:bg] rate limited, broadcasting pause', {
           retryAfter,
           attempt: attempt + 1,
-          maxAttempts: 3,
+          maxAttempts: 2,
         })
-        logger.verbose(`⏸ paused ${retryAfter}s — attempt ${attempt + 1}/3`)
+        logger.verbose(`⏸ paused ${retryAfter}s — attempt ${attempt + 1}/2`)
         await broadcastQueue({ total: 0, completed: 0, paused: true, retryAfter }, tabId)
         await sleep(retryAfter * 1000)
         await broadcastQueue({ total: 0, completed: 0, paused: false }, tabId)
