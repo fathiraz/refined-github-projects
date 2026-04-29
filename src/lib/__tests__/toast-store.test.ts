@@ -97,7 +97,7 @@ describe('toastStore', () => {
     expect(entries.length).toBe(countBefore + 1)
   })
 
-  it('resets dismiss timer when showing with duplicate id', () => {
+  it('resets dismiss timer when showing with duplicate id', async () => {
     const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(12345)
     const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
 
@@ -110,8 +110,9 @@ describe('toastStore', () => {
     // Two toasts with same id exist
     expect(entries[entries.length - 1].filter((t) => t.id === id)).toHaveLength(2)
 
-    // Advance to auto-dismiss — only one timer should fire because line 24 cleared the first
-    vi.advanceTimersByTime(6000)
+    // Advance to auto-dismiss — only one timer should fire because line 24 cleared the first.
+    // `Async` form is required because Effect.sleep yields through microtasks.
+    await vi.advanceTimersByTimeAsync(6000)
 
     // Only one dismiss occurred, so one toast with that id should remain
     expect(entries[entries.length - 1].filter((t) => t.id === id)).toHaveLength(1)
@@ -124,7 +125,7 @@ describe('toastStore', () => {
   // auto-dismiss
   // ---------------------------------------------------------------------------
 
-  it('auto-dismisses after 5000ms', () => {
+  it('auto-dismisses after 5000ms', async () => {
     const entries: ToastEntry[][] = []
     toastStore.subscribe((e) => entries.push([...e]))
 
@@ -134,19 +135,20 @@ describe('toastStore', () => {
     const beforeDismiss = entries[entries.length - 1]
     expect(beforeDismiss.find((t) => t.id === id)).toBeDefined()
 
-    // Advance past auto-dismiss timeout
-    vi.advanceTimersByTime(6000)
+    // Advance past auto-dismiss timeout (`Async` form is required because
+    // Effect.sleep yields through microtasks).
+    await vi.advanceTimersByTimeAsync(6000)
 
     const afterDismiss = entries[entries.length - 1]
     expect(afterDismiss.find((t) => t.id === id)).toBeUndefined()
   })
 
-  it('dismiss after auto-dismiss is a no-op', () => {
+  it('dismiss after auto-dismiss is a no-op', async () => {
     const entries: ToastEntry[][] = []
     toastStore.subscribe((e) => entries.push([...e]))
 
     const id = toastStore.show({ message: 'temp', type: 'info' })
-    vi.advanceTimersByTime(6000)
+    await vi.advanceTimersByTimeAsync(6000)
 
     // Toast already auto-dismissed
     const afterAutoDismiss = entries[entries.length - 1]
