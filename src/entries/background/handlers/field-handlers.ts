@@ -13,8 +13,11 @@ import {
   GET_REPOSITORY_ISSUE_BY_NUMBER,
   GET_REPOSITORY_RECENT_OPEN_ISSUES,
 } from '@/lib/graphql/queries'
+import { Effect } from 'effect'
+
 import { sleep } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
+import { runHandler } from '@/lib/effect/runtime'
 
 import {
   getProjectFieldsData,
@@ -26,6 +29,8 @@ import {
   dedupeRelationships,
   withRateLimitRetry,
 } from '../helpers'
+import { ProjectService } from '../services/project-service'
+import { provideBackground } from '../services/runtime-ext'
 
 import type {
   IssueTypeNode,
@@ -251,29 +256,52 @@ export function registerFieldHandlers(): void {
     return nodes.filter(isTransferEligible)
   })
 
-  onMessage('getProjectFields', async ({ data }) => {
-    logger.log('[rgp:bg] getProjectFields received', data)
-    const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
-    return {
-      id: project?.id || '',
-      title: project?.title || 'Project',
-      fields: project?.fields.nodes.filter(Boolean) || [],
-    }
-  })
+  onMessage('getProjectFields', ({ data }) =>
+    runHandler(
+      'getProjectFields',
+      provideBackground(
+        Effect.gen(function* () {
+          logger.log('[rgp:bg] getProjectFields received', data)
+          const projectService = yield* ProjectService
+          const { project } = yield* projectService.getProjectFieldsData(
+            data.owner,
+            data.number,
+            data.isOrg,
+          )
+          return {
+            id: project?.id || '',
+            title: project?.title || 'Project',
+            fields: project?.fields.nodes.filter(Boolean) || [],
+          }
+        }),
+      ),
+    ),
+  )
 
-  onMessage('getItemTitles', async ({ data }) => {
-    logger.log('[rgp:bg] getItemTitles received', {
-      itemCount: data.itemIds.length,
-      projectId: data.projectId,
-    })
-    const resolved = await resolveProjectItemIdsWithTitles(data.itemIds, data.projectId)
-    return resolved.map((r) => ({
-      domId: r.domId,
-      issueNodeId: r.issueNodeId,
-      title: r.title,
-      typename: r.typename,
-    }))
-  })
+  onMessage('getItemTitles', ({ data }) =>
+    runHandler(
+      'getItemTitles',
+      provideBackground(
+        Effect.gen(function* () {
+          logger.log('[rgp:bg] getItemTitles received', {
+            itemCount: data.itemIds.length,
+            projectId: data.projectId,
+          })
+          const projectService = yield* ProjectService
+          const resolved = yield* projectService.resolveProjectItemIdsWithTitles(
+            data.itemIds,
+            data.projectId,
+          )
+          return resolved.map((r) => ({
+            domId: r.domId,
+            issueNodeId: r.issueNodeId,
+            title: r.title,
+            typename: r.typename,
+          }))
+        }),
+      ),
+    ),
+  )
 
   onMessage('getReorderContext', async ({ data }) => {
     logger.log('[rgp:bg] getReorderContext received', { itemCount: data.itemIds.length })
