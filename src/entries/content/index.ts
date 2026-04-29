@@ -9,6 +9,9 @@ import { createHierarchyChipInjector } from './hierarchy-injections'
 import { setupIssueDetailInjector } from './issue-detail-injections'
 import { selectionStore } from '../../lib/selection-store'
 import { logger, initDebugLogger } from '../../lib/debug-logger'
+// Eager-load the ManagedRuntime so the content script shares one runtime
+// instance across all stores/services it touches.
+import '../../lib/effect/runtime'
 import { extractProjectContext, fetchProjectFields } from '../../lib/github-project'
 
 export default defineContentScript({
