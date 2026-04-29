@@ -1,0 +1,57 @@
+src/lib/__tests__/errors.test.ts
+  60ae18e1a74a52b8 4-16,18,20,28-29,40-41,48-49,100,106-170,178-183
+  05173596be51847b 171-177
+src/entries/popup/bootstrap.tsx
+  60ae18e1a74a52b8 3
+src/entries/options/bootstrap.tsx
+  60ae18e1a74a52b8 3
+src/lib/__tests__/vitest.setup.effect.ts
+  60ae18e1a74a52b8 1-18
+src/lib/__tests__/store-streams.test.ts
+  05173596be51847b 21-24
+  60ae18e1a74a52b8 1-20,25-74
+src/lib/__tests__/toast-store.test.ts
+  60ae18e1a74a52b8 100,113-115,128,138-140,146,151
+src/lib/graphql/__tests__/client.test.ts
+  60ae18e1a74a52b8 1,5-6,13,22-23,26-39,43-46,50-52,54,61,70,80-85,89,91-94,96,98-103,107-109,112,114-116,121,125-129,133,137-140,146,158-164,167-168,174-176,180,182-183
+src/lib/__tests__/project-table-dom.test.ts
+  60ae18e1a74a52b8 84-86
+src/lib/__tests__/queue-store.test.ts
+  60ae18e1a74a52b8 111,122-123,130,144
+src/entries/content/index.ts
+  60ae18e1a74a52b8 12-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "62a41f8ccbead4fc9b12491647ebc4a46b8f3cd5",
+  "prompts": {
+    "05173596be51847b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_225dff219ffeEA0WOcdw1Kg13X",
+        "model": "opencode-go/kimi-k2.6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 7,
+      "accepted_lines": 147,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/5bef8a715afa33ce48c2e601686ec7cd6c0141e4cc2ba0fad56d645fe2158c89"
+    },
+    "60ae18e1a74a52b8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_225dff219ffeEA0WOcdw1Kg13X-464589b7-59eb-4141-8de5-d11112dd8045",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1526,
+      "total_deletions": 159,
+      "accepted_lines": 1519,
+      "overriden_lines": 0
+    }
+  }
+}
