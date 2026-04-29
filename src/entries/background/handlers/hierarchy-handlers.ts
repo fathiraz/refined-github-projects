@@ -1,4 +1,6 @@
 import { onMessage } from '@/lib/messages'
+import { Effect } from 'effect'
+
 import type {
   BulkRelationshipValidationResult,
   HierarchyData,
@@ -8,10 +10,13 @@ import type {
 import { gql } from '@/lib/graphql/client'
 import { GET_PROJECT_ITEM_DETAILS } from '@/lib/graphql/queries'
 import { logger } from '@/lib/debug-logger'
+import { runHandler } from '@/lib/effect/runtime'
 
 import type { DateFieldValue, NumberFieldValue, ProjectItemDetails } from '../types'
 
-import { cacheResolvedItems, getOrCachePreview, getOrCacheHierarchy } from '../cache'
+import { cacheResolvedItems } from '../cache'
+import { HierarchyCache, PreviewCache } from '../services/cache-service'
+import { provideBackground } from '../services/runtime-ext'
 
 import {
   getProjectFieldsData,
@@ -222,24 +227,40 @@ export function registerHierarchyHandlers(): void {
     return result
   })
 
-  onMessage('getItemPreview', async ({ data }) => {
-    logger.log('[rgp:bg] getItemPreview received', data)
-    const key = `${data.owner}/${data.number}/${data.itemId}`
-    const response = await getOrCachePreview(key, () => fetchItemPreviewData(data))
-    logger.log('[rgp:bg] getItemPreview returning', {
-      fieldsCount: response.fields.length,
-      relationships: {
-        parent: Boolean(response.relationships.parent),
-        blockedBy: response.relationships.blockedBy.length,
-        blocking: response.relationships.blocking.length,
-      },
-    })
-    return response
-  })
+  onMessage('getItemPreview', ({ data }) =>
+    runHandler(
+      'getItemPreview',
+      provideBackground(
+        Effect.gen(function* () {
+          logger.log('[rgp:bg] getItemPreview received', data)
+          const previewCache = yield* PreviewCache
+          const key = `${data.owner}/${data.number}/${data.itemId}`
+          const response = yield* previewCache.get(key, () => fetchItemPreviewData(data))
+          logger.log('[rgp:bg] getItemPreview returning', {
+            fieldsCount: response.fields.length,
+            relationships: {
+              parent: Boolean(response.relationships.parent),
+              blockedBy: response.relationships.blockedBy.length,
+              blocking: response.relationships.blocking.length,
+            },
+          })
+          return response
+        }),
+      ),
+    ),
+  )
 
-  onMessage('getHierarchyData', async ({ data }) => {
-    logger.log('[rgp:bg] getHierarchyData received', data)
-    const key = `${data.owner}/${data.number}/${data.itemId}`
-    return getOrCacheHierarchy(key, () => fetchHierarchyData(data))
-  })
+  onMessage('getHierarchyData', ({ data }) =>
+    runHandler(
+      'getHierarchyData',
+      provideBackground(
+        Effect.gen(function* () {
+          logger.log('[rgp:bg] getHierarchyData received', data)
+          const hierarchyCache = yield* HierarchyCache
+          const key = `${data.owner}/${data.number}/${data.itemId}`
+          return yield* hierarchyCache.get(key, () => fetchHierarchyData(data))
+        }),
+      ),
+    ),
+  )
 }

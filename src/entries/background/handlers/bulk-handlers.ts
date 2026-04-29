@@ -30,6 +30,7 @@ import {
 import { processQueue, sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
+import { decodeProjectItemDomId } from '@/lib/effect/schemas/decode'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '../concurrency'
 import { takeCachedResolvedItems } from '../cache'
@@ -948,7 +949,7 @@ export function registerBulkHandlers(): void {
       const tasks: QueueTask[] = []
 
       for (const assignment of data.assignments) {
-        const issueNodeId = itemToIssueMap.get(assignment.itemId)
+        const issueNodeId = itemToIssueMap.get(decodeProjectItemDomId(assignment.itemId))
         if (issueNodeId && assignment.assigneeIds.length > 0) {
           tasks.push({
             id: `assign-${assignment.itemId}`,
