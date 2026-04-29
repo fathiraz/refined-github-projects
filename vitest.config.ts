@@ -10,7 +10,7 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     include: ['src/**/*.test.{ts,tsx}'],
-    setupFiles: ['./src/lib/__tests__/effect-assert.ts'],
+    setupFiles: ['./src/lib/__tests__/vitest.setup.effect.ts'],
     coverage: {
       provider: 'v8',
       include: ['src/lib/**'],
