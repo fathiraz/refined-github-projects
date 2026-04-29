@@ -1,0 +1,42 @@
+src/entries/background/handlers/hierarchy-handlers.ts
+  9739beb532a3b676 2-3,13,17-19,230-251,253-265
+src/entries/background/handlers/bulk-handlers.ts
+  9739beb532a3b676 33,952
+src/entries/background/handlers/config-handlers.ts
+  9739beb532a3b676 1-2,9,16-40,42,44-50,52-66,68,70-78,80,82-94,96,98-107,109-128,130,132-138,140-143
+src/entries/background/handlers/field-handlers.ts
+  9739beb532a3b676 16-17,20,32-33,259-279,281-304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "6a9f4b5cee845768d7a5ed0aabc3b342ba249b87",
+  "prompts": {
+    "9739beb532a3b676": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_225dff219ffeEA0WOcdw1Kg13X-4ad8fed8-e0d8-47bc-8905-fa7ccf327a3c",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 2166,
+      "total_deletions": 544,
+      "accepted_lines": 2166,
+      "overriden_lines": 0
+    },
+    "f47a935ba1440769": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_225dff219ffeEA0WOcdw1Kg13X-e2c5deb3-26c9-4c00-9647-f77da02c84ff",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
