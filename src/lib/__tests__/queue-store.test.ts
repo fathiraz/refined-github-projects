@@ -108,7 +108,7 @@ describe('queueStore active counters', () => {
 })
 
 describe('queueStore auto-dismiss', () => {
-  it('auto-dismisses a done process after 3s when no failures', () => {
+  it('auto-dismisses a done process after 3s when no failures', async () => {
     const snapshots: unknown[][] = []
     const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
 
@@ -119,14 +119,15 @@ describe('queueStore auto-dismiss', () => {
     const immediatelyAfterDone = snapshots[snapshots.length - 1]
     expect(immediatelyAfterDone).toHaveLength(1)
 
-    vi.advanceTimersByTime(3500)
+    // `Async` form is required because Effect.sleep yields through microtasks.
+    await vi.advanceTimersByTimeAsync(3500)
 
     const afterDismiss = snapshots[snapshots.length - 1]
     expect(afterDismiss).toEqualValue([])
     unsub()
   })
 
-  it('does not auto-dismiss when there are failedItems', () => {
+  it('does not auto-dismiss when there are failedItems', async () => {
     const snapshots: unknown[][] = []
     const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
 
@@ -140,7 +141,7 @@ describe('queueStore auto-dismiss', () => {
       failedItems: [{ id: 'x', title: 'x', error: 'boom' }],
     })
 
-    vi.advanceTimersByTime(5000)
+    await vi.advanceTimersByTimeAsync(5000)
 
     const latest = snapshots[snapshots.length - 1]
     expect(latest).toHaveLength(1)

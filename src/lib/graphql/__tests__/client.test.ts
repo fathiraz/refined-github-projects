@@ -1,13 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('../../storage', () => ({
   patStorage: { getValue: vi.fn().mockResolvedValue('test-token') },
+  usernameStorage: { getValue: vi.fn().mockResolvedValue('') },
+  debugStorage: { getValue: vi.fn().mockResolvedValue(false), watch: vi.fn() },
 }))
 
 vi.mock('../../debug-logger', async () => {
   const { Logger } = await import('effect')
   return {
     logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
+    initDebugLogger: vi.fn().mockResolvedValue(undefined),
     // Provide an inert layer so client.ts still has a Logger to provide.
     RgpLoggerLive: Logger.replace(
       Logger.defaultLogger,
@@ -16,29 +19,46 @@ vi.mock('../../debug-logger', async () => {
   }
 })
 
-import { GqlError, gql } from '../client'
+import { GithubRateLimitError } from '../../errors'
+import { gql } from '../client'
 
 const mockFetch = vi.fn()
-globalThis.fetch = mockFetch
+
+function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+    ...init,
+  })
+}
+
+function errorResponse(status: number, init: { retryAfter?: string } = {}): Response {
+  const headers: Record<string, string> = { 'content-type': 'application/json' }
+  if (init.retryAfter !== undefined) headers['retry-after'] = init.retryAfter
+  return new Response(JSON.stringify({}), { status, headers })
+}
 
 beforeEach(() => {
   mockFetch.mockReset()
-  vi.restoreAllMocks()
-  globalThis.fetch = mockFetch
+  globalThis.fetch = mockFetch as unknown as typeof fetch
 })
 
-describe('GqlError', () => {
-  it('has the correct name, message, status, and retryAfter properties', () => {
-    const error = new GqlError({ message: 'Rate limited', status: 429, retryAfter: 60 })
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
-    expect(error.name).toBe('GithubHttpError')
+describe('GithubRateLimitError (replaces legacy GqlError)', () => {
+  it('has the correct tag, message, status, and retryAfter properties', () => {
+    const error = new GithubRateLimitError({ message: 'Rate limited', status: 429, retryAfter: 60 })
+
+    expect(error._tag).toBe('GithubRateLimitError')
     expect(error.message).toBe('Rate limited')
     expect(error.status).toBe(429)
     expect(error.retryAfter).toBe(60)
   })
 
   it('is an instanceof Error', () => {
-    const error = new GqlError({ message: 'Forbidden', status: 403, retryAfter: 30 })
+    const error = new GithubRateLimitError({ message: 'Forbidden', status: 403, retryAfter: 30 })
 
     expect(error).toBeInstanceOf(Error)
   })
@@ -47,12 +67,7 @@ describe('GqlError', () => {
 describe('gql', () => {
   it('returns data on a successful query', async () => {
     const expectedData = { viewer: { login: 'test' } }
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ data: expectedData }),
-      headers: { get: () => null },
-    })
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: expectedData }))
 
     const result = await gql<{ viewer: { login: string } }>(
       'query GetViewer { viewer { login } }',
@@ -62,116 +77,73 @@ describe('gql', () => {
     expect(result).toEqualValue(expectedData)
   })
 
-  it('throws GqlError with status and retryAfter on HTTP error', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 403,
-      statusText: 'Forbidden',
-      headers: { get: (h: string) => (h === 'Retry-After' ? '30' : null) },
-    })
-
-    await expect(gql('query GetViewer { viewer { login } }', {})).rejects.toThrow(GqlError)
+  it('throws GithubRateLimitError on 403 (after internal retries)', async () => {
+    // GithubGraphQL retries rate-limit failures up to 2 extra times — return
+    // 403 for every attempt so the call surfaces the failure.
+    for (let i = 0; i < 3; i++) {
+      mockFetch.mockResolvedValueOnce(errorResponse(403, { retryAfter: '30' }))
+    }
 
     try {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 403,
-        statusText: 'Forbidden',
-        headers: { get: (h: string) => (h === 'Retry-After' ? '30' : null) },
-      })
       await gql('query GetViewer { viewer { login } }', {})
+      throw new Error('should have thrown')
     } catch (error) {
-      expect(error).toBeInstanceOf(GqlError)
-      const gqlError = error as GqlError
-      expect(gqlError.status).toBe(403)
-      expect(gqlError.retryAfter).toBe(30)
-      expect(gqlError.message).toBe('Forbidden')
+      const e = error as { _tag: string; status?: number; retryAfter?: number }
+      expect(e._tag).toBe('GithubRateLimitError')
+      expect(e.status).toBe(403)
+      expect(e.retryAfter).toBe(30)
     }
-  })
+  }, 30000)
 
-  it('throws GqlError with message from first GraphQL error', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          errors: [{ message: 'Field "foo" not found' }, { message: 'Another error' }],
-        }),
-      headers: { get: () => null },
-    })
+  it('throws GithubGraphQLError with message from first GraphQL error', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({
+        errors: [{ message: 'Field "foo" not found' }, { message: 'Another error' }],
+      }),
+    )
 
     await expect(gql('query Bad { foo }', {})).rejects.toThrow('Field "foo" not found')
 
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ errors: [{ message: 'Field "foo" not found' }] }),
+    )
     try {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            errors: [{ message: 'Field "foo" not found' }],
-          }),
-        headers: { get: () => null },
-      })
       await gql('query Bad { foo }', {})
+      throw new Error('should have thrown')
     } catch (error) {
-      expect(error).toBeInstanceOf(Error)
-      expect((error as Error).message).toBe('Field "foo" not found')
+      const e = error as { _tag: string; message: string }
+      expect(e._tag).toBe('GithubGraphQLError')
+      expect(e.message).toBe('Field "foo" not found')
     }
   })
 
   it('sends the correct Authorization header with the PAT', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ data: {} }),
-      headers: { get: () => null },
-    })
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: {} }))
 
     await gql('query Test { test }', {})
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.github.com/graphql',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: 'Bearer test-token',
-        }),
-      }),
-    )
+    // @effect/platform's FetchHttpClient invokes fetch as `fetch(url, init)`.
+    const [urlArg, initArg] = mockFetch.mock.calls[0] as [URL | string, RequestInit]
+    expect(String(urlArg)).toBe('https://api.github.com/graphql')
+    const headers = new Headers(initArg.headers)
+    expect(headers.get('authorization')).toBe('Bearer test-token')
   })
 
   it('sends correct Content-Type and GitHub-Feature-Request headers', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ data: {} }),
-      headers: { get: () => null },
-    })
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: {} }))
 
     await gql('query Test { test }', {})
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.github.com/graphql',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          'Content-Type': 'application/json',
-          'GitHub-Feature-Request': 'ProjectV2',
-        }),
-      }),
-    )
+    const [, initArg] = mockFetch.mock.calls[0] as [URL | string, RequestInit]
+    const headers = new Headers(initArg.headers)
+    expect(headers.get('content-type')).toMatch(/application\/json/)
+    expect(headers.get('github-feature-request')).toBe('ProjectV2')
   })
 
   it('silent option suppresses console.error for GraphQL errors', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          errors: [{ message: 'Silent error' }],
-        }),
-      headers: { get: () => null },
-    })
+    mockFetch.mockResolvedValueOnce(jsonResponse({ errors: [{ message: 'Silent error' }] }))
 
     await expect(gql('query Bad { foo }', {}, { silent: true })).rejects.toThrow('Silent error')
 
@@ -183,32 +155,32 @@ describe('gql', () => {
   it('propagates network error when fetch rejects', async () => {
     mockFetch.mockRejectedValueOnce(new Error('network down'))
 
-    await expect(gql('query Test { test }', {})).rejects.toBeDefined()
+    try {
+      await gql('query Test { test }', {})
+      throw new Error('should have thrown')
+    } catch (error) {
+      const e = error as { _tag: string }
+      expect(e._tag).toBe('GithubNetworkError')
+    }
   })
 
-  it('defaults retryAfter to 0 when header is missing', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      statusText: 'Server Error',
-      headers: { get: () => null },
-    })
+  it('500 responses become GithubServerError', async () => {
+    mockFetch.mockResolvedValueOnce(errorResponse(500))
 
     try {
       await gql('query Test { test }', {})
       throw new Error('should have thrown')
     } catch (error) {
-      const gqlError = error as GqlError
-      expect(gqlError).toBeInstanceOf(GqlError)
-      expect(gqlError.status).toBe(500)
-      expect(gqlError.retryAfter).toBe(0)
+      const e = error as { _tag: string; status?: number }
+      expect(e._tag).toBe('GithubServerError')
+      expect(e.status).toBe(500)
     }
   })
 
-  it('two identical GqlError instances are Equal.equals', async () => {
+  it('two identical GithubRateLimitError instances are Equal.equals', async () => {
     const { Equal } = await import('effect')
-    const a = new GqlError({ status: 429, message: 'Rate', retryAfter: 30 })
-    const b = new GqlError({ status: 429, message: 'Rate', retryAfter: 30 })
+    const a = new GithubRateLimitError({ status: 429, message: 'Rate', retryAfter: 30 })
+    const b = new GithubRateLimitError({ status: 429, message: 'Rate', retryAfter: 30 })
     expect(Equal.equals(a, b)).toBe(true)
   })
 })

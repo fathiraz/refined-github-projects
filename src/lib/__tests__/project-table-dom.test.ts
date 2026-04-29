@@ -81,7 +81,9 @@ describe('getAllInjectedItemIds', () => {
     document.body.appendChild(row2)
 
     const ids = getAllInjectedItemIds()
-    expect(ids).toEqualValue(['id-1', 'id-2'])
+    // Branded primitives erase to plain strings at runtime, so deep-equal
+    // comparison against the underlying string array remains valid.
+    expect([...ids] as string[]).toEqualValue(['id-1', 'id-2'])
   })
 
   it('returns empty array when no injected rows', () => {
