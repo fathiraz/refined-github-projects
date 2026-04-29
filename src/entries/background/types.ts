@@ -1,4 +1,13 @@
 import type { IssueRelationshipData } from '@/lib/messages'
+import type {
+  IssueDatabaseId,
+  IssueNodeId,
+  IssueNumber,
+  ProjectItemDomId,
+  ProjectItemId,
+  RepoName,
+  RepoOwner,
+} from '@/lib/effect/schemas/branded'
 
 export interface IssueTypeNode {
   id: string
@@ -145,13 +154,13 @@ export interface RestSubIssue {
 }
 
 export interface ResolvedItem {
-  domId: string
-  issueNodeId: string
-  projectItemId: string
-  repoOwner: string
-  repoName: string
-  issueDatabaseId?: number
-  issueNumber?: number
+  domId: ProjectItemDomId
+  issueNodeId: IssueNodeId
+  projectItemId: ProjectItemId
+  repoOwner: RepoOwner
+  repoName: RepoName
+  issueDatabaseId?: IssueDatabaseId
+  issueNumber?: IssueNumber
   currentParent?: IssueRelationshipData
   typename?: 'Issue' | 'PullRequest'
 }
