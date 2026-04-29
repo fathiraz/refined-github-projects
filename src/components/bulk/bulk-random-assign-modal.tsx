@@ -49,6 +49,7 @@ export function BulkRandomAssignModal({
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [assignees, setAssignees] = useState<Assignee[]>([])
+  const [assigneeCache, setAssigneeCache] = useState<Map<string, Assignee>>(new Map())
   const [isLoadingAssignees, setIsLoadingAssignees] = useState(false)
   const latestRequestIdRef = useRef<number>(0)
 
@@ -67,7 +68,17 @@ export function BulkRandomAssignModal({
         })
           .then((results) => {
             if (requestId === latestRequestIdRef.current) {
-              setAssignees(results.map((r) => ({ id: r.id, name: r.name, avatarUrl: r.avatarUrl })))
+              const mapped = results.map((r) => ({
+                id: r.id,
+                name: r.name,
+                avatarUrl: r.avatarUrl,
+              }))
+              setAssignees(mapped)
+              setAssigneeCache((prev) => {
+                const next = new Map(prev)
+                for (const a of mapped) next.set(a.id, a)
+                return next
+              })
             }
           })
           .finally(() => {
@@ -117,7 +128,21 @@ export function BulkRandomAssignModal({
     else if (step === 'CONFIRM') setStep('PREVIEW')
   }
 
-  const idToLogin = Object.fromEntries(assignees.map((a) => [a.id, a.name]))
+  const idToLogin = Object.fromEntries(
+    Array.from(assigneeCache.values()).map((a) => [a.id, a.name]),
+  )
+
+  const visibleAssignees = (() => {
+    const visibleIds = new Set(assignees.map((a) => a.id))
+    const pinned: Assignee[] = []
+    for (const id of selectedAssignees) {
+      if (!visibleIds.has(id)) {
+        const cached = assigneeCache.get(id)
+        if (cached) pinned.push(cached)
+      }
+    }
+    return [...pinned, ...assignees]
+  })()
 
   const renderStep = () => {
     switch (step) {
@@ -156,14 +181,14 @@ export function BulkRandomAssignModal({
                   <Spinner size="small" />
                 </Box>
               )}
-              {!isLoadingAssignees && assignees.length === 0 && (
+              {!isLoadingAssignees && visibleAssignees.length === 0 && (
                 <Box sx={{ p: 3, textAlign: 'center', color: 'fg.muted' }}>
                   {searchQuery
                     ? `No assignees found matching "${searchQuery}"`
                     : 'No assignees found'}
                 </Box>
               )}
-              {assignees.map((assignee, index) => (
+              {visibleAssignees.map((assignee, index) => (
                 <Box
                   key={assignee.id}
                   sx={{
