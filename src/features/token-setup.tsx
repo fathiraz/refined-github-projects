@@ -13,7 +13,7 @@ import {
 import { sendMessage } from '@/lib/messages'
 import type { PatError, PatErrorType } from '@/lib/errors'
 import { patStorage } from '@/lib/storage'
-import { CheckIcon, GearIcon, XIcon } from '@/ui/primitives'
+import { CheckIcon, GearIcon, XIcon } from '@/ui/icons'
 
 const PAT_URL =
   'https://github.com/settings/tokens/new?scopes=project,read:org,repo&description=Refined+GitHub+Projects'

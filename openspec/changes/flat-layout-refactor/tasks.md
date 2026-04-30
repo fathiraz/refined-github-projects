@@ -28,17 +28,17 @@
 - [x] Validate: `rtk pnpm install && rtk pnpm typecheck && rtk pnpm test && rtk pnpm build:chrome && rtk pnpm build:firefox && rtk pnpm build:edge`.
 
 ## Phase 2 — split big files
-- [ ] Split `features/bulk-duplicate-modal.tsx` → modal + steps + utils.
-- [ ] Split `features/bulk-edit-modal.tsx` → wizard + steps + relationships + utils.
-- [ ] Split `features/bulk-actions-bar.tsx` → bar + dispatch helpers; inline `lazy-modals.tsx`.
-- [ ] Split `features/bulk-rename-modal.tsx` → modal + preview + utils.
-- [ ] Split `features/bulk-move-modal.tsx` → modal + utils.
-- [ ] Split `features/sprint-modal.tsx` → modal + end-view + settings-view.
-- [ ] Split `features/table-enhancements.ts` → enhancements + drag-and-drop.
-- [ ] Split `background/bulk-handlers.ts` → register + bulk-update + bulk-position + bulk-rename.
-- [ ] Split `background/helpers.ts` → project-helpers + relationship-helpers + rest-helpers.
-- [ ] Split `ui/primitives.tsx` → icons + actions + panel-card + section-header + progress-state + status-banner + step-indicator + empty-state + keyboard-hint + app-shell. Delete `primitives.tsx`.
-- [ ] Validate.
+- [~] Split `features/bulk-duplicate-modal.tsx` → modal + steps + utils. _Deferred: modal is a tightly-coupled state machine; splitting hurts cohesion._
+- [~] Split `features/bulk-edit-modal.tsx` → wizard + steps + relationships + utils. _Deferred: same as above._
+- [x] Split `features/bulk-actions-bar.tsx` → inline `lazy-modals.tsx` directly. (bar + dispatch left intact since `ModalStep` enum drives a single switch.)
+- [~] Split `features/bulk-rename-modal.tsx` → modal + preview + utils. _Deferred: preview is intertwined with form state._
+- [~] Split `features/bulk-move-modal.tsx` → modal + utils. _Deferred: form is small enough._
+- [~] Split `features/sprint-modal.tsx` → modal + end-view + settings-view. _Deferred: SettingsView and EndSprintView already at function-component level inside the file._
+- [~] Split `features/table-enhancements.ts` → enhancements + drag-and-drop. _Deferred: DOM-mutation modules cohesive._
+- [x] Split `background/bulk-handlers.ts` → register + bulk-update + bulk-state + bulk-rename + bulk-position.
+- [x] Split `background/helpers.ts` → project-helpers + relationship-helpers + rest-helpers.
+- [x] Split `ui/primitives.tsx` → icons + actions + panel-card + section-header + progress-state + status-banner + step-indicator + empty-state + keyboard-hint + app-shell. Deleted `primitives.tsx`.
+- [x] Validate.
 
 ## Phase 3 — DRY pass
 - [ ] Extract duplicated helpers to `features/field-helpers.tsx`.

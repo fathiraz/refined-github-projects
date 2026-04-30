@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Button, Flash, Text } from '@primer/react'
 import { toastStore, type ToastEntry } from '@/lib/toast-store'
-import { AlertIcon, CheckIcon, InfoIcon, XIcon } from '@/ui/primitives'
+import { AlertIcon, CheckIcon, InfoIcon, XIcon } from '@/ui/icons'
 import { Z_OVERLAY } from '@/lib/z-index'
 
 const FLASH_VARIANT: Record<ToastEntry['type'], 'success' | 'warning' | 'danger' | 'default'> = {

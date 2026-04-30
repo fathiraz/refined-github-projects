@@ -5,23 +5,7 @@ import { RepoMetadataSelectPanel } from '@/ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '@/ui/markdown-textarea'
 import { IssueRelationshipSelectPanel } from '@/ui/issue-relationship-select-panel'
 import type { BulkEditRelationshipsUpdate, IssueRelationshipData } from '@/lib/messages'
-import {
-  AlertIcon,
-  CheckIcon,
-  PersonIcon,
-  TagIcon,
-  ShieldIcon,
-  HashIcon,
-  CalendarIcon,
-  TextLineIcon,
-  OptionsSelectIcon,
-  SyncIcon,
-  GearIcon,
-  ProjectBoardIcon,
-  PencilIcon,
-  ListCheckIcon,
-  XIcon,
-} from '@/ui/primitives'
+import { AlertIcon, CheckIcon, PersonIcon, TagIcon, ShieldIcon, HashIcon, CalendarIcon, TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon, PencilIcon, ListCheckIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ensureTippyCss } from '@/lib/tippy-utils'

@@ -18,14 +18,9 @@ import { cacheResolvedItems } from '@/background/cache'
 import { HierarchyCache, PreviewCache } from '@/background/cache-service'
 import { provideBackground } from '@/background/runtime-ext'
 
-import {
-  getProjectFieldsData,
-  resolveProjectItemIds,
-  withRateLimitRetry,
-  listIssueRelationshipsSafe,
-  listSubIssuesSafe,
-  getBulkRelationshipValidationErrors,
-} from '@/background/helpers'
+import { withRateLimitRetry } from '@/background/rest-helpers'
+import { listIssueRelationshipsSafe, listSubIssuesSafe, getBulkRelationshipValidationErrors } from '@/background/relationship-helpers'
+import { getProjectFieldsData, resolveProjectItemIds } from '@/background/project-helpers'
 
 type ItemLookupInput = {
   itemId: string

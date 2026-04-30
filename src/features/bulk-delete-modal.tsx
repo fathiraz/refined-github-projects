@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Button, Flash, Text } from '@primer/react'
-import { TrashIcon } from '@/ui/primitives'
+import { TrashIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL } from '@/lib/z-index'
 

@@ -1,13 +1,7 @@
 import { Context, Effect, Layer } from 'effect'
 
-import {
-  getProjectFieldsData as getProjectFieldsDataAsync,
-  getRepositoryId as getRepositoryIdAsync,
-  listIssueRelationshipsSafe as listIssueRelationshipsSafeAsync,
-  listSubIssuesSafe as listSubIssuesSafeAsync,
-  resolveProjectItemIds as resolveProjectItemIdsAsync,
-  resolveProjectItemIdsWithTitles as resolveProjectItemIdsWithTitlesAsync,
-} from '@/background/helpers'
+import { listIssueRelationshipsSafe as listIssueRelationshipsSafeAsync, listSubIssuesSafe as listSubIssuesSafeAsync } from '@/background/relationship-helpers'
+import { getProjectFieldsData as getProjectFieldsDataAsync, getRepositoryId as getRepositoryIdAsync, resolveProjectItemIds as resolveProjectItemIdsAsync, resolveProjectItemIdsWithTitles as resolveProjectItemIdsWithTitlesAsync } from '@/background/project-helpers'
 import type { FieldsResultProject, ResolvedItem, ResolvedItemWithTitle } from '@/background/types'
 import type { IssueRelationshipData, SubIssueData } from '@/lib/messages'
 

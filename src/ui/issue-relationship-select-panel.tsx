@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import { Box } from '@primer/react'
 import { sendMessage, type IssueSearchResultData } from '@/lib/messages'
-import { HashIcon, IssueClosedIcon, IssueReopenedIcon } from '@/ui/primitives'
+import { HashIcon, IssueClosedIcon, IssueReopenedIcon } from '@/ui/icons'
 import { SearchSelectPanel, type SearchSelectPanelOption } from '@/ui/search-select-panel'
 
 export type IssueRelationshipItem = IssueSearchResultData

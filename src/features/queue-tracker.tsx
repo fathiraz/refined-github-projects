@@ -4,7 +4,7 @@ import { ensureTippyCss } from '@/lib/tippy-utils'
 import { ActionList, Box, Button, Flash, ProgressBar, Spinner, Text } from '@primer/react'
 import { queueStore, type ProcessEntry } from '@/lib/queue-store'
 import { sendMessage } from '@/lib/messages'
-import { CheckIcon, XIcon } from '@/ui/primitives'
+import { CheckIcon, XIcon } from '@/ui/icons'
 import { Z_OVERLAY } from '@/lib/z-index'
 
 function ProcessCard({

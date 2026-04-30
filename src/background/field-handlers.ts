@@ -19,16 +19,9 @@ import { sleep } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 import { runHandler } from '@/lib/effect-runtime'
 
-import {
-  getProjectFieldsData,
-  resolveProjectItemIds,
-  resolveProjectItemIdsWithTitles,
-  parseExactIssueReference,
-  buildRelationshipSearchQuery,
-  mapIssueNodeToRelationshipSearchResult,
-  dedupeRelationships,
-  withRateLimitRetry,
-} from '@/background/helpers'
+import { withRateLimitRetry } from '@/background/rest-helpers'
+import { parseExactIssueReference, buildRelationshipSearchQuery, mapIssueNodeToRelationshipSearchResult, dedupeRelationships } from '@/background/relationship-helpers'
+import { getProjectFieldsData, resolveProjectItemIds, resolveProjectItemIdsWithTitles } from '@/background/project-helpers'
 import { ProjectService } from '@/background/project-service'
 import { provideBackground } from '@/background/runtime-ext'
 
