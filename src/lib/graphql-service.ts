@@ -76,7 +76,7 @@ const make = Effect.gen(function* () {
         HttpClientRequest.bodyUnsafeJson({ query, variables }),
       )
 
-      // Network-level failure -> tagged GithubNetworkError
+      // network-level failure -> tagged GithubNetworkError
       const res = yield* client
         .execute(req)
         .pipe(Effect.mapError((cause) => new GithubNetworkError({ cause }) satisfies GithubError))
@@ -103,7 +103,7 @@ const make = Effect.gen(function* () {
         )
       }
 
-      // Decode body shape (`{ data?, errors? }`) — anything that isn't valid
+      // decode body shape (`{ data?, errors? }`) — anything that isn't valid
       // JSON or doesn't match this shape becomes `GithubDecodeError`.
       const json = yield* HttpClientResponse.schemaBodyJson(ResponseShape)(res).pipe(
         Effect.mapError(
@@ -120,7 +120,7 @@ const make = Effect.gen(function* () {
           yield* Effect.logError('GraphQL errors').pipe(
             Effect.annotateLogs({ op, errors: json.errors }),
           )
-          // User data may live in query/variables — keep at debug level so
+          // user data may live in query/variables — keep at debug level so
           // they're gated by RgpLoggerLive's debug flag.
           yield* Effect.logDebug('QUERY').pipe(Effect.annotateLogs({ query }))
           yield* Effect.logDebug('VARIABLES').pipe(Effect.annotateLogs({ variables }))
@@ -128,7 +128,7 @@ const make = Effect.gen(function* () {
         return yield* Effect.fail(new GithubGraphQLError({ message: json.errors[0].message }))
       }
 
-      // Decode the successful `data` payload via the caller-supplied schema.
+      // decode the successful `data` payload via the caller-supplied schema.
       return yield* Schema.decodeUnknown(schema)(json.data).pipe(
         Effect.mapError(
           (e) =>
@@ -140,7 +140,7 @@ const make = Effect.gen(function* () {
       )
     })
 
-    // Retry rate-limit failures only. Use the per-error retryAfter to compute
+    // retry rate-limit failures only. Use the per-error retryAfter to compute
     // an additional fixed delay; layer that under exponential+jittered backoff
     // so two clients hitting the limit don't synchronise their retries.
     const schedule = Schedule.exponential('1 seconds', 2.0).pipe(

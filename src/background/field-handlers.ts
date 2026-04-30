@@ -59,7 +59,7 @@ export function registerFieldHandlers(): void {
         const raw = result.repository?.milestones?.nodes || []
         return raw.map((m) => ({ id: m.id, name: m.title, color: '' }))
       } else if (data.type === 'ISSUE_TYPES') {
-        // Fetch all repository issue types with pagination
+        // fetch all repository issue types with pagination
         const allTypes: IssueTypeNode[] = []
         let cursor: string | null = null
         let hasMore = true
@@ -83,10 +83,10 @@ export function registerFieldHandlers(): void {
           }
         }
 
-        // Only exclude explicitly disabled types
+        // only exclude explicitly disabled types
         let raw = allTypes.filter((t) => t.isEnabled !== false)
 
-        // Client-side filtering since GitHub API doesn't support search for issue types
+        // client-side filtering since GitHub API doesn't support search for issue types
         if (data.q) {
           const q = data.q.toLowerCase()
           raw = raw.filter((t) => t.name.toLowerCase().includes(q))
@@ -301,14 +301,14 @@ export function registerFieldHandlers(): void {
     const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
     if (!project) throw new Error('Project not found')
 
-    // Build map from content databaseId → domId for selected items
+    // build map from content databaseId → domId for selected items
     const selectedDbIdMap = new Map<number, string>()
     for (const domId of data.itemIds) {
       const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
       if (m) selectedDbIdMap.set(parseInt(m[1], 10), domId)
     }
 
-    // Paginate through all project items
+    // paginate through all project items
     interface ReorderItemsResult {
       node: {
         items: {
@@ -329,7 +329,7 @@ export function registerFieldHandlers(): void {
       nodeId: string
       title: string
     }> = []
-    // Track contentDbId → entry for DOM-order re-sorting
+    // track contentDbId → entry for DOM-order re-sorting
     const contentDbIdToEntry = new Map<
       number,
       { memexItemId: number; nodeId: string; title: string }
@@ -367,7 +367,7 @@ export function registerFieldHandlers(): void {
       await sleep(500)
     }
 
-    // Re-sort allOrderedItems to match DOM visual order when provided
+    // re-sort allOrderedItems to match DOM visual order when provided
     if (data.allDomIds?.length) {
       const sorted: Array<{ memexItemId: number; nodeId: string; title: string }> = []
       for (const domId of data.allDomIds) {
@@ -376,7 +376,7 @@ export function registerFieldHandlers(): void {
         const entry = contentDbIdToEntry.get(parseInt(m[1], 10))
         if (entry) sorted.push(entry)
       }
-      // Append items not visible in the DOM (filtered/hidden) at the end
+      // append items not visible in the DOM (filtered/hidden) at the end
       const sortedSet = new Set(sorted.map((i) => i.memexItemId))
       const rest = allOrderedItems.filter((i) => !sortedSet.has(i.memexItemId))
       allOrderedItems.length = 0

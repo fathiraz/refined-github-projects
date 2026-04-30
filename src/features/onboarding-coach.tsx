@@ -12,7 +12,7 @@ import { KeyboardHint } from '@/ui/keyboard-hint'
 import { PanelCard } from '@/ui/panel-card'
 import { StatusBanner } from '@/ui/status-banner'
 import { Z_OVERLAY } from '@/lib/z-index'
-// Override: strips non-conformant shadows and border-radius from driver.js
+// override: strips non-conformant shadows and border-radius from driver.js
 import { DRIVER_CSS_OVERRIDES } from '@/lib/driver-overrides'
 
 export function OnboardingCoach() {

@@ -1,4 +1,4 @@
-// Bulk-action handler registry. The actual handlers live in per-feature files.
+// bulk-action handler registry. The actual handlers live in per-feature files.
 
 import { registerBulkUpdateHandler } from '@/background/bulk-update'
 import { registerBulkStateHandlers } from '@/background/bulk-state'

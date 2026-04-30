@@ -363,9 +363,9 @@ interface ProtocolMap {
 const _messaging = defineExtensionMessaging<ProtocolMap>()
 export const onMessage = _messaging.onMessage
 
-// Wrap sendMessage with SW reconnect retry logic
-// When the SW is idle, Chrome terminates it. Waking it takes ~100-300ms.
-// This wrapper catches "Could not establish connection" errors and retries once.
+// wrap sendMessage with SW reconnect retry logic
+// when the SW is idle, Chrome terminates it. Waking it takes ~100-300ms.
+// this wrapper catches "Could not establish connection" errors and retries once.
 export const sendMessage: typeof _messaging.sendMessage = async (
   type: any,
   data: any,

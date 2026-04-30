@@ -79,7 +79,7 @@ export const queueStore = {
   dismiss(processId: string) {
     clearDismissTimer(processId)
     if (!processes.has(processId)) {
-      // Still notify so callers observing 'after dismiss' state get a tick.
+      // still notify so callers observing 'after dismiss' state get a tick.
       setState(new Map(processes))
       return
     }
@@ -93,9 +93,9 @@ export const queueChanges: Stream.Stream<ReadonlyMap<string, ProcessEntry>> = _r
 
 export const getQueueSnapshot = (): ReadonlyMap<string, ProcessEntry> => processes
 
-// Single central listener for the whole CS context
+// single central listener for the whole CS context
 onMessage('queueStateUpdate', ({ data }) => {
-  // Use processId if provided, fall back to sentinel 'bulk' for legacy bulk-update path
+  // use processId if provided, fall back to sentinel 'bulk' for legacy bulk-update path
   const key = data.processId ?? 'bulk'
   const isDone = data.total === 0 && data.status === 'Done!'
 
@@ -113,11 +113,11 @@ onMessage('queueStateUpdate', ({ data }) => {
         retryContext: data.retryContext ?? existing.retryContext,
       })
       setState(next)
-      // Don't auto-dismiss when there are failures so the user can review them
+      // don't auto-dismiss when there are failures so the user can review them
       if (!mergedFailedItems || mergedFailedItems.length === 0) {
         scheduleDismiss(key)
       }
-      // Fire completion toast when ALL processes are done
+      // fire completion toast when ALL processes are done
       const allDone = Array.from(processes.values()).every((e) => e.done)
       if (allDone && processes.size > 0) {
         toastStore.show({

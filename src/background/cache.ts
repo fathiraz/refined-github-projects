@@ -10,21 +10,21 @@ export const resolvedItemCache = new Map<
 
 // ===== Effect-based hover tooltip caches (preview + hierarchy) =====
 // cachedWithTTL wraps each fetch Effect and handles TTL automatically.
-// No manual expiry checking or pruning needed.
+// no manual expiry checking or pruning needed.
 
 const PREVIEW_TTL = Duration.minutes(1)
 const HIERARCHY_TTL = Duration.minutes(1)
 const MAX_SETUP_ENTRIES = 500
 
-// Stores Promise<CachedEffect> per item key.
+// stores Promise<CachedEffect> per item key.
 // Set synchronously before first await to prevent concurrent-request races.
-// Entries are evicted after their TTL expires and capped at MAX_SETUP_ENTRIES
+// entries are evicted after their TTL expires and capped at MAX_SETUP_ENTRIES
 // (FIFO) to prevent unbounded memory growth for distinct keys. Each entry has
 // an associated eviction fiber tracked in the sibling fiber Map so that
 // re-insertions (after a cap-eviction or failure-invalidation) interrupt the
 // stale fiber and never accidentally delete a newer entry for the same key.
 //
-// Using `Effect.sleep` + `Fiber.interrupt` instead of `setTimeout`/`clearTimeout`
+// using `Effect.sleep` + `Fiber.interrupt` instead of `setTimeout`/`clearTimeout`
 // keeps eviction on the Effect runtime (TestClock-friendly) and gives us
 // structured cancellation semantics.
 const _previewSetup = new Map<string, Promise<Effect.Effect<ItemPreviewData>>>()
@@ -51,7 +51,7 @@ function scheduleSetupEviction<V>(
     Effect.sleep(ttl).pipe(
       Effect.tap(() =>
         Effect.sync(() => {
-          // Only evict if this fiber is still the active timer for the key —
+          // only evict if this fiber is still the active timer for the key —
           // a re-insertion since scheduling will have replaced the entry.
           if (timers.get(key) === fiber) {
             timers.delete(key)
@@ -101,7 +101,7 @@ export async function getOrCachePreview(
   try {
     return await Effect.runPromise(await _previewSetup.get(key)!)
   } catch (err) {
-    // Never cache transient fetch failures — invalidate so subsequent callers retry.
+    // never cache transient fetch failures — invalidate so subsequent callers retry.
     invalidateSetupEntry(_previewSetup, _previewTimers, key)
     throw err
   }

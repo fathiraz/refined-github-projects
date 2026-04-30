@@ -1,4 +1,4 @@
-// Project field/item resolution helpers (GraphQL).
+// project field/item resolution helpers (GraphQL).
 
 import { gql } from '@/lib/graphql-client'
 import {

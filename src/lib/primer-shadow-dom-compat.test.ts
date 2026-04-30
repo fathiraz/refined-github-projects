@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mock debug-logger before importing the module under test
+// mock debug-logger before importing the module under test
 vi.mock('@/lib/debug-logger', () => ({
   logger: {
     log: vi.fn(),
@@ -40,7 +40,7 @@ describe('installPrimerShadowDomCompat', () => {
   it('cleanup removes listeners and observer', () => {
     cleanup = installPrimerShadowDomCompat(portalHost, shadowRoot)
     cleanup()
-    // Should be safe to reinstall after cleanup
+    // should be safe to reinstall after cleanup
     cleanup = installPrimerShadowDomCompat(portalHost, shadowRoot)
     expect(typeof cleanup).toBe('function')
   })
@@ -51,7 +51,7 @@ describe('installPrimerShadowDomCompat', () => {
 
     cleanup = installPrimerShadowDomCompat(portalHost, shadowRoot)
 
-    // Dispatch mousedown from inside the shadow tree so happy-dom populates composedPath
+    // dispatch mousedown from inside the shadow tree so happy-dom populates composedPath
     const mousedown = new MouseEvent('mousedown', { bubbles: true, composed: true })
     child.dispatchEvent(mousedown)
 
@@ -65,7 +65,7 @@ describe('installPrimerShadowDomCompat', () => {
     const child = document.createElement('div')
     portalHost.appendChild(child)
 
-    // Allow MutationObserver to fire in happy-dom
+    // allow MutationObserver to fire in happy-dom
     await new Promise<void>((r) => setTimeout(r, 10))
 
     const mousedown = new MouseEvent('mousedown', { bubbles: true, composed: true })
@@ -80,7 +80,7 @@ describe('installPrimerShadowDomCompat', () => {
 
     cleanup = installPrimerShadowDomCompat(portalHost, shadowRoot)
 
-    // No mousedown dispatched — activeMousedownPath is empty
+    // no mousedown dispatched — activeMousedownPath is empty
     expect(child.contains(shadowHost as unknown as Node)).toBe(false)
   })
 
@@ -109,7 +109,7 @@ describe('installPrimerShadowDomCompat', () => {
     const click = new MouseEvent('click', { bubbles: true, composed: true })
     child.dispatchEvent(click)
 
-    // After click clears state, contains should return false
+    // after click clears state, contains should return false
     expect(child.contains(shadowHost as unknown as Node)).toBe(false)
   })
 
@@ -125,7 +125,7 @@ describe('installPrimerShadowDomCompat', () => {
     const click = new MouseEvent('click', { bubbles: true, composed: true })
     child.dispatchEvent(click)
 
-    // Should not throw; click handler logs and clears
+    // should not throw; click handler logs and clears
     expect(true).toBe(true)
   })
 
@@ -140,13 +140,13 @@ describe('installPrimerShadowDomCompat', () => {
     child.dispatchEvent(mousedownInside)
     expect(child.contains(shadowHost as unknown as Node)).toBe(true)
 
-    // Dispatch from outside the shadow tree
+    // dispatch from outside the shadow tree
     const outsideEl = document.createElement('div')
     document.body.appendChild(outsideEl)
     const mousedownOutside = new MouseEvent('mousedown', { bubbles: true })
     outsideEl.dispatchEvent(mousedownOutside)
 
-    // State should be cleared
+    // state should be cleared
     expect(child.contains(shadowHost as unknown as Node)).toBe(false)
   })
 
@@ -158,7 +158,7 @@ describe('installPrimerShadowDomCompat', () => {
 
     cleanup = installPrimerShadowDomCompat(portalHost, shadowRoot)
 
-    // Dispatch mousedown from grandchild so parent.contains uses originalContains fallback
+    // dispatch mousedown from grandchild so parent.contains uses originalContains fallback
     const mousedown = new MouseEvent('mousedown', { bubbles: true, composed: true })
     child.dispatchEvent(mousedown)
 

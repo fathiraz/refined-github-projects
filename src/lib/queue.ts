@@ -47,7 +47,7 @@ const _activeFibers = Effect.runSync(
   Effect.provideService(FiberMap.make<string>(), Scope.Scope, _queueScope),
 )
 
-// Synchronous fast-path flag set to track cancelled process IDs.
+// synchronous fast-path flag set to track cancelled process IDs.
 // FiberMap.remove ultimately interrupts the fiber, but interrupt propagation
 // can race with fake-timer-driven sleeps and with cancellations that originate
 // from inside a task's own run() callback. Checking this set explicitly between
@@ -72,7 +72,7 @@ export async function processQueue(
 ): Promise<void> {
   logger.log('[rgp:queue] starting', tasks.length, 'tasks')
 
-  // Local state per invocation — fully independent from concurrent calls
+  // local state per invocation — fully independent from concurrent calls
   let localCompleted = 0
   let localPaused = false
   let localRetryAfter: number | undefined
@@ -101,7 +101,7 @@ export async function processQueue(
     yield* Queue.offerAll(q, tasks)
 
     for (let i = 0; i < tasks.length; i++) {
-      // Bail out if the queue was cancelled between tasks (e.g. from inside
+      // bail out if the queue was cancelled between tasks (e.g. from inside
       // the previous task's run callback or from another fiber).
       if (isCancelled()) return
       const task = yield* Queue.take(q)
@@ -148,7 +148,7 @@ export async function processQueue(
             notify()
             attempts++
           } else {
-            // Non-rate-limit error OR max retries exhausted: skip task
+            // non-rate-limit error OR max retries exhausted: skip task
             const errVal = result.left
             const errorMsg = errVal instanceof Error ? errVal.message : String(errVal)
             console.error('[rgp:queue] task error (skipping)', task.id, errVal)
@@ -165,7 +165,7 @@ export async function processQueue(
     logger.log('[rgp:queue] all tasks done')
   })
 
-  // Fork the program; if a processId is given, register the fiber so that
+  // fork the program; if a processId is given, register the fiber so that
   // `cancelQueue(id)` can interrupt it. FiberMap.run automatically removes
   // the entry when the fiber completes.
   const fiber = processId
@@ -194,7 +194,7 @@ export async function processQueue(
       }
     }
   } finally {
-    // Clear the cancellation flag so a subsequent processQueue call with the
+    // clear the cancellation flag so a subsequent processQueue call with the
     // same processId starts with a clean slate.
     if (processId) _cancelledProcesses.delete(processId)
   }

@@ -1,4 +1,4 @@
-// Bulk reorder/position handlers.
+// bulk reorder/position handlers.
 
 import { onMessage } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'

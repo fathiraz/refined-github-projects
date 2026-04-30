@@ -39,10 +39,10 @@ describe('GithubGraphQL service — TestClock-driven retry behavior', () => {
 
     const program = Effect.gen(function* () {
       const gql = yield* GithubGraphQL
-      // Fork the request so we can advance the test clock to satisfy the
+      // fork the request so we can advance the test clock to satisfy the
       // exponential-jittered retry schedule before awaiting completion.
       const fiber = yield* Effect.fork(gql.request(ViewerSchema, VIEWER_QUERY, {}))
-      // Advance enough for any reasonable jittered exponential backoff with
+      // advance enough for any reasonable jittered exponential backoff with
       // base 1s and 2 retries.
       yield* TestClock.adjust('30 seconds')
       const result = yield* fiber
@@ -84,7 +84,7 @@ describe('GithubGraphQL service — TestClock-driven retry behavior', () => {
       program.pipe(Effect.provide(services), Effect.provide(TestContext.TestContext)),
     )
 
-    // Either.left -> GithubRateLimitError after 3 attempts (1 initial + 2 retries)
+    // either.left -> GithubRateLimitError after 3 attempts (1 initial + 2 retries)
     expect(result._tag).toBe('Left')
     if (result._tag === 'Left') {
       expect((result.left as { _tag: string })._tag).toBe('GithubRateLimitError')

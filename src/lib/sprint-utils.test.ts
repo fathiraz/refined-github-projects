@@ -10,7 +10,7 @@ import {
 } from '@/lib/sprint-utils'
 
 // ---------------------------------------------------------------------------
-// Helpers
+// helpers
 // ---------------------------------------------------------------------------
 
 function iter(overrides: Partial<Iteration> & { startDate: string; duration: number }): Iteration {
@@ -181,7 +181,7 @@ describe('injectSprintFilter', () => {
 
     injectSprintFilter()
 
-    // Should not duplicate the filter
+    // should not duplicate the filter
     const count = input.value.split(SPRINT_FILTER).length - 1
     expect(count).toBe(1)
     document.body.removeChild(input)
@@ -189,7 +189,7 @@ describe('injectSprintFilter', () => {
 
   it('does nothing when input element is not found', async () => {
     const { injectSprintFilter } = await import('@/lib/sprint-utils')
-    // No element in DOM — should not throw
+    // no element in DOM — should not throw
     expect(() => injectSprintFilter()).not.toThrow()
   })
 })

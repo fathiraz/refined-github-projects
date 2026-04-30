@@ -1,4 +1,4 @@
-// Shared relationship helpers used by background, features, and ui layers.
+// shared relationship helpers used by background, features, and ui layers.
 
 export interface RelationshipLike {
   databaseId?: number

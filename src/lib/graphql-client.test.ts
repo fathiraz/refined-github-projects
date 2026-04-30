@@ -11,7 +11,7 @@ vi.mock('@/lib/debug-logger', async () => {
   return {
     logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
     initDebugLogger: vi.fn().mockResolvedValue(undefined),
-    // Provide an inert layer so client.ts still has a Logger to provide.
+    // provide an inert layer so client.ts still has a Logger to provide.
     RgpLoggerLive: Logger.replace(
       Logger.defaultLogger,
       Logger.make(() => {}),

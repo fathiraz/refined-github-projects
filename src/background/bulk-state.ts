@@ -1,4 +1,4 @@
-// Bulk state-change handlers: close, open, delete, lock, pin, unpin.
+// bulk state-change handlers: close, open, delete, lock, pin, unpin.
 
 import { onMessage } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'

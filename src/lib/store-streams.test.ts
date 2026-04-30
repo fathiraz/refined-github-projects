@@ -26,7 +26,7 @@ describe('store change streams', () => {
 
     const fiber = Effect.runFork(program)
 
-    // First emission should be the current (cleared) state. Give the runtime
+    // first emission should be the current (cleared) state. Give the runtime
     // a tick to deliver it.
     await new Promise((r) => setTimeout(r, 0))
 
@@ -42,9 +42,9 @@ describe('store change streams', () => {
   })
 
   it('toastChanges streams snapshots through Stream.take(n)', async () => {
-    // Drain any leftover toasts from earlier tests
+    // drain any leftover toasts from earlier tests
     while (selectionStore.count() > 0) selectionStore.clear()
-    // Cannot directly clear toasts (no public clear), but we can collect
+    // cannot directly clear toasts (no public clear), but we can collect
     // *new* emissions after a known starting point. Take(2) = current + 1
     // change.
     const collected: number[] = []
@@ -68,7 +68,7 @@ describe('store change streams', () => {
     await Effect.runPromise(Effect.fromFiber(fiber))
 
     expect(collected).toHaveLength(2)
-    // Second emission must have at least one more toast than the first.
+    // second emission must have at least one more toast than the first.
     expect(collected[1]).toBeGreaterThan(collected[0])
   })
 })

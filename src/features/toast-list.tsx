@@ -11,7 +11,7 @@ const FLASH_VARIANT: Record<ToastEntry['type'], 'success' | 'warning' | 'danger'
   info: 'default',
 }
 
-// Used only for the auto-dismiss countdown bar fill color
+// used only for the auto-dismiss countdown bar fill color
 const ACCENT_CSS: Record<ToastEntry['type'], string> = {
   success: 'var(--color-success-emphasis)',
   warning: 'var(--color-attention-emphasis)',

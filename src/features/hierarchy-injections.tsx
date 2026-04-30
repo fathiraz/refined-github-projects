@@ -23,7 +23,7 @@ export function createHierarchyChipInjector(projectContext: ProjectContext): () 
         const itemId = row.getAttribute(INJECTED_ATTR)
         if (!itemId || itemId === '1') continue
 
-        // Mark as mounted so we don't re-mount on subsequent observer ticks
+        // mark as mounted so we don't re-mount on subsequent observer ticks
         if (span.getAttribute('data-rgp-hier-mounted')) continue
         span.setAttribute('data-rgp-hier-mounted', '1')
 
@@ -65,10 +65,10 @@ export function createHierarchyChipInjector(projectContext: ProjectContext): () 
       hostSpan.className = 'rgp-hier-host'
       titleCell.appendChild(hostSpan)
 
-      // Store the titleCell reference so the IntersectionObserver callback can pass it as a prop
+      // store the titleCell reference so the IntersectionObserver callback can pass it as a prop
       titleCellMap.set(hostSpan, titleCell)
 
-      // Defer React mount until row enters viewport via IntersectionObserver
+      // defer React mount until row enters viewport via IntersectionObserver
       observer.observe(hostSpan)
     }
   }

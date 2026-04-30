@@ -19,7 +19,7 @@ export const BULK_BAR_PRIMER_PORTAL_NAME = 'rgp-bulk-bar-primer-portal' as const
 
 type ComposedMouseEvent = MouseEvent & { composedPath?: () => EventTarget[] }
 
-// Store only the current mousedown event's retargeted target/path so patched
+// store only the current mousedown event's retargeted target/path so patched
 // contains() checks can answer Primer's document-level outside-click query.
 let activeMousedownPath: EventTarget[] = []
 let activeMousedownTarget: EventTarget | null = null
@@ -84,11 +84,11 @@ export function installPrimerShadowDomCompat(
   portalHost: HTMLElement,
   shadowRoot: ShadowRoot,
 ): () => void {
-  // Capture mousedown at document level BEFORE Primer's listener
-  // This ensures we have the current event target/composedPath available when
+  // capture mousedown at document level BEFORE Primer's listener
+  // this ensures we have the current event target/composedPath available when
   // Primer does its contains(event.target) outside-click check.
   const captureMousedown = (e: MouseEvent) => {
-    // Track the current event only when it originated from our shadow/portal tree
+    // track the current event only when it originated from our shadow/portal tree
     const path = (e as ComposedMouseEvent).composedPath?.() ?? []
     const target = e.target
     const originatedFromPortal =
@@ -129,7 +129,7 @@ export function installPrimerShadowDomCompat(
 
   document.addEventListener('click', captureClick, true)
 
-  // Observer to patch contains() on overlay elements as they're added
+  // observer to patch contains() on overlay elements as they're added
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
@@ -141,7 +141,7 @@ export function installPrimerShadowDomCompat(
 
   observer.observe(portalHost, { childList: true, subtree: true })
 
-  // Patch any existing overlay elements
+  // patch any existing overlay elements
   Array.from(portalHost.children).forEach((child) => {
     if (child instanceof HTMLElement) {
       patchPortalOverlaySubtree(child, portalHost, shadowRoot.host)
@@ -189,12 +189,12 @@ function patchOverlayContains(
 
   const originalContains = overlay.contains.bind(overlay)
 
-  // Override contains to treat the current event's retargeted shadow host
+  // override contains to treat the current event's retargeted shadow host
   // target as inside the overlay when the overlay is present in the composedPath.
   overlay.contains = (node: Node | null): boolean => {
     if (!node) return false
 
-    // First try the original contains check
+    // first try the original contains check
     if (originalContains(node)) {
       return true
     }

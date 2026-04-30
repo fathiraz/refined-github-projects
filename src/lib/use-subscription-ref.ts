@@ -20,7 +20,7 @@ export function useSubscriptionRef<A>(
 ): A {
   return useSyncExternalStore(
     (onStoreChange) => {
-      // Skip the very first emission (it equals the current snapshot) so
+      // skip the very first emission (it equals the current snapshot) so
       // we only react to actual changes — this avoids a redundant render
       // on mount.
       let first = true
