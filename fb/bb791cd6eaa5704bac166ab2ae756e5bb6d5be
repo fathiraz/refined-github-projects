@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "fbbb791cd6eaa5704bac166ab2ae756e5bb6d5be",
+  "prompts": {
+    "079d38ff7f77cbc4": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "68d11040-fa41-4def-a276-9a97d2f8645b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 971,
+      "total_deletions": 0,
+      "accepted_lines": 971,
+      "overriden_lines": 0
+    }
+  }
+}
