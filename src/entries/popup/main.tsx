@@ -4,15 +4,11 @@ import { Box, Button, Flash, FormControl, Heading, Link, Text, TextInput } from 
 import { sendMessage } from '@/lib/messages'
 import { useTokenSetup } from '@/features/token-setup'
 import { usernameStorage } from '@/lib/storage'
-import {
-  AppShell,
-  EyeIcon,
-  EyeOffIcon,
-  KeyboardHint,
-  PanelCard,
-  StatusBanner,
-  XIcon,
-} from '@/ui/primitives'
+import { AppShell } from '@/ui/app-shell'
+import { EyeIcon, EyeOffIcon, XIcon } from '@/ui/icons'
+import { KeyboardHint } from '@/ui/keyboard-hint'
+import { PanelCard } from '@/ui/panel-card'
+import { StatusBanner } from '@/ui/status-banner'
 import { DebugSettingsCard } from '@/features/debug-settings-card'
 // boot the effect runtime once so popup-side stores share it.
 import '@/lib/effect-runtime'

@@ -13,7 +13,8 @@ import { sprintProgressCache, SPRINT_PROGRESS_CACHE_TTL_MS, pruneExpiredCache } 
 
 import { isSprintEndFull, acquireSprintEnd, releaseSprintEnd } from '@/background/concurrency'
 
-import { getProjectFieldsData, broadcastQueue } from '@/background/helpers'
+import { broadcastQueue } from '@/background/rest-helpers'
+import { getProjectFieldsData } from '@/background/project-helpers'
 
 export function registerSprintHandlers(): void {
   onMessage('getSprintStatus', async ({ data }) => {

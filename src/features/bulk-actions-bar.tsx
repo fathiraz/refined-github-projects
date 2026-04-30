@@ -23,30 +23,24 @@ import { BulkLockModal } from '@/features/bulk-lock-modal'
 import { BulkPinModal } from '@/features/bulk-pin-modal'
 import { BulkUnpinModal } from '@/features/bulk-unpin-modal'
 import type { ReorderOp } from '@/features/bulk-move-modal'
-import {
-  ArrowRightIcon,
-  CircleSlashIcon,
-  CopyIcon,
-  DownloadIcon,
-  ListCheckIcon,
-  LockIcon,
-  MoveIcon,
-  PencilIcon,
-  PersonIcon,
-  PinIcon,
-  SyncIcon,
-  TrashIcon,
-  UnpinIcon,
-  XIcon,
-} from '@/ui/primitives'
+import { ArrowRightIcon, CircleSlashIcon, CopyIcon, DownloadIcon, ListCheckIcon, LockIcon, MoveIcon, PencilIcon, PersonIcon, PinIcon, SyncIcon, TrashIcon, UnpinIcon, XIcon } from '@/ui/icons'
 import { Z_MODAL, Z_OVERLAY } from '@/lib/z-index'
-import {
-  LazyBulkEditWizard,
-  LazyBulkDuplicateModal,
-  LazyBulkRenameModal,
-  LazyBulkMoveModal,
-  LazyBulkRandomAssignModal,
-} from '@/features/lazy-modals'
+
+const LazyBulkEditWizard = React.lazy(() =>
+  import('@/features/bulk-edit-modal').then((m) => ({ default: m.BulkEditWizard })),
+)
+const LazyBulkDuplicateModal = React.lazy(() =>
+  import('@/features/bulk-duplicate-modal').then((m) => ({ default: m.BulkDuplicateModal })),
+)
+const LazyBulkRenameModal = React.lazy(() =>
+  import('@/features/bulk-rename-modal').then((m) => ({ default: m.BulkRenameModal })),
+)
+const LazyBulkMoveModal = React.lazy(() =>
+  import('@/features/bulk-move-modal').then((m) => ({ default: m.BulkMoveModal })),
+)
+const LazyBulkRandomAssignModal = React.lazy(() =>
+  import('@/features/bulk-random-assign-modal').then((m) => ({ default: m.BulkRandomAssignModal })),
+)
 
 interface Props {
   projectId: string

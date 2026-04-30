@@ -11,22 +11,7 @@ import { queueStore } from '@/lib/queue-store'
 import { flyToTracker } from '@/features/bulk-utils'
 import { RepoMetadataSelectPanel, type RepoMetadataItem } from '@/ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '@/ui/markdown-textarea'
-import {
-  AlertIcon,
-  ArrowRightIcon,
-  CalendarIcon,
-  CheckIcon,
-  CopyIcon,
-  HashIcon,
-  OptionsSelectIcon,
-  PersonIcon,
-  ProjectBoardIcon,
-  ShieldIcon,
-  SyncIcon,
-  TagIcon,
-  TextLineIcon,
-  XIcon,
-} from '@/ui/primitives'
+import { AlertIcon, ArrowRightIcon, CalendarIcon, CheckIcon, CopyIcon, HashIcon, OptionsSelectIcon, PersonIcon, ProjectBoardIcon, ShieldIcon, SyncIcon, TagIcon, TextLineIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ensureTippyCss } from '@/lib/tippy-utils'

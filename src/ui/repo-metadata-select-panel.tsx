@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import { Avatar, Box } from '@primer/react'
 import { sendMessage } from '@/lib/messages'
-import { PersonIcon, ShieldIcon } from '@/ui/primitives'
+import { PersonIcon, ShieldIcon } from '@/ui/icons'
 import { SearchSelectPanel, type SearchSelectPanelOption } from '@/ui/search-select-panel'
 
 export type RepoMetadataType = 'ASSIGNEES' | 'LABELS' | 'ISSUE_TYPES'

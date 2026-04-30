@@ -11,7 +11,7 @@ import {
   Spinner,
 } from '@primer/react'
 import { ModalStepHeader } from '@/ui/modal-step-header'
-import { PersonIcon, SearchIcon } from '@/ui/primitives'
+import { PersonIcon, SearchIcon } from '@/ui/icons'
 import { Z_MODAL } from '@/lib/z-index'
 import { sendMessage } from '@/lib/messages'
 import {

@@ -17,13 +17,9 @@ import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isDuplicateFull, acquireDuplicate, releaseDuplicate } from '@/background/concurrency'
-import {
-  broadcastQueue,
-  withRateLimitRetry,
-  buildFieldValueFromSource,
-  formatRelationshipLabel,
-  githubRest,
-} from '@/background/helpers'
+import { broadcastQueue, withRateLimitRetry, githubRest } from '@/background/rest-helpers'
+import { formatRelationshipLabel } from '@/background/relationship-helpers'
+import { buildFieldValueFromSource } from '@/background/project-helpers'
 import type { ProjectItemDetails, FieldValue } from '@/background/types'
 
 // ─── runDeepDuplicate (private) ──────────────────────────────────────────────

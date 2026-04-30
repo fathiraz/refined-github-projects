@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Button, Heading, Text } from '@primer/react'
-import { XIcon, StepIndicator } from '@/ui/primitives'
+import { XIcon } from '@/ui/icons'
+import { StepIndicator } from '@/ui/step-indicator'
 
 type ModalStepHeaderProps =
   | {

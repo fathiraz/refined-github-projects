@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Button, Text } from '@primer/react'
-import { IssueReopenedIcon } from '@/ui/primitives'
+import { IssueReopenedIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL } from '@/lib/z-index'
 

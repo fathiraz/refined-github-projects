@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { Box, Heading, Text } from '@primer/react'
 import { TokenSetupCard } from '@/features/token-setup'
 import { DebugSettingsCard } from '@/features/debug-settings-card'
-import { AppShell, CheckIcon } from '@/ui/primitives'
+import { AppShell } from '@/ui/app-shell'
+import { CheckIcon } from '@/ui/icons'
 // boot the effect runtime once so options-side stores share it.
 import '@/lib/effect-runtime'
 

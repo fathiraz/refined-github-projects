@@ -16,18 +16,7 @@ import {
   TextInput,
 } from '@primer/react'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
-import {
-  FilterIcon,
-  GearIcon,
-  IssueClosedIcon,
-  IterationsIcon,
-  OptionsSelectIcon,
-  PlusIcon,
-  SlidersIcon,
-  SprintIcon,
-  TextLineIcon,
-  XIcon,
-} from '@/ui/primitives'
+import { FilterIcon, GearIcon, IssueClosedIcon, IterationsIcon, OptionsSelectIcon, PlusIcon, SlidersIcon, SprintIcon, TextLineIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
 import type { SprintInfo } from '@/lib/messages'
