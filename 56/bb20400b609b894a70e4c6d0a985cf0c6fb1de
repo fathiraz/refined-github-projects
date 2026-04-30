@@ -1,0 +1,38 @@
+src/lib/sprint-utils.ts
+  079d38ff7f77cbc4 78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "56bb20400b609b894a70e4c6d0a985cf0c6fb1de",
+  "prompts": {
+    "079d38ff7f77cbc4": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "68d11040-fa41-4def-a276-9a97d2f8645b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/a3f423a5506506df65fd591634b3b61a7816bd9094546de7e1faa9ebd5d9d1ef"
+    },
+    "9fe07c71265c3a23": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "6a1d7ae6-decd-477d-a4b9-0d9123669c6d",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 971,
+      "total_deletions": 0,
+      "accepted_lines": 971,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/3e03217c7c7f74569e0789a6913910d1b8f5b29c6d255f5d0afc62cc29291f1e"
+    }
+  }
+}
