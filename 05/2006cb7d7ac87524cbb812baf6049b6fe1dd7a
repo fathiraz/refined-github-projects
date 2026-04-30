@@ -1,0 +1,32 @@
+openspec/changes/archive/2026-04-30-flat-layout-refactor/design.md
+  0e84a4d9d295aa5a 1-110
+openspec/changes/archive/2026-04-30-flat-layout-refactor/proposal.md
+  0e84a4d9d295aa5a 1-45
+openspec/changes/archive/2026-04-30-flat-layout-refactor/tasks.md
+  0e84a4d9d295aa5a 1-62
+openspec/changes/archive/2026-04-30-flat-layout-refactor/specs/layout/spec.md
+  0e84a4d9d295aa5a 1-54
+openspec/specs/layout/spec.md
+  0e84a4d9d295aa5a 1-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "052006cb7d7ac87524cbb812baf6049b6fe1dd7a",
+  "prompts": {
+    "0e84a4d9d295aa5a": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "56613cd7-9b3f-4f5d-a0d0-3c583a8ca7a5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1299,
+      "total_deletions": 0,
+      "accepted_lines": 1299,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/2c960ceb040151d18eda6548d2da476cf102902e8bbbc36a708cc879e0d72063"
+    }
+  }
+}
