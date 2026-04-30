@@ -1,11 +1,10 @@
-import React, { Suspense, useEffect, useRef, useState } from 'react'
-import { ActionList, Box, Button, CounterLabel, Spinner, Text } from '@primer/react'
+import React, { useEffect, useRef, useState } from 'react'
+import { Box, Button, CounterLabel, Text } from '@primer/react'
 import Tippy from '@/ui/tooltip'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { selectionStore } from '@/lib/selection-store'
 import { getAllInjectedItemIds } from '@/lib/project-table-dom'
 import { shortcutRegistry, isMac, type ShortcutDefinition } from '@/lib/keyboard'
-import { KeyboardHelpOverlay } from '@/features/keyboard-help-overlay'
 import { sendMessage, type BulkEditRelationshipsUpdate } from '@/lib/messages'
 import { queueStore } from '@/lib/queue-store'
 import { exportSelectedToCSV, flyToTracker } from '@/features/bulk-utils'
@@ -15,32 +14,18 @@ import type {
   RelationshipSelectionState,
   WizardStep,
 } from '@/features/bulk-edit-modal'
-import { BulkCloseModal } from '@/features/bulk-close-modal'
-import { BulkDeleteModal } from '@/features/bulk-delete-modal'
-import { BulkOpenModal } from '@/features/bulk-open-modal'
-import { BulkTransferModal } from '@/features/bulk-transfer-modal'
-import { BulkLockModal } from '@/features/bulk-lock-modal'
-import { BulkPinModal } from '@/features/bulk-pin-modal'
-import { BulkUnpinModal } from '@/features/bulk-unpin-modal'
 import type { ReorderOp } from '@/features/bulk-move-modal'
-import { ArrowRightIcon, CircleSlashIcon, CopyIcon, DownloadIcon, ListCheckIcon, LockIcon, MoveIcon, PencilIcon, PersonIcon, PinIcon, SyncIcon, TrashIcon, UnpinIcon, XIcon } from '@/ui/icons'
-import { Z_MODAL, Z_OVERLAY } from '@/lib/z-index'
+import { ListCheckIcon, XIcon } from '@/ui/icons'
+import { Z_OVERLAY } from '@/lib/z-index'
+import {
+  createEmptyRelationshipSelection,
+  createEmptyRelationshipUpdates,
+  hasRelationshipOperations,
+} from '@/features/bulk-actions-utils'
+import { BulkActionsMenu } from '@/features/bulk-actions-menu'
+import { BulkActionsModals } from '@/features/bulk-actions-modals'
 
-const LazyBulkEditWizard = React.lazy(() =>
-  import('@/features/bulk-edit-modal').then((m) => ({ default: m.BulkEditWizard })),
-)
-const LazyBulkDuplicateModal = React.lazy(() =>
-  import('@/features/bulk-duplicate-modal').then((m) => ({ default: m.BulkDuplicateModal })),
-)
-const LazyBulkRenameModal = React.lazy(() =>
-  import('@/features/bulk-rename-modal').then((m) => ({ default: m.BulkRenameModal })),
-)
-const LazyBulkMoveModal = React.lazy(() =>
-  import('@/features/bulk-move-modal').then((m) => ({ default: m.BulkMoveModal })),
-)
-const LazyBulkRandomAssignModal = React.lazy(() =>
-  import('@/features/bulk-random-assign-modal').then((m) => ({ default: m.BulkRandomAssignModal })),
-)
+export type { ReorderOp } from '@/features/bulk-move-modal'
 
 interface Props {
   projectId: string
@@ -51,71 +36,6 @@ interface Props {
 }
 
 type ModalStep = 'CLOSED' | WizardStep
-
-function createEmptyRelationshipUpdates(): BulkEditRelationshipsUpdate {
-  return {
-    parent: {
-      set: undefined,
-      clear: false,
-    },
-    blockedBy: {
-      add: [],
-      remove: [],
-      clear: false,
-    },
-    blocking: {
-      add: [],
-      remove: [],
-      clear: false,
-    },
-  }
-}
-
-function createEmptyRelationshipSelection(): RelationshipSelectionState {
-  return {
-    parent: false,
-    blockedBy: false,
-    blocking: false,
-  }
-}
-
-function hasRelationshipOperations(relationships: BulkEditRelationshipsUpdate): boolean {
-  return Boolean(
-    relationships.parent.clear ||
-    relationships.parent.set ||
-    relationships.blockedBy.clear ||
-    relationships.blockedBy.add.length > 0 ||
-    relationships.blockedBy.remove.length > 0 ||
-    relationships.blocking.clear ||
-    relationships.blocking.add.length > 0 ||
-    relationships.blocking.remove.length > 0,
-  )
-}
-
-/** Returns the display string for a Ctrl/Cmd+Shift+key shortcut */
-function shortcut(key: string) {
-  return isMac ? `⌘⇧${key}` : `⌃⇧${key}`
-}
-
-function ModalLoadingFallback() {
-  return (
-    <Box
-      sx={{
-        position: 'fixed',
-        inset: 0,
-        bg: 'rgba(27,31,36,0.5)',
-        zIndex: Z_MODAL,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <Spinner size="large" />
-    </Box>
-  )
-}
-
-// ── Main component ──────────────────────────────────────────
 
 export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: Props) {
   ensureTippyCss()
@@ -170,7 +90,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     showRandomAssignModal ||
     showHelp
 
-  // Selection subscription
+  // selection subscription
   useEffect(() => {
     return selectionStore.subscribe(() => {
       const newCount = selectionStore.count()
@@ -199,7 +119,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     })
   }, [])
 
-  // Click-outside for action menu
+  // click-outside for action menu
   useEffect(() => {
     if (!menuOpen) return
     function handleClick(e: MouseEvent) {
@@ -210,7 +130,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     return () => window.removeEventListener('mousedown', handleClick)
   }, [menuOpen])
 
-  // Focus request from keyboard shortcut
+  // focus request from keyboard shortcut
   useEffect(() => {
     return selectionStore.onFocusRequest(() => {
       if (selectionStore.count() > 0) {
@@ -228,7 +148,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       ids.push(def.id)
     }
 
-    // Escape — always available
+    // escape — always available
     reg({
       id: 'escape',
       key: 'Escape',
@@ -257,7 +177,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     })
 
     if (step === 'CLOSED' && !anyModalOpen) {
-      // Select all — works even with zero selection
+      // select all — works even with zero selection
       reg({
         id: 'select-all',
         key: 'a',
@@ -274,7 +194,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     }
 
     if (count > 0 && step === 'CLOSED' && !anyModalOpen) {
-      // Help
+      // help
       reg({
         id: 'help',
         key: '?',
@@ -284,7 +204,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         action: () => setShowHelp(true),
       })
 
-      // Focus actions menu
+      // focus actions menu
       reg({
         id: 'focus-actions',
         key: 'b',
@@ -458,7 +378,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     return () => ids.forEach((id) => shortcutRegistry.unregister(id))
   }, [count, step, anyModalOpen])
 
-  // Extract first repo name from DOM issue links
+  // extract first repo name from dom issue links
   useEffect(() => {
     if (firstRepoName) return
     const links = document.querySelectorAll<HTMLAnchorElement>(
@@ -473,7 +393,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     }
   }, [count, owner, firstRepoName])
 
-  // Load project fields on first selection
+  // load project fields on first selection
   useEffect(() => {
     if (count > 0 && !projectData) {
       getFields()
@@ -779,193 +699,96 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
 
   return (
     <>
-      {/* Wizard overlay (FIELDS / VALUES / SUMMARY / TOKEN_WARNING) */}
-      {step !== 'CLOSED' && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <LazyBulkEditWizard
-            count={count}
-            step={step as WizardStep}
-            projectData={projectData}
-            selectedFields={selectedFields}
-            fieldValues={fieldValues}
-            relationships={relationshipUpdates}
-            relationshipSelection={relationshipSelection}
-            hasChanges={hasChanges}
-            validationErrors={bulkUpdateValidationErrors}
-            concurrentError={concurrentError}
-            owner={owner}
-            firstRepoName={firstRepoName}
-            applyBtnRef={applyBtnRef}
-            onClose={() => setStep('CLOSED')}
-            onToggleField={(f) => {
-              setBulkUpdateValidationErrors([])
-              setSelectedFields((prev) =>
-                prev.some((x) => x.id === f.id) ? prev.filter((x) => x.id !== f.id) : [...prev, f],
-              )
-            }}
-            onUpdateFieldValue={(id, v) => {
-              setBulkUpdateValidationErrors([])
-              setFieldValues((prev) => ({ ...prev, [id]: v }))
-            }}
-            onUpdateRelationships={(relationships) => {
-              setBulkUpdateValidationErrors([])
-              setRelationshipUpdates(relationships)
-            }}
-            onUpdateRelationshipSelection={handleUpdateRelationshipSelection}
-            onSetSelectedFields={(fields) => {
-              setBulkUpdateValidationErrors([])
-              setSelectedFields(fields)
-            }}
-            onGoToStep={(s) => {
-              if (s !== 'SUMMARY') {
-                setBulkUpdateValidationErrors([])
-              }
-              setStep(s)
-            }}
-            onApply={handleBulkUpdate}
-            onOpenOptions={() => {
-              sendMessage('openOptions', {})
-              setStep('CLOSED')
-            }}
-          />
-        </Suspense>
-      )}
+      <BulkActionsModals
+        step={step}
+        count={count}
+        projectData={projectData}
+        selectedFields={selectedFields}
+        fieldValues={fieldValues}
+        relationshipUpdates={relationshipUpdates}
+        relationshipSelection={relationshipSelection}
+        hasChanges={hasChanges}
+        bulkUpdateValidationErrors={bulkUpdateValidationErrors}
+        concurrentError={concurrentError}
+        owner={owner}
+        isOrg={isOrg}
+        number={number}
+        projectId={projectId}
+        firstRepoName={firstRepoName}
+        applyBtnRef={applyBtnRef}
+        onWizardClose={() => setStep('CLOSED')}
+        onToggleField={(f) => {
+          setBulkUpdateValidationErrors([])
+          setSelectedFields((prev) =>
+            prev.some((x) => x.id === f.id) ? prev.filter((x) => x.id !== f.id) : [...prev, f],
+          )
+        }}
+        onUpdateFieldValue={(id, v) => {
+          setBulkUpdateValidationErrors([])
+          setFieldValues((prev) => ({ ...prev, [id]: v }))
+        }}
+        onUpdateRelationships={(relationships) => {
+          setBulkUpdateValidationErrors([])
+          setRelationshipUpdates(relationships)
+        }}
+        onUpdateRelationshipSelection={handleUpdateRelationshipSelection}
+        onSetSelectedFields={(fields) => {
+          setBulkUpdateValidationErrors([])
+          setSelectedFields(fields)
+        }}
+        onGoToStep={(s) => {
+          if (s !== 'SUMMARY') setBulkUpdateValidationErrors([])
+          setStep(s)
+        }}
+        onApply={handleBulkUpdate}
+        onOpenOptions={() => {
+          sendMessage('openOptions', {})
+          setStep('CLOSED')
+        }}
+        showCloseModal={showCloseModal}
+        closeReason={closeReason}
+        onChangeCloseReason={setCloseReason}
+        onCloseCloseModal={() => setShowCloseModal(false)}
+        onConfirmClose={handleConfirmClose}
+        showOpenModal={showOpenModal}
+        onCloseOpenModal={() => setShowOpenModal(false)}
+        onConfirmOpen={handleConfirmOpen}
+        showDeleteModal={showDeleteModal}
+        onCloseDeleteModal={() => setShowDeleteModal(false)}
+        onConfirmDelete={handleConfirmDelete}
+        showLockModal={showLockModal}
+        lockReason={lockReason}
+        onChangeLockReason={setLockReason}
+        onCloseLockModal={() => setShowLockModal(false)}
+        onConfirmLock={handleConfirmLock}
+        showPinModal={showPinModal}
+        onClosePinModal={() => setShowPinModal(false)}
+        onConfirmPin={handleConfirmPin}
+        showUnpinModal={showUnpinModal}
+        onCloseUnpinModal={() => setShowUnpinModal(false)}
+        onConfirmUnpin={handleConfirmUnpin}
+        showTransferModal={showTransferModal}
+        onCloseTransferModal={() => setShowTransferModal(false)}
+        onConfirmTransfer={handleConfirmTransfer}
+        showDupModal={showDupModal}
+        onCloseDupModal={() => {
+          selectionStore.clear()
+          setShowDupModal(false)
+        }}
+        showRenameModal={showRenameModal}
+        onCloseRenameModal={() => setShowRenameModal(false)}
+        onConfirmRename={handleConfirmRename}
+        showMoveModal={showMoveModal}
+        onCloseMoveModal={() => setShowMoveModal(false)}
+        onConfirmReorder={handleConfirmReorder}
+        showRandomAssignModal={showRandomAssignModal}
+        onCloseRandomAssignModal={() => setShowRandomAssignModal(false)}
+        onConfirmRandomAssign={handleConfirmRandomAssign}
+        showHelp={showHelp}
+        onCloseHelp={() => setShowHelp(false)}
+      />
 
-      {/* Close modal */}
-      {showCloseModal && (
-        <BulkCloseModal
-          count={count}
-          closeReason={closeReason}
-          onChangeReason={setCloseReason}
-          onClose={() => setShowCloseModal(false)}
-          onConfirm={handleConfirmClose}
-        />
-      )}
-
-      {/* Open modal */}
-      {showOpenModal && (
-        <BulkOpenModal
-          count={count}
-          onClose={() => setShowOpenModal(false)}
-          onConfirm={handleConfirmOpen}
-        />
-      )}
-
-      {/* Delete modal */}
-      {showDeleteModal && (
-        <BulkDeleteModal
-          count={count}
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={handleConfirmDelete}
-        />
-      )}
-
-      {/* Lock modal */}
-      {showLockModal && (
-        <BulkLockModal
-          count={count}
-          lockReason={lockReason}
-          onChangeReason={setLockReason}
-          onClose={() => setShowLockModal(false)}
-          onConfirm={handleConfirmLock}
-        />
-      )}
-
-      {/* Pin modal */}
-      {showPinModal && (
-        <BulkPinModal
-          count={count}
-          onClose={() => setShowPinModal(false)}
-          onConfirm={handleConfirmPin}
-        />
-      )}
-
-      {/* Unpin modal */}
-      {showUnpinModal && (
-        <BulkUnpinModal
-          count={count}
-          onClose={() => setShowUnpinModal(false)}
-          onConfirm={handleConfirmUnpin}
-        />
-      )}
-
-      {/* Transfer modal */}
-      {showTransferModal && (
-        <BulkTransferModal
-          count={count}
-          owner={owner}
-          firstItemId={selectionStore.getAll()[0]}
-          projectId={projectData?.id || projectId}
-          onClose={() => setShowTransferModal(false)}
-          onConfirm={handleConfirmTransfer}
-        />
-      )}
-
-      {/* Bulk Duplicate modal */}
-      {showDupModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <LazyBulkDuplicateModal
-            itemId={selectionStore.getAll()[0]}
-            projectId={projectData?.id || projectId}
-            owner={owner}
-            isOrg={isOrg}
-            projectNumber={number}
-            onClose={() => {
-              selectionStore.clear()
-              setShowDupModal(false)
-            }}
-          />
-        </Suspense>
-      )}
-
-      {/* Rename modal */}
-      {showRenameModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <LazyBulkRenameModal
-            count={count}
-            projectId={projectData?.id || projectId}
-            itemIds={selectionStore.getAll()}
-            onClose={() => setShowRenameModal(false)}
-            onConfirm={handleConfirmRename}
-          />
-        </Suspense>
-      )}
-
-      {/* Move / Reorder modal */}
-      {showMoveModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <LazyBulkMoveModal
-            count={count}
-            projectId={projectData?.id || projectId}
-            itemIds={selectionStore.getAll()}
-            owner={owner}
-            number={number}
-            isOrg={isOrg}
-            onClose={() => setShowMoveModal(false)}
-            onConfirm={handleConfirmReorder}
-          />
-        </Suspense>
-      )}
-
-      {/* Keyboard help overlay */}
-      {showHelp && <KeyboardHelpOverlay onClose={() => setShowHelp(false)} />}
-
-      {/* Random Assign modal */}
-      {showRandomAssignModal && (
-        <Suspense fallback={<ModalLoadingFallback />}>
-          <LazyBulkRandomAssignModal
-            count={count}
-            projectId={projectData?.id || projectId}
-            owner={owner}
-            repoName={firstRepoName}
-            itemIds={selectionStore.getAll()}
-            onClose={() => setShowRandomAssignModal(false)}
-            onConfirm={handleConfirmRandomAssign}
-          />
-        </Suspense>
-      )}
-
-      {/* ── Persistent bottom bar ── */}
+      {/* ── persistent bottom bar ── */}
       <Box
         sx={{
           position: 'fixed',
@@ -1089,573 +912,27 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
               </Box>
             </Button>
             {menuOpen && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  bottom: 'calc(100% + 6px)',
-                  right: 0,
-                  width: 256,
-                  zIndex: 100,
-                  bg: 'canvas.overlay',
-                  border: '1px solid',
-                  borderColor: 'border.default',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                }}
-              >
-                <ActionList>
-                  <ActionList.Group>
-                    <ActionList.GroupHeading as="h3">Fields</ActionList.GroupHeading>
-                    <ActionList.Item onSelect={() => handleFieldSelectionOpen()}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'accent.subtle',
-                            color: 'accent.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <ListCheckIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Edit Fields
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('E')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                    <ActionList.Item onSelect={handleRandomAssign}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'accent.subtle',
-                            color: 'accent.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <PersonIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Random Assign (beta)
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('A')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                    {count === 1 && (
-                      <ActionList.Item
-                        onSelect={() => checkToken().then((ok) => ok && setShowDupModal(true))}
-                      >
-                        <ActionList.LeadingVisual>
-                          <Box
-                            sx={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: 2,
-                              bg: 'done.subtle',
-                              color: 'done.fg',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <CopyIcon size={13} />
-                          </Box>
-                        </ActionList.LeadingVisual>
-                        Deep Duplicate
-                        <ActionList.TrailingVisual>
-                          <Box
-                            as="kbd"
-                            sx={{
-                              fontSize: 0,
-                              fontFamily: 'inherit',
-                              fontWeight: 500,
-                              px: '5px',
-                              py: '1px',
-                              borderRadius: 1,
-                              bg: 'canvas.inset',
-                              border: '1px solid',
-                              borderColor: 'border.default',
-                              color: 'fg.muted',
-                              cursor: 'default',
-                              lineHeight: 1.6,
-                              letterSpacing: '0.02em',
-                            }}
-                          >
-                            {shortcut('D')}
-                          </Box>
-                        </ActionList.TrailingVisual>
-                      </ActionList.Item>
-                    )}
-                  </ActionList.Group>
-                  <ActionList.Group>
-                    <ActionList.GroupHeading as="h3">Content</ActionList.GroupHeading>
-                    <ActionList.Item onSelect={handleBulkRename}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'accent.subtle',
-                            color: 'accent.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <PencilIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Rename Titles
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('R')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                    <ActionList.Item onSelect={handleBulkReorder}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'accent.subtle',
-                            color: 'accent.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <MoveIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Reorder Items
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('J')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                  </ActionList.Group>
-                  <ActionList.Group>
-                    <ActionList.GroupHeading as="h3">Status</ActionList.GroupHeading>
-                    <ActionList.Item onSelect={handleBulkClose}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'attention.subtle',
-                            color: 'attention.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <CircleSlashIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Close Issues
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('X')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                    <ActionList.Item onSelect={handleBulkOpen}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'success.subtle',
-                            color: 'success.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <SyncIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Reopen Issues
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('O')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                    <ActionList.Item onSelect={handleLock}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'attention.subtle',
-                            color: 'attention.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <LockIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Lock Conversations
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('L')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                  </ActionList.Group>
-                  <ActionList.Group>
-                    <ActionList.GroupHeading as="h3">Visibility</ActionList.GroupHeading>
-                    <ActionList.Item onSelect={handlePin}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'accent.subtle',
-                            color: 'accent.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <PinIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Pin Issues
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('F')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                    <ActionList.Item onSelect={handleUnpin}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'accent.subtle',
-                            color: 'accent.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <UnpinIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Unpin
-                    </ActionList.Item>
-                  </ActionList.Group>
-                  <ActionList.Group>
-                    <ActionList.GroupHeading as="h3">Move</ActionList.GroupHeading>
-                    <ActionList.Item onSelect={handleTransfer}>
-                      <ActionList.LeadingVisual>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 2,
-                            bg: 'done.subtle',
-                            color: 'done.fg',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <ArrowRightIcon size={13} />
-                        </Box>
-                      </ActionList.LeadingVisual>
-                      Transfer Issues
-                      <ActionList.TrailingVisual>
-                        <Box
-                          as="kbd"
-                          sx={{
-                            fontSize: 0,
-                            fontFamily: 'inherit',
-                            fontWeight: 500,
-                            px: '5px',
-                            py: '1px',
-                            borderRadius: 1,
-                            bg: 'canvas.inset',
-                            border: '1px solid',
-                            borderColor: 'border.default',
-                            color: 'fg.muted',
-                            cursor: 'default',
-                            lineHeight: 1.6,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {shortcut('M')}
-                        </Box>
-                      </ActionList.TrailingVisual>
-                    </ActionList.Item>
-                  </ActionList.Group>
-                  <ActionList.Divider />
-                  <ActionList.Item onSelect={() => exportSelectedToCSV()}>
-                    <ActionList.LeadingVisual>
-                      <Box
-                        sx={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: 2,
-                          bg: 'success.subtle',
-                          color: 'success.fg',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <DownloadIcon size={13} />
-                      </Box>
-                    </ActionList.LeadingVisual>
-                    Export CSV
-                    <ActionList.TrailingVisual>
-                      <Box
-                        as="kbd"
-                        sx={{
-                          fontSize: 0,
-                          fontFamily: 'inherit',
-                          fontWeight: 500,
-                          px: '5px',
-                          py: '1px',
-                          borderRadius: 1,
-                          bg: 'canvas.inset',
-                          border: '1px solid',
-                          borderColor: 'border.default',
-                          color: 'fg.muted',
-                          cursor: 'default',
-                          lineHeight: 1.6,
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        {shortcut('V')}
-                      </Box>
-                    </ActionList.TrailingVisual>
-                  </ActionList.Item>
-                  <ActionList.Divider />
-                  <ActionList.Item variant="danger" onSelect={handleBulkDelete}>
-                    <ActionList.LeadingVisual>
-                      <Box
-                        sx={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: 2,
-                          bg: 'danger.subtle',
-                          color: 'danger.fg',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <TrashIcon size={13} />
-                      </Box>
-                    </ActionList.LeadingVisual>
-                    Delete
-                    <ActionList.TrailingVisual>
-                      <Box
-                        sx={{
-                          fontSize: 0,
-                          fontWeight: 'bold',
-                          px: 1,
-                          py: '1px',
-                          borderRadius: 2,
-                          bg: 'danger.subtle',
-                          color: 'danger.fg',
-                          mr: 1,
-                        }}
-                      >
-                        admin
-                      </Box>
-                      <Box
-                        as="kbd"
-                        sx={{
-                          fontSize: 0,
-                          fontFamily: 'inherit',
-                          fontWeight: 500,
-                          px: '5px',
-                          py: '1px',
-                          borderRadius: 1,
-                          bg: 'canvas.inset',
-                          border: '1px solid',
-                          borderColor: 'border.default',
-                          color: 'fg.muted',
-                          cursor: 'default',
-                          lineHeight: 1.6,
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        {isMac ? '⌘⇧⌫' : '⌃⇧⌫'}
-                      </Box>
-                    </ActionList.TrailingVisual>
-                  </ActionList.Item>
-                </ActionList>
-              </Box>
+              <BulkActionsMenu
+                count={count}
+                onEditFields={() => handleFieldSelectionOpen()}
+                onRandomAssign={handleRandomAssign}
+                onDeepDuplicate={() =>
+                  checkToken().then((ok) => ok && setShowDupModal(true))
+                }
+                onRename={handleBulkRename}
+                onReorder={handleBulkReorder}
+                onClose={handleBulkClose}
+                onOpen={handleBulkOpen}
+                onLock={handleLock}
+                onPin={handlePin}
+                onUnpin={handleUnpin}
+                onTransfer={handleTransfer}
+                onDelete={handleBulkDelete}
+              />
             )}
           </Box>
 
-          {/* Spacer + clear */}
+          {/* spacer + clear */}
           <Box sx={{ flex: 1 }} />
           <Tippy content="Clear selection (Esc)" placement="top" delay={[400, 0]}>
             <Button

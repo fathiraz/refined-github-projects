@@ -3,38 +3,37 @@ import Tippy from '@/ui/tooltip'
 import { Box, Button, Checkbox, Flash, FormControl, Heading, Text, TextInput } from '@primer/react'
 import { RepoMetadataSelectPanel } from '@/ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '@/ui/markdown-textarea'
-import { IssueRelationshipSelectPanel } from '@/ui/issue-relationship-select-panel'
-import type { BulkEditRelationshipsUpdate, IssueRelationshipData } from '@/lib/messages'
-import { AlertIcon, CheckIcon, PersonIcon, TagIcon, ShieldIcon, HashIcon, CalendarIcon, TextLineIcon, OptionsSelectIcon, SyncIcon, GearIcon, ProjectBoardIcon, PencilIcon, ListCheckIcon, XIcon } from '@/ui/icons'
+import type { BulkEditRelationshipsUpdate } from '@/lib/messages'
+import { AlertIcon, CheckIcon, GearIcon, ProjectBoardIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ensureTippyCss } from '@/lib/tippy-utils'
-import { formatIssueReference, relationshipKey as issueKey } from '@/lib/relationship-utils'
 import { getFieldOptionTooltip } from '@/features/field-helpers'
+import {
+  bulkEditHeaderIcon,
+  buildRelationshipSummaryRows,
+  describeFieldValue,
+  getFieldIcon,
+  getFieldSelectionTooltip,
+  getFieldValueStepTooltip,
+  getRelationshipSelectionCount,
+  getRelationshipSelectionTooltip,
+  RELATIONSHIP_OPTIONS,
+  type ProjectData,
+  type ProjectField,
+  type RelationshipKey,
+  type RelationshipSelectionState,
+  type RelationshipSummaryRow,
+  type WizardStep,
+} from '@/features/bulk-edit-utils'
+import { RelationshipsSection } from '@/features/bulk-edit-relationships'
 
-export interface ProjectField {
-  id: string
-  name: string
-  dataType: string
-  options?: { id: string; name: string; color?: string }[]
-  configuration?: {
-    iterations: { id: string; title: string; startDate: string; duration: number }[]
-  }
-}
-
-export interface ProjectData {
-  id: string
-  title: string
-  fields: ProjectField[]
-}
-
-export interface RelationshipSelectionState {
-  parent: boolean
-  blockedBy: boolean
-  blocking: boolean
-}
-
-export type WizardStep = 'TOKEN_WARNING' | 'FIELDS' | 'VALUES' | 'SUMMARY'
+export type {
+  ProjectData,
+  ProjectField,
+  RelationshipSelectionState,
+  WizardStep,
+} from '@/features/bulk-edit-utils'
 
 interface WizardProps {
   count: number
@@ -60,162 +59,6 @@ interface WizardProps {
   onApply: () => void
   onOpenOptions: () => void
 }
-
-type RelationshipKey = keyof RelationshipSelectionState
-
-type RelationshipSummaryRow = {
-  label: string
-  value: string
-}
-
-const RELATIONSHIP_OPTIONS: Array<{ key: RelationshipKey; label: string; description: string }> = [
-  {
-    key: 'parent',
-    label: 'Parent',
-    description: 'Set or clear a parent issue for the selected issues.',
-  },
-  {
-    key: 'blockedBy',
-    label: 'Blocked by',
-    description: 'Add, remove, or clear issues that block the selected issues.',
-  },
-  {
-    key: 'blocking',
-    label: 'Blocking',
-    description: 'Add, remove, or clear issues that the selected issues block.',
-  },
-]
-
-function getFieldIcon(dataType: string): React.ReactNode {
-  switch (dataType) {
-    case 'ASSIGNEES':
-      return <PersonIcon />
-    case 'LABELS':
-      return <TagIcon />
-    case 'ISSUE_TYPE':
-      return <ShieldIcon />
-    case 'SINGLE_SELECT':
-      return <OptionsSelectIcon />
-    case 'ITERATION':
-      return <SyncIcon />
-    case 'NUMBER':
-      return <HashIcon />
-    case 'DATE':
-      return <CalendarIcon />
-    case 'TEXT':
-      return <TextLineIcon />
-    case 'TITLE':
-      return <PencilIcon />
-    case 'BODY':
-      return <TextLineIcon />
-    case 'COMMENT':
-      return <TextLineIcon />
-    default:
-      return null
-  }
-}
-
-function getFieldSelectionTooltip(field: ProjectField): string {
-  return `Select ${field.name} to set the same value across all selected items.`
-}
-
-function getFieldValueStepTooltip(field: ProjectField, itemCount: number): string {
-  return `Set ${field.name} for all ${itemCount} selected item${itemCount !== 1 ? 's' : ''}.`
-}
-
-function getRelationshipSelectionTooltip(label: string): string {
-  return `Enable ${label.toLowerCase()} relationship changes for this bulk edit.`
-}
-
-
-
-function issueTitle(issue: IssueRelationshipData): string {
-  return issue.title.trim() || formatIssueReference(issue)
-}
-
-function getRelationshipSelectionCount(selection: RelationshipSelectionState): number {
-  return Object.values(selection).filter(Boolean).length
-}
-
-function buildRelationshipSummaryRows(
-  relationships: BulkEditRelationshipsUpdate,
-): RelationshipSummaryRow[] {
-  const rows: RelationshipSummaryRow[] = []
-
-  if (relationships.parent.clear) {
-    rows.push({ label: 'Parent', value: 'Clear existing parent relationship' })
-  }
-  if (relationships.parent.set) {
-    rows.push({
-      label: 'Parent',
-      value: `Set to ${formatIssueReference(relationships.parent.set)}`,
-    })
-  }
-
-  if (relationships.blockedBy.clear) {
-    rows.push({ label: 'Blocked by', value: 'Clear all current blockers' })
-  }
-  if (relationships.blockedBy.add.length > 0) {
-    rows.push({
-      label: 'Blocked by',
-      value: `Add ${relationships.blockedBy.add.map(formatIssueReference).join(', ')}`,
-    })
-  }
-  if (relationships.blockedBy.remove.length > 0) {
-    rows.push({
-      label: 'Blocked by',
-      value: `Remove ${relationships.blockedBy.remove.map(formatIssueReference).join(', ')}`,
-    })
-  }
-
-  if (relationships.blocking.clear) {
-    rows.push({ label: 'Blocking', value: 'Clear all currently blocked issues' })
-  }
-  if (relationships.blocking.add.length > 0) {
-    rows.push({
-      label: 'Blocking',
-      value: `Add ${relationships.blocking.add.map(formatIssueReference).join(', ')}`,
-    })
-  }
-  if (relationships.blocking.remove.length > 0) {
-    rows.push({
-      label: 'Blocking',
-      value: `Remove ${relationships.blocking.remove.map(formatIssueReference).join(', ')}`,
-    })
-  }
-
-  return rows
-}
-
-function describeFieldValue(field: ProjectField, fieldValues: Record<string, unknown>): string {
-  const valueObj = (fieldValues[field.id] || {}) as Record<string, unknown>
-  let displayValue = 'None / Cleared'
-
-  const arr = valueObj.array as { name: string }[] | undefined
-  if (arr && arr.length > 0) {
-    displayValue = arr.map((v) => v.name).join(', ')
-  } else if (valueObj.date) {
-    displayValue = new Date((valueObj.date as string) + 'T00:00:00').toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  } else if (valueObj.number !== undefined && valueObj.number !== null) {
-    displayValue = String(valueObj.number)
-  } else if (valueObj.text) {
-    displayValue = valueObj.text as string
-  } else if (valueObj.singleSelectOptionId && field.options) {
-    const opt = field.options.find((option) => option.id === valueObj.singleSelectOptionId)
-    if (opt) displayValue = opt.name
-  } else if (valueObj.iterationId && field.configuration?.iterations) {
-    const iter = field.configuration.iterations.find((option) => option.id === valueObj.iterationId)
-    if (iter) displayValue = iter.title
-  }
-
-  return displayValue
-}
-
-const bulkEditHeaderIcon = <ListCheckIcon size={16} />
 
 function TokenWarning({
   onClose,
@@ -280,275 +123,6 @@ function TokenWarning({
           Set up token
         </Button>
       </Box>
-    </Box>
-  )
-}
-
-function RelationshipIssueList({
-  items,
-  onRemove,
-}: {
-  items: IssueRelationshipData[]
-  onRemove: (issue: IssueRelationshipData) => void
-}) {
-  if (items.length === 0) return null
-
-  return (
-    <Box
-      sx={{
-        border: '1px solid',
-        borderColor: 'border.default',
-        borderRadius: 2,
-        overflow: 'hidden',
-      }}
-    >
-      {items.map((issue, index) => (
-        <Box
-          key={issueKey(issue)}
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 2,
-            px: 3,
-            py: 2,
-            borderTop: index === 0 ? 'none' : '1px solid',
-            borderColor: 'border.default',
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Text sx={{ display: 'block', fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
-              {issueTitle(issue)}
-            </Text>
-            <Text sx={{ display: 'block', fontSize: 0, color: 'fg.muted', mt: 1 }}>
-              {formatIssueReference(issue)}
-            </Text>
-          </Box>
-          <Button
-            variant="invisible"
-            size="small"
-            aria-label={`Remove ${formatIssueReference(issue)}`}
-            onClick={() => onRemove(issue)}
-            sx={{ boxShadow: 'none', color: 'fg.muted' }}
-          >
-            <XIcon size={14} />
-          </Button>
-        </Box>
-      ))}
-    </Box>
-  )
-}
-
-function ParentRelationshipEditor({
-  owner,
-  repoName,
-  value,
-  onChange,
-}: {
-  owner: string
-  repoName?: string
-  value: BulkEditRelationshipsUpdate['parent']
-  onChange: (nextValue: BulkEditRelationshipsUpdate['parent']) => void
-}) {
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>Parent issue</Text>
-      <IssueRelationshipSelectPanel
-        owner={owner}
-        repoName={repoName}
-        value={value.set ? [value.set] : []}
-        onChange={(selected) => onChange({ set: selected[0], clear: false })}
-        singleSelect
-        title="Select parent issue"
-        subtitle="Choose the issue that should become the parent for each selected issue."
-        placeholder="Search for a parent issue"
-        placeholderText="Search for a parent issue"
-        inputLabel="Parent issue"
-        anchorAriaLabel="Select parent issue"
-      />
-      {value.set && (
-        <RelationshipIssueList
-          items={[value.set]}
-          onRemove={() => onChange({ set: undefined, clear: false })}
-        />
-      )}
-      <FormControl sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-        <Checkbox
-          checked={value.clear}
-          onChange={(event) =>
-            onChange({
-              set: event.target.checked ? undefined : value.set,
-              clear: event.target.checked,
-            })
-          }
-        />
-        <FormControl.Label sx={{ m: 0, fontWeight: 400 }}>
-          Clear existing parent relationship
-        </FormControl.Label>
-      </FormControl>
-    </Box>
-  )
-}
-
-function RelationshipCategoryEditor({
-  label,
-  owner,
-  repoName,
-  value,
-  onChange,
-}: {
-  label: 'Blocked by' | 'Blocking'
-  owner: string
-  repoName?: string
-  value: BulkEditRelationshipsUpdate['blockedBy']
-  onChange: (nextValue: BulkEditRelationshipsUpdate['blockedBy']) => void
-}) {
-  const addTitle =
-    label === 'Blocked by'
-      ? 'Issues that block the selected issues'
-      : 'Issues the selected issues block'
-  const removeTitle = label === 'Blocked by' ? 'Blockers to remove' : 'Blocked issues to remove'
-
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{label}</Text>
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Text sx={{ fontSize: 1, fontWeight: 400, color: 'fg.default' }}>Add issues</Text>
-        <IssueRelationshipSelectPanel
-          owner={owner}
-          repoName={repoName}
-          value={value.add}
-          onChange={(nextAdd) => {
-            const nextAddKeys = new Set(nextAdd.map(issueKey))
-            onChange({
-              ...value,
-              add: nextAdd,
-              remove: value.remove.filter((issue) => !nextAddKeys.has(issueKey(issue))),
-            })
-          }}
-          title={`Add ${label.toLowerCase()} issues`}
-          subtitle={addTitle}
-          placeholder={`Search issues to add to ${label.toLowerCase()}`}
-          placeholderText={`Search issues to add to ${label.toLowerCase()}`}
-          inputLabel={`Add ${label.toLowerCase()} issues`}
-          anchorAriaLabel={`Add ${label.toLowerCase()} issues`}
-        />
-      </Box>
-      <RelationshipIssueList
-        items={value.add}
-        onRemove={(issue) =>
-          onChange({
-            ...value,
-            add: value.add.filter((candidate) => issueKey(candidate) !== issueKey(issue)),
-          })
-        }
-      />
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Text sx={{ fontSize: 1, fontWeight: 400, color: 'fg.default' }}>
-          Remove specific issues
-        </Text>
-        <IssueRelationshipSelectPanel
-          owner={owner}
-          repoName={repoName}
-          value={value.remove}
-          onChange={(nextRemove) => {
-            const nextRemoveKeys = new Set(nextRemove.map(issueKey))
-            onChange({
-              ...value,
-              remove: nextRemove,
-              add: value.add.filter((issue) => !nextRemoveKeys.has(issueKey(issue))),
-            })
-          }}
-          title={`Remove ${label.toLowerCase()} issues`}
-          subtitle={removeTitle}
-          placeholder={`Search issues to remove from ${label.toLowerCase()}`}
-          placeholderText={`Search issues to remove from ${label.toLowerCase()}`}
-          inputLabel={`Remove ${label.toLowerCase()} issues`}
-          anchorAriaLabel={`Remove ${label.toLowerCase()} issues`}
-        />
-      </Box>
-      <RelationshipIssueList
-        items={value.remove}
-        onRemove={(issue) =>
-          onChange({
-            ...value,
-            remove: value.remove.filter((candidate) => issueKey(candidate) !== issueKey(issue)),
-          })
-        }
-      />
-
-      <FormControl sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-        <Checkbox
-          checked={value.clear}
-          onChange={(event) => onChange({ ...value, clear: event.target.checked })}
-        />
-        <FormControl.Label sx={{ m: 0, fontWeight: 400 }}>
-          Clear all current {label === 'Blocked by' ? 'blockers' : 'blocked issues'} before applying
-          updates
-        </FormControl.Label>
-      </FormControl>
-    </Box>
-  )
-}
-
-function RelationshipsSection({
-  owner,
-  repoName,
-  relationshipSelection,
-  relationships,
-  onUpdateRelationships,
-}: {
-  owner: string
-  repoName?: string
-  relationshipSelection: RelationshipSelectionState
-  relationships: BulkEditRelationshipsUpdate
-  onUpdateRelationships: (relationships: BulkEditRelationshipsUpdate) => void
-}) {
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Text sx={{ fontSize: 2, fontWeight: 'bold', color: 'fg.default' }}>Relationships</Text>
-        <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-          Relationship updates apply only to issues. Pull requests in the selection are skipped
-          automatically.
-        </Text>
-      </Box>
-
-      {relationshipSelection.parent && (
-        <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, p: 3 }}>
-          <ParentRelationshipEditor
-            owner={owner}
-            repoName={repoName}
-            value={relationships.parent}
-            onChange={(parent) => onUpdateRelationships({ ...relationships, parent })}
-          />
-        </Box>
-      )}
-
-      {relationshipSelection.blockedBy && (
-        <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, p: 3 }}>
-          <RelationshipCategoryEditor
-            label="Blocked by"
-            owner={owner}
-            repoName={repoName}
-            value={relationships.blockedBy}
-            onChange={(blockedBy) => onUpdateRelationships({ ...relationships, blockedBy })}
-          />
-        </Box>
-      )}
-
-      {relationshipSelection.blocking && (
-        <Box sx={{ border: '1px solid', borderColor: 'border.default', borderRadius: 2, p: 3 }}>
-          <RelationshipCategoryEditor
-            label="Blocking"
-            owner={owner}
-            repoName={repoName}
-            value={relationships.blocking}
-            onChange={(blocking) => onUpdateRelationships({ ...relationships, blocking })}
-          />
-        </Box>
-      )}
     </Box>
   )
 }

@@ -11,26 +11,54 @@ import { queueStore } from '@/lib/queue-store'
 import { flyToTracker } from '@/features/bulk-utils'
 import { RepoMetadataSelectPanel, type RepoMetadataItem } from '@/ui/repo-metadata-select-panel'
 import { MarkdownTextarea } from '@/ui/markdown-textarea'
-import { AlertIcon, ArrowRightIcon, CalendarIcon, CheckIcon, CopyIcon, HashIcon, OptionsSelectIcon, PersonIcon, ProjectBoardIcon, ShieldIcon, SyncIcon, TagIcon, TextLineIcon, XIcon } from '@/ui/icons'
+import {
+  AlertIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  CopyIcon,
+  PersonIcon,
+  ProjectBoardIcon,
+  ShieldIcon,
+  TagIcon,
+  TextLineIcon,
+  XIcon,
+} from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { formatIssueReference, relationshipKey } from '@/lib/relationship-utils'
 import { getFieldOptionTooltip } from '@/features/field-helpers'
-
-type Step = 'LOADING' | 'SELECT' | 'VALUES' | 'SUMMARY' | 'ERROR'
-type EditableField = ItemPreviewData['fields'][number]
-type SectionGroup = 'CONTENT' | 'METADATA' | 'PROJECT_FIELDS' | 'RELATIONSHIPS'
-type SectionId =
-  | 'TITLE'
-  | 'BODY'
-  | 'ASSIGNEES'
-  | 'LABELS'
-  | 'ISSUE_TYPE'
-  | 'REL_PARENT'
-  | 'REL_BLOCKED_BY'
-  | 'REL_BLOCKING'
-  | `FIELD:${string}`
+import {
+  ASSIGNEES_SECTION_ID,
+  BLOCKED_BY_SECTION_ID,
+  BLOCKING_SECTION_ID,
+  BODY_SECTION_ID,
+  buildFieldValue,
+  bulkDuplicateHeaderIcon,
+  buttonMotionSx,
+  duplicateValueTooltip,
+  fieldSectionId,
+  formatIssueSummary,
+  getFieldIcon,
+  ISSUE_TYPE_SECTION_ID,
+  LABELS_SECTION_ID,
+  PARENT_SECTION_ID,
+  prefixLabelIcon,
+  sectionGroupMeta,
+  sectionGroupOrder,
+  sectionLabel,
+  summarizeFieldValue,
+  summarizeIssueList,
+  summarizeText,
+  TITLE_SECTION_ID,
+  type DuplicateSection,
+  type EditableField,
+  type ReviewRow,
+  type SectionGroup,
+  type SectionId,
+  type Step,
+} from '@/features/bulk-duplicate-utils'
+import { RelationshipListEditor } from '@/features/bulk-duplicate-relationship-list'
 
 interface Props {
   itemId: string
@@ -39,164 +67,6 @@ interface Props {
   isOrg: boolean
   projectNumber: number
   onClose: () => void
-}
-
-interface DuplicateSection {
-  id: SectionId
-  label: string
-  group: SectionGroup
-  icon: React.ReactNode
-  badge?: string
-  helperText?: string
-}
-
-interface ReviewRow {
-  id: SectionId
-  label: string
-  value: string
-}
-
-const TITLE_SECTION_ID = 'TITLE' as const
-const BODY_SECTION_ID = 'BODY' as const
-const ASSIGNEES_SECTION_ID = 'ASSIGNEES' as const
-const LABELS_SECTION_ID = 'LABELS' as const
-const ISSUE_TYPE_SECTION_ID = 'ISSUE_TYPE' as const
-const PARENT_SECTION_ID = 'REL_PARENT' as const
-const BLOCKED_BY_SECTION_ID = 'REL_BLOCKED_BY' as const
-const BLOCKING_SECTION_ID = 'REL_BLOCKING' as const
-
-const sectionLabel = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 2,
-  fontSize: 0 as const,
-  fontWeight: 'bold' as const,
-  textTransform: 'uppercase' as const,
-  color: 'fg.muted' as const,
-  letterSpacing: '0.05em',
-}
-
-const prefixLabelIcon = {
-  color: 'fg.muted' as const,
-  display: 'flex' as const,
-  alignItems: 'center' as const,
-  flexShrink: 0 as const,
-}
-
-const buttonMotionSx = {
-  boxShadow: 'none',
-  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-  '@media (prefers-reduced-motion: reduce)': {
-    transition: 'none',
-    '&:hover:not(:disabled)': { transform: 'none' },
-  },
-}
-
-const sectionGroupMeta: Record<SectionGroup, { label: string; icon: React.ReactNode }> = {
-  CONTENT: {
-    label: 'Content',
-    icon: <TextLineIcon size={14} />,
-  },
-  METADATA: {
-    label: 'Metadata',
-    icon: <PersonIcon size={14} />,
-  },
-  PROJECT_FIELDS: {
-    label: 'Project Fields',
-    icon: <ProjectBoardIcon size={14} />,
-  },
-  RELATIONSHIPS: {
-    label: 'Relationships',
-    icon: <AlertIcon size={14} />,
-  },
-}
-
-const sectionGroupOrder: SectionGroup[] = ['CONTENT', 'METADATA', 'PROJECT_FIELDS', 'RELATIONSHIPS']
-const bulkDuplicateHeaderIcon = <CopyIcon size={16} />
-
-function fieldSectionId(fieldId: string): SectionId {
-  return `FIELD:${fieldId}`
-}
-
-function getFieldIcon(dataType: EditableField['dataType']): React.ReactNode {
-  switch (dataType) {
-    case 'TEXT':
-      return <TextLineIcon size={14} />
-    case 'NUMBER':
-      return <HashIcon size={14} />
-    case 'DATE':
-      return <CalendarIcon size={14} />
-    case 'SINGLE_SELECT':
-      return <OptionsSelectIcon size={14} />
-    case 'ITERATION':
-      return <SyncIcon size={14} />
-    default:
-      return null
-  }
-}
-
-function duplicateValueTooltip(fieldName: string): string {
-  return `Value applied to the duplicated item for ${fieldName}.`
-}
-
-function formatIssueSummary(issue: IssueRelationshipData): string {
-  return `${formatIssueReference(issue)} — ${issue.title}`
-}
-
-function summarizeText(value: string, fallback = 'Empty'): string {
-  const trimmed = value.trim()
-  if (!trimmed) return fallback
-  return trimmed.length > 80 ? `${trimmed.slice(0, 77)}…` : trimmed
-}
-
-function summarizeIssueList(issues: IssueRelationshipData[]): string {
-  if (issues.length === 0) return 'Skipped'
-  const preview = issues.slice(0, 2).map(formatIssueSummary).join('; ')
-  return issues.length > 2 ? `${preview} +${issues.length - 2} more` : preview
-}
-
-function summarizeFieldValue(field: EditableField): string {
-  if (field.dataType === 'TEXT') {
-    return summarizeText(field.text ?? '', 'None / Cleared')
-  }
-
-  if (field.dataType === 'SINGLE_SELECT') {
-    return field.optionName || 'None / Cleared'
-  }
-
-  if (field.dataType === 'ITERATION') {
-    return field.iterationTitle || 'None / Cleared'
-  }
-
-  if (field.dataType === 'NUMBER') {
-    return field.number === undefined || field.number === null
-      ? 'None / Cleared'
-      : String(field.number)
-  }
-
-  if (field.dataType === 'DATE') {
-    if (!field.date) return 'None / Cleared'
-    const parsed = new Date(`${field.date}T00:00:00`)
-    return Number.isNaN(parsed.getTime())
-      ? field.date
-      : parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-  }
-
-  return 'None / Cleared'
-}
-
-function buildFieldValue(field: EditableField): Record<string, unknown> {
-  if (field.dataType === 'TEXT') return { text: field.text ?? '' }
-  if (field.dataType === 'SINGLE_SELECT')
-    return field.optionId ? { singleSelectOptionId: field.optionId } : {}
-  if (field.dataType === 'ITERATION')
-    return field.iterationId ? { iterationId: field.iterationId } : {}
-  if (field.dataType === 'NUMBER')
-    return field.number === undefined || field.number === null ? {} : { number: field.number }
-  if (field.dataType === 'DATE') return field.date ? { date: field.date } : {}
-  return {}
 }
 
 function SelectSectionsStep({
@@ -377,89 +247,6 @@ function SelectSectionsStep({
         </Button>
       </Box>
     </>
-  )
-}
-
-function RelationshipListEditor({
-  label,
-  icon,
-  description,
-  issues,
-  onRemoveIssue,
-  tooltipLabel,
-}: {
-  label: string
-  icon: React.ReactNode
-  description: string
-  issues: IssueRelationshipData[]
-  onRemoveIssue: (issue: IssueRelationshipData) => void
-  tooltipLabel: string
-}) {
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
-      <Tippy
-        content={duplicateValueTooltip(tooltipLabel)}
-        delay={[400, 0]}
-        placement="top"
-        zIndex={Z_TOOLTIP}
-      >
-        <Text
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 2,
-            fontSize: 1,
-            fontWeight: 'bold',
-            color: 'fg.default',
-            width: 'fit-content',
-            cursor: 'help',
-          }}
-        >
-          <Box as="span" sx={prefixLabelIcon}>
-            {icon}
-          </Box>
-          {label}
-        </Text>
-      </Tippy>
-      <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{description}</Text>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {issues.map((issue) => (
-          <Box
-            key={relationshipKey(issue)}
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 3,
-              px: 3,
-              py: 2,
-              border: '1px solid',
-              borderColor: 'border.default',
-              borderRadius: 2,
-              bg: 'canvas.default',
-            }}
-          >
-            <Box
-              sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}
-            >
-              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
-                {issue.title}
-              </Text>
-              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{formatIssueReference(issue)}</Text>
-            </Box>
-            <Button
-              variant="invisible"
-              size="small"
-              aria-label={`Remove ${formatIssueReference(issue)} from ${label}`}
-              onClick={() => onRemoveIssue(issue)}
-              sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted', ...buttonMotionSx }}
-            >
-              <XIcon size={14} />
-            </Button>
-          </Box>
-        ))}
-      </Box>
-    </Box>
   )
 }
 

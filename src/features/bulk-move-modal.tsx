@@ -7,20 +7,18 @@ import { MoveIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
+import {
+  buildOps,
+  computeNewOrder,
+  type MoveAction,
+  type OrderedItem,
+  type ReorderOp,
+} from '@/features/bulk-move-utils'
+import { PreviewList } from '@/features/bulk-move-preview'
+
+export type { ReorderOp } from '@/features/bulk-move-utils'
 
 type Stage = 'LOADING' | 'CONFIGURE' | 'PREVIEW' | 'ERROR'
-type MoveAction = 'TOP' | 'BOTTOM' | 'BEFORE' | 'AFTER'
-
-interface OrderedItem {
-  memexItemId: number
-  nodeId: string
-  title: string
-}
-
-export interface ReorderOp {
-  nodeId: string
-  previousNodeId: string | null
-}
 
 interface Props {
   count: number
@@ -32,119 +30,6 @@ interface Props {
   onClose: () => void
   onConfirm: (ops: ReorderOp[], projectId: string, label: string) => void
 }
-
-function computeNewOrder(
-  allItems: OrderedItem[],
-  selectedMemexIds: Set<number>,
-  action: MoveAction,
-  targetMemexId: number | null,
-): OrderedItem[] {
-  const selected = allItems.filter((i) => selectedMemexIds.has(i.memexItemId))
-  const nonSelected = allItems.filter((i) => !selectedMemexIds.has(i.memexItemId))
-
-  if (action === 'TOP') return [...selected, ...nonSelected]
-  if (action === 'BOTTOM') return [...nonSelected, ...selected]
-
-  if (targetMemexId == null) return allItems
-
-  const targetIdx = nonSelected.findIndex((i) => i.memexItemId === targetMemexId)
-  if (targetIdx === -1) return allItems
-
-  if (action === 'BEFORE') {
-    return [...nonSelected.slice(0, targetIdx), ...selected, ...nonSelected.slice(targetIdx)]
-  }
-
-  // AFTER
-  return [...nonSelected.slice(0, targetIdx + 1), ...selected, ...nonSelected.slice(targetIdx + 1)]
-}
-
-function buildOps(newOrder: OrderedItem[], selectedMemexIds: Set<number>): ReorderOp[] {
-  return newOrder.reduce<ReorderOp[]>((acc, item, i) => {
-    if (!selectedMemexIds.has(item.memexItemId)) return acc
-    const prev = newOrder[i - 1]
-    acc.push({ nodeId: item.nodeId, previousNodeId: prev?.nodeId ?? null })
-    return acc
-  }, [])
-}
-
-// ─── Preview list ──────────────────────────────────────────────────────────────
-
-function PreviewList({
-  items,
-  selectedMemexIds,
-}: {
-  items: OrderedItem[]
-  selectedMemexIds: Set<number>
-}) {
-  return (
-    <Box
-      as="ol"
-      sx={{ listStyle: 'none', m: 0, p: 0, display: 'flex', flexDirection: 'column', gap: 0 }}
-    >
-      {items.map((item, i) => {
-        const isSel = selectedMemexIds.has(item.memexItemId)
-        return (
-          <Box
-            as="li"
-            key={item.memexItemId}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              px: 2,
-              py: '5px',
-              borderRadius: 1,
-              bg: isSel ? 'accent.subtle' : 'transparent',
-              borderBottom: '1px solid',
-              borderColor: 'border.muted',
-            }}
-          >
-            <Text
-              sx={{
-                fontSize: 0,
-                color: 'fg.muted',
-                minWidth: 20,
-                textAlign: 'right',
-                flexShrink: 0,
-              }}
-            >
-              {i + 1}
-            </Text>
-            <Text
-              sx={{
-                fontSize: 0,
-                color: isSel ? 'accent.fg' : 'fg.default',
-                fontWeight: isSel ? 'semibold' : 'normal',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {item.title || '(no title)'}
-            </Text>
-            {isSel && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  color: 'accent.fg',
-                  flexShrink: 0,
-                  ml: 'auto',
-                }}
-              >
-                <ArrowUpIcon size={12} />
-                <Text sx={{ fontSize: 0, color: 'accent.fg', fontWeight: 'semibold' }}>moving</Text>
-              </Box>
-            )}
-          </Box>
-        )
-      })}
-    </Box>
-  )
-}
-
-// ─── Modal ─────────────────────────────────────────────────────────────────────
 
 export function BulkMoveModal({
   count,
@@ -170,7 +55,7 @@ export function BulkMoveModal({
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Fetch data on mount
+  // fetch data on mount
   useEffect(() => {
     const allDomIds = Array.from(document.querySelectorAll('[data-rgp-cb]'))
       .map((el) => el.getAttribute('data-rgp-cb') ?? '')
@@ -191,7 +76,7 @@ export function BulkMoveModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Close dropdown on outside click
+  // close dropdown on outside click
   useEffect(() => {
     if (!dropdownOpen) return
     function handle(e: MouseEvent) {
