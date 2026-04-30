@@ -41,7 +41,7 @@ export type GithubGraphQLError = Schema.Schema.Type<typeof GithubGraphQLError>
 // messaging boundaries preserves the failure shape.
 export const GithubNetworkError = Schema.TaggedStruct('GithubNetworkError', {
   message: Schema.optional(Schema.String),
-  cause: Schema.optional(Schema.Unknown),
+  cause: Schema.Unknown,
 })
 export type GithubNetworkError = Schema.Schema.Type<typeof GithubNetworkError>
 
