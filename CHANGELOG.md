@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.0.0 (2026-04-30)
+
+
+### Features
+
+* **app:** fully migrated from plasmo to wxt ([d97088f](https://github.com/fathiraz/refined-github-projects/commit/d97088feef94074739e389e4ecc4f17a46054599))
+* **app:** migrating to wxt from plasmo ([fba14c6](https://github.com/fathiraz/refined-github-projects/commit/fba14c647a48306b79cea4a74412ac98bfa2ee26))
+* auto-inject sprint filter on settings save and enhance logging ([5903e28](https://github.com/fathiraz/refined-github-projects/commit/5903e2854fbec5ea7ceae22d08eecca44ae215f6))
+* bulk edit title/body/comment and reorder via GraphQL ([f03707c](https://github.com/fathiraz/refined-github-projects/commit/f03707c7ad0f2fad35816d3f894613d0cee5ccce))
+* **bulk:** add bulk random assign functionality ([#13](https://github.com/fathiraz/refined-github-projects/issues/13)) ([c18f581](https://github.com/fathiraz/refined-github-projects/commit/c18f581727202e1e9f45cd3a9100c92bc17d6baa))
+* **duplicate:** add WYSIWYG markdown editor for description field ([cd9e452](https://github.com/fathiraz/refined-github-projects/commit/cd9e4521e3b7d85e63ab1012d7dc082208c113be))
+* enhance sprint panel navigation and update readme ([06fc597](https://github.com/fathiraz/refined-github-projects/commit/06fc597f7c29d08832088f2b9a3386c8ed9ae3c0))
+* **hierarchy:** add issue hierarchy and project context support ([#11](https://github.com/fathiraz/refined-github-projects/issues/11)) ([8a7cbbc](https://github.com/fathiraz/refined-github-projects/commit/8a7cbbcfa2e5d4038e4b27ad88d82e7580a97b58))
+* integrate Effect library for functional error handling and GraphQL client ([#18](https://github.com/fathiraz/refined-github-projects/issues/18)) ([a289cb9](https://github.com/fathiraz/refined-github-projects/commit/a289cb95f6aa2c49f82ec99e56d6a55a463a8e4a))
+* migrate to Effect platform with typed services and structured concurrency ([#26](https://github.com/fathiraz/refined-github-projects/issues/26)) ([9e5f099](https://github.com/fathiraz/refined-github-projects/commit/9e5f0991a82d9342e3ce214742514132b9d95f1f))
+* modular background architecture, keyboard shortcuts, and dev tooling (v0.4.0) ([#16](https://github.com/fathiraz/refined-github-projects/issues/16)) ([fc995f6](https://github.com/fathiraz/refined-github-projects/commit/fc995f61753265eebeab266b43c206565cfb9aa4))
+* **queue:** add rich detail descriptions for bulk operations ([3d50222](https://github.com/fathiraz/refined-github-projects/commit/3d50222c3fbdfb37b07222fbe938d040a5913f91))
+* **sprint:** add sprint progress tracking with scope change visibility ([#14](https://github.com/fathiraz/refined-github-projects/issues/14)) ([ffad04f](https://github.com/fathiraz/refined-github-projects/commit/ffad04fe159d28278cef530c48ec44f9119edb20))
+* **sprint:** inline modals and add migration exclude rules ([e58a280](https://github.com/fathiraz/refined-github-projects/commit/e58a2808f686c385fe1104c5484de5d996570e74))
+* **sprint:** modal dialog layout and exclude-from-migration rules ([129e5de](https://github.com/fathiraz/refined-github-projects/commit/129e5dee2fd486ca568931b2faa6f62fd8263160))
+* switch options page to full tab and fix select-all shortcut ([#22](https://github.com/fathiraz/refined-github-projects/issues/22)) ([321fe19](https://github.com/fathiraz/refined-github-projects/commit/321fe19ddeb1df70ac1d30b7668bb7d78344a51b))
+* **ui:** add bulk issue relationship editing ([#3](https://github.com/fathiraz/refined-github-projects/issues/3)) ([7f2f39f](https://github.com/fathiraz/refined-github-projects/commit/7f2f39fbee6c951f416bee96a608e0b761327f1e))
+* **ui:** add guided bulk duplicate plan and relationship copying ([b0947cf](https://github.com/fathiraz/refined-github-projects/commit/b0947cf6b289df0752df4e3d49084fd940512467))
+* **ui:** add guided bulk duplicate plan and relationship copying ([0712de6](https://github.com/fathiraz/refined-github-projects/commit/0712de6886bbfb92b9c014ca21c8c6c259b2886d))
+* **ui:** add issue type selection and consolidate shared components ([a7a3b6f](https://github.com/fathiraz/refined-github-projects/commit/a7a3b6fd5dfd1141c46a1775c4eb62ea5cf8fac8))
+* **ui:** enhance sprint group header widget loading and error states ([8d9fea9](https://github.com/fathiraz/refined-github-projects/commit/8d9fea9ac80db92fcf5081d3753d6da665718420))
+* **ui:** rebuild bulk and sprint overlays ([2778168](https://github.com/fathiraz/refined-github-projects/commit/27781683eef2eebb752c719e18c351247d205a98))
+
+
+### Bug Fixes
+
+* **app:** drop `-is:closed` from auto-injected sprint filter ([#28](https://github.com/fathiraz/refined-github-projects/issues/28)) ([fbbb791](https://github.com/fathiraz/refined-github-projects/commit/fbbb791cd6eaa5704bac166ab2ae756e5bb6d5be))
+* **app:** permission for firefox and cookies permission ([#7](https://github.com/fathiraz/refined-github-projects/issues/7)) ([13f43c9](https://github.com/fathiraz/refined-github-projects/commit/13f43c91099f89ec96a1a0db24c851a8323b5aae))
+* **app:** styling of checkboxes and order ([c6b2c44](https://github.com/fathiraz/refined-github-projects/commit/c6b2c440ecd5fc2095ebc9d4e35f099a587dc1bc))
+* **bulk:** preserve selected assignees visibility in random assign modal ([#24](https://github.com/fathiraz/refined-github-projects/issues/24)) ([cdd8144](https://github.com/fathiraz/refined-github-projects/commit/cdd81444071a2a853dfefead5a0e68efde23697f))
+* **dragHandles:** fix multi-select drag and snapshot selection at drag-start ([a5f84a4](https://github.com/fathiraz/refined-github-projects/commit/a5f84a4bdf5096f4a4050791dbbd0335ba28511e))
+
 ## [0.6.0](https://github.com/fathiraz/refined-github-projects/compare/v0.5.0...v0.6.0) (2026-04-27)
 
 
