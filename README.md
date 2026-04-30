@@ -14,7 +14,7 @@
   <a href="https://github.com/fathiraz/refined-github-projects/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License" /></a>
   <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-238636?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" /></a>
   <a href="https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/"><img src="https://img.shields.io/badge/Firefox_Add--ons-Live-238636?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="Firefox Add-ons" /></a>
-  <!-- COVERAGE_BADGE_START --><img src="https://img.shields.io/badge/coverage-93.03%25-brightgreen?style=for-the-badge" alt="Coverage" /><!-- COVERAGE_BADGE_END -->
+  <!-- COVERAGE_BADGE_START --><img src="https://img.shields.io/badge/coverage-84.81%25-brightgreen?style=for-the-badge" alt="Coverage" /><!-- COVERAGE_BADGE_END -->
 </p>
 
 <p align="center">
@@ -364,13 +364,12 @@ If you want to use Safari manually, follow the [WXT Safari publishing guide](htt
 
 <!-- COVERAGE_REPORT_START -->
 
-![Code Coverage](https://img.shields.io/badge/Code%20Coverage-95%25-success?style=flat)
+![Code Coverage](https://img.shields.io/badge/Code%20Coverage-86%25-success?style=flat)
 
 Package | Line Rate | Branch Rate | Health
 -------- | --------- | ----------- | ------
-lib | 94% | 83% | ✔
-lib.graphql | 96% | 75% | ✔
-**Summary** | **95%** (549 / 580) | **82%** (274 / 333) | ✔
+main | 86% | 81% | ✔
+**Summary** | **86%** (712 / 826) | **81%** (332 / 412) | ✔
 
 <!-- COVERAGE_REPORT_END -->
 
