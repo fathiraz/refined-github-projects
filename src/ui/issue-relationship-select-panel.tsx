@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react'
 import { Box } from '@primer/react'
 import { sendMessage, type IssueSearchResultData } from '@/lib/messages'
+import { formatIssueReference } from '@/lib/relationship-utils'
 import { HashIcon, IssueClosedIcon, IssueReopenedIcon } from '@/ui/icons'
 import { SearchSelectPanel, type SearchSelectPanelOption } from '@/ui/search-select-panel'
 
@@ -19,10 +20,6 @@ interface IssueRelationshipSelectPanelProps {
   placeholderText?: string
   inputLabel?: string
   anchorAriaLabel?: string
-}
-
-function formatIssueReference(issue: IssueRelationshipItem): string {
-  return `${issue.repoOwner}/${issue.repoName}#${issue.number}`
 }
 
 function leadingVisual(issue: IssueRelationshipItem): React.ReactNode {
