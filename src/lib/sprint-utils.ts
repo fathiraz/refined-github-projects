@@ -5,6 +5,46 @@ export interface Iteration {
   duration: number
 }
 
+export interface FieldNode {
+  id: string
+  name: string
+  dataType: string
+  options?: { id: string; name: string; color: string }[]
+  configuration?: {
+    iterations: Iteration[]
+  }
+}
+
+export function fmt(iso: string): string {
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+export function daysLeft(endDate: string): number {
+  const today = new Date().toISOString().slice(0, 10)
+  return Math.max(
+    0,
+    Math.ceil(
+      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) /
+        86_400_000,
+    ),
+  )
+}
+
+export function sprintProgress(startDate: string, endDate: string): number {
+  const total = Math.max(
+    1,
+    Math.ceil(
+      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(startDate + 'T00:00:00Z').getTime()) /
+        86_400_000,
+    ),
+  )
+  return Math.min(100, Math.round(((total - daysLeft(endDate)) / total) * 100))
+}
+
 export function todayUtc(): string {
   return new Date().toISOString().slice(0, 10)
 }
