@@ -17,7 +17,7 @@ function redefineMessage(target: object, message: string): void {
 }
 
 // ─── GitHub-domain tagged ADT ────────────────────────────────────────────────
-// Tagged-union of GitHub error variants. Use `classifyHttpError` to map an
+// tagged-union of GitHub error variants. Use `classifyHttpError` to map an
 // HTTP status onto the right variant when constructing a failure from a
 // non-OK Response.
 
@@ -118,7 +118,7 @@ export const classifyHttpError = (args: {
       // GitHub returns 403 for two unrelated reasons:
       //   - secondary rate limits / abuse detection (X-RateLimit-Remaining=0)
       //   - permission errors (token lacks scope, repo locked, ...)
-      // Keep the 403→rate-limit treatment as the existing code does, because
+      // keep the 403→rate-limit treatment as the existing code does, because
       // the higher-level retry path already handled this case the same way.
       args.rateLimitRemaining === 0
         ? new GithubRateLimitError(args)

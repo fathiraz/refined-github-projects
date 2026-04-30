@@ -1,10 +1,10 @@
 import { Effect, Stream, SubscriptionRef } from 'effect'
 
-import { logger } from './debug-logger'
+import { logger } from '@/lib/debug-logger'
 
 type Listener = () => void
 
-// Internal SubscriptionRef holds the canonical state. A synchronous mirror
+// internal SubscriptionRef holds the canonical state. A synchronous mirror
 // (`current`) is kept so that getters / isSelected / count / getAll stay
 // synchronous and zero-cost. Mutations always go through `setState` which
 // updates the ref AND the mirror in one shot before firing legacy listeners

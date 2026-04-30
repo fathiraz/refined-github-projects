@@ -1,5 +1,5 @@
 import { Layer, LogLevel, Logger, HashMap } from 'effect'
-import { debugStorage } from './storage'
+import { debugStorage } from '@/lib/storage'
 
 let isDebugEnabled = false
 
@@ -34,7 +34,7 @@ export const logger = {
 
   error: (...args: unknown[]): void => {
     const [first, ...rest] = args
-    // Preserve the primary error object/stack by passing it to console.error
+    // preserve the primary error object/stack by passing it to console.error
     // rather than only stringifying it into the group header. Browsers render
     // Error instances with a clickable stack when handed the real object.
     console.group(`%c🔴 [rgp ${ts()}] ${String(first)}`, 'color:#f85149;font-weight:bold')
@@ -68,7 +68,7 @@ export const logger = {
 // enhanced logger above. We also set the minimum log level to Debug so that
 // Effect.logDebug calls are actually evaluated and delivered to this Logger,
 // which then gates them behind the runtime debug flag via logger.debug().
-// Without the minimum-level override, Effect's default INFO floor would drop
+// without the minimum-level override, Effect's default INFO floor would drop
 // logDebug entries before they reach our layer.
 const rgpLogger = Logger.make(({ logLevel, message, annotations }) => {
   const msg = [message].flat().map(String).join(' ')

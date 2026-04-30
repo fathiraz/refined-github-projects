@@ -1,4 +1,4 @@
-import { isEditableTarget } from './project-table-dom'
+import { isEditableTarget } from '@/lib/project-table-dom'
 
 export interface ShortcutModifiers {
   meta?: boolean
