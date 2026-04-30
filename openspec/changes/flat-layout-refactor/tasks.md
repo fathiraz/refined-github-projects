@@ -58,5 +58,5 @@
 - [x] `pnpm typecheck` — clean.
 - [x] `pnpm build:chrome && pnpm build:firefox && pnpm build:edge` — clean (3.05 MB each).
 - [x] `pnpm check:manifest` — clean (only `storage`).
-- [ ] Diff size sanity: `git diff --stat origin/main...HEAD` — verify scope (files moved/split, not behavior).
+- [x] Diff size sanity: 137 src files changed, net −96 lines (3387 ins / 3483 del). Pure moves + DRY.
 - [ ] Open PR; archive change once merged: rename `openspec/changes/flat-layout-refactor/` → `openspec/changes/archive/flat-layout-refactor/` and copy its `specs/layout/spec.md` → `openspec/specs/layout/spec.md`.
