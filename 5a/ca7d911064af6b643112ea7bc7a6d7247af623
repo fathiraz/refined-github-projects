@@ -1,0 +1,66 @@
+src/features/sprint-end-view.tsx
+  0e84a4d9d295aa5a 1-202
+src/features/table-drag-drop.ts
+  0e84a4d9d295aa5a 1-257
+src/features/bulk-move-utils.ts
+  0e84a4d9d295aa5a 1-48
+src/features/bulk-rename-modal.tsx
+  0e84a4d9d295aa5a 9-15,43,47
+src/features/bulk-rename-utils.ts
+  0e84a4d9d295aa5a 1-29
+src/features/bulk-actions-bar.tsx
+  0e84a4d9d295aa5a 1-2,18-28,93,122,133,151,180,197,207,381,396,702-791,915-931,935
+src/lib/sprint-utils.ts
+  0e84a4d9d295aa5a 8-47
+src/features/bulk-rename-preview.tsx
+  0e84a4d9d295aa5a 1-143
+src/features/bulk-edit-utils.tsx
+  0e84a4d9d295aa5a 1-202
+src/features/bulk-edit-modal.tsx
+  0e84a4d9d295aa5a 6-7,12-36
+src/features/sprint-settings-view.tsx
+  0e84a4d9d295aa5a 1-572
+src/features/sprint-modal.tsx
+  0e84a4d9d295aa5a 4,6,10-11,15-16,149,242
+src/features/bulk-actions-utils.tsx
+  0e84a4d9d295aa5a 1-72
+src/features/table-enhancements.ts
+  0e84a4d9d295aa5a 1-3,8-10
+src/features/bulk-actions-modals.tsx
+  0e84a4d9d295aa5a 1-290
+src/features/bulk-move-modal.tsx
+  0e84a4d9d295aa5a 10-17,19,21,58,79
+src/features/bulk-move-preview.tsx
+  0e84a4d9d295aa5a 1-81
+src/features/bulk-edit-relationships.tsx
+  0e84a4d9d295aa5a 1-278
+src/features/bulk-duplicate-utils.tsx
+  0e84a4d9d295aa5a 1-193
+src/features/bulk-duplicate-modal.tsx
+  0e84a4d9d295aa5a 14-25,31-61
+src/features/bulk-duplicate-relationship-list.tsx
+  0e84a4d9d295aa5a 1-97
+src/features/bulk-actions-menu.tsx
+  0e84a4d9d295aa5a 1-284
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "5aca7d911064af6b643112ea7bc7a6d7247af623",
+  "prompts": {
+    "0e84a4d9d295aa5a": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "56613cd7-9b3f-4f5d-a0d0-3c583a8ca7a5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 3996,
+      "total_deletions": 2901,
+      "accepted_lines": 3996,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/191b57bc529e47b7730d6f39543d112425f17c05d7e90e005f9ad239b4619606"
+    }
+  }
+}
