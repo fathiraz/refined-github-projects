@@ -48,27 +48,40 @@ const ParentIssueRef = Schema.Struct({
   }),
 })
 
-// ─── Field values (tagged union by `field.dataType`) ────────────────────────
+// ─── Field values (truly discriminated by `field.dataType`) ─────────────────
+// each variant locks `field.dataType` to a single literal so a payload that
+// claims dataType=TEXT but ships an `iterationId` fails decode rather than
+// silently passing as the first matching variant in the union.
 
-const FieldRef = Schema.Struct({
-  field: Schema.Struct({
-    id: Schema.String,
-    name: Schema.String,
-    dataType: Schema.String,
-  }),
-})
+const fieldRefStruct = <T extends string>(dataType: T) =>
+  Schema.Struct({
+    field: Schema.Struct({
+      id: Schema.String,
+      name: Schema.String,
+      dataType: Schema.Literal(dataType),
+    }),
+  })
 
-export const TextFieldValue = Schema.extend(FieldRef, Schema.Struct({ text: Schema.String }))
+export const TextFieldValue = Schema.extend(
+  fieldRefStruct('TEXT'),
+  Schema.Struct({ text: Schema.String }),
+)
 export const SingleSelectFieldValue = Schema.extend(
-  FieldRef,
+  fieldRefStruct('SINGLE_SELECT'),
   Schema.Struct({ optionId: Schema.String }),
 )
 export const IterationFieldValue = Schema.extend(
-  FieldRef,
+  fieldRefStruct('ITERATION'),
   Schema.Struct({ iterationId: Schema.String }),
 )
-export const NumberFieldValue = Schema.extend(FieldRef, Schema.Struct({ number: Schema.Number }))
-export const DateFieldValue = Schema.extend(FieldRef, Schema.Struct({ date: Schema.String }))
+export const NumberFieldValue = Schema.extend(
+  fieldRefStruct('NUMBER'),
+  Schema.Struct({ number: Schema.Number }),
+)
+export const DateFieldValue = Schema.extend(
+  fieldRefStruct('DATE'),
+  Schema.Struct({ date: Schema.String }),
+)
 
 export const FieldValue = Schema.Union(
   TextFieldValue,

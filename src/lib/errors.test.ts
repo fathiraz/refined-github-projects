@@ -132,7 +132,7 @@ describe('classifyHttpError', () => {
     if (err._tag === 'GithubRateLimitError') expect(err.retryAfter).toBe(60)
   })
 
-  it('403 → GithubRateLimitError (treated as secondary rate limit)', () => {
+  it('403 with x-ratelimit-remaining=0 → GithubRateLimitError (secondary rate limit)', () => {
     const err = classifyHttpError({
       status: 403,
       message: 'forbidden',
@@ -140,6 +140,25 @@ describe('classifyHttpError', () => {
       rateLimitRemaining: 0,
     })
     expect(err._tag).toBe('GithubRateLimitError')
+  })
+
+  it('403 with x-ratelimit-remaining > 0 → GithubClientError (permission failure)', () => {
+    const err = classifyHttpError({
+      status: 403,
+      message: 'permission denied',
+      retryAfter: 0,
+      rateLimitRemaining: 4998,
+    })
+    expect(err._tag).toBe('GithubClientError')
+    if (err._tag === 'GithubClientError') {
+      expect(err.status).toBe(403)
+      expect(err.message).toBe('permission denied')
+    }
+  })
+
+  it('403 with x-ratelimit-remaining missing → GithubClientError (defaults to permission)', () => {
+    const err = classifyHttpError({ status: 403, message: 'forbidden', retryAfter: 0 })
+    expect(err._tag).toBe('GithubClientError')
   })
 
   it('500 → GithubServerError', () => {

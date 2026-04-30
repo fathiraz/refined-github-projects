@@ -81,4 +81,6 @@ export const toastStore = {
 
 export const toastChanges: Stream.Stream<ToastEntry[]> = _ref.changes
 
-export const getToastSnapshot = (): ToastEntry[] => current
+// return a defensive copy so external consumers cannot mutate the live ref
+// and bypass setState's notify/SubscriptionRef updates.
+export const getToastSnapshot = (): ToastEntry[] => [...current]

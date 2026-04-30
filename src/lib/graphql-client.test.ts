@@ -32,9 +32,14 @@ function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
   })
 }
 
-function errorResponse(status: number, init: { retryAfter?: string } = {}): Response {
+function errorResponse(
+  status: number,
+  init: { retryAfter?: string; rateLimitRemaining?: string } = {},
+): Response {
   const headers: Record<string, string> = { 'content-type': 'application/json' }
   if (init.retryAfter !== undefined) headers['retry-after'] = init.retryAfter
+  if (init.rateLimitRemaining !== undefined)
+    headers['x-ratelimit-remaining'] = init.rateLimitRemaining
   return new Response(JSON.stringify({}), { status, headers })
 }
 
@@ -77,11 +82,16 @@ describe('gql', () => {
     expect(result).toEqualValue(expectedData)
   })
 
-  it('throws GithubRateLimitError on 403 (after internal retries)', async () => {
+  it('throws GithubRateLimitError on 403 with x-ratelimit-remaining=0 (after internal retries)', async () => {
     // GithubGraphQL retries rate-limit failures up to 2 extra times — return
-    // 403 for every attempt so the call surfaces the failure.
+    // 403 for every attempt so the call surfaces the failure. Use retryAfter=1
+    // to keep the test fast: the service honors retryAfter via Effect.sleep
+    // between attempts (verified separately) so a large value would balloon
+    // the wall-clock duration.
     for (let i = 0; i < 3; i++) {
-      mockFetch.mockResolvedValueOnce(errorResponse(403, { retryAfter: '30' }))
+      mockFetch.mockResolvedValueOnce(
+        errorResponse(403, { retryAfter: '1', rateLimitRemaining: '0' }),
+      )
     }
 
     try {
@@ -91,9 +101,25 @@ describe('gql', () => {
       const e = error as { _tag: string; status?: number; retryAfter?: number }
       expect(e._tag).toBe('GithubRateLimitError')
       expect(e.status).toBe(403)
-      expect(e.retryAfter).toBe(30)
+      expect(e.retryAfter).toBe(1)
     }
   }, 30000)
+
+  it('throws GithubClientError on 403 permission errors (no rate-limit header) without retry', async () => {
+    // permission 403 (token lacks scope, repo locked, ...) -> GithubClientError
+    // and is NOT retried, so a single fetch call is enough.
+    mockFetch.mockResolvedValueOnce(errorResponse(403))
+
+    try {
+      await gql('query GetViewer { viewer { login } }', {})
+      throw new Error('should have thrown')
+    } catch (error) {
+      const e = error as { _tag: string; status?: number }
+      expect(e._tag).toBe('GithubClientError')
+      expect(e.status).toBe(403)
+    }
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
 
   it('throws GithubGraphQLError with message from first GraphQL error', async () => {
     mockFetch.mockResolvedValueOnce(

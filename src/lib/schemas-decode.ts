@@ -14,9 +14,22 @@ import {
 } from '@/lib/schemas-branded'
 
 /**
- * Synchronous brand-decoders. These are pure type-narrowers — no runtime
- * validation on top of the underlying primitive — so they're safe to call on
- * the hot path (DOM extraction, message receipt, etc).
+ * Synchronous brand-decoders.
+ *
+ * Two flavors:
+ *
+ * 1. String-branded helpers (`decodeProjectId`, `decodeProjectItemId`,
+ *    `decodeProjectItemDomId`, `decodeIssueNodeId`, `decodePat`,
+ *    `decodeLogin`, `decodeRepoOwner`, `decodeRepoName`) carry no extra
+ *    runtime predicate beyond `Schema.String`, so they cannot fail on a
+ *    `string` input. Safe to call on the hot path (DOM extraction, message
+ *    receipt) without try/catch.
+ *
+ * 2. Integer-branded helpers (`decodeIssueNumber`, `decodeIssueDatabaseId`)
+ *    DO validate at runtime — `Schema.decodeSync` checks `Schema.Int` — and
+ *    will THROW `ParseError` on a non-integer input (e.g. `NaN`, `1.5`).
+ *    Either supply already-validated integers or wrap the call in a
+ *    try/catch.
  */
 export const decodeProjectId: (raw: string) => ProjectId = Schema.decodeSync(ProjectId)
 export const decodeProjectItemId: (raw: string) => ProjectItemId = Schema.decodeSync(ProjectItemId)

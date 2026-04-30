@@ -91,7 +91,9 @@ export const queueStore = {
 
 export const queueChanges: Stream.Stream<ReadonlyMap<string, ProcessEntry>> = _ref.changes
 
-export const getQueueSnapshot = (): ReadonlyMap<string, ProcessEntry> => processes
+// return a defensive copy so external consumers cannot mutate the live ref
+// and bypass setState's notify/SubscriptionRef updates.
+export const getQueueSnapshot = (): ReadonlyMap<string, ProcessEntry> => new Map(processes)
 
 // single central listener for the whole CS context
 onMessage('queueStateUpdate', ({ data }) => {

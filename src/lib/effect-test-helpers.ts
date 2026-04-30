@@ -56,7 +56,14 @@ export const makeRecordedHttpLayer = (respond: (call: RecordedHttpCall) => Respo
     }
     const headers: Record<string, string> = {}
     if (init?.headers) {
-      const entries = init.headers instanceof Headers ? Array.from(init.headers.entries()) : []
+      // accept any iterable (DOM Headers, Effect Headers, [k,v][]) or a
+      // record-shaped object; otherwise fall through to an empty record.
+      const candidate = init.headers as unknown
+      const entries: Iterable<readonly [string, string]> =
+        candidate != null &&
+        typeof (candidate as { [Symbol.iterator]?: unknown })[Symbol.iterator] === 'function'
+          ? (candidate as Iterable<readonly [string, string]>)
+          : Object.entries(candidate as Record<string, string>)
       for (const [k, v] of entries) headers[k] = v
     }
     const call: RecordedHttpCall = { url, method, body, headers }

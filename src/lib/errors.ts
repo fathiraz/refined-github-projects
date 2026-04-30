@@ -118,11 +118,12 @@ export const classifyHttpError = (args: {
       // GitHub returns 403 for two unrelated reasons:
       //   - secondary rate limits / abuse detection (X-RateLimit-Remaining=0)
       //   - permission errors (token lacks scope, repo locked, ...)
-      // keep the 403→rate-limit treatment as the existing code does, because
-      // the higher-level retry path already handled this case the same way.
+      // we surface them as different tagged variants so the retry path only
+      // re-fires on actual rate limits and the UI can show the correct
+      // message for permission failures.
       args.rateLimitRemaining === 0
         ? new GithubRateLimitError(args)
-        : new GithubRateLimitError(args),
+        : new GithubClientError({ status: args.status, message: args.message }),
     ),
     Match.when(
       (s) => s >= 500 && s < 600,

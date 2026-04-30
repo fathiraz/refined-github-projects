@@ -82,10 +82,17 @@ const make = Effect.gen(function* () {
         .pipe(Effect.mapError((cause) => new GithubNetworkError({ cause }) satisfies GithubError))
 
       if (res.status < 200 || res.status >= 300) {
-        const retryAfter = Number(res.headers['retry-after'] ?? 0)
-        const rateLimitRemaining = res.headers['x-ratelimit-remaining']
-          ? Number(res.headers['x-ratelimit-remaining'])
-          : null
+        // GitHub may omit these headers or return non-numeric placeholders;
+        // coerce non-finite to 0 so downstream classification doesn't see NaN.
+        const parseHeader = (raw: unknown): number => {
+          const n = Number(raw)
+          return Number.isFinite(n) ? n : 0
+        }
+        const retryAfter = parseHeader(res.headers['retry-after'])
+        const rateLimitRemaining =
+          res.headers['x-ratelimit-remaining'] !== undefined
+            ? parseHeader(res.headers['x-ratelimit-remaining'])
+            : null
         yield* Effect.logError('HTTP error').pipe(
           Effect.annotateLogs({
             op,
@@ -140,9 +147,12 @@ const make = Effect.gen(function* () {
       )
     })
 
-    // retry rate-limit failures only. Use the per-error retryAfter to compute
-    // an additional fixed delay; layer that under exponential+jittered backoff
-    // so two clients hitting the limit don't synchronise their retries.
+    // retry rate-limit failures only. The `tapError` honors the server's
+    // `Retry-After` (seconds) by sleeping that long on every rate-limit
+    // failure; the schedule then layers its jittered exponential delay on
+    // top. So actual inter-attempt wait = retryAfter + jitteredExponential,
+    // which prevents two clients synchronising AND respects the server's
+    // mandated window.
     const schedule = Schedule.exponential('1 seconds', 2.0).pipe(
       Schedule.jittered,
       Schedule.intersect(Schedule.recurs(2)),
@@ -155,16 +165,25 @@ const make = Effect.gen(function* () {
           new GithubNetworkError({ cause: new Error(`Timeout: ${op}`) }) satisfies GithubError,
         ),
       ),
+      Effect.tapError((e) =>
+        e._tag === 'GithubRateLimitError' &&
+        Number.isFinite((e as GithubRateLimitError).retryAfter) &&
+        (e as GithubRateLimitError).retryAfter > 0
+          ? Effect.sleep(Duration.seconds((e as GithubRateLimitError).retryAfter))
+          : Effect.void,
+      ),
       Effect.retry({
         schedule,
         while: (e: GithubError) => e._tag === 'GithubRateLimitError',
       }),
       Effect.tapError((e) =>
         e._tag === 'GithubRateLimitError'
-          ? Effect.logWarning('rate limit exhausted', {
-              op,
-              retryAfter: (e as GithubRateLimitError).retryAfter,
-            })
+          ? Effect.logWarning('rate limit exhausted').pipe(
+              Effect.annotateLogs({
+                op,
+                retryAfter: (e as GithubRateLimitError).retryAfter,
+              }),
+            )
           : Effect.void,
       ),
       Effect.withSpan(`gql.${op}`, { attributes: { op } }),
