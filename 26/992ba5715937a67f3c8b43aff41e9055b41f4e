@@ -1,0 +1,48 @@
+openspec/changes/tighten-network-error-cause/.openspec.yaml
+  892a07debf17fb3b 1-2
+openspec/changes/tighten-network-error-cause/proposal.md
+  892a07debf17fb3b 1-23
+openspec/changes/tighten-network-error-cause/tasks.md
+  892a07debf17fb3b 1-16
+openspec/changes/tighten-network-error-cause/design.md
+  892a07debf17fb3b 1-41
+src/lib/schemas-errors.ts
+  892a07debf17fb3b 44
+openspec/changes/tighten-network-error-cause/specs/errors/spec.md
+  892a07debf17fb3b 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "26992ba5715937a67f3c8b43aff41e9055b41f4e",
+  "prompts": {
+    "0b51af9f91e9486e": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "016e382f-b971-4f85-9738-d69ba209afe9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 971,
+      "total_deletions": 0,
+      "accepted_lines": 971,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/d79b40a7ebdbab9c07100503ccce5bcf68a1841b2812e6261a600bcde3f4dabe"
+    },
+    "892a07debf17fb3b": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "22ad130f-30fc-42e2-82ec-044654c35901",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 99,
+      "total_deletions": 1,
+      "accepted_lines": 99,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/b3ca6cb32bebdf34333fb846835159058e4721e05052425df670699eb8427777"
+    }
+  }
+}
