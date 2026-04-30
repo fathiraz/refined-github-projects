@@ -75,7 +75,7 @@ export function nextAfter(iters: Iteration[], activeEndDate: string): Iteration 
   )
 }
 
-export const SPRINT_FILTER = '-is:closed -sprint:<@current'
+export const SPRINT_FILTER = '-sprint:<@current'
 
 export function injectSprintFilter(): void {
   const input = document.getElementById('filter-bar-component-input') as HTMLInputElement | null
