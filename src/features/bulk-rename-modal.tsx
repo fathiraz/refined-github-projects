@@ -6,25 +6,15 @@ import { ArrowRightIcon, PencilIcon, PlusIcon, SearchIcon, TextLineIcon } from '
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
+import {
+  applyRule,
+  type RenameTab,
+  type RuleState,
+  type TitleItem,
+} from '@/features/bulk-rename-utils'
+import { PreviewTable } from '@/features/bulk-rename-preview'
 
 type Stage = 'LOADING' | 'CONFIGURE' | 'PREVIEW' | 'ERROR'
-type RenameTab = 'FIND_REPLACE' | 'PREFIX_SUFFIX'
-
-interface TitleItem {
-  domId: string
-  issueNodeId: string
-  title: string
-  typename: 'Issue' | 'PullRequest'
-}
-
-interface RuleState {
-  tab: RenameTab
-  findText: string
-  replaceText: string
-  caseSensitive: boolean
-  prefix: string
-  suffix: string
-}
 
 interface Props {
   count: number
@@ -41,16 +31,6 @@ interface Props {
   ) => void
 }
 
-function applyRule(original: string, rule: RuleState): string {
-  if (rule.tab === 'FIND_REPLACE') {
-    if (!rule.findText) return original
-    const flags = rule.caseSensitive ? 'g' : 'gi'
-    const escaped = rule.findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    return original.replace(new RegExp(escaped, flags), rule.replaceText)
-  }
-  return `${rule.prefix}${original}${rule.suffix}`
-}
-
 export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm }: Props) {
   useEffect(() => {
     ensureTippyCss()
@@ -60,11 +40,11 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
   const [items, setItems] = useState<TitleItem[]>([])
   const [errorMsg, setErrorMsg] = useState('')
 
-  // FIND_REPLACE
+  // find/replace state
   const [findText, setFindText] = useState('')
   const [replaceText, setReplaceText] = useState('')
   const [caseSensitive, setCaseSensitive] = useState(false)
-  // PREFIX_SUFFIX
+  // prefix/suffix state
   const [prefix, setPrefix] = useState('')
   const [suffix, setSuffix] = useState('')
 
@@ -789,143 +769,6 @@ export function BulkRenameModal({ count, projectId, itemIds, onClose, onConfirm 
             </Button>
           </Box>
         </Box>
-      </Box>
-    </Box>
-  )
-}
-
-function PreviewTable({ items }: { items: Array<TitleItem & { newTitle: string }> }) {
-  return (
-    <Box as="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: 0 }}>
-      <Box as="thead" sx={{ bg: 'canvas.subtle', position: 'sticky', top: 0 }}>
-        <Box as="tr">
-          <Box
-            as="th"
-            sx={{
-              px: 2,
-              py: 1,
-              textAlign: 'left',
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-              width: 32,
-              borderBottom: '1px solid',
-              borderColor: 'border.default',
-            }}
-          >
-            #
-          </Box>
-          <Box
-            as="th"
-            sx={{
-              px: 2,
-              py: 1,
-              textAlign: 'left',
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-              borderBottom: '1px solid',
-              borderColor: 'border.default',
-            }}
-          >
-            Original Title
-          </Box>
-          <Box
-            as="th"
-            aria-label="Rename direction"
-            sx={{
-              px: 2,
-              py: 1,
-              textAlign: 'center',
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-              width: 24,
-              borderBottom: '1px solid',
-              borderColor: 'border.default',
-            }}
-          >
-            <ArrowRightIcon size={14} />
-          </Box>
-          <Box
-            as="th"
-            sx={{
-              px: 2,
-              py: 1,
-              textAlign: 'left',
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-              borderBottom: '1px solid',
-              borderColor: 'border.default',
-            }}
-          >
-            New Title
-          </Box>
-        </Box>
-      </Box>
-      <Box as="tbody">
-        {items.map((item, i) => {
-          const unchanged = item.newTitle === item.title
-          return (
-            <Box as="tr" key={item.domId} sx={{ opacity: unchanged ? 0.5 : 1 }}>
-              <Box
-                as="td"
-                sx={{
-                  px: 2,
-                  py: 1,
-                  color: 'fg.muted',
-                  borderBottom: '1px solid',
-                  borderColor: 'border.muted',
-                }}
-              >
-                {i + 1}
-              </Box>
-              <Box
-                as="td"
-                sx={{
-                  px: 2,
-                  py: 1,
-                  color: unchanged ? 'fg.muted' : 'fg.default',
-                  borderBottom: '1px solid',
-                  borderColor: 'border.muted',
-                  maxWidth: 200,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {item.title}
-              </Box>
-              <Box
-                as="td"
-                sx={{
-                  px: 2,
-                  py: 1,
-                  color: 'fg.muted',
-                  textAlign: 'center',
-                  borderBottom: '1px solid',
-                  borderColor: 'border.muted',
-                }}
-              >
-                <ArrowRightIcon size={14} />
-              </Box>
-              <Box
-                as="td"
-                sx={{
-                  px: 2,
-                  py: 1,
-                  color: unchanged ? 'fg.muted' : 'fg.default',
-                  fontWeight: unchanged ? 'normal' : 'semibold',
-                  borderBottom: '1px solid',
-                  borderColor: 'border.muted',
-                  maxWidth: 200,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {item.newTitle}
-              </Box>
-            </Box>
-          )
-        })}
       </Box>
     </Box>
   )
