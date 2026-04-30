@@ -25,12 +25,12 @@ import {
   parseRepoFromUrl,
   withRateLimitRetry,
 } from '@/background/rest-helpers'
+import {
+  formatIssueReference,
+  relationshipKey,
+} from '@/lib/relationship-utils'
 
-export function relationshipKey(issue: IssueRelationshipData): string {
-  return issue.databaseId
-    ? `db:${issue.databaseId}`
-    : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
-}
+export { relationshipKey } from '@/lib/relationship-utils'
 
 export function parseExactIssueReference(
   query: string,
@@ -245,9 +245,7 @@ export async function listSubIssuesSafe(
   }
 }
 
-export function formatRelationshipLabel(issue: IssueRelationshipData): string {
-  return `${issue.repoOwner}/${issue.repoName}#${issue.number}`
-}
+export const formatRelationshipLabel = formatIssueReference
 
 export function dedupeRelationships(issues: IssueRelationshipData[]): IssueRelationshipData[] {
   const deduped = new Map<string, IssueRelationshipData>()

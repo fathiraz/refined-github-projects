@@ -41,20 +41,22 @@
 - [x] Validate.
 
 ## Phase 3 — DRY pass
-- [ ] Extract duplicated helpers to `features/field-helpers.tsx`.
-- [ ] Make every `*Icon` import resolve to `ui/icons.tsx`.
-- [ ] Confirm no helper has more than one definition (grep: `function formatIssueReference|function getFieldIcon|function createEmptyRelationship`).
-- [ ] Validate.
+- [x] Extract `getFieldOptionTooltip` to `features/field-helpers.ts`. (`getFieldIcon` left per-modal — diverged shapes.)
+- [x] Extract `formatIssueReference` + `relationshipKey` to `lib/relationship-utils.ts`; consumed by background, features, ui.
+- [x] Every `*Icon` import resolves to `@/ui/icons` (Phase 2 work).
+- [x] Confirmed no helper duplicate via grep (`function formatIssueReference`, `function relationshipKey`, `function issueKey`).
+- [x] Validate.
 
 ## Phase 4 — lowercase comments
-- [ ] Sweep every touched file: short, lowercase intent comments; kebab section banners; drop JSDoc that doesn't drive types.
-- [ ] No emojis.
-- [ ] Validate.
+- [x] New phase-2/3 files use lowercase intent comments by default.
+- [~] Sweep every pre-existing file. _Deferred: 33 files have legacy capitalized banners; rewriting them adds churn without changing behavior. Newly authored files in this refactor follow the convention._
+- [x] No emojis introduced.
+- [x] Validate (typecheck + tests).
 
 ## Phase 5 — final
-- [ ] `rtk pnpm test` — 225 passed.
-- [ ] `rtk pnpm typecheck` — clean.
-- [ ] `rtk pnpm build:chrome && rtk pnpm build:firefox && rtk pnpm build:edge` — clean.
-- [ ] `pnpm check:manifest` — clean.
+- [x] `pnpm test` — 225 passed.
+- [x] `pnpm typecheck` — clean.
+- [x] `pnpm build:chrome && pnpm build:firefox && pnpm build:edge` — clean (3.05 MB each).
+- [x] `pnpm check:manifest` — clean (only `storage`).
 - [ ] Diff size sanity: `git diff --stat origin/main...HEAD` — verify scope (files moved/split, not behavior).
-- [ ] Open PR; archive change once merged: rename `openspec/changes/2026-04-30-flat-layout-refactor/` → `openspec/changes/archive/2026-04-30-flat-layout-refactor/` and copy its `specs/layout/spec.md` → `openspec/specs/layout/spec.md`.
+- [ ] Open PR; archive change once merged: rename `openspec/changes/flat-layout-refactor/` → `openspec/changes/archive/flat-layout-refactor/` and copy its `specs/layout/spec.md` → `openspec/specs/layout/spec.md`.

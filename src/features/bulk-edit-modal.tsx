@@ -9,6 +9,8 @@ import { AlertIcon, CheckIcon, PersonIcon, TagIcon, ShieldIcon, HashIcon, Calend
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ensureTippyCss } from '@/lib/tippy-utils'
+import { formatIssueReference, relationshipKey as issueKey } from '@/lib/relationship-utils'
+import { getFieldOptionTooltip } from '@/features/field-helpers'
 
 export interface ProjectField {
   id: string
@@ -117,10 +119,6 @@ function getFieldSelectionTooltip(field: ProjectField): string {
   return `Select ${field.name} to set the same value across all selected items.`
 }
 
-function getFieldOptionTooltip(fieldName: string, optionName: string): string {
-  return `Set ${fieldName} to ${optionName}.`
-}
-
 function getFieldValueStepTooltip(field: ProjectField, itemCount: number): string {
   return `Set ${field.name} for all ${itemCount} selected item${itemCount !== 1 ? 's' : ''}.`
 }
@@ -129,15 +127,7 @@ function getRelationshipSelectionTooltip(label: string): string {
   return `Enable ${label.toLowerCase()} relationship changes for this bulk edit.`
 }
 
-function formatIssueReference(issue: IssueRelationshipData): string {
-  return `${issue.repoOwner}/${issue.repoName}#${issue.number}`
-}
 
-function issueKey(issue: IssueRelationshipData): string {
-  return issue.databaseId
-    ? `db:${issue.databaseId}`
-    : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
-}
 
 function issueTitle(issue: IssueRelationshipData): string {
   return issue.title.trim() || formatIssueReference(issue)

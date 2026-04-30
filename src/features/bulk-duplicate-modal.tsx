@@ -15,6 +15,8 @@ import { AlertIcon, ArrowRightIcon, CalendarIcon, CheckIcon, CopyIcon, HashIcon,
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ensureTippyCss } from '@/lib/tippy-utils'
+import { formatIssueReference, relationshipKey } from '@/lib/relationship-utils'
+import { getFieldOptionTooltip } from '@/features/field-helpers'
 
 type Step = 'LOADING' | 'SELECT' | 'VALUES' | 'SUMMARY' | 'ERROR'
 type EditableField = ItemPreviewData['fields'][number]
@@ -118,12 +120,6 @@ function fieldSectionId(fieldId: string): SectionId {
   return `FIELD:${fieldId}`
 }
 
-function relationshipKey(issue: IssueRelationshipData): string {
-  return issue.databaseId
-    ? `db:${issue.databaseId}`
-    : `${issue.repoOwner}/${issue.repoName}#${issue.number}`
-}
-
 function getFieldIcon(dataType: EditableField['dataType']): React.ReactNode {
   switch (dataType) {
     case 'TEXT':
@@ -141,16 +137,8 @@ function getFieldIcon(dataType: EditableField['dataType']): React.ReactNode {
   }
 }
 
-function getFieldOptionTooltip(fieldName: string, optionName: string): string {
-  return `Set ${fieldName} to ${optionName}.`
-}
-
 function duplicateValueTooltip(fieldName: string): string {
   return `Value applied to the duplicated item for ${fieldName}.`
-}
-
-function formatIssueReference(issue: IssueRelationshipData): string {
-  return `${issue.repoOwner}/${issue.repoName}#${issue.number}`
 }
 
 function formatIssueSummary(issue: IssueRelationshipData): string {
