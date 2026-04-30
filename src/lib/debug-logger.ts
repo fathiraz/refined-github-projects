@@ -1,5 +1,5 @@
 import { Layer, LogLevel, Logger, HashMap } from 'effect'
-import { debugStorage } from './storage'
+import { debugStorage } from '@/lib/storage'
 
 let isDebugEnabled = false
 

@@ -1,7 +1,7 @@
 import { Duration, Effect, Fiber, Stream, SubscriptionRef } from 'effect'
 
-import { onMessage } from './messages'
-import { toastStore } from './toast-store'
+import { onMessage } from '@/lib/messages'
+import { toastStore } from '@/lib/toast-store'
 
 export interface ProcessEntry {
   processId: string

@@ -2,8 +2,8 @@
  * Shared DOM utilities for extracting data from GitHub Projects table rows.
  * Used by both the content script and React components (e.g. SelectAllCheckbox).
  */
-import type { ProjectItemDomId } from './effect/schemas/branded'
-import { decodeProjectItemDomId } from './effect/schemas/decode'
+import type { ProjectItemDomId } from '@/lib/schemas-branded'
+import { decodeProjectItemDomId } from '@/lib/schemas-decode'
 
 /** Attribute set on rows that have been injected with a checkbox.
  *  The VALUE is the item ID stored at injection time, guaranteeing

@@ -12,7 +12,7 @@ import {
   Scope,
 } from 'effect'
 
-import { logger } from './debug-logger'
+import { logger } from '@/lib/debug-logger'
 
 export interface QueueTask {
   id: string

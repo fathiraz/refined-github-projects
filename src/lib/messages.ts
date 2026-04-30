@@ -1,6 +1,6 @@
 import { defineExtensionMessaging } from '@webext-core/messaging'
-import type { ExcludeCondition, SprintSettings } from './storage'
-import type { PatErrorType } from './errors'
+import type { ExcludeCondition, SprintSettings } from '@/lib/storage'
+import type { PatErrorType } from '@/lib/errors'
 
 export interface IssueRelationshipData {
   nodeId?: string

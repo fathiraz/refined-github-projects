@@ -13,7 +13,7 @@
  * inside that overlay.
  */
 
-import { logger } from './debug-logger'
+import { logger } from '@/lib/debug-logger'
 
 export const BULK_BAR_PRIMER_PORTAL_NAME = 'rgp-bulk-bar-primer-portal' as const
 

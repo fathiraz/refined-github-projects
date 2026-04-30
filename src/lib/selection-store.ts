@@ -1,6 +1,6 @@
 import { Effect, Stream, SubscriptionRef } from 'effect'
 
-import { logger } from './debug-logger'
+import { logger } from '@/lib/debug-logger'
 
 type Listener = () => void
 
