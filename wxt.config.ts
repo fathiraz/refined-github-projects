@@ -24,6 +24,8 @@ export default defineConfig({
       alias: {
         // Stub out @primer/live-region-element to prevent customElements error in content scripts
         // Content scripts run in isolated world where customElements is null
+        // stub primer's live-region custom element so content scripts
+        // (where customElements is null) don't throw at import time.
         '@primer/live-region-element': path.resolve(
           __dirname,
           'src/lib/primer-live-region-stub.ts',
