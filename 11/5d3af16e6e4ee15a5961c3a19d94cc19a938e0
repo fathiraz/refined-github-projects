@@ -1,0 +1,24 @@
+src/lib/sprint-utils.ts
+  079d38ff7f77cbc4 78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "115d3af16e6e4ee15a5961c3a19d94cc19a938e0",
+  "prompts": {
+    "079d38ff7f77cbc4": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "68d11040-fa41-4def-a276-9a97d2f8645b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/a3f423a5506506df65fd591634b3b61a7816bd9094546de7e1faa9ebd5d9d1ef"
+    }
+  }
+}
