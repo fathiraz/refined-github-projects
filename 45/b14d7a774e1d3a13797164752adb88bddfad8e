@@ -1,0 +1,120 @@
+src/ui/progress-state.tsx
+  0e84a4d9d295aa5a 1-75
+src/ui/keyboard-hint.tsx
+  0e84a4d9d295aa5a 1-37
+src/ui/app-shell.tsx
+  0e84a4d9d295aa5a 1-20
+src/features/bulk-close-modal.tsx
+  0e84a4d9d295aa5a 5
+src/ui/empty-state.tsx
+  0e84a4d9d295aa5a 1-54
+src/ui/step-indicator.tsx
+  0e84a4d9d295aa5a 1-27
+src/features/onboarding-coach.tsx
+  0e84a4d9d295aa5a 9-13
+src/background/rest-helpers.ts
+  0e84a4d9d295aa5a 1-140
+src/features/bulk-actions-bar.tsx
+  0e84a4d9d295aa5a 26,28-43
+src/features/toast-list.tsx
+  0e84a4d9d295aa5a 4
+src/ui/panel-card.tsx
+  0e84a4d9d295aa5a 1-52
+src/ui/actions.tsx
+  0e84a4d9d295aa5a 1-54
+src/ui/status-banner.tsx
+  0e84a4d9d295aa5a 1-72
+src/features/bulk-lock-modal.tsx
+  0e84a4d9d295aa5a 5
+src/features/bulk-duplicate-modal.tsx
+  0e84a4d9d295aa5a 14
+src/ui/section-header.tsx
+  0e84a4d9d295aa5a 1-54
+src/background/project-service.ts
+  0e84a4d9d295aa5a 3-4
+src/background/bulk-handlers.ts
+  0e84a4d9d295aa5a 1,3-6,9-12
+src/background/bulk-position.ts
+  0e84a4d9d295aa5a 1-267
+src/entries/popup/main.tsx
+  0e84a4d9d295aa5a 7-11
+src/ui/modal-step-header.tsx
+  0e84a4d9d295aa5a 3-4
+src/ui/issue-relationship-select-panel.tsx
+  0e84a4d9d295aa5a 4
+src/entries/options/main.tsx
+  0e84a4d9d295aa5a 6-7
+src/background/sprint-handlers.ts
+  0e84a4d9d295aa5a 16-17
+src/features/sprint-modal.tsx
+  0e84a4d9d295aa5a 19
+src/features/bulk-transfer-modal.tsx
+  0e84a4d9d295aa5a 5
+src/ui/icons.tsx
+  0e84a4d9d295aa5a 42,67
+src/features/queue-tracker.tsx
+  0e84a4d9d295aa5a 7
+src/features/bulk-open-modal.tsx
+  0e84a4d9d295aa5a 3
+src/background/project-helpers.ts
+  0e84a4d9d295aa5a 1-273
+openspec/config.yaml
+  0e84a4d9d295aa5a 1-20
+src/background/hierarchy-handlers.ts
+  0e84a4d9d295aa5a 21-23
+src/background/bulk-update.ts
+  0e84a4d9d295aa5a 1-288
+src/background/bulk-rename.ts
+  0e84a4d9d295aa5a 1-279
+src/features/bulk-unpin-modal.tsx
+  0e84a4d9d295aa5a 3
+src/ui/repo-metadata-select-panel.tsx
+  0e84a4d9d295aa5a 4
+src/features/sprint-table-widget.tsx
+  0e84a4d9d295aa5a 5
+src/features/bulk-delete-modal.tsx
+  0e84a4d9d295aa5a 3
+src/background/relationship-helpers.ts
+  0e84a4d9d295aa5a 1,3-6,23-27
+src/features/bulk-pin-modal.tsx
+  0e84a4d9d295aa5a 3
+src/features/bulk-rename-modal.tsx
+  0e84a4d9d295aa5a 5
+src/background/field-handlers.ts
+  0e84a4d9d295aa5a 22-24
+src/features/bulk-edit-modal.tsx
+  0e84a4d9d295aa5a 8
+src/background/bulk-state.ts
+  0e84a4d9d295aa5a 1-438
+src/features/bulk-random-assign-modal.tsx
+  0e84a4d9d295aa5a 14
+src/features/token-setup.tsx
+  0e84a4d9d295aa5a 16
+src/features/bulk-move-modal.tsx
+  0e84a4d9d295aa5a 6
+openspec/changes/flat-layout-refactor/tasks.md
+  0e84a4d9d295aa5a 31-41
+src/background/duplicate-handlers.ts
+  0e84a4d9d295aa5a 20-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "45b14d7a774e1d3a13797164752adb88bddfad8e",
+  "prompts": {
+    "0e84a4d9d295aa5a": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "56613cd7-9b3f-4f5d-a0d0-3c583a8ca7a5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 4030,
+      "total_deletions": 1402,
+      "accepted_lines": 25674,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/a71585a2156c3b8eec5c86cf5dfa9780e143bd80716886bcf39f90f767d58d59"
+    }
+  }
+}
