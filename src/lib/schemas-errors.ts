@@ -36,8 +36,12 @@ export const GithubGraphQLError = Schema.TaggedStruct('GithubGraphQLError', {
 })
 export type GithubGraphQLError = Schema.Schema.Type<typeof GithubGraphQLError>
 
+// the runtime class carries `cause: unknown` (set from the underlying
+// `fetch` rejection or thrown error). Mirror it here so encode/decode across
+// messaging boundaries preserves the failure shape.
 export const GithubNetworkError = Schema.TaggedStruct('GithubNetworkError', {
   message: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.Unknown),
 })
 export type GithubNetworkError = Schema.Schema.Type<typeof GithubNetworkError>
 

@@ -1,20 +1,18 @@
 // ─── Concurrency guards ───────────────────────────────────────────────────────
 //
-// the legacy imperative API (`isXFull`, `acquireX`, `releaseX`) is preserved so
-// existing handlers continue to short-circuit when the queue is full. The
-// underlying counter is now mirrored into an `Effect.Semaphore` so handlers
-// migrated to Effect-first in Phase 7 can use the proper `withPermits`
-// combinator to await a permit instead of being silently rejected.
-
-import { Effect } from 'effect'
+// the imperative API (`isXFull`, `acquireX`, `releaseX`) is the sole mechanism
+// enforcing in-process concurrency limits today. Each handler short-circuits
+// (rather than awaiting) when its counter is full.
+//
+// TODO(effect-ts-first phase 7): replace these counters with `Effect.Semaphore`
+// + `Effect.withPermits` so handlers can await a permit instead of being
+// silently rejected. Until that wiring lands, do not export an unused
+// semaphore from this module — it would only cause drift between the comment
+// and the actual call sites.
 
 const MAX_CONCURRENT_DUPLICATES = 3
 const MAX_CONCURRENT_BULK = 3
 const MAX_CONCURRENT_SPRINT_END = 1
-
-export const duplicateSemaphore = Effect.unsafeMakeSemaphore(MAX_CONCURRENT_DUPLICATES)
-export const bulkSemaphore = Effect.unsafeMakeSemaphore(MAX_CONCURRENT_BULK)
-export const sprintEndSemaphore = Effect.unsafeMakeSemaphore(MAX_CONCURRENT_SPRINT_END)
 
 let activeDuplicateCount = 0
 let activeBulkCount = 0
