@@ -1,5 +1,7 @@
-import { onMessage } from './messages'
-import { toastStore } from './toast-store'
+import { Duration, Effect, Fiber, Stream, SubscriptionRef } from 'effect'
+
+import { onMessage } from '@/lib/messages'
+import { toastStore } from '@/lib/toast-store'
 
 export interface ProcessEntry {
   processId: string
@@ -17,24 +19,45 @@ export interface ProcessEntry {
 
 type Listener = (entries: ProcessEntry[]) => void
 
-const processes = new Map<string, ProcessEntry>()
-const listeners = new Set<Listener>()
-const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const DISMISS_DELAY = Duration.millis(3000)
 
-function notify() {
-  const entries = Array.from(processes.values())
+const _ref = Effect.runSync(SubscriptionRef.make<ReadonlyMap<string, ProcessEntry>>(new Map()))
+let processes: Map<string, ProcessEntry> = new Map()
+const listeners = new Set<Listener>()
+const dismissTimers = new Map<string, Fiber.RuntimeFiber<void>>()
+
+function setState(next: Map<string, ProcessEntry>): void {
+  processes = next
+  Effect.runSync(SubscriptionRef.set(_ref, next))
+  const entries = Array.from(next.values())
   listeners.forEach((fn) => fn(entries))
 }
 
+function clearDismissTimer(id: string): void {
+  const fiber = dismissTimers.get(id)
+  if (fiber !== undefined) {
+    Effect.runFork(Fiber.interrupt(fiber))
+    dismissTimers.delete(id)
+  }
+}
+
 function scheduleDismiss(processId: string) {
-  const existing = dismissTimers.get(processId)
-  if (existing) clearTimeout(existing)
-  const timer = setTimeout(() => {
-    processes.delete(processId)
-    dismissTimers.delete(processId)
-    notify()
-  }, 3000)
-  dismissTimers.set(processId, timer)
+  clearDismissTimer(processId)
+  const fiber = Effect.runFork(
+    Effect.sleep(DISMISS_DELAY).pipe(
+      Effect.tap(() =>
+        Effect.sync(() => {
+          if (dismissTimers.get(processId) !== fiber) return
+          dismissTimers.delete(processId)
+          if (!processes.has(processId)) return
+          const next = new Map(processes)
+          next.delete(processId)
+          setState(next)
+        }),
+      ),
+    ),
+  )
+  dismissTimers.set(processId, fiber)
 }
 
 export const queueStore = {
@@ -54,17 +77,27 @@ export const queueStore = {
     return queueStore.getActiveCount() > 0
   },
   dismiss(processId: string) {
-    const timer = dismissTimers.get(processId)
-    if (timer) clearTimeout(timer)
-    dismissTimers.delete(processId)
-    processes.delete(processId)
-    notify()
+    clearDismissTimer(processId)
+    if (!processes.has(processId)) {
+      // still notify so callers observing 'after dismiss' state get a tick.
+      setState(new Map(processes))
+      return
+    }
+    const next = new Map(processes)
+    next.delete(processId)
+    setState(next)
   },
 }
 
-// Single central listener for the whole CS context
+export const queueChanges: Stream.Stream<ReadonlyMap<string, ProcessEntry>> = _ref.changes
+
+// return a defensive copy so external consumers cannot mutate the live ref
+// and bypass setState's notify/SubscriptionRef updates.
+export const getQueueSnapshot = (): ReadonlyMap<string, ProcessEntry> => new Map(processes)
+
+// single central listener for the whole CS context
 onMessage('queueStateUpdate', ({ data }) => {
-  // Use processId if provided, fall back to sentinel 'bulk' for legacy bulk-update path
+  // use processId if provided, fall back to sentinel 'bulk' for legacy bulk-update path
   const key = data.processId ?? 'bulk'
   const isDone = data.total === 0 && data.status === 'Done!'
 
@@ -72,7 +105,8 @@ onMessage('queueStateUpdate', ({ data }) => {
     const existing = processes.get(key)
     if (existing) {
       const mergedFailedItems = data.failedItems ?? existing.failedItems
-      processes.set(key, {
+      const next = new Map(processes)
+      next.set(key, {
         ...existing,
         done: true,
         completed: existing.total,
@@ -80,12 +114,12 @@ onMessage('queueStateUpdate', ({ data }) => {
         failedItems: mergedFailedItems,
         retryContext: data.retryContext ?? existing.retryContext,
       })
-      notify()
-      // Don't auto-dismiss when there are failures so the user can review them
+      setState(next)
+      // don't auto-dismiss when there are failures so the user can review them
       if (!mergedFailedItems || mergedFailedItems.length === 0) {
         scheduleDismiss(key)
       }
-      // Fire completion toast when ALL processes are done
+      // fire completion toast when ALL processes are done
       const allDone = Array.from(processes.values()).every((e) => e.done)
       if (allDone && processes.size > 0) {
         toastStore.show({
@@ -99,7 +133,8 @@ onMessage('queueStateUpdate', ({ data }) => {
   }
 
   const existing = processes.get(key)
-  processes.set(key, {
+  const next = new Map(processes)
+  next.set(key, {
     processId: key,
     label: data.label ?? existing?.label ?? (key === 'bulk' ? 'Bulk update' : 'Duplicating…'),
     total: data.total,
@@ -112,5 +147,5 @@ onMessage('queueStateUpdate', ({ data }) => {
     failedItems: data.failedItems ?? (existing?.done ? undefined : existing?.failedItems),
     retryContext: data.retryContext ?? (existing?.done ? undefined : existing?.retryContext),
   })
-  notify()
+  setState(next)
 })

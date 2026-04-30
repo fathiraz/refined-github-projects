@@ -1,4 +1,4 @@
-import { sendMessage } from './messages'
+import { sendMessage } from '@/lib/messages'
 
 export interface ProjectContext {
   projectId: string

@@ -1,4 +1,4 @@
-// Override: strips non-conformant shadows and border-radius from driver.js
+// override: strips non-conformant shadows and border-radius from driver.js
 // NOTE: This CSS is injected into document.head (not the shadow DOM). ShadowThemeProvider
 // does NOT cover this scope, so hex fallbacks are required for all CSS custom properties.
 export const DRIVER_CSS_OVERRIDES = `
