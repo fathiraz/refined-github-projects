@@ -1,0 +1,24 @@
+openspec/changes/flat-layout-refactor/tasks.md
+  0e84a4d9d295aa5a 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "74ee068057fa48197bafbbc085d8ccfc31d436ff",
+  "prompts": {
+    "0e84a4d9d295aa5a": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "56613cd7-9b3f-4f5d-a0d0-3c583a8ca7a5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 972,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/1ad6620f24c2b5337e876971a84b443fe313bde2062a628c80bfa670dc481a8b"
+    }
+  }
+}
