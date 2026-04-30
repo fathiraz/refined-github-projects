@@ -1,0 +1,38 @@
+src/features/field-helpers.ts
+  0e84a4d9d295aa5a 1-5
+src/ui/issue-relationship-select-panel.tsx
+  0e84a4d9d295aa5a 4
+roadmap.md
+  0e84a4d9d295aa5a 1-971
+src/features/bulk-edit-modal.tsx
+  0e84a4d9d295aa5a 12-13
+src/lib/relationship-utils.ts
+  0e84a4d9d295aa5a 1-18
+openspec/changes/flat-layout-refactor/tasks.md
+  0e84a4d9d295aa5a 44-48,51-54,57-60,62
+src/features/bulk-duplicate-modal.tsx
+  0e84a4d9d295aa5a 18-19
+src/background/relationship-helpers.ts
+  0e84a4d9d295aa5a 28-31,33,248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "1b14a7373bf74fbc678590a1686af5cc4e80b6dd",
+  "prompts": {
+    "0e84a4d9d295aa5a": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "56613cd7-9b3f-4f5d-a0d0-3c583a8ca7a5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1019,
+      "total_deletions": 50,
+      "accepted_lines": 9440,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/6d9535a69f1df0c614a4c1204aa5f879678d42022b22589dc53a2b550c31987c"
+    }
+  }
+}
