@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/fathiraz/refined-github-projects/compare/v0.6.0...v0.7.0) (2026-04-30)
+
+
+### Features
+
+* migrate to Effect platform with typed services and structured concurrency ([#26](https://github.com/fathiraz/refined-github-projects/issues/26)) ([fa0f5f8](https://github.com/fathiraz/refined-github-projects/commit/fa0f5f8f3b0dec6c739a4c0fea7c750441a5339c))
+
+
+### Bug Fixes
+
+* **bulk:** preserve selected assignees visibility in random assign modal ([#24](https://github.com/fathiraz/refined-github-projects/issues/24)) ([f008c5a](https://github.com/fathiraz/refined-github-projects/commit/f008c5a82ebf75b5d1984d346227e5937306c3cd))
+
 ## [0.6.0](https://github.com/fathiraz/refined-github-projects/compare/v0.5.0...v0.6.0) (2026-04-27)
 
 
