@@ -1,0 +1,248 @@
+src/lib/errors.test.ts
+  0e84a4d9d295aa5a 1-185
+src/features/hierarchy-chip-tooltip.tsx
+  0e84a4d9d295aa5a 1-458
+src/features/table-enhancements.ts
+  0e84a4d9d295aa5a 1-598
+src/entries/popup/index.html
+  0e84a4d9d295aa5a 10
+src/features/checkbox-portal-host.tsx
+  0e84a4d9d295aa5a 1-151
+openspec/changes/flat-layout-refactor/tasks.md
+  0e84a4d9d295aa5a 4-28
+src/features/sprint-progress-view.tsx
+  0e84a4d9d295aa5a 1-352
+src/features/bulk-transfer-modal.tsx
+  0e84a4d9d295aa5a 1-214
+src/features/bulk-delete-modal.tsx
+  0e84a4d9d295aa5a 1-88
+src/lib/queue.test.ts
+  0e84a4d9d295aa5a 1-250
+src/background/cache-service.ts
+  0e84a4d9d295aa5a 1-51
+src/lib/primer-live-region-stub.test.ts
+  0e84a4d9d295aa5a 1-21
+src/lib/messages.ts
+  0e84a4d9d295aa5a 2-3
+src/ui/tooltip.tsx
+  0e84a4d9d295aa5a 1-231
+src/lib/messages.test.ts
+  0e84a4d9d295aa5a 1-73
+src/features/sprint-modal.tsx
+  0e84a4d9d295aa5a 1-1223
+src/lib/selection-store.ts
+  0e84a4d9d295aa5a 3
+src/ui/primitives.tsx
+  0e84a4d9d295aa5a 1-660
+src/ui/error-boundary.tsx
+  0e84a4d9d295aa5a 1-46
+src/background/hierarchy-handlers.ts
+  0e84a4d9d295aa5a 1-266
+src/lib/project-table-dom.test.ts
+  0e84a4d9d295aa5a 1-141
+src/features/bulk-edit-modal.tsx
+  0e84a4d9d295aa5a 1-1665
+src/lib/effect-assert.ts
+  0e84a4d9d295aa5a 1-64
+src/background/project-service.ts
+  0e84a4d9d295aa5a 1-77
+src/background/bulk-handlers.ts
+  0e84a4d9d295aa5a 1-1262
+wxt.config.ts
+  0e84a4d9d295aa5a 27-28
+src/background/concurrency.ts
+  0e84a4d9d295aa5a 1-54
+src/features/bulk-random-assign-modal.tsx
+  0e84a4d9d295aa5a 1-438
+src/features/content-ui.tsx
+  0e84a4d9d295aa5a 1-258
+src/lib/schemas-messages.ts
+  0e84a4d9d295aa5a 2-4
+openspec/changes/flat-layout-refactor/proposal.md
+  0e84a4d9d295aa5a 1-45
+src/lib/sprint-store.ts
+  0e84a4d9d295aa5a 1-32
+src/features/bulk-rename-modal.tsx
+  0e84a4d9d295aa5a 1-932
+src/background/helpers.ts
+  0e84a4d9d295aa5a 1-1040
+src/lib/debug-logger.test.ts
+  0e84a4d9d295aa5a 1-190
+src/lib/driver-overrides.test.ts
+  0e84a4d9d295aa5a 1-9
+src/background/duplicate-handlers.ts
+  0e84a4d9d295aa5a 1-425
+src/lib/github-project.test.ts
+  0e84a4d9d295aa5a 1-60
+src/lib/tippy-utils.test.ts
+  0e84a4d9d295aa5a 1-76
+src/ui/modal-step-header.tsx
+  0e84a4d9d295aa5a 1-119
+src/lib/vitest.setup.ts
+  0e84a4d9d295aa5a 1-18
+src/background/config-handlers.ts
+  0e84a4d9d295aa5a 1-144
+src/lib/schema-snapshots.test.ts
+  0e84a4d9d295aa5a 1-53
+src/features/project-context-card.tsx
+  0e84a4d9d295aa5a 1-195
+src/lib/toast-store.test.ts
+  0e84a4d9d295aa5a 1-186
+src/lib/graphql-testclock.test.ts
+  0e84a4d9d295aa5a 1-94
+src/features/issue-detail-injections.tsx
+  0e84a4d9d295aa5a 1-208
+src/ui/issue-relationship-select-panel.tsx
+  0e84a4d9d295aa5a 1-133
+src/entries/background.ts
+  0e84a4d9d295aa5a 1-27
+src/lib/primer-shadow-dom-compat.ts
+  0e84a4d9d295aa5a 16
+src/lib/selection-store.test.ts
+  0e84a4d9d295aa5a 1-120
+src/features/toast-list.tsx
+  0e84a4d9d295aa5a 1-171
+src/entries/content.ts
+  0e84a4d9d295aa5a 1-67
+src/features/bulk-close-modal.tsx
+  0e84a4d9d295aa5a 1-166
+src/features/lazy-modals.tsx
+  0e84a4d9d295aa5a 4,8,12,16,20
+src/lib/queue-store.test.ts
+  0e84a4d9d295aa5a 1-238
+src/lib/sprint-utils.test.ts
+  0e84a4d9d295aa5a 1-195
+src/lib/graphql-strings.test.ts
+  0e84a4d9d295aa5a 1-19
+src/lib/store-streams.test.ts
+  0e84a4d9d295aa5a 1-74
+src/background/services.ts
+  0e84a4d9d295aa5a 1-14
+openspec/changes/flat-layout-refactor/design.md
+  0e84a4d9d295aa5a 1-110
+src/background/runtime-ext.ts
+  0e84a4d9d295aa5a 1-23
+src/lib/use-subscription-ref.ts
+  0e84a4d9d295aa5a 4
+src/ui/search-select-panel.tsx
+  0e84a4d9d295aa5a 1-402
+src/features/hierarchy-injections.tsx
+  0e84a4d9d295aa5a 1-75
+src/lib/queue-store.ts
+  0e84a4d9d295aa5a 3-4
+src/lib/z-index.test.ts
+  0e84a4d9d295aa5a 1-28
+src/features/bulk-actions-bar.tsx
+  0e84a4d9d295aa5a 1-1703
+src/lib/primer-shadow-dom-compat.test.ts
+  0e84a4d9d295aa5a 1-173
+src/features/bulk-lock-modal.tsx
+  0e84a4d9d295aa5a 1-167
+src/lib/queue.ts
+  0e84a4d9d295aa5a 15
+src/ui/markdown-textarea.tsx
+  0e84a4d9d295aa5a 1-164
+src/features/bulk-utils.ts
+  0e84a4d9d295aa5a 1-83
+src/features/bulk-duplicate-modal.tsx
+  0e84a4d9d295aa5a 1-1855
+src/lib/graphql-queries.ts
+  0e84a4d9d295aa5a 1-509
+src/lib/checkbox-portal-store.test.ts
+  0e84a4d9d295aa5a 1-131
+src/lib/schemas-decode.ts
+  0e84a4d9d295aa5a 14
+src/lib/project-table-dom.ts
+  0e84a4d9d295aa5a 5-6
+src/lib/graphql-mutations.ts
+  0e84a4d9d295aa5a 1-222
+src/lib/github-project.ts
+  0e84a4d9d295aa5a 1
+src/lib/keyboard.test.ts
+  0e84a4d9d295aa5a 1-205
+src/features/sprint-injections.tsx
+  0e84a4d9d295aa5a 1-222
+src/ui/shadow-theme-provider.tsx
+  0e84a4d9d295aa5a 1-40
+src/features/queue-tracker.tsx
+  0e84a4d9d295aa5a 1-381
+src/features/bulk-unpin-modal.tsx
+  0e84a4d9d295aa5a 1-87
+src/features/token-setup.tsx
+  0e84a4d9d295aa5a 1-361
+src/lib/debug-logger.ts
+  0e84a4d9d295aa5a 2
+src/features/onboarding-coach.tsx
+  0e84a4d9d295aa5a 1-243
+src/lib/graphql-client.ts
+  0e84a4d9d295aa5a 1-32
+src/features/bulk-move-modal.tsx
+  0e84a4d9d295aa5a 1-801
+src/features/bulk-random-assign-utils.ts
+  0e84a4d9d295aa5a 1-93
+src/background/cache.ts
+  0e84a4d9d295aa5a 1-184
+src/lib/graphql-client.test.ts
+  0e84a4d9d295aa5a 1-186
+src/background/types.ts
+  0e84a4d9d295aa5a 1-171
+src/lib/storage-service.ts
+  0e84a4d9d295aa5a 3
+src/features/debug-settings-card.tsx
+  0e84a4d9d295aa5a 1-89
+src/features/bulk-open-modal.tsx
+  0e84a4d9d295aa5a 1-91
+src/features/bulk-random-assign-utils.test.ts
+  0e84a4d9d295aa5a 1-172
+src/lib/keyboard.ts
+  0e84a4d9d295aa5a 1
+src/features/keyboard-help-overlay.tsx
+  0e84a4d9d295aa5a 1-141
+src/entries/options/index.html
+  0e84a4d9d295aa5a 10
+vitest.config.ts
+  0e84a4d9d295aa5a 13
+src/lib/storage.test.ts
+  0e84a4d9d295aa5a 1-39
+src/ui/repo-metadata-select-panel.tsx
+  0e84a4d9d295aa5a 1-215
+src/background/sprint-handlers.ts
+  0e84a4d9d295aa5a 1-482
+src/features/bulk-pin-modal.tsx
+  0e84a4d9d295aa5a 1-88
+src/lib/effect-test-helpers.ts
+  0e84a4d9d295aa5a 1-73
+src/lib/effect-runtime.ts
+  0e84a4d9d295aa5a 3-6
+src/entries/options/main.tsx
+  0e84a4d9d295aa5a 3-8,10-88
+src/lib/graphql-service.ts
+  0e84a4d9d295aa5a 11-12
+src/features/sprint-table-widget.tsx
+  0e84a4d9d295aa5a 1-264
+src/background/field-handlers.ts
+  0e84a4d9d295aa5a 1-395
+src/entries/popup/main.tsx
+  0e84a4d9d295aa5a 3-18,20-204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "8aedd2f84e866b47ab14220c4759e46d1b0f5a99",
+  "prompts": {
+    "0e84a4d9d295aa5a": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "56613cd7-9b3f-4f5d-a0d0-3c583a8ca7a5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 25932,
+      "total_deletions": 530,
+      "accepted_lines": 24951,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/9e118298f9ec9ea84a1004d1d5f57c3b1974db0ab99c06853803152652d394c9"
+    }
+  }
+}
