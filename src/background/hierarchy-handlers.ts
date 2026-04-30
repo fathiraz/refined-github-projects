@@ -148,7 +148,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
 }
 
 async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData> {
-  // Resolve DOM item ID (e.g. "issue:3960969873") → real ProjectV2Item node ID
+  // resolve DOM item ID (e.g. "issue:3960969873") → real ProjectV2Item node ID
   let resolvedItemId = data.itemId
   if (/^issue[:-]\d+$/.test(data.itemId)) {
     const { project: projectV2 } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
@@ -161,7 +161,7 @@ async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData>
     resolvedItemId = resolved[0].projectItemId
   }
 
-  // Fetch item details for parent relationship (GraphQL)
+  // fetch item details for parent relationship (GraphQL)
   const details = await withRateLimitRetry(() =>
     gql<ProjectItemDetails>(GET_PROJECT_ITEM_DETAILS, { itemId: resolvedItemId }),
   )
@@ -170,7 +170,7 @@ async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData>
   const issue = source.content
   if (!issue?.title) throw new Error('Item is not a supported type')
 
-  // Fetch sub-issues, blockedBy, blocking concurrently (all GETs — safe to parallelize)
+  // fetch sub-issues, blockedBy, blocking concurrently (all GETs — safe to parallelize)
   const [subIssues, blockedBy, blocking] = await Promise.all([
     listSubIssuesSafe(issue.repository.owner.login, issue.repository.name, issue.number),
     listIssueRelationshipsSafe(

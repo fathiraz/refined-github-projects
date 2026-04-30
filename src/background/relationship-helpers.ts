@@ -1,4 +1,4 @@
-// Relationship parsing, REST listing, and bulk relationship task building.
+// relationship parsing, REST listing, and bulk relationship task building.
 
 import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mock project-table-dom before importing keyboard
+// mock project-table-dom before importing keyboard
 let mockIsEditable = false
 vi.mock('@/lib/project-table-dom', () => ({
   isEditableTarget: () => mockIsEditable,
@@ -21,7 +21,7 @@ function makeDef(overrides: Partial<ShortcutDefinition> = {}): ShortcutDefinitio
 }
 
 beforeEach(() => {
-  // Clear registry between tests
+  // clear registry between tests
   for (const def of shortcutRegistry.getAll()) {
     shortcutRegistry.unregister(def.id)
   }
@@ -78,7 +78,7 @@ describe('shortcutRegistry', () => {
 
     unsub()
     shortcutRegistry.register(makeDef({ id: 'after-unsub' }))
-    // Should not fire after unsubscribe
+    // should not fire after unsubscribe
     expect(listener).toHaveBeenCalledTimes(2)
   })
 
@@ -199,7 +199,7 @@ describe('formatShortcut', () => {
 
   it('includes meta modifier', () => {
     const result = formatShortcut(makeDef({ key: 'a', modifiers: { meta: true } }))
-    // Should contain either ⌘ (Mac) or ⌃ (non-Mac)
+    // should contain either ⌘ (Mac) or ⌃ (non-Mac)
     expect(result).toMatch(/[\u2318\u2303]/)
   })
 })

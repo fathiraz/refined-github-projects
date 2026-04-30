@@ -28,13 +28,13 @@
 - [x] Validate: `rtk pnpm install && rtk pnpm typecheck && rtk pnpm test && rtk pnpm build:chrome && rtk pnpm build:firefox && rtk pnpm build:edge`.
 
 ## Phase 2 — split big files
-- [~] Split `features/bulk-duplicate-modal.tsx` → modal + steps + utils. _Deferred: modal is a tightly-coupled state machine; splitting hurts cohesion._
-- [~] Split `features/bulk-edit-modal.tsx` → wizard + steps + relationships + utils. _Deferred: same as above._
-- [x] Split `features/bulk-actions-bar.tsx` → inline `lazy-modals.tsx` directly. (bar + dispatch left intact since `ModalStep` enum drives a single switch.)
-- [~] Split `features/bulk-rename-modal.tsx` → modal + preview + utils. _Deferred: preview is intertwined with form state._
-- [~] Split `features/bulk-move-modal.tsx` → modal + utils. _Deferred: form is small enough._
-- [~] Split `features/sprint-modal.tsx` → modal + end-view + settings-view. _Deferred: SettingsView and EndSprintView already at function-component level inside the file._
-- [~] Split `features/table-enhancements.ts` → enhancements + drag-and-drop. _Deferred: DOM-mutation modules cohesive._
+- [x] Split `features/bulk-duplicate-modal.tsx` (1828) → modal (1615) + utils (193) + relationship-list (97).
+- [x] Split `features/bulk-edit-modal.tsx` (1639) → modal (1213) + utils (202) + relationships (278).
+- [x] Split `features/bulk-actions-bar.tsx` (1697) → bar (974) + menu (284) + modals (290) + utils (72); inlined `lazy-modals.tsx`.
+- [x] Split `features/bulk-rename-modal.tsx` (932) → modal (775) + preview (132) + utils (31).
+- [x] Split `features/bulk-move-modal.tsx` (801) → modal (686) + utils (48) + preview (81).
+- [x] Split `features/sprint-modal.tsx` (1213) → modal (432) + sprint-settings-view + sprint-end-view; helpers moved to `lib/sprint-utils.ts`.
+- [x] Split `features/table-enhancements.ts` (598) → enhancements (340) + drag-and-drop (270).
 - [x] Split `background/bulk-handlers.ts` → register + bulk-update + bulk-state + bulk-rename + bulk-position.
 - [x] Split `background/helpers.ts` → project-helpers + relationship-helpers + rest-helpers.
 - [x] Split `ui/primitives.tsx` → icons + actions + panel-card + section-header + progress-state + status-banner + step-indicator + empty-state + keyboard-hint + app-shell. Deleted `primitives.tsx`.
@@ -49,7 +49,7 @@
 
 ## Phase 4 — lowercase comments
 - [x] New phase-2/3 files use lowercase intent comments by default.
-- [~] Sweep every pre-existing file. _Deferred: 33 files have legacy capitalized banners; rewriting them adds churn without changing behavior. Newly authored files in this refactor follow the convention._
+- [x] Sweep every pre-existing file (46 files, scripted via `/tmp/lc_comments.py` with proper-noun whitelist preserving Effect/Fiber/GraphQL/IntersectionObserver/etc. references; 2 manual reverts for `Fiber.await` / `Effect.sleep` API references).
 - [x] No emojis introduced.
 - [x] Validate (typecheck + tests).
 
@@ -59,4 +59,4 @@
 - [x] `pnpm build:chrome && pnpm build:firefox && pnpm build:edge` — clean (3.05 MB each).
 - [x] `pnpm check:manifest` — clean (only `storage`).
 - [x] Diff size sanity: 137 src files changed, net −96 lines (3387 ins / 3483 del). Pure moves + DRY.
-- [ ] Open PR; archive change once merged: rename `openspec/changes/flat-layout-refactor/` → `openspec/changes/archive/flat-layout-refactor/` and copy its `specs/layout/spec.md` → `openspec/specs/layout/spec.md`.
+- [x] Open PR; archive change once merged: rename `openspec/changes/flat-layout-refactor/` → `openspec/changes/archive/flat-layout-refactor/` and copy its `specs/layout/spec.md` → `openspec/specs/layout/spec.md`. (PR opened; archive deferred until merge.)

@@ -26,7 +26,7 @@ describe('toastStore', () => {
 
     toastStore.show({ message: 'first', type: 'success' })
 
-    // First call is initial snapshot, second is after show
+    // first call is initial snapshot, second is after show
     const latest = entries[entries.length - 1]
     expect(latest.length).toBeGreaterThanOrEqual(1)
     expect(latest[0].message).toBe('first')
@@ -107,14 +107,14 @@ describe('toastStore', () => {
     const id = toastStore.show({ message: 'dup', type: 'info' })
     toastStore.show({ message: 'dup', type: 'info' })
 
-    // Two toasts with same id exist
+    // two toasts with same id exist
     expect(entries[entries.length - 1].filter((t) => t.id === id)).toHaveLength(2)
 
-    // Advance to auto-dismiss — only one timer should fire because line 24 cleared the first.
+    // advance to auto-dismiss — only one timer should fire because line 24 cleared the first.
     // `Async` form is required because Effect.sleep yields through microtasks.
     await vi.advanceTimersByTimeAsync(6000)
 
-    // Only one dismiss occurred, so one toast with that id should remain
+    // only one dismiss occurred, so one toast with that id should remain
     expect(entries[entries.length - 1].filter((t) => t.id === id)).toHaveLength(1)
 
     dateSpy.mockRestore()
@@ -131,11 +131,11 @@ describe('toastStore', () => {
 
     const id = toastStore.show({ message: 'temp', type: 'info' })
 
-    // Before timeout — toast should exist
+    // before timeout — toast should exist
     const beforeDismiss = entries[entries.length - 1]
     expect(beforeDismiss.find((t) => t.id === id)).toBeDefined()
 
-    // Advance past auto-dismiss timeout (`Async` form is required because
+    // advance past auto-dismiss timeout (`Async` form is required because
     // Effect.sleep yields through microtasks).
     await vi.advanceTimersByTimeAsync(6000)
 
@@ -150,11 +150,11 @@ describe('toastStore', () => {
     const id = toastStore.show({ message: 'temp', type: 'info' })
     await vi.advanceTimersByTimeAsync(6000)
 
-    // Toast already auto-dismissed
+    // toast already auto-dismissed
     const afterAutoDismiss = entries[entries.length - 1]
     expect(afterAutoDismiss.find((t) => t.id === id)).toBeUndefined()
 
-    // Manual dismiss should not bring the toast back
+    // manual dismiss should not bring the toast back
     toastStore.dismiss(id)
     const afterManualDismiss = entries[entries.length - 1]
     expect(afterManualDismiss.find((t) => t.id === id)).toBeUndefined()
@@ -170,7 +170,7 @@ describe('toastStore', () => {
     const received: ToastEntry[][] = []
     toastStore.subscribe((e) => received.push([...e]))
 
-    // First call should have the existing toast
+    // first call should have the existing toast
     expect(received.length).toBeGreaterThanOrEqual(1)
   })
 

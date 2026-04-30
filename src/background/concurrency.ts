@@ -1,6 +1,6 @@
 // ─── Concurrency guards ───────────────────────────────────────────────────────
 //
-// The legacy imperative API (`isXFull`, `acquireX`, `releaseX`) is preserved so
+// the legacy imperative API (`isXFull`, `acquireX`, `releaseX`) is preserved so
 // existing handlers continue to short-circuit when the queue is full. The
 // underlying counter is now mirrored into an `Effect.Semaphore` so handlers
 // migrated to Effect-first in Phase 7 can use the proper `withPermits`
@@ -20,7 +20,7 @@ let activeDuplicateCount = 0
 let activeBulkCount = 0
 let activeSprintEndCount = 0
 
-// Duplicate guards
+// duplicate guards
 export function isDuplicateFull(): boolean {
   return activeDuplicateCount >= MAX_CONCURRENT_DUPLICATES
 }
@@ -31,7 +31,7 @@ export function releaseDuplicate(): void {
   activeDuplicateCount--
 }
 
-// Bulk guards
+// bulk guards
 export function isBulkFull(): boolean {
   return activeBulkCount >= MAX_CONCURRENT_BULK
 }
@@ -42,7 +42,7 @@ export function releaseBulk(): void {
   activeBulkCount--
 }
 
-// Sprint end guards
+// sprint end guards
 export function isSprintEndFull(): boolean {
   return activeSprintEndCount >= MAX_CONCURRENT_SPRINT_END
 }

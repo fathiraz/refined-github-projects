@@ -98,7 +98,7 @@ export const ProjectItemDetails = Schema.Struct({
       parent: Schema.optional(Schema.NullOr(ParentIssueRef)),
     }),
     fieldValues: Schema.Struct({
-      // Loose array — entries that don't match a known FieldValue variant are
+      // loose array — entries that don't match a known FieldValue variant are
       // filtered downstream (kept here as `Unknown` so unrelated field kinds
       // such as Milestone don't cause whole-payload decode failure).
       nodes: Schema.Array(Schema.Unknown),

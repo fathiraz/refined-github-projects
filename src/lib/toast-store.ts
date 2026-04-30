@@ -16,7 +16,7 @@ const _ref = Effect.runSync(SubscriptionRef.make<ToastEntry[]>([]))
 let current: ToastEntry[] = []
 const listeners = new Set<Listener>()
 
-// Tracks the eviction fiber per toast id. Effect.sleep + Fiber.interrupt keeps
+// tracks the eviction fiber per toast id. Effect.sleep + Fiber.interrupt keeps
 // dismissal on the Effect runtime (TestClock-friendly) and integrates with
 // structured cancellation.
 const dismissTimers = new Map<string, Fiber.RuntimeFiber<void>>()
@@ -42,7 +42,7 @@ function scheduleDismiss(id: string) {
     Effect.sleep(AUTO_DISMISS).pipe(
       Effect.tap(() =>
         Effect.sync(() => {
-          // Only dismiss if this fiber is still the active one for the id —
+          // only dismiss if this fiber is still the active one for the id —
           // a manual dismiss before TTL elapses will have already cleared it.
           if (dismissTimers.get(id) === fiber) {
             toastStore.dismiss(id)
@@ -57,7 +57,7 @@ function scheduleDismiss(id: string) {
 export const toastStore = {
   show(entry: Omit<ToastEntry, 'id'>): string {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    // Prepend newest on top; trim to max
+    // prepend newest on top; trim to max
     const next = [{ id, ...entry }, ...current]
     if (next.length > MAX_TOASTS) next.splice(MAX_TOASTS)
     setState(next)

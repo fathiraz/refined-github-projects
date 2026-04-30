@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Effect } from 'effect'
 
-// Mock storage before importing debug-logger
+// mock storage before importing debug-logger
 const debugFlag = { value: false }
 vi.mock('@/lib/storage', () => ({
   debugStorage: {
@@ -154,9 +154,9 @@ describe('RgpLoggerLive', () => {
     // mismatched argument. In our replaced logger we always invoke per the
     // incoming logLevel, so we should see it here.
     // (If Effect's default min log level excludes DEBUG we still won't see it.)
-    // To guarantee we see it we set FiberRef.currentMinimumLogLevel via config.
+    // to guarantee we see it we set FiberRef.currentMinimumLogLevel via config.
     if (debugSpy.mock.calls.length === 0) {
-      // Skip assertion when runtime default suppresses DEBUG — behaviour is
+      // skip assertion when runtime default suppresses DEBUG — behaviour is
       // still covered by logInfo/logError branches above.
       return
     }

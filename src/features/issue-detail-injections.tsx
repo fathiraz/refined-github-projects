@@ -32,7 +32,7 @@ const SIDEBAR_SELECTORS = [
 ]
 
 function findPanelBroad(): Element | null {
-  // Last-resort: find any issue link outside table rows, then walk up to a pane container
+  // last-resort: find any issue link outside table rows, then walk up to a pane container
   try {
     const link = document.querySelector<HTMLAnchorElement>(
       'a[href*="/issues/"]:not([role="row"] *):not(header *):not(nav *)',
@@ -53,7 +53,7 @@ function findPanel(): Element | null {
       const el = document.querySelector(sel)
       if (el) return el
     } catch {
-      // Selector may not be valid in this browser; skip
+      // selector may not be valid in this browser; skip
     }
   }
   return findPanelBroad()
@@ -72,7 +72,7 @@ function findSidebar(panel: Element): Element | null {
 }
 
 function extractItemIdFromPanel(panel: Element): string | null {
-  // Try to read a data-rgp-cb attr from the currently-active table row
+  // try to read a data-rgp-cb attr from the currently-active table row
   const activeRow = document.querySelector<HTMLElement>(
     `[role="row"][${INJECTED_ATTR}][data-rgp-active]`,
   )
@@ -81,7 +81,7 @@ function extractItemIdFromPanel(panel: Element): string | null {
     if (id && id !== '1') return id
   }
 
-  // Fallback: find any issue link inside the panel to extract an item ID
+  // fallback: find any issue link inside the panel to extract an item ID
   const issueLink = panel.querySelector<HTMLAnchorElement>('a[href*="/issues/"]')
   if (issueLink) {
     const m = issueLink.href.match(/\/issues\/(\d+)/)
@@ -107,7 +107,7 @@ function mountCard(panel: Element, projectContext: ProjectContext): void {
     return
   }
 
-  // Avoid double-mounting
+  // avoid double-mounting
   if (sidebar.querySelector(`#${HOST_ID}`)) return
 
   const host = document.createElement('div')
@@ -150,17 +150,17 @@ export function setupIssueDetailInjector(projectContext: ProjectContext): () => 
     const panel = findPanel()
 
     if (panel && panel !== currentPanel) {
-      // New panel appeared
+      // new panel appeared
       unmountCard()
       currentPanel = panel
       mountCard(panel, projectContext)
     } else if (!panel && currentPanel) {
-      // Panel closed
+      // panel closed
       unmountCard()
     }
   }
 
-  // Watch for DOM additions/removals AND attribute changes (GitHub may show/hide pane via class toggle)
+  // watch for DOM additions/removals AND attribute changes (GitHub may show/hide pane via class toggle)
   const observer = new MutationObserver(scheduleCheck)
   observer.observe(document.body, {
     childList: true,
@@ -169,7 +169,7 @@ export function setupIssueDetailInjector(projectContext: ProjectContext): () => 
     attributeFilter: ['style', 'class', 'hidden', 'aria-hidden', 'open'],
   })
 
-  // Watch for GitHub's client-side URL changes (?pane=issue indicates a pane is open)
+  // watch for GitHub's client-side URL changes (?pane=issue indicates a pane is open)
   window.addEventListener('popstate', scheduleCheck)
   const origPush = history.pushState.bind(history)
   const origReplace = history.replaceState.bind(history)
@@ -182,7 +182,7 @@ export function setupIssueDetailInjector(projectContext: ProjectContext): () => 
     scheduleCheck()
   }
 
-  // Handle click on table rows to capture which item was activated
+  // handle click on table rows to capture which item was activated
   const handleRowClick = (e: Event) => {
     const row = (e.target as Element).closest<HTMLElement>(`[role="row"][${INJECTED_ATTR}]`)
     if (!row) return

@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { processQueue, cancelQueue, type QueueState, type QueueTask } from '@/lib/queue'
 
-// Mock debug-logger so queue.ts doesn't hit WXT storage APIs
+// mock debug-logger so queue.ts doesn't hit WXT storage APIs
 vi.mock('@/lib/debug-logger', () => ({
   logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
 }))
 
 // ---------------------------------------------------------------------------
-// Timer setup — lets sleep() resolve instantly via fake timers
+// timer setup — lets sleep() resolve instantly via fake timers
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
@@ -38,7 +38,7 @@ async function runToCompletion(promise: Promise<void>): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Tests
+// tests
 // ---------------------------------------------------------------------------
 
 describe('processQueue', () => {
@@ -81,10 +81,10 @@ describe('processQueue', () => {
 
     await runToCompletion(processQueue(tasks, (s) => states.push({ ...s })))
 
-    // First call: initial broadcast (completed 0)
+    // first call: initial broadcast (completed 0)
     expect(states[0]).toMatchObject({ total: 2, completed: 0 })
 
-    // Final call should show all completed
+    // final call should show all completed
     const last = states[states.length - 1]
     expect(last).toMatchObject({ total: 2, completed: 2 })
   })
@@ -110,7 +110,7 @@ describe('processQueue', () => {
     const states: QueueState[] = []
     await runToCompletion(processQueue(tasks, (s) => states.push({ ...s })))
 
-    // The failing task is skipped but counted as completed
+    // the failing task is skipped but counted as completed
     expect(order).toEqualValue(['ok'])
     const last = states[states.length - 1]
     expect(last).toMatchObject({ total: 2, completed: 2 })
@@ -125,7 +125,7 @@ describe('processQueue', () => {
         id: 'first',
         run: async () => {
           order.push('first')
-          // Cancel after the first task runs
+          // cancel after the first task runs
           cancelQueue(processId)
         },
       },
@@ -145,7 +145,7 @@ describe('processQueue', () => {
 
     await runToCompletion(processQueue(tasks, undefined, processId))
 
-    // Only the first task should have run; cancellation is checked before
+    // only the first task should have run; cancellation is checked before
     // each subsequent task.
     expect(order).toEqualValue(['first'])
   })
@@ -155,7 +155,7 @@ describe('processQueue', () => {
 
     await runToCompletion(processQueue([], (s) => states.push({ ...s })))
 
-    // Should still broadcast the initial state
+    // should still broadcast the initial state
     expect(states.length).toBeGreaterThanOrEqual(1)
     expect(states[0]).toMatchObject({ total: 0, completed: 0 })
   })
@@ -180,9 +180,9 @@ describe('processQueue', () => {
     const states: QueueState[] = []
     await runToCompletion(processQueue(tasks, (s) => states.push({ ...s })))
 
-    // Should have paused at some point
+    // should have paused at some point
     expect(states.some((s) => s.paused)).toBe(true)
-    // Should have completed after retry
+    // should have completed after retry
     const last = states[states.length - 1]
     expect(last).toMatchObject({ total: 1, completed: 1, paused: false })
   })
@@ -207,7 +207,7 @@ describe('processQueue', () => {
     const states: QueueState[] = []
     await runToCompletion(processQueue(tasks, (s) => states.push({ ...s })))
 
-    // Should see retryAfter in paused state
+    // should see retryAfter in paused state
     const pausedState = states.find((s) => s.paused)
     expect(pausedState).toBeDefined()
     expect(pausedState!.retryAfter).toBe(2)

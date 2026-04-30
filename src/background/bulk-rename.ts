@@ -1,4 +1,4 @@
-// Bulk rename, transfer, and random-assign handlers.
+// bulk rename, transfer, and random-assign handlers.
 
 import { onMessage } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'

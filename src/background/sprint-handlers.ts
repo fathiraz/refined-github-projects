@@ -56,7 +56,7 @@ export function registerSprintHandlers(): void {
       ? { ...upcoming, endDate: iterationEndDate(upcoming) }
       : null
 
-    // Check acknowledged sprint (if any) — clear stale IDs
+    // check acknowledged sprint (if any) — clear stale IDs
     let acknowledgedSprint: SprintInfo | null = null
     if (settings?.acknowledgedSprintId) {
       const ackIter = iterField.configuration.iterations?.find(
@@ -65,7 +65,7 @@ export function registerSprintHandlers(): void {
       if (ackIter) {
         acknowledgedSprint = { ...ackIter, endDate: iterationEndDate(ackIter) }
       } else {
-        // Stale — clear it
+        // stale — clear it
         const updated = { ...settings, acknowledgedSprintId: undefined }
         await allSprintSettingsStorage.setValue({ ...allSettings, [data.projectId]: updated })
       }
@@ -206,7 +206,7 @@ export function registerSprintHandlers(): void {
       const doneFieldValue = fvNodes.find((fv) => fv.field?.id === data.settings.doneFieldId)
       if (!doneFieldValue) return false
       if (data.settings.doneFieldType === 'SINGLE_SELECT' && 'optionId' in doneFieldValue) {
-        // If a "not started" option is configured, everything except that option counts as done
+        // if a "not started" option is configured, everything except that option counts as done
         if (data.settings.notStartedOptionId) {
           return doneFieldValue.optionId !== data.settings.notStartedOptionId
         }
@@ -251,7 +251,7 @@ export function registerSprintHandlers(): void {
       }
     }
 
-    // Show most recently added first (reverse chronological via createdAt, approximate via array order)
+    // show most recently added first (reverse chronological via createdAt, approximate via array order)
     recentlyAdded.reverse()
 
     const result: SprintProgressData = {
@@ -301,7 +301,7 @@ export function registerSprintHandlers(): void {
         tabId,
       )
 
-      // Resolve real GraphQL node ID (data.projectId is a URL slug, not a node ID)
+      // resolve real GraphQL node ID (data.projectId is a URL slug, not a node ID)
       const { project: sprintProject } = await getProjectFieldsData(
         data.owner,
         data.number,
@@ -310,7 +310,7 @@ export function registerSprintHandlers(): void {
       if (!sprintProject) throw new Error('Could not load project fields')
       const realProjectId = sprintProject.id
 
-      // Paginate all project items matching the active sprint
+      // paginate all project items matching the active sprint
       interface SprintItemNode {
         id: string
         fieldValues: {
@@ -347,7 +347,7 @@ export function registerSprintHandlers(): void {
         if (!itemsPage) break
 
         for (const item of itemsPage.nodes) {
-          // Check if this item is in the active sprint
+          // check if this item is in the active sprint
           const inSprint = item.fieldValues.nodes
             .filter(Boolean)
             .some(
@@ -372,10 +372,10 @@ export function registerSprintHandlers(): void {
         await sleep(1000)
       }
 
-      // Classify done vs not-done
+      // classify done vs not-done
       const excludeConditions = data.excludeConditions ?? []
       const notDoneItems = sprintItems.filter((item) => {
-        // Check done field
+        // check done field
         type SprintFv = {
           iterationId?: string
           optionId?: string
@@ -396,7 +396,7 @@ export function registerSprintHandlers(): void {
           return true
         }
 
-        // Exclude conditions — item stays in current sprint if it matches any
+        // exclude conditions — item stays in current sprint if it matches any
         for (const cond of excludeConditions) {
           const fv = fvNodes.find((f) => f.field?.id === cond.fieldId)
           if (!fv) continue

@@ -50,7 +50,7 @@ function dispatch(data: UpdatePayload) {
 beforeEach(() => {
   vi.useFakeTimers()
   toastShow.mockReset()
-  // Clear any leftover processes between tests
+  // clear any leftover processes between tests
   for (const pid of ['p1', 'p2', 'bulk']) queueStore.dismiss(pid)
 })
 
@@ -99,7 +99,7 @@ describe('queueStore active counters', () => {
 
   it('done processes no longer count as active', () => {
     dispatch({ total: 1, completed: 0, paused: false, processId: 'p1', label: 'A' })
-    // Completion sentinel: total=0 + status='Done!'
+    // completion sentinel: total=0 + status='Done!'
     dispatch({ total: 0, completed: 0, paused: false, status: 'Done!', processId: 'p1' })
 
     expect(queueStore.getActiveCount()).toBe(0)
@@ -115,7 +115,7 @@ describe('queueStore auto-dismiss', () => {
     dispatch({ total: 1, completed: 0, paused: false, processId: 'p1', label: 'A' })
     dispatch({ total: 0, completed: 0, paused: false, status: 'Done!', processId: 'p1' })
 
-    // Still present right after done
+    // still present right after done
     const immediatelyAfterDone = snapshots[snapshots.length - 1]
     expect(immediatelyAfterDone).toHaveLength(1)
 
