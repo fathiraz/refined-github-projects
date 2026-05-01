@@ -1,0 +1,24 @@
+CHANGELOG.md
+  097ae03a8f1b3511 3,14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "d63dbf54ba57adbddc94902adebc78e3bf531c57",
+  "prompts": {
+    "097ae03a8f1b3511": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8c4c7947-3738-4a94-9c41-8d69514f9eee",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 26,
+      "accepted_lines": 2,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/34eef95de38e9d8a7fffb1643e2f1a22fc396c5f2836b0b245aa4a3c8de33d19"
+    }
+  }
+}
