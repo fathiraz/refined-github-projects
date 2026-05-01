@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fathiraz/refined-github-projects/releases"><img src="https://img.shields.io/github/v/release/fathiraz/refined-github-projects?style=for-the-badge&color=238636&label=Latest+Release" alt="Latest Release" /></a>
+  <a href="https://github.com/fathiraz/refined-github-projects/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Latest_Release-v1.0.0-238636?style=for-the-badge" alt="Latest Release v1.0.0" /></a>
   <a href="https://github.com/fathiraz/refined-github-projects/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License" /></a>
   <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-238636?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" /></a>
   <a href="https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/"><img src="https://img.shields.io/badge/Firefox_Add--ons-Live-238636?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="Firefox Add-ons" /></a>
