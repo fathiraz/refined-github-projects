@@ -1,0 +1,24 @@
+README.md
+  097ae03a8f1b3511 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "1de4c98c4b73d7dd7c8453131916b369bf5052b9",
+  "prompts": {
+    "097ae03a8f1b3511": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8c4c7947-3738-4a94-9c41-8d69514f9eee",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 972,
+      "total_deletions": 1,
+      "accepted_lines": 972,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/7f01833daee511cb44ecc00a91be259a3e365dc8ec9a042048e94ff71afddca7"
+    }
+  }
+}
