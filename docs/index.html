@@ -1,1514 +1,449 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<!doctype html>
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Refined GitHub Projects — Bulk superpowers for GitHub Projects V2</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap"
-        rel="stylesheet" />
-    <style>
-        :root {
-            --bg: #0d1117;
-            --surface: #161b22;
-            --surface-2: #1c2128;
-            --border: #30363d;
-            --border-subtle: #21262d;
-            --text: #e6edf3;
-            --text-muted: #7d8590;
-            --text-subtle: #484f58;
-            --green: #3fb950;
-            --green-dim: #1a4128;
-            --blue: #58a6ff;
-            --blue-dim: #0d2541;
-            --purple: #bc8cff;
-            --purple-dim: #271a3f;
-            --orange: #ffa657;
-            --red: #f85149;
-            --accent: #238636;
-            --accent-hover: #2ea043;
-            --mono: 'DM Mono', monospace;
-            --sans: 'DM Sans', sans-serif;
-        }
-
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: var(--sans);
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            font-size: 16px;
-            overflow-x: hidden;
-        }
-
-        /* NAV */
-        nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            padding: 0 24px;
-            background: rgba(13, 17, 23, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .nav-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 15px;
-            color: var(--text);
-            text-decoration: none;
-        }
-
-        .nav-logo-icon {
-            width: 28px;
-            height: 28px;
-            background: var(--accent);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color 0.15s;
-        }
-
-        .nav-links a:hover {
-            color: var(--text);
-        }
-
-        .nav-cta {
-            background: var(--accent);
-            color: white !important;
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            transition: background 0.15s !important;
-        }
-
-        .nav-cta:hover {
-            background: var(--accent-hover) !important;
-            color: white !important;
-        }
-
-        /* HERO */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 120px 24px 80px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-grid {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            background-image:
-                linear-gradient(rgba(48, 54, 61, 0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(48, 54, 61, 0.4) 1px, transparent 1px);
-            background-size: 40px 40px;
-            mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%);
-        }
-
-        .hero-glow {
-            position: absolute;
-            top: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 600px;
-            height: 300px;
-            background: radial-gradient(ellipse, rgba(35, 134, 54, 0.15) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .hero-inner {
-            position: relative;
-            z-index: 1;
-            max-width: 860px;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--green);
-            margin-bottom: 28px;
-            font-family: var(--mono);
-        }
-
-        .hero-badge-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--green);
-            animation: pulse-dot 2s ease infinite;
-        }
-
-        @keyframes pulse-dot {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
-        }
-
-        h1 {
-            font-size: clamp(42px, 6vw, 72px);
-            font-weight: 700;
-            line-height: 1.1;
-            letter-spacing: -0.03em;
-            margin-bottom: 20px;
-        }
-
-        h1 em {
-            font-style: normal;
-            color: var(--green);
-        }
-
-        .hero-sub {
-            font-size: clamp(17px, 2vw, 20px);
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 36px;
-            font-weight: 400;
-            line-height: 1.6;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 60px;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.15s, transform 0.1s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: border-color 0.15s, transform 0.1s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--text-muted);
-            transform: translateY(-1px);
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 40px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .hero-stat {
-            text-align: center;
-        }
-
-        .hero-stat-num {
-            display: block;
-            font-size: 28px;
-            font-weight: 700;
-            font-family: var(--mono);
-            color: var(--text);
-            line-height: 1;
-        }
-
-        .hero-stat-label {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* SECTION BASE */
-        section {
-            padding: 96px 24px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .section-label {
-            font-family: var(--mono);
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--green);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 16px;
-        }
-
-        h2 {
-            font-size: clamp(28px, 4vw, 42px);
-            font-weight: 700;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            margin-bottom: 16px;
-        }
-
-        .section-desc {
-            font-size: 18px;
-            color: var(--text-muted);
-            max-width: 560px;
-            line-height: 1.6;
-        }
-
-        /* WHY SECTION */
-        .why {
-            background: var(--bg);
-        }
-
-        .why-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            margin-top: 56px;
-        }
-
-        .why-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            transition: border-color 0.15s;
-        }
-
-        .why-card:hover {
-            border-color: var(--text-subtle);
-        }
-
-        .why-card-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            margin-bottom: 14px;
-        }
-
-        .why-card h3 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .why-card p {
-            font-size: 14px;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        /* FEATURES */
-        .features {
-            background: var(--surface);
-        }
-
-        .feature-list {
-            display: flex;
-            flex-direction: column;
-            gap: 80px;
-            margin-top: 64px;
-        }
-
-        .feature-item {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .feature-item.reverse {
-            direction: rtl;
-        }
-
-        .feature-item.reverse>* {
-            direction: ltr;
-        }
-
-        .feature-text {}
-
-        .feature-number {
-            font-family: var(--mono);
-            font-size: 12px;
-            color: var(--text-subtle);
-            letter-spacing: 0.08em;
-            margin-bottom: 12px;
-        }
-
-        .feature-text h3 {
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: -0.015em;
-            line-height: 1.2;
-            margin-bottom: 12px;
-        }
-
-        .feature-text h3 span {
-            color: var(--green);
-        }
-
-        .feature-text p {
-            color: var(--text-muted);
-            font-size: 16px;
-            line-height: 1.7;
-            margin-bottom: 20px;
-        }
-
-        .feature-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .pill {
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 12px;
-            font-family: var(--mono);
-            color: var(--text-muted);
-        }
-
-        .feature-visual {
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--surface-2);
-        }
-
-        .feature-visual img {
-            width: 100%;
-            display: block;
-        }
-
-        /* ACTIONS TABLE */
-        .actions {
-            background: var(--bg);
-        }
-
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1px;
-            background: var(--border);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 56px;
-        }
-
-        .action-cell {
-            background: var(--surface);
-            padding: 18px 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .action-cell-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-        .action-cell h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-
-        .action-cell p {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .action-cell kbd {
-            font-family: var(--mono);
-            font-size: 11px;
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 1px 5px;
-            color: var(--text-muted);
-            margin-top: 6px;
-            display: inline-block;
-        }
-
-        /* INSTALL */
-        .install {
-            background: var(--surface);
-        }
-
-        .install-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 48px;
-            margin-top: 56px;
-        }
-
-        .install-steps {}
-
-        .step {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-
-        .step-num {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--green);
-            color: #0d1117;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .step-content h4 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .step-content p {
-            font-size: 14px;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        .step-content code {
-            font-family: var(--mono);
-            font-size: 13px;
-            background: var(--surface-2);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: var(--blue);
-        }
-
-        .install-pat {}
-
-        .pat-card {
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-        }
-
-        .pat-card h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-
-        .scope-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border-subtle);
-            font-size: 14px;
-        }
-
-        .scope-row:last-child {
-            border-bottom: none;
-        }
-
-        .scope-name {
-            font-family: var(--mono);
-            color: var(--blue);
-            font-size: 13px;
-        }
-
-        .scope-reason {
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        .privacy-note {
-            margin-top: 16px;
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-            background: rgba(35, 134, 54, 0.08);
-            border: 1px solid rgba(35, 134, 54, 0.3);
-            border-radius: 8px;
-            padding: 12px 14px;
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        /* DEV SETUP */
-        .dev {
-            background: var(--bg);
-        }
-
-        .code-block {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 32px;
-        }
-
-        .code-block-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface-2);
-        }
-
-        .code-block-title {
-            font-size: 13px;
-            color: var(--text-muted);
-            font-family: var(--mono);
-        }
-
-        .code-block-dots {
-            display: flex;
-            gap: 6px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        .dot-red {
-            background: #ff5f57;
-        }
-
-        .dot-yellow {
-            background: #febc2e;
-        }
-
-        .dot-green {
-            background: #28c840;
-        }
-
-        pre {
-            padding: 20px 24px;
-            overflow-x: auto;
-            font-family: var(--mono);
-            font-size: 13px;
-            line-height: 1.7;
-            color: var(--text);
-        }
-
-        .comment {
-            color: var(--text-subtle);
-        }
-
-        .cmd {
-            color: var(--green);
-        }
-
-        .arg {
-            color: var(--blue);
-        }
-
-        /* ARCH */
-        .arch {
-            background: var(--surface);
-        }
-
-        .arch-diagram {
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 40px;
-            margin-top: 48px;
-            overflow-x: auto;
-        }
-
-        .arch-diagram pre {
-            color: var(--text-muted);
-            font-size: 13px;
-            padding: 0;
-            white-space: pre;
-        }
-
-        .arch-rules {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-            margin-top: 32px;
-        }
-
-        .arch-rule {
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 18px 20px;
-            border-left: 3px solid var(--red);
-        }
-
-        .arch-rule.green {
-            border-left-color: var(--green);
-        }
-
-        .arch-rule h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .arch-rule p {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        /* ROADMAP */
-        .roadmap {
-            background: var(--bg);
-        }
-
-        .roadmap-list {
-            margin-top: 48px;
-            max-width: 720px;
-        }
-
-        .roadmap-item {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            padding: 16px 0;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .roadmap-item:last-child {
-            border-bottom: none;
-        }
-
-        .roadmap-check {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            margin-top: 2px;
-        }
-
-        .roadmap-check.done {
-            background: var(--green);
-            color: #0d1117;
-        }
-
-        .roadmap-check.todo {
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-        }
-
-        .roadmap-text {
-            font-size: 15px;
-        }
-
-        .roadmap-text.done {
-            color: var(--text-muted);
-        }
-
-        .roadmap-text.todo {
-            color: var(--text);
-            font-weight: 500;
-        }
-
-        /* FOOTER */
-        footer {
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            padding: 48px 24px;
-            text-align: center;
-        }
-
-        .footer-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .footer-logo {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .footer-tagline {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 24px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 24px;
-            list-style: none;
-        }
-
-        .footer-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .footer-links a:hover {
-            color: var(--text);
-        }
-
-        .footer-copy {
-            font-size: 13px;
-            color: var(--text-subtle);
-        }
-
-        .demo-showcase {
-            margin: 2.5rem auto 0;
-            max-width: 900px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            box-shadow: none;
-        }
-
-        .demo-showcase img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-
-            .feature-item,
-            .feature-item.reverse {
-                grid-template-columns: 1fr;
-                direction: ltr;
-            }
-
-            .install-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .hero-stats {
-                gap: 24px;
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Refined GitHub Projects — Bulk operations, sprint tooling, zero backend</title>
+<meta name="description" content="The browser extension that adds bulk edit, deep duplicate, and sprint management to GitHub Projects V2. MIT-licensed, runs in your browser, your token never leaves your machine." />
+<meta property="og:title" content="Refined GitHub Projects" />
+<meta property="og:description" content="Bulk operations and sprint tooling GitHub Projects V2 should have shipped with." />
+<link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-    <!-- NAV -->
-    <nav>
-        <div class="nav-inner">
-            <a href="#" class="nav-logo">
-                <div class="nav-logo-icon">⚡</div>
-                Refined GitHub Projects
-            </a>
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#install">Install</a></li>
-                <li><a href="#dev">Dev Setup</a></li>
-                <li><a href="#architecture">Architecture</a></li>
-                <li><a href="https://github.com/fathiraz/refined-github-projects" target="_blank">GitHub</a></li>
-                <li><a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"
-                        target="_blank" class="nav-cta">Install</a></li>
-            </ul>
-        </div>
+<header class="rgp-header">
+  <div class="rgp-header-inner">
+    <a class="rgp-header-brand" href="#">
+      <span class="rgp-header-brand-mark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1H4.75A1.75 1.75 0 0 0 3 2.75v10.5c0 .966.784 1.75 1.75 1.75h6.5A1.75 1.75 0 0 0 13 13.25V5.5L9.5 1Zm-1 4V2.5l3 3H8.5Z"/></svg>
+      </span>
+      Refined GitHub Projects
+    </a>
+    <nav class="rgp-nav">
+      <a href="#problem">Why</a>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#install">Install</a>
+      <a href="#roadmap">Roadmap</a>
     </nav>
+    <span class="rgp-header-spacer"></span>
+    <div class="rgp-header-actions">
+      <a class="rgp-btn rgp-btn-small" href="https://github.com/fathiraz/refined-github-projects">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</header>
 
-    <!-- HERO -->
-    <section class="hero">
-        <div class="hero-grid"></div>
-        <div class="hero-glow"></div>
-        <div class="hero-inner">
-            <div class="hero-badge">
-                <span class="hero-badge-dot"></span>
-                    Chrome Web Store & Firefox Add-ons live · Manifest V3 · No backend required
-            </div>
-            <h1>GitHub Projects,<br /><em>bulk-edited.</em></h1>
-            <p class="hero-sub">
-                The bulk operations and sprint tooling that GitHub Projects V2 should have shipped with —
-                running entirely in your browser, your token never leaves your machine.
-            </p>
-            <div class="hero-actions">
-                <a href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg" class="btn-primary"
-                    target="_blank">
-                    Install on Chrome
-                </a>
-                <a href="https://github.com/fathiraz/refined-github-projects" class="btn-secondary" target="_blank">
-                    ★ View on GitHub
-                </a>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <span class="hero-stat-num">11+</span>
-                    <span class="hero-stat-label">Bulk actions</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-num">4</span>
-                    <span class="hero-stat-label">Browsers supported</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-num">100%</span>
-                    <span class="hero-stat-label">Local & private</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-num">MV3</span>
-                    <span class="hero-stat-label">Manifest version</span>
-                </div>
-            </div>
+<div class="lp-root">
+
+  <!-- Hero -->
+  <section class="lp-hero rgp-section">
+    <div class="lp-hero-grid">
+      <div class="lp-hero-copy">
+        <div class="lp-badge">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M7.53 1.282a.5.5 0 0 1 .94 0l1.17 3.156 3.156 1.17a.5.5 0 0 1 0 .94l-3.156 1.17-1.17 3.156a.5.5 0 0 1-.94 0l-1.17-3.156-3.156-1.17a.5.5 0 0 1 0-.94l3.156-1.17 1.17-3.156Z"/></svg>
+          Chrome Web Store &amp; Firefox Add-ons live · Manifest V3 · No backend
         </div>
-    </section>
-
-    <!-- WHY -->
-    <section class="why" id="why">
-        <div class="container">
-            <span class="section-label">Why it exists</span>
-            <h2>GitHub Projects is powerful.<br />Managing it at scale isn't.</h2>
-            <div class="demo-showcase">
-                <img
-                    src="https://github.com/fathiraz/refined-github-projects/blob/main/src/assets/images/demo.gif?raw=true"
-                    alt="Refined GitHub Projects — live demo"
-                    loading="lazy"
-                />
-            </div>
-            <p class="section-desc">Refined GitHub Projects fixes the gaps that slow down every sprint planning session.
-            </p>
-            <div class="why-grid">
-                <div class="why-card">
-                    <div class="why-card-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">📋</div>
-                    <h3>One field at a time, forever</h3>
-                    <p>Native GitHub lets you update exactly one item's field per interaction. With a backlog of 60
-                        items, that's 60 clicks just to flip a Status.</p>
-                </div>
-                <div class="why-card">
-                    <div class="why-card-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">🔁</div>
-                    <h3>GitHub's duplicate strips everything</h3>
-                    <p>The built-in duplicate copies only the title. Every assignee, label, status, and project field
-                        has to be re-applied manually — every single time.</p>
-                </div>
-                <div class="why-card">
-                    <div class="why-card-icon" style="background:rgba(188,140,255,0.12); color:var(--purple);">🏃</div>
-                    <h3>Ending a sprint is a chore</h3>
-                    <p>Moving incomplete items to the next iteration requires opening each issue individually, changing
-                        the sprint field, and hoping you didn't miss any.</p>
-                </div>
-                <div class="why-card">
-                    <div class="why-card-icon" style="background:rgba(255,166,87,0.12); color:var(--orange);">🔒</div>
-                    <h3>No visibility into background ops</h3>
-                    <p>When you do find a workaround — via API or script — there's no progress indicator, no rate-limit
-                        safety, and a 403 ban if you fire too fast.</p>
-                </div>
-            </div>
+        <h1 class="lp-h1">
+          The bulk operations<br />
+          <span class="lp-h1-accent">GitHub Projects forgot.</span>
+        </h1>
+        <p class="lp-lede">
+          The bulk operations and sprint tooling GitHub Projects V2 should have shipped with — running entirely in your browser, your token never leaves your machine.
+        </p>
+        <div class="lp-hero-actions">
+          <a class="rgp-btn rgp-btn-primary rgp-btn-large" href="https://chromewebstore.google.com">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M7.47 10.78a.749.749 0 0 0 1.06 0l3.75-3.75a.749.749 0 1 0-1.06-1.06L8.75 8.439V1.75a.75.75 0 0 0-1.5 0v6.689L4.78 5.97a.749.749 0 1 0-1.06 1.06l3.75 3.75ZM3.75 13a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5Z"/></svg>
+            Install on Chrome
+          </a>
+          <a class="rgp-btn rgp-btn-large" href="https://github.com/fathiraz/refined-github-projects">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+            ★ View on GitHub
+          </a>
         </div>
-    </section>
-
-    <!-- FEATURES -->
-    <section class="features" id="features">
-        <div class="container">
-            <span class="section-label">Features</span>
-            <h2>Everything your project board<br />was always missing.</h2>
-
-            <div class="feature-list">
-
-                <!-- Bulk Actions -->
-                <div class="feature-item">
-                    <div class="feature-text">
-                        <div class="feature-number">01 / BULK ACTIONS</div>
-                        <h3>Select many. <span>Edit once.</span></h3>
-                        <p>Checkboxes appear on every row the moment you hover. Select individual items or press <kbd
-                                style="font-family:var(--mono);background:var(--surface-2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:13px;">⌘A</kbd>
-                            to grab everything visible. The floating Actions bar appears instantly — open the full menu
-                            to access all 11 bulk operations, grouped by category.</p>
-                        <div class="feature-pills">
-                            <span class="pill">Bulk Edit Fields</span>
-                            <span class="pill">Close Issues</span>
-                            <span class="pill">Reopen Issues</span>
-                            <span class="pill">Deep Duplicate</span>
-                            <span class="pill">Pin / Unpin</span>
-                            <span class="pill">Transfer</span>
-                            <span class="pill">Export CSV</span>
-                            <span class="pill">Delete</span>
-                        </div>
-                    </div>
-                    <div class="feature-visual">
-                        <img src="https://github.com/fathiraz/refined-github-projects/blob/main/src/assets/images/screenshot-1.png?raw=true" alt="Bulk Actions Bar showing all available operations" />
-                    </div>
-                </div>
-
-                <!-- Bulk Edit Wizard -->
-                <div class="feature-item reverse">
-                    <div class="feature-text">
-                        <div class="feature-number">02 / BULK EDIT WIZARD</div>
-                        <h3>Pick fields. Set values. <span>Apply to all.</span></h3>
-                        <p>A guided 3-step wizard for bulk-updating Status, Priority, Sprint, Estimate, Assignees,
-                            Labels & more. Choose which fields to update, set new values for every field type, then
-                            review a clean diff of every change before a single API call fires.</p>
-                        <div class="feature-pills">
-                            <span class="pill">Step 1: Select Fields</span>
-                            <span class="pill">Step 2: Set Values</span>
-                            <span class="pill">Step 3: Review &amp; Apply</span>
-                        </div>
-                    </div>
-                    <div class="feature-visual">
-                        <img src="https://github.com/fathiraz/refined-github-projects/blob/main/src/assets/images/screenshot-2.png?raw=true" alt="Bulk Edit Wizard 3-step flow" />
-                    </div>
-                </div>
-
-                <!-- Deep Duplicate -->
-                <div class="feature-item">
-                    <div class="feature-text">
-                        <div class="feature-number">03 / DEEP DUPLICATE</div>
-                        <h3>Clone issues like a real <span>copy machine.</span></h3>
-                        <p>GitHub's built-in copy pastes only the title. Deep Duplicate clones everything — all project
-                            fields, assignees, labels, and body — so you don't have to re-apply anything. Review and
-                            edit every field in an editable modal before you confirm.</p>
-                        <div class="feature-pills">
-                            <span class="pill">All project fields preserved</span>
-                            <span class="pill">Assignees &amp; labels copied</span>
-                            <span class="pill">Edit before duplicating</span>
-                        </div>
-                    </div>
-                    <div class="feature-visual">
-                        <img src="https://github.com/fathiraz/refined-github-projects/blob/main/src/assets/images/screenshot-3.png?raw=true" alt="Deep Duplicate modal" />
-                    </div>
-                </div>
-
-                <!-- Sprint Management -->
-                <div class="feature-item reverse">
-                    <div class="feature-text">
-                        <div class="feature-number">04 / SPRINT MANAGEMENT</div>
-                        <h3>End sprint. Move items. <span>Instantly.</span></h3>
-                        <p>The Sprint widget appears top-right on every Projects page. One click ends the sprint and
-                            auto-moves all incomplete items to the next iteration. The background queue handles
-                            everything sequentially and rate-limit safe, with live progress shown in real time.</p>
-                        <div class="feature-pills">
-                            <span class="pill">One-click sprint end</span>
-                            <span class="pill">Auto-move incomplete items</span>
-                            <span class="pill">Live queue tracker</span>
-                            <span class="pill">Configurable condition</span>
-                        </div>
-                    </div>
-                    <div class="feature-visual">
-                        <img src="https://github.com/fathiraz/refined-github-projects/blob/main/src/assets/images/screenshot-4.png?raw=true" alt="Sprint Management panel and End Sprint modal" />
-                    </div>
-                </div>
-
-            </div>
+        <div class="lp-hero-stats">
+          <div class="lp-hs"><div class="lp-hs-num">11+</div><div class="lp-hs-label">bulk actions</div></div>
+          <div class="lp-hs"><div class="lp-hs-num">4</div><div class="lp-hs-label">browsers supported</div></div>
+          <div class="lp-hs"><div class="lp-hs-num">100%</div><div class="lp-hs-label">local &amp; private</div></div>
+          <div class="lp-hs"><div class="lp-hs-num">MV3</div><div class="lp-hs-label">manifest version</div></div>
         </div>
-    </section>
+      </div>
 
-    <!-- ALL ACTIONS -->
-    <section class="actions" id="actions">
-        <div class="container">
-            <span class="section-label">Full action list</span>
-            <h2>Everything GitHub Projects<br />should have shipped.</h2>
-            <p class="section-desc">One extension. Eleven features. Zero extra tabs. One token stays local.</p>
-            <img src="https://github.com/fathiraz/refined-github-projects/blob/main/src/assets/images/screenshot-5.png?raw=true" alt="Full list of bulk actions available in Refined GitHub Projects"
-                style="width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:40px;" />
-            <div class="actions-grid">
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">✏️</div>
-                    <div>
-                        <h4>Edit Fields</h4>
-                        <p>Bulk-update Status, Priority, Sprint, Size, Estimate, Assignees, Labels, and custom fields
-                        </p>
-                        <kbd>⌘⇧E</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">📝</div>
-                    <div>
-                        <h4>Rename Titles</h4>
-                        <p>Update issue or PR titles across multiple items at once</p>
-                        <kbd>⌘⇧R</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">⇅</div>
-                    <div>
-                        <h4>Reorder Items</h4>
-                        <p>Reposition selected items within your project board</p>
-                        <kbd>⌘⇧J</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(255,81,73,0.12); color:var(--red);">⊗</div>
-                    <div>
-                        <h4>Close Issues</h4>
-                        <p>Mark as Completed or Not Planned. Sweep a whole sprint in one action.</p>
-                        <kbd>⌘⇧X</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">↻</div>
-                    <div>
-                        <h4>Reopen Issues</h4>
-                        <p>Restore closed items back to open. Only affects actually-closed issues.</p>
-                        <kbd>⌘⇧O</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(255,166,87,0.12); color:var(--orange);">🔒
-                    </div>
-                    <div>
-                        <h4>Lock Conversations</h4>
-                        <p>Lock with reason: off-topic, too heated, resolved, or spam</p>
-                        <kbd>⌘⇧L</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(188,140,255,0.12); color:var(--purple);">📌
-                    </div>
-                    <div>
-                        <h4>Pin / Unpin Issues</h4>
-                        <p>Promote or demote important issues at the repository level (max 3)</p>
-                        <kbd>⌘⇧F</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(88,166,255,0.12); color:var(--blue);">→</div>
-                    <div>
-                        <h4>Transfer Issues</h4>
-                        <p>Move issues to another repository with full history intact</p>
-                        <kbd>⌘⇧M</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(63,185,80,0.12); color:var(--green);">⬇</div>
-                    <div>
-                        <h4>Export to CSV</h4>
-                        <p>Download selected items with all fields, assignees, labels, and custom properties</p>
-                        <kbd>⌘⇧V</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(188,140,255,0.12); color:var(--purple);">⎘
-                    </div>
-                    <div>
-                        <h4>Deep Duplicate</h4>
-                        <p>Clone any item with all fields, assignees, labels, body, and sub-issue relationships</p>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(255,81,73,0.12); color:var(--red);">🗑</div>
-                    <div>
-                        <h4>Delete Items</h4>
-                        <p>Permanently remove items from your project. Requires admin access.</p>
-                        <kbd>⌘⇧⌫</kbd>
-                    </div>
-                </div>
-                <div class="action-cell">
-                    <div class="action-cell-icon" style="background:rgba(255,166,87,0.12); color:var(--orange);">🏃
-                    </div>
-                    <div>
-                        <h4>End Sprint</h4>
-                        <p>One click moves all incomplete items to the next iteration automatically</p>
-                    </div>
-                </div>
+      <!-- Hero artwork -->
+      <div class="lp-hero-art">
+        <div class="lp-hero-window">
+          <div class="lp-hero-chrome">
+            <span class="lp-tl"></span><span class="lp-tl"></span><span class="lp-tl"></span>
+            <div class="lp-hero-url">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M4 4v2H3.25A1.25 1.25 0 0 0 2 7.25v6.5A1.25 1.25 0 0 0 3.25 15h9.5A1.25 1.25 0 0 0 14 13.75v-6.5A1.25 1.25 0 0 0 12.75 6H12V4a4 4 0 0 0-8 0Zm6.5 2h-5V4a2.5 2.5 0 0 1 5 0v2Z"/></svg>
+              github.com/acme/sprint-12 · Projects
             </div>
-        </div>
-    </section>
-
-    <!-- INSTALL -->
-    <section class="install" id="install">
-        <div class="container">
-            <span class="section-label">Installation</span>
-            <h2>Up and running<br />in under two minutes.</h2>
-            <div class="install-grid">
-                <div class="install-steps">
-                    <div class="step">
-                        <div class="step-num">1</div>
-                        <div class="step-content">
-                            <h4>Install on Chrome</h4>
-                            <p>Install directly from the <a
-                                    href="https://chromewebstore.google.com/detail/refined-github-projects/ljkfilkmedkcpckabpeeiacjefhnlplg"
-                                    style="color:var(--blue);">Chrome Web Store</a> for the fastest setup.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">2</div>
-                        <div class="step-content">
-                            <h4>Install on Firefox</h4>
-                            <p>Install directly from <a
-                                    href="https://addons.mozilla.org/en-US/firefox/addon/refined-github-projects/"
-                                    style="color:var(--blue);">Firefox Add-ons</a> — one-click install, automatic
-                                updates.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">3</div>
-                        <div class="step-content">
-                            <h4>Need Edge or local testing?</h4>
-                            <p>Download the latest browser build from the <a
-                                    href="https://github.com/fathiraz/refined-github-projects/releases"
-                                    style="color:var(--blue);">Releases page</a>. Edge stays supported via manual
-                                install only, so extract the package before loading it unpacked.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">4</div>
-                        <div class="step-content">
-                            <h4>Open your browser's extension page</h4>
-                            <p>Chrome: <code>chrome://extensions</code><br />Edge: <code>edge://extensions</code><br />
-                                Firefox (manual): <code>about:debugging#/runtime/this-firefox</code></p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">5</div>
-                        <div class="step-content">
-                            <h4>Load unpacked extension</h4>
-                            <p>Chrome / Edge: enable <strong>Developer mode</strong>, click <strong>Load
-                                    unpacked</strong>, select the extracted folder.<br />Firefox (manual): click <strong>Load
-                                    Temporary Add-on</strong>, select the manifest file.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">6</div>
-                        <div class="step-content">
-                            <h4>Add your GitHub PAT</h4>
-                            <p>Click the extension icon, paste your token, and click <strong>Validate and save</strong>.
-                                All features unlock automatically — one token for everything.</p>
-                        </div>
-                    </div>
-
-                    <div
-                        style="margin-top:8px; padding:16px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;">
-                        <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Tested browsers</div>
-                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                            <span style="font-size:13px; color:var(--text-muted);">✅ Google Chrome (Chrome Web Store)</span>
-                            <span style="font-size:13px; color:var(--text-muted);">✅ Firefox (Firefox Add-ons)</span>
-                            <span style="font-size:13px; color:var(--text-muted);">✅ Arc (Chromium)</span>
-                            <span style="font-size:13px; color:var(--text-muted);">✅ Microsoft Edge (manual install)</span>
-                            <span style="font-size:13px; color:var(--text-muted);">✅ Zen (Firefox)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="install-pat">
-                    <div class="pat-card">
-                        <h3>🔑 Required PAT scopes</h3>
-                        <div class="scope-row">
-                            <span class="scope-name">repo</span>
-                            <span class="scope-reason">Read/write issues, labels, assignees</span>
-                        </div>
-                        <div class="scope-row">
-                            <span class="scope-name">read:org</span>
-                            <span class="scope-reason">Read org membership for assignee search</span>
-                        </div>
-                        <div class="scope-row">
-                            <span class="scope-name">project</span>
-                            <span class="scope-reason">Read/write GitHub Projects V2 fields</span>
-                        </div>
-                        <div class="privacy-note">
-                            🔒 Your token is stored in browser extension storage and never sent to any server. All API
-                            calls go directly from your browser to <code
-                                style="font-family:var(--mono);font-size:12px;">api.github.com</code>.
-                        </div>
-                    </div>
-
-                    <div
-                        style="margin-top:20px; padding:20px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;">
-                        <div style="font-size:13px; font-weight:600; margin-bottom:10px;">Generate a PAT</div>
-                        <p style="font-size:13px; color:var(--text-muted); line-height:1.6; margin-bottom:12px;">GitHub
-                            → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new
-                            token (classic)</p>
-                        <a href="https://github.com/settings/tokens/new?scopes=repo,read:org,project&description=Refined+GitHub+Projects"
-                            target="_blank"
-                            style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:white;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">
-                            Generate token →
-                        </a>
-                    </div>
-                </div>
+          </div>
+          <div class="lp-hero-table">
+            <div class="lp-hero-tabbar">
+              <div class="lp-hero-tab is-active">Sprint board</div>
+              <div class="lp-hero-tab">Roadmap</div>
+              <div class="lp-hero-tab">Backlog</div>
             </div>
-        </div>
-    </section>
-
-    <!-- DEV SETUP -->
-    <section class="dev" id="dev">
-        <div class="container">
-            <span class="section-label">Development</span>
-            <h2>Build it yourself.</h2>
-            <p class="section-desc">Node.js 18+ and pnpm required.</p>
-            <div class="code-block">
-                <div class="code-block-header">
-                    <div class="code-block-dots">
-                        <div class="dot dot-red"></div>
-                        <div class="dot dot-yellow"></div>
-                        <div class="dot dot-green"></div>
-                    </div>
-                    <span class="code-block-title">bash</span>
-                </div>
-                <pre><span class="comment"># Clone the repository</span>
-<span class="cmd">git clone</span> <span class="arg">https://github.com/fathiraz/refined-github-projects.git</span>
-<span class="cmd">cd</span> refined-github-projects
-
-<span class="comment"># Install dependencies</span>
-<span class="cmd">pnpm install</span>
-
-<span class="comment"># Start dev server with hot reload</span>
-<span class="cmd">pnpm dev</span>
-
-<span class="comment"># Production build</span>
-<span class="cmd">pnpm build</span>
-
-<span class="comment"># Type check</span>
-<span class="cmd">pnpm typecheck</span></pre>
+            <div class="lp-hero-row is-selected">
+              <span class="rgp-check is-checked">✓</span>
+              <span class="lp-hero-num">#4821</span>
+              <span class="lp-hero-title">Migrate auth to OAuth 2.1</span>
+              <span class="rgp-label rgp-label-attention rgp-label-subtle"><span class="rgp-label-dot"></span>In progress</span>
+              <span class="rgp-avatar" style="width:20px;height:20px;background:#bf3989"></span>
             </div>
-            <p style="margin-top:16px; font-size:14px; color:var(--text-muted);">After build, load <code
-                    style="font-family:var(--mono);font-size:13px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--blue);">dist/chrome-mv3</code>
-                in <code
-                    style="font-family:var(--mono);font-size:13px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--blue);">chrome://extensions</code>
-                or <code
-                    style="font-family:var(--mono);font-size:13px;background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--blue);">edge://extensions</code>
-                via <strong>Load unpacked</strong>. For Firefox, load the Firefox output folder.</p>
-            <p style="margin-top:12px; font-size:14px; color:var(--text-muted);">Want to use Safari manually? Follow
-                the <a href="https://wxt.dev/guide/essentials/publishing.html#safari" target="_blank"
-                    style="color:var(--blue);">WXT Safari publishing guide</a>.</p>
-        </div>
-    </section>
-
-    <!-- ARCHITECTURE -->
-    <section class="arch" id="architecture">
-        <div class="container">
-            <span class="section-label">Architecture</span>
-            <h2>How it works.</h2>
-            <p class="section-desc">A clean three-layer extension — content script, background worker, and popup — with
-                no external servers in the loop.</p>
-
-            <div class="arch-diagram">
-                <pre>
-┌─────────────────┐   sendMessage    ┌─────────────────────────┐    ┌─────────────────────┐
-│  Content Script │ ───────────────→ │  Background Service     │ ──→│  GitHub GraphQL API │
-│  (DOM / UI)     │                  │  Worker                 │    │  api.github.com     │
-│                 │ ←─────────────── │  • PAT storage          │    │                     │
-│  • Shadow DOM   │   queueStateUpd  │  • Sequential queue     │    │                     │
-│  • Row observer │                  │  • Rate limit backoff   │    │                     │
-└─────────────────┘                  └─────────────────────────┘    └─────────────────────┘
-         ↑
-         │ WXT Storage API
-         ↓
-┌─────────────────┐
-│  Extension      │
-│  Popup          │
-│  • PAT config   │
-└─────────────────┘</pre>
+            <div class="lp-hero-row is-selected">
+              <span class="rgp-check is-checked">✓</span>
+              <span class="lp-hero-num">#4822</span>
+              <span class="lp-hero-title">Decommission legacy webhook router</span>
+              <span class="rgp-label rgp-label-default rgp-label-subtle"><span class="rgp-label-dot"></span>Todo</span>
+              <span class="rgp-avatar" style="width:20px;height:20px;background:#0969da"></span>
             </div>
-
-            <div class="arch-rules">
-                <div class="arch-rule">
-                    <h4>⛔ Never use Promise.all() for mutations</h4>
-                    <p>GitHub will 403-ban your PAT if you fire parallel GraphQL mutations. All operations must run
-                        sequentially with <code style="font-family:var(--mono);font-size:12px;">sleep(1000)</code>
-                        between writes.</p>
-                </div>
-                <div class="arch-rule">
-                    <h4>⛔ Never call the API from Content Scripts</h4>
-                    <p>All GitHub API calls must go through <code
-                            style="font-family:var(--mono);font-size:12px;">sendMessage</code> to the Background Service
-                        Worker. Never fire <code style="font-family:var(--mono);font-size:12px;">fetch</code> to
-                        api.github.com from a content script.</p>
-                </div>
-                <div class="arch-rule green">
-                    <h4>✅ Anchor to data-testid / ARIA labels</h4>
-                    <p>GitHub's CSS class names are generated and change frequently. Always anchor injected UI to stable
-                        <code style="font-family:var(--mono);font-size:12px;">data-testid</code> attributes or ARIA
-                        labels.</p>
-                </div>
-                <div class="arch-rule green">
-                    <h4>✅ Shadow DOM isolation</h4>
-                    <p>All injected UI lives in a Shadow DOM container. This guarantees RGP's styles never leak into
-                        GitHub's own UI and vice versa.</p>
-                </div>
+            <div class="lp-hero-row is-selected">
+              <span class="rgp-check is-checked">✓</span>
+              <span class="lp-hero-num">#4823</span>
+              <span class="lp-hero-title">Audit npm dependencies for CVE-2025-04</span>
+              <span class="rgp-label rgp-label-done rgp-label-subtle"><span class="rgp-label-dot"></span>In review</span>
+              <span class="rgp-avatar" style="width:20px;height:20px;background:#1a7f37"></span>
             </div>
-        </div>
-    </section>
-
-    <!-- ROADMAP -->
-    <section class="roadmap" id="roadmap">
-        <div class="container">
-            <span class="section-label">Roadmap</span>
-            <h2>What's shipped, what's next.</h2>
-            <div class="roadmap-list">
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk update fields — Status,
-                        Assignee, Sprint, Priority, Labels, custom fields</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk close / reopen
-                        issues</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk lock / pin / unpin /
-                        transfer / delete</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Bulk rename titles &amp;
-                        reorder items</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Export selected items to
-                        CSV</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Deep duplicate with all
-                        fields and sub-issues</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Sprint management — end
-                        sprint with auto-assignment</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Task completion tracker in
-                        sprint group headers</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Live queue tracker with
-                        real-time progress and rate-limit backoff</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Chrome Web Store
-                        release</span>
-                </div>
-                <div class="roadmap-item">
-                    <div class="roadmap-check done">✓</div><span class="roadmap-text done">Firefox Add-ons release</span>
-                </div>
+            <div class="lp-hero-row is-selected">
+              <span class="rgp-check is-checked">✓</span>
+              <span class="lp-hero-num">#4824</span>
+              <span class="lp-hero-title">Backfill events table partitioned by month</span>
+              <span class="rgp-label rgp-label-default rgp-label-subtle"><span class="rgp-label-dot"></span>Todo</span>
+              <span class="rgp-avatar" style="width:20px;height:20px;background:#bc4c00"></span>
             </div>
+            <div class="lp-hero-row">
+              <span class="rgp-check"></span>
+              <span class="lp-hero-num">#4820</span>
+              <span class="lp-hero-title">Add Slack alerts for queue backpressure</span>
+              <span class="rgp-label rgp-label-success rgp-label-subtle"><span class="rgp-label-dot"></span>Done</span>
+              <span class="rgp-avatar" style="width:20px;height:20px;background:#8250df"></span>
+            </div>
+            <div class="lp-hero-row">
+              <span class="rgp-check"></span>
+              <span class="lp-hero-num">#4819</span>
+              <span class="lp-hero-title">Document on-call rotation handoff</span>
+              <span class="rgp-label rgp-label-success rgp-label-subtle"><span class="rgp-label-dot"></span>Done</span>
+              <span class="rgp-avatar" style="width:20px;height:20px;background:#cf222e"></span>
+            </div>
+          </div>
+          <div class="lp-hero-bulkbar">
+            <span class="rgp-check is-indeterminate">—</span>
+            <span class="lp-bulk-count"><strong>4</strong> selected</span>
+            <span class="lp-bulk-divider"></span>
+            <span class="rgp-btn rgp-btn-small">Actions</span>
+            <span class="rgp-btn rgp-btn-small">Edit fields</span>
+            <span class="rgp-btn rgp-btn-small">Close</span>
+            <span class="rgp-btn rgp-btn-small">Duplicate</span>
+            <span class="rgp-btn rgp-btn-small">Export</span>
+            <span class="lp-bulk-spacer"></span>
+            <span class="rgp-kbd-seq">
+              <kbd class="rgp-kbd">⌘</kbd><kbd class="rgp-kbd">⇧</kbd><kbd class="rgp-kbd">B</kbd>
+            </span>
+          </div>
         </div>
-    </section>
+        <div class="lp-hero-glow" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
 
-    <!-- FOOTER -->
-    <footer>
-        <div class="footer-inner">
-            <div class="footer-logo">⚡ Refined GitHub Projects</div>
-            <div class="footer-tagline">GitHub Projects, bulk-edited the way it should work.</div>
-            <ul class="footer-links">
-                <li><a href="https://github.com/fathiraz/refined-github-projects" target="_blank">GitHub</a></li>
-                <li><a href="https://github.com/fathiraz/refined-github-projects/releases" target="_blank">Releases</a>
-                </li>
-                <li><a href="https://github.com/fathiraz/refined-github-projects/issues" target="_blank">Issues</a></li>
-                <li><a href="https://github.com/fathiraz" target="_blank">fathiraz</a></li>
-            </ul>
-            <div class="footer-copy">MIT License · Built with WXT, React, Primer CSS · ⚡ 90% built with AI agents</div>
+  <!-- Why it exists -->
+  <section class="lp-section rgp-section" id="problem">
+    <div class="rgp-eyebrow">Why it exists</div>
+    <h2 class="rgp-h2">GitHub Projects is powerful. Managing it at scale isn't.</h2>
+    <p class="rgp-lede">Refined GitHub Projects fixes the gaps that slow down every sprint planning session.</p>
+
+    <div class="lp-pain-grid">
+      <div class="lp-pain">
+        <div class="lp-pain-icon">📋</div>
+        <div class="lp-pain-title">One field at a time, forever</div>
+        <div class="lp-pain-body">Native GitHub lets you update exactly one item's field per interaction. With a backlog of 60 items, that's 60 clicks just to flip a Status.</div>
+      </div>
+      <div class="lp-pain">
+        <div class="lp-pain-icon">🔁</div>
+        <div class="lp-pain-title">GitHub's duplicate strips everything</div>
+        <div class="lp-pain-body">The built-in duplicate copies only the title. Every assignee, label, status, and project field has to be re-applied manually — every single time.</div>
+      </div>
+      <div class="lp-pain">
+        <div class="lp-pain-icon">🏃</div>
+        <div class="lp-pain-title">Ending a sprint is a chore</div>
+        <div class="lp-pain-body">Moving incomplete items to the next iteration requires opening each issue individually, changing the sprint field, and hoping you didn't miss any.</div>
+      </div>
+      <div class="lp-pain">
+        <div class="lp-pain-icon">🔒</div>
+        <div class="lp-pain-title">No visibility into background ops</div>
+        <div class="lp-pain-body">When you do find a workaround — via API or script — there's no progress indicator, no rate-limit safety, and a 403 ban if you fire too fast.</div>
+      </div>
+    </div>
+
+    <h2 class="rgp-h2" style="margin-top:80px">And what we ship instead.</h2>
+    <div class="lp-problem-table">
+      <div class="lp-prow lp-prow-head">
+        <div>The problem</div>
+        <div>What RGP adds</div>
+      </div>
+      <div class="lp-prow">
+        <div class="lp-prow-problem">✕ Can't edit N items at once</div>
+        <div class="lp-prow-solution">✓ Bulk Edit Wizard — pick fields, set values, apply to all</div>
+      </div>
+      <div class="lp-prow">
+        <div class="lp-prow-problem">✕ GitHub's duplicate copies only the title</div>
+        <div class="lp-prow-solution">✓ Deep Duplicate — clones every field, assignee, label, body</div>
+      </div>
+      <div class="lp-prow">
+        <div class="lp-prow-problem">✕ Closing a sprint takes many clicks</div>
+        <div class="lp-prow-solution">✓ End Sprint — moves incomplete items to next iteration in one action</div>
+      </div>
+      <div class="lp-prow">
+        <div class="lp-prow-problem">✕ No visibility into background API calls</div>
+        <div class="lp-prow-solution">✓ Live Queue Tracker — real-time progress, rate-limit safe</div>
+      </div>
+      <div class="lp-prow">
+        <div class="lp-prow-problem">✕ Destructive actions have no guardrail</div>
+        <div class="lp-prow-solution">✓ Every bulk write requires explicit confirmation</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="lp-section rgp-section" id="features">
+    <div class="rgp-eyebrow">Features</div>
+    <h2 class="rgp-h2">Twelve bulk operations, one queue, zero backend.</h2>
+
+    <div class="lp-feature-grid">
+      <div class="lp-feat-eyebrow-row">
+        <span>01 / BULK ACTIONS</span><span>02 / EDIT WIZARD</span><span>03 / DEEP DUPLICATE</span><span>04 / SPRINT MGMT</span>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-severe">⚡</div>
+        <div class="lp-feat-title">Bulk Edit Wizard</div>
+        <div class="lp-feat-body">Three-step flow: pick fields, set values, review the diff. One queue, sequential mutations, full audit before a single API call fires.</div>
+        <div class="lp-feat-kbd"><span class="rgp-kbd-seq"><kbd class="rgp-kbd">⌘</kbd><kbd class="rgp-kbd">⇧</kbd><kbd class="rgp-kbd">E</kbd></span></div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-done">⎘</div>
+        <div class="lp-feat-title">Deep Duplicate</div>
+        <div class="lp-feat-body">GitHub's duplicate copies the title. Ours clones the issue: every project field, assignee, label, body, sub-issue link.</div>
+        <div class="lp-feat-kbd"><span class="rgp-kbd-seq"><kbd class="rgp-kbd">⌘</kbd><kbd class="rgp-kbd">⇧</kbd><kbd class="rgp-kbd">D</kbd></span></div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-success">📅</div>
+        <div class="lp-feat-title">End Sprint</div>
+        <div class="lp-feat-body">Pick the target iteration. Incomplete items auto-assign. The queue handles re-parenting in the background.</div>
+        <div class="lp-feat-kbd"><span class="rgp-kbd-seq"><kbd class="rgp-kbd">⌘</kbd><kbd class="rgp-kbd">⇧</kbd><kbd class="rgp-kbd">N</kbd></span></div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-accent">⇨</div>
+        <div class="lp-feat-title">Bulk Transfer</div>
+        <div class="lp-feat-body">Move issues to another repository — history, comments, sub-issue links intact.</div>
+        <div class="lp-feat-kbd"><span class="rgp-kbd-seq"><kbd class="rgp-kbd">⌘</kbd><kbd class="rgp-kbd">⇧</kbd><kbd class="rgp-kbd">M</kbd></span></div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-attention">🔒</div>
+        <div class="lp-feat-title">Bulk Lock</div>
+        <div class="lp-feat-body">Lock conversations with a reason. Off-topic, too heated, resolved, spam — apply to N issues at once.</div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-severe">📌</div>
+        <div class="lp-feat-title">Bulk Pin / Unpin</div>
+        <div class="lp-feat-body">Promote (or demote) important issues at the repository level without clicking through every one.</div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-default">⬇</div>
+        <div class="lp-feat-title">CSV Export</div>
+        <div class="lp-feat-body">Selected items, every custom field, assignees, labels — exported in a shape that pastes cleanly into a spreadsheet.</div>
+        <div class="lp-feat-kbd"><span class="rgp-kbd-seq"><kbd class="rgp-kbd">⌘</kbd><kbd class="rgp-kbd">⇧</kbd><kbd class="rgp-kbd">V</kbd></span></div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-icon lp-tone-danger">🗑</div>
+        <div class="lp-feat-title">Bulk Delete</div>
+        <div class="lp-feat-body">Hidden behind admin permissions and a hard confirm. The kind of thing GitHub should require — and didn't.</div>
+        <div class="lp-feat-kbd"><span class="rgp-kbd-seq"><kbd class="rgp-kbd">⌘</kbd><kbd class="rgp-kbd">⇧</kbd><kbd class="rgp-kbd">⌫</kbd></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="lp-section rgp-section" id="how">
+    <div class="rgp-eyebrow">How it works</div>
+    <h2 class="rgp-h2">Your token. Your browser. No middleman.</h2>
+    <p class="rgp-lede">Refined GitHub Projects is a browser extension. There is no SaaS. There is no proxy. Your PAT lives in browser extension storage and goes one place — api.github.com. Audit the source if you don't believe us.</p>
+
+    <div class="lp-arch">
+      <div class="lp-arch-col">
+        <div class="lp-arch-icon">⚙</div>
+        <div class="lp-arch-title">Content Script</div>
+        <div class="lp-arch-sub">In the page</div>
+        <ul class="lp-arch-lines">
+          <li>Observes DOM via MutationObserver</li>
+          <li>Injects UI inside Shadow DOM</li>
+          <li>Sends typed messages — never calls the API</li>
+        </ul>
+      </div>
+      <div class="lp-arch-arrow">
+        <div class="lp-arch-arrow-label">sendMessage</div>
+        <div class="lp-arch-arrow-line"></div>
+        <div class="lp-arch-arrow-tip">→</div>
+      </div>
+      <div class="lp-arch-col is-highlight">
+        <div class="lp-arch-icon">⚡</div>
+        <div class="lp-arch-title">Background Worker</div>
+        <div class="lp-arch-sub">Service worker</div>
+        <ul class="lp-arch-lines">
+          <li>Stores PAT in extension storage</li>
+          <li>Sequential queue, sleep(1000) between writes</li>
+          <li>403 / 429 backoff is automatic</li>
+        </ul>
+      </div>
+      <div class="lp-arch-arrow">
+        <div class="lp-arch-arrow-label">GraphQL</div>
+        <div class="lp-arch-arrow-line"></div>
+        <div class="lp-arch-arrow-tip">→</div>
+      </div>
+      <div class="lp-arch-col">
+        <div class="lp-arch-icon">🐙</div>
+        <div class="lp-arch-title">GitHub</div>
+        <div class="lp-arch-sub">api.github.com</div>
+        <ul class="lp-arch-lines">
+          <li>Projects V2 GraphQL</li>
+          <li>Your scopes: repo, read:org, project</li>
+          <li>Rate limit lives here, we respect it</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="lp-rules">
+      <div class="lp-rule">🛡 <span><strong>Never</strong> use Promise.all() for mutations — GitHub will 403-ban your PAT.</span></div>
+      <div class="lp-rule">🛡 <span><strong>Never</strong> call the API from a content script. Always proxy through the worker.</span></div>
+      <div class="lp-rule">🛡 <span>Anchor injected UI to <code>data-testid</code> — not volatile class names.</span></div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="lp-section rgp-section" id="stats">
+    <div class="lp-stats">
+      <div class="lp-stat"><div class="lp-stat-num">12</div><div class="lp-stat-label">bulk operations</div></div>
+      <div class="lp-stat"><div class="lp-stat-num">1s</div><div class="lp-stat-label">between mutations</div></div>
+      <div class="lp-stat"><div class="lp-stat-num">0</div><div class="lp-stat-label">backend services</div></div>
+      <div class="lp-stat"><div class="lp-stat-num">5</div><div class="lp-stat-label">browsers tested</div></div>
+      <div class="lp-stat"><div class="lp-stat-num">99.3%</div><div class="lp-stat-label">TypeScript</div></div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="lp-section rgp-section" id="install">
+    <div class="rgp-eyebrow">Installation</div>
+    <h2 class="rgp-h2">Up and running in under two minutes.</h2>
+    <div class="lp-install-grid">
+      <div class="lp-install">
+        <div class="lp-install-n">1</div>
+        <div class="lp-install-title">Install on Chrome</div>
+        <div class="lp-install-body">One-click install from the Chrome Web Store — fastest path.</div>
+        <div class="lp-install-link">chromewebstore.google.com</div>
+      </div>
+      <div class="lp-install">
+        <div class="lp-install-n">2</div>
+        <div class="lp-install-title">Install on Firefox</div>
+        <div class="lp-install-body">Live on Firefox Add-ons. Automatic updates included.</div>
+        <div class="lp-install-link">addons.mozilla.org</div>
+      </div>
+      <div class="lp-install">
+        <div class="lp-install-n">3</div>
+        <div class="lp-install-title">Edge / local testing</div>
+        <div class="lp-install-body">Edge is supported via manual install. Download the latest release, extract, then load unpacked.</div>
+        <div class="lp-install-link">github.com/fathiraz/refined-github-projects/releases</div>
+      </div>
+      <div class="lp-install">
+        <div class="lp-install-n">4</div>
+        <div class="lp-install-title">Open extension page</div>
+        <div class="lp-install-body">Chrome: chrome://extensions · Edge: edge://extensions · Firefox: about:debugging.</div>
+      </div>
+      <div class="lp-install">
+        <div class="lp-install-n">5</div>
+        <div class="lp-install-title">Load unpacked</div>
+        <div class="lp-install-body">Enable Developer mode → Load unpacked → select the folder. Firefox: Load Temporary Add-on.</div>
+      </div>
+      <div class="lp-install">
+        <div class="lp-install-n">6</div>
+        <div class="lp-install-title">Add your PAT</div>
+        <div class="lp-install-body">Click the icon, paste your token, hit Validate and save. All features unlock automatically.</div>
+      </div>
+    </div>
+    <div class="lp-browser-row">
+      <div class="lp-browser"><span class="lp-browser-dot"></span>Chrome <small>tested</small></div>
+      <div class="lp-browser"><span class="lp-browser-dot"></span>Firefox <small>tested</small></div>
+      <div class="lp-browser"><span class="lp-browser-dot"></span>Arc <small>tested</small></div>
+      <div class="lp-browser"><span class="lp-browser-dot"></span>Edge <small>tested</small></div>
+      <div class="lp-browser"><span class="lp-browser-dot"></span>Zen <small>tested</small></div>
+      <div class="lp-browser is-roadmap"><span class="lp-browser-dot"></span>Safari <small>roadmap</small></div>
+    </div>
+
+    <div class="lp-pat-box">
+      <div class="lp-pat-head">
+        <div class="lp-pat-key">🔑</div>
+        <div>
+          <div class="lp-pat-title">Required PAT scopes</div>
+          <div class="lp-pat-sub">Your token is stored locally and goes only to api.github.com — never to any server we control.</div>
         </div>
-    </footer>
+        <a class="rgp-btn" href="https://github.com/settings/tokens">Generate token →</a>
+      </div>
+      <div class="lp-pat-scopes">
+        <div class="lp-pat-scope"><code>repo</code><span>Read/write issues, labels, assignees</span></div>
+        <div class="lp-pat-scope"><code>read:org</code><span>Read org membership for assignee search</span></div>
+        <div class="lp-pat-scope"><code>project</code><span>Read/write GitHub Projects V2 fields</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap -->
+  <section class="lp-section rgp-section" id="roadmap">
+    <div class="rgp-eyebrow">Roadmap</div>
+    <h2 class="rgp-h2">What's shipped, what's next.</h2>
+    <div class="lp-roadmap">
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Bulk update fields — Status, Assignee, Sprint, Priority, Labels, custom fields</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Bulk close / reopen issues</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Bulk lock / pin / unpin / transfer / delete</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Bulk rename titles &amp; reorder items</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Export selected items to CSV</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Deep duplicate with all fields and sub-issues</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Sprint management — end sprint with auto-assignment</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Task completion tracker in sprint group headers</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Live queue tracker with real-time progress and rate-limit backoff</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Chrome Web Store release</div>
+      <div class="lp-rd"><span class="lp-rd-check">✓</span> Firefox Add-ons release</div>
+      <div class="lp-rd is-next"><span class="lp-rd-check is-next">○</span> Safari support — manual install via WXT publishing guide</div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="lp-cta rgp-section">
+    <div class="lp-cta-card">
+      <h2 class="rgp-h2">Stop clicking. Start moving.</h2>
+      <p class="rgp-lede">Refined GitHub Projects is MIT-licensed, runs in your browser, and never asks you to log into anything that isn't GitHub.</p>
+      <div class="lp-hero-actions">
+        <a class="rgp-btn rgp-btn-primary rgp-btn-large" href="https://chromewebstore.google.com">Install on Chrome</a>
+        <a class="rgp-btn rgp-btn-large" href="https://github.com/fathiraz/refined-github-projects">github.com/fathiraz/refined-github-projects</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lp-footer">
+    <div class="lp-footer-inner rgp-section rgp-section-tight">
+      <div class="rgp-header-brand">
+        <span class="rgp-header-brand-mark">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1H4.75A1.75 1.75 0 0 0 3 2.75v10.5c0 .966.784 1.75 1.75 1.75h6.5A1.75 1.75 0 0 0 13 13.25V5.5L9.5 1Zm-1 4V2.5l3 3H8.5Z"/></svg>
+        </span>
+        Refined GitHub Projects
+      </div>
+      <div class="lp-footer-meta">
+        MIT © fathiraz · Inspired by refined-github · 90% built with multiple AI agents
+      </div>
+    </div>
+  </footer>
+</div>
 
 </body>
-
 </html>
