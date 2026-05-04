@@ -1,0 +1,132 @@
+docs/index.html
+  1d96954fa47dc902 57
+  a9ee305cc36b7b14 67-68
+  b9365d26738f7a01 2
+  b7a7caa63f717d4b 427
+  7a5adbb64fdfb589 345,351,357
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "acef08ca099b2541166f9f3684838542dd57228f",
+  "prompts": {
+    "0ffd23eb0ef715c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-646f52d9-3d4e-4a68-ab5c-13af8826e8c0",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 971,
+      "total_deletions": 0,
+      "accepted_lines": 971,
+      "overriden_lines": 0
+    },
+    "1ac890889a7fbd2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-19725629-ee68-4270-b88b-bbff26e7dfe5",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "1d96954fa47dc902": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-46f6dc6e-604f-4e5b-b41e-4060985b27d5",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "7a5adbb64fdfb589": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-bdc7f6b7-3296-42fa-bf49-388e62f40f5a",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "a9ee305cc36b7b14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-08a1a076-d09f-41d6-a161-78f6c5b4dac2",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "b7a7caa63f717d4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-a397f000-a3a3-4c8e-8799-142a9b971d0d",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "b9365d26738f7a01": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20f81440effecnexc615WjEe3O",
+        "model": "opencode-go/kimi-k2.6"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/5057ed89d3d5a7567e2533c65b729288d6504b31007135f8c3f810cec089334d"
+    },
+    "eaead252a4cd7b77": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-b64b81de-0ca2-42ee-982b-225b75101fe0",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "f52a708b3f1392e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "opencode-transcript-ses_20f81440effecnexc615WjEe3O-2eaf8a37-ee06-4f2d-8a40-66472d401dba",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
