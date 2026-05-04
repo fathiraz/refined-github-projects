@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/fathiraz/refined-github-projects/compare/v1.0.0...v1.1.0) (2026-05-04)
+
+
+### Features
+
+* **app:** add new docs design with modern style ([#32](https://github.com/fathiraz/refined-github-projects/issues/32)) ([c9fa3e4](https://github.com/fathiraz/refined-github-projects/commit/c9fa3e46a8e0036ee75093eee19bf177edb3c3b6))
+
+
+### Bug Fixes
+
+* **changelog:** scope v1.0.0 entry to real diff against v0.6.0 ([#30](https://github.com/fathiraz/refined-github-projects/issues/30)) ([b4770fe](https://github.com/fathiraz/refined-github-projects/commit/b4770fe64e2af9d757ec7ad3bab6c2a376d8d2ef))
+
 ## [1.0.0](https://github.com/fathiraz/refined-github-projects/compare/v0.6.0...v1.0.0) (2026-04-30)
 
 
