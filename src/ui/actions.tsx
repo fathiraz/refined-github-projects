@@ -1,24 +1,15 @@
 import React from 'react'
 import { Box, Button, type ButtonProps, Spinner } from '@primer/react'
+import { primerCss } from '@/lib/primer-css-helper'
 
 interface ActionButtonProps extends Omit<ButtonProps, 'variant' | 'icon'> {
   loading?: boolean
   icon?: React.ReactNode
 }
 
-function buttonSx(extra?: ButtonProps['sx']) {
-  return {
-    boxShadow: 'none',
-    transition: 'all 180ms cubic-bezier(0.4, 0, 0.2, 1)',
-    '&:hover:not([disabled])': { transform: 'translateY(-1px)' },
-    '&:active:not([disabled])': { transform: 'translateY(0)' },
-    ...(extra || {}),
-  }
-}
-
 export function PrimaryAction({ children, loading, icon, ...props }: ActionButtonProps) {
   return (
-    <Button variant="primary" {...props} sx={buttonSx(props.sx)}>
+    <Button variant="primary" {...props} sx={primerCss.buttonMotion(props.sx)}>
       {loading ? (
         <Spinner size="small" />
       ) : (
@@ -33,7 +24,7 @@ export function PrimaryAction({ children, loading, icon, ...props }: ActionButto
 
 export function SecondaryAction({ children, icon, ...props }: ActionButtonProps) {
   return (
-    <Button variant="default" {...props} sx={buttonSx(props.sx)}>
+    <Button variant="default" {...props} sx={primerCss.buttonMotion(props.sx)}>
       <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
         {icon}
         {children}
@@ -44,7 +35,7 @@ export function SecondaryAction({ children, icon, ...props }: ActionButtonProps)
 
 export function GhostAction({ children, icon, ...props }: ActionButtonProps) {
   return (
-    <Button variant="invisible" {...props} sx={buttonSx(props.sx)}>
+    <Button variant="invisible" {...props} sx={primerCss.buttonMotion(props.sx)}>
       <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
         {icon}
         {children}

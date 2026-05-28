@@ -2,6 +2,7 @@
 
 import React from 'react'
 import type { IssueRelationshipData, ItemPreviewData } from '@/lib/messages'
+import { primerCss } from '@/lib/primer-css-helper'
 import {
   AlertIcon,
   CalendarIcon,
@@ -71,16 +72,7 @@ export const prefixLabelIcon = {
   flexShrink: 0 as const,
 }
 
-export const buttonMotionSx = {
-  boxShadow: 'none',
-  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-  '@media (prefers-reduced-motion: reduce)': {
-    transition: 'none',
-    '&:hover:not(:disabled)': { transform: 'none' },
-  },
-}
+export const buttonMotionSx = primerCss.buttonMotion()
 
 export const sectionGroupMeta: Record<SectionGroup, { label: string; icon: React.ReactNode }> = {
   CONTENT: {
