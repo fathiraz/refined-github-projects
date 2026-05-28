@@ -15,8 +15,6 @@ import { sendMessage } from '@/lib/messages'
 import type { ProjectContext } from '@/lib/github-project'
 import Tooltip from '@/ui/tooltip'
 
-ensureTippyCss()
-ensureRgpCardTheme()
 const MIN_LOADING_SKELETON_MS = 220
 
 interface RowHoverCardProps {
@@ -35,6 +33,10 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
   const [state, setState] = useState<CardState>({ status: 'idle' })
   const hasFetchedRef = useRef(false)
   const pendingRef = useRef<Promise<void> | null>(null)
+  const appendTarget = getHovercardAppendTarget()
+
+  ensureTippyCss(appendTarget)
+  ensureRgpCardTheme(appendTarget)
 
   const startFetch = useCallback(
     (instance: Instance) => {
@@ -98,7 +100,7 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
       reference={titleCell}
       delay={[300, 100]}
       placement="bottom-start"
-      appendTo={getHovercardAppendTarget()}
+      appendTo={appendTarget}
       theme="rgp-card"
       zIndex={Z_TOOLTIP}
       interactive
@@ -196,21 +198,17 @@ function ProjectBlock({
   preview: ItemPreviewData
   hierarchy: HierarchyData
 }) {
-  const statusField = preview.fields.find(
-    (f) =>
-      f.dataType === 'SINGLE_SELECT' &&
-      f.optionName &&
-      (/status/i.test(f.fieldName) || f.fieldName.toLowerCase() === 'status'),
-  )
-  const priorityField = preview.fields.find((f) => /priority/i.test(f.fieldName) && f.optionName)
-  const iterationField = preview.fields.find((f) => f.dataType === 'ITERATION' && f.iterationTitle)
-
-  const hasAssignees = preview.assignees.length > 0
-  const hasLabels = preview.labels.length > 0
-  const hasParent = Boolean(hierarchy.parent)
-  const hasSubIssues = hierarchy.totalSubIssues > 0
-  const hasBlockedBy = hierarchy.blockedBy.length > 0
-  const hasBlocking = hierarchy.blocking.length > 0
+  const {
+    statusField,
+    priorityField,
+    iterationField,
+    hasAssignees,
+    hasLabels,
+    hasParent,
+    hasSubIssues,
+    hasBlockedBy,
+    hasBlocking,
+  } = getProjectBlockMeta(preview, hierarchy)
 
   const subPct = hasSubIssues
     ? Math.round((hierarchy.completedSubIssues / hierarchy.totalSubIssues) * 100)
@@ -329,6 +327,22 @@ function ProjectBlock({
 }
 
 function hasProjectBlock(preview: ItemPreviewData, hierarchy: HierarchyData): boolean {
+  const projectBlockMeta = getProjectBlockMeta(preview, hierarchy)
+
+  return (
+    Boolean(projectBlockMeta.statusField?.optionName) ||
+    Boolean(projectBlockMeta.iterationField?.iterationTitle) ||
+    Boolean(projectBlockMeta.priorityField?.optionName) ||
+    projectBlockMeta.hasAssignees ||
+    projectBlockMeta.hasLabels ||
+    projectBlockMeta.hasParent ||
+    projectBlockMeta.hasSubIssues ||
+    projectBlockMeta.hasBlockedBy ||
+    projectBlockMeta.hasBlocking
+  )
+}
+
+function getProjectBlockMeta(preview: ItemPreviewData, hierarchy: HierarchyData) {
   const statusField = preview.fields.find(
     (f) =>
       f.dataType === 'SINGLE_SELECT' &&
@@ -338,17 +352,17 @@ function hasProjectBlock(preview: ItemPreviewData, hierarchy: HierarchyData): bo
   const priorityField = preview.fields.find((f) => /priority/i.test(f.fieldName) && f.optionName)
   const iterationField = preview.fields.find((f) => f.dataType === 'ITERATION' && f.iterationTitle)
 
-  return (
-    Boolean(statusField?.optionName) ||
-    Boolean(iterationField?.iterationTitle) ||
-    Boolean(priorityField?.optionName) ||
-    preview.assignees.length > 0 ||
-    preview.labels.length > 0 ||
-    Boolean(hierarchy.parent) ||
-    hierarchy.totalSubIssues > 0 ||
-    hierarchy.blockedBy.length > 0 ||
-    hierarchy.blocking.length > 0
-  )
+  return {
+    statusField,
+    priorityField,
+    iterationField,
+    hasAssignees: preview.assignees.length > 0,
+    hasLabels: preview.labels.length > 0,
+    hasParent: Boolean(hierarchy.parent),
+    hasSubIssues: hierarchy.totalSubIssues > 0,
+    hasBlockedBy: hierarchy.blockedBy.length > 0,
+    hasBlocking: hierarchy.blocking.length > 0,
+  }
 }
 
 function excerptIssueBody(body: string, maxLen = 220): string {

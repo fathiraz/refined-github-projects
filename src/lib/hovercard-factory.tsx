@@ -35,7 +35,7 @@ function HovercardPortalHost({ projectContext }: { projectContext: ProjectContex
       />
       {triggers.map((trigger) => (
         <RowHoverCard
-          key={trigger.itemId}
+          key={trigger.id}
           itemId={trigger.itemId}
           projectContext={projectContext}
           titleCell={trigger.titleCell}

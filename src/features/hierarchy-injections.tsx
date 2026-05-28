@@ -14,18 +14,32 @@ export function createHierarchyChipInjector(_projectContext: ProjectContext): ()
     const rows = document.querySelectorAll<HTMLElement>(`[role="row"][${INJECTED_ATTR}]`)
     const seenRows = new Set<HTMLElement>()
 
+    const cleanupTrackedRow = (row: HTMLElement): void => {
+      const tracked = trackedRows.get(row)
+      if (!tracked) return
+      tracked.cleanup()
+      trackedRows.delete(row)
+      row.removeAttribute(HIER_ATTR)
+    }
+
     for (const row of rows) {
-      seenRows.add(row)
+      const existing = trackedRows.get(row)
       const itemId = row.getAttribute(INJECTED_ATTR)
-      if (!itemId || itemId === '1') continue
+      if (!itemId || itemId === '1') {
+        cleanupTrackedRow(row)
+        continue
+      }
 
       // GitHub Projects V2 uses role="rowheader" for the title cell; other columns use role="gridcell"
       const titleCell =
         row.querySelector<HTMLElement>(':scope > [role="rowheader"]') ??
         row.querySelector<HTMLElement>(':scope > [role="gridcell"]')
-      if (!titleCell) continue
+      if (!titleCell) {
+        cleanupTrackedRow(row)
+        continue
+      }
 
-      const existing = trackedRows.get(row)
+      seenRows.add(row)
       if (existing && existing.itemId === itemId && existing.titleCell === titleCell) continue
 
       existing?.cleanup()

@@ -9,8 +9,10 @@ type HovercardTriggerListener = (triggers: HovercardTrigger[]) => void
 const triggers = new Map<string, HovercardTrigger>()
 const elementIds = new WeakMap<HTMLElement, string>()
 const listeners = new Set<HovercardTriggerListener>()
+const activeRegistrations = new Map<string, number>()
 
 let nextTriggerId = 0
+let nextRegistrationId = 0
 
 function emitTriggers(): void {
   const snapshot = Array.from(triggers.values())
@@ -31,13 +33,17 @@ function getElementId(titleCell: HTMLElement): string {
 export function registerHovercardTrigger(itemId: string, titleCell: HTMLElement): () => void {
   const triggerId = getElementId(titleCell)
   const previous = triggers.get(triggerId)
+  const registrationId = nextRegistrationId++
 
   if (!previous || previous.itemId !== itemId || previous.titleCell !== titleCell) {
     triggers.set(triggerId, { id: triggerId, itemId, titleCell })
     emitTriggers()
   }
+  activeRegistrations.set(triggerId, registrationId)
 
   return () => {
+    if (activeRegistrations.get(triggerId) !== registrationId) return
+    activeRegistrations.delete(triggerId)
     if (triggers.delete(triggerId)) {
       emitTriggers()
     }
