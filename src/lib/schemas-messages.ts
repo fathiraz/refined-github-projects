@@ -92,6 +92,7 @@ export const ItemPreviewData = Schema.Struct({
   issueNumber: Schema.Number,
   title: Schema.String,
   body: Schema.String,
+  state: Schema.Literal('OPEN', 'CLOSED'),
   repoOwner: Schema.String,
   repoName: Schema.String,
   assignees: Schema.Array(

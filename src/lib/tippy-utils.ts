@@ -2,28 +2,57 @@
 const TIPPY_CSS =
   '.tippy-box[data-animation=fade][data-state=hidden]{opacity:0}[data-tippy-root]{max-width:calc(100vw - 10px)}.tippy-box{position:relative;background-color:#333;color:#fff;border-radius:4px;font-size:14px;line-height:1.4;white-space:normal;outline:0;transition-property:transform,visibility,opacity}.tippy-box[data-placement^=top]>.tippy-arrow{bottom:0}.tippy-box[data-placement^=top]>.tippy-arrow:before{bottom:-7px;left:0;border-width:8px 8px 0;border-top-color:initial;transform-origin:center top}.tippy-box[data-placement^=bottom]>.tippy-arrow{top:0}.tippy-box[data-placement^=bottom]>.tippy-arrow:before{top:-7px;left:0;border-width:0 8px 8px;border-bottom-color:initial;transform-origin:center bottom}.tippy-box[data-placement^=left]>.tippy-arrow{right:0}.tippy-box[data-placement^=left]>.tippy-arrow:before{border-width:8px 0 8px 8px;border-left-color:initial;right:-7px;transform-origin:center left}.tippy-box[data-placement^=right]>.tippy-arrow{left:0}.tippy-box[data-placement^=right]>.tippy-arrow:before{left:-7px;border-width:8px 8px 8px 0;border-right-color:initial;transform-origin:center right}.tippy-box[data-inertia][data-state=visible]{transition-timing-function:cubic-bezier(.54,1.5,.38,1.11)}.tippy-arrow{width:16px;height:16px;color:#333}.tippy-arrow:before{content:"";position:absolute;border-color:transparent;border-style:solid}.tippy-content{position:relative;padding:5px 9px;z-index:1}'
 
-export function ensureTippyCss(): void {
-  if (document.getElementById('rgp-tippy-css')) return
-  const el = document.createElement('style')
-  el.id = 'rgp-tippy-css'
-  el.textContent = TIPPY_CSS
-  document.head.appendChild(el)
+type StyleRoot = Document | ShadowRoot
+
+function getStyleRoot(target: Node | null | undefined): StyleRoot {
+  if (!target) return document
+  const root = target.getRootNode()
+  return root instanceof ShadowRoot ? root : document
+}
+
+function isDocumentRoot(root: StyleRoot): root is Document {
+  return root.nodeType === Node.DOCUMENT_NODE
+}
+
+function hasStyle(root: StyleRoot, id: string): boolean {
+  if (isDocumentRoot(root)) {
+    return root.getElementById(id) instanceof HTMLStyleElement
+  }
+  return root.querySelector(`style#${id}`) instanceof HTMLStyleElement
+}
+
+function injectStyle(root: StyleRoot, id: string, cssText: string): void {
+  if (hasStyle(root, id)) return
+  const ownerDocument = isDocumentRoot(root) ? root : (root.ownerDocument ?? document)
+  const el = ownerDocument.createElement('style')
+  el.id = id
+  el.textContent = cssText
+  if (isDocumentRoot(root)) {
+    root.head.appendChild(el)
+    return
+  }
+  root.appendChild(el)
+}
+
+export function ensureTippyCss(target?: Node | null): void {
+  injectStyle(getStyleRoot(target), 'rgp-tippy-css', TIPPY_CSS)
 }
 
 const RGP_CARD_THEME_CSS = [
   '.tippy-box[data-theme~="rgp-card"]{background-color:transparent;color:inherit;border-radius:0;font-size:inherit}',
   '.tippy-box[data-theme~="rgp-card"]>.tippy-content{padding:0}',
+  '.tippy-box[data-theme~="rgp-card"]>.tippy-arrow{color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="top"]>.tippy-arrow:before{border-top-color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="bottom"]>.tippy-arrow:before{border-bottom-color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="left"]>.tippy-arrow:before{border-left-color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="right"]>.tippy-arrow:before{border-right-color:var(--color-canvas-overlay)}',
   '@keyframes rgp-shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}',
   '.rgp-skeleton{background:linear-gradient(90deg,var(--color-border-muted,#d0d7de) 25%,var(--color-border-default,#d0d7de) 50%,var(--color-border-muted,#d0d7de) 75%);background-size:400px 100%;animation:rgp-shimmer 1.4s ease infinite;border-radius:4px}',
   '@media(prefers-reduced-motion:reduce){.rgp-skeleton{animation:none;background:var(--color-border-muted,#d0d7de)}}',
 ].join('')
 
-export function ensureRgpCardTheme(): void {
-  if (document.getElementById('rgp-tippy-card-theme')) return
-  const el = document.createElement('style')
-  el.id = 'rgp-tippy-card-theme'
-  el.textContent = RGP_CARD_THEME_CSS
-  document.head.appendChild(el)
+export function ensureRgpCardTheme(target?: Node | null): void {
+  injectStyle(getStyleRoot(target), 'rgp-tippy-card-theme', RGP_CARD_THEME_CSS)
 }
 
 export function getTippyDelayValue(

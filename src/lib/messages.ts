@@ -82,6 +82,7 @@ export interface ItemPreviewData {
   issueNumber: number
   title: string
   body: string
+  state: 'OPEN' | 'CLOSED'
   repoOwner: string
   repoName: string
   assignees: { id: string; login: string; avatarUrl: string }[]

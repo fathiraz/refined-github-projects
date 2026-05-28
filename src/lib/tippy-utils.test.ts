@@ -4,6 +4,7 @@ import { ensureTippyCss, ensureRgpCardTheme, getTippyDelayValue } from '@/lib/ti
 describe('ensureTippyCss', () => {
   beforeEach(() => {
     document.head.innerHTML = ''
+    document.body.innerHTML = ''
   })
 
   it('injects tippy css style element', () => {
@@ -19,11 +20,25 @@ describe('ensureTippyCss', () => {
     const els = document.querySelectorAll('#rgp-tippy-css')
     expect(els.length).toBe(1)
   })
+
+  it('injects into shadow root when target is in shadow DOM', () => {
+    const host = document.createElement('div')
+    const shadowRoot = host.attachShadow({ mode: 'open' })
+    const target = document.createElement('div')
+    shadowRoot.appendChild(target)
+    document.body.appendChild(host)
+
+    ensureTippyCss(target)
+
+    expect(shadowRoot.querySelector('#rgp-tippy-css')).toBeInstanceOf(HTMLStyleElement)
+    expect(document.head.querySelectorAll('#rgp-tippy-css').length).toBe(0)
+  })
 })
 
 describe('ensureRgpCardTheme', () => {
   beforeEach(() => {
     document.head.innerHTML = ''
+    document.body.innerHTML = ''
   })
 
   it('injects card theme style element', () => {
@@ -38,6 +53,19 @@ describe('ensureRgpCardTheme', () => {
     ensureRgpCardTheme()
     const els = document.querySelectorAll('#rgp-tippy-card-theme')
     expect(els.length).toBe(1)
+  })
+
+  it('injects into shadow root when target is in shadow DOM', () => {
+    const host = document.createElement('div')
+    const shadowRoot = host.attachShadow({ mode: 'open' })
+    const target = document.createElement('div')
+    shadowRoot.appendChild(target)
+    document.body.appendChild(host)
+
+    ensureRgpCardTheme(target)
+
+    expect(shadowRoot.querySelector('#rgp-tippy-card-theme')).toBeInstanceOf(HTMLStyleElement)
+    expect(document.head.querySelectorAll('#rgp-tippy-card-theme').length).toBe(0)
   })
 })
 
