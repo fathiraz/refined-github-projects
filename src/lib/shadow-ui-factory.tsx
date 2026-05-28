@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef } from 'react'
 import type { ContentScriptContext } from 'wxt/utils/content-script-context'
+import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root'
 import ReactDOM from 'react-dom/client'
 import { StyleSheetManager } from 'styled-components'
 import isPropValid from '@emotion/is-prop-valid'
@@ -102,8 +103,11 @@ export async function createFeatureUi(
       )
       return root
     },
-    onRemove(root) {
-      root?.unmount()
+    onRemove(reactRoot) {
+      reactRoot?.unmount()
+      styleHost?.remove()
+      styleHost = null
+      root = null
     },
   })
 
@@ -112,8 +116,10 @@ export async function createFeatureUi(
       ui.mount()
     },
     destroy() {
-      root?.unmount()
+      ui.remove()
       styleHost?.remove()
+      styleHost = null
+      root = null
     },
   }
 }

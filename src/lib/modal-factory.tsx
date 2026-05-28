@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Box, Button, Flash, Spinner } from '@primer/react'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { primerCss } from '@/lib/primer-css-helper'
@@ -46,6 +46,8 @@ export function createModal<T>(opts: CreateModalOptions<T>): React.FC<ModalCompo
     const dataProps = rest as T
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const submitInFlightRef = useRef(false)
+    const mountedRef = useRef(true)
 
     const stage: ModalStage = loading ? 'LOADING' : error ? 'ERROR' : 'INPUT'
 
@@ -54,60 +56,88 @@ export function createModal<T>(opts: CreateModalOptions<T>): React.FC<ModalCompo
     }, [])
 
     useEffect(() => {
+      mountedRef.current = true
+      return () => {
+        mountedRef.current = false
+      }
+    }, [])
+
+    const handleRequestClose = useCallback(() => {
+      if (loading) return
+      onClose()
+    }, [loading, onClose])
+
+    useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose()
+        if (e.key === 'Escape') handleRequestClose()
       }
       document.addEventListener('keydown', handleKeyDown)
       return () => document.removeEventListener('keydown', handleKeyDown)
-    }, [onClose])
+    }, [handleRequestClose])
 
     const handleSubmit = async () => {
+      if (submitInFlightRef.current) return
+      submitInFlightRef.current = true
+
       setError(null)
-      if (validate) {
-        const validationError = validate()
-        if (validationError) {
-          setError(validationError)
-          return
-        }
-      }
-      setLoading(true)
       try {
+        if (validate) {
+          const validationError = validate()
+          if (validationError) {
+            setError(validationError)
+            return
+          }
+        }
+
+        setLoading(true)
         await onSubmit(dataProps)
         toastStore.show({ message: `${name} completed`, type: 'success' })
-        onClose()
+        handleRequestClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
-        setLoading(false)
+        if (mountedRef.current) {
+          setError(err instanceof Error ? err.message : String(err))
+          setLoading(false)
+        }
+      } finally {
+        submitInFlightRef.current = false
       }
     }
 
     return (
       <Box
         sx={primerCss.modalOverlay()}
-        onClick={onClose}
+        onClick={handleRequestClose}
         role="dialog"
         aria-modal="true"
         aria-label={name}
       >
         <Box sx={primerCss.modalPanel()} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-          <ModalStepHeader title={name} icon={icon} onClose={onClose} />
+          <ModalStepHeader title={name} icon={icon} onClose={handleRequestClose} />
           <Box sx={primerCss.contentArea()}>
             {error && (
               <Flash variant="danger" sx={{ mb: 2 }}>
                 {error}
               </Flash>
             )}
-            {renderContent({ ...dataProps, onClose } as T & { onClose: () => void }, {
-              error,
-              stage,
-            })}
+            {renderContent(
+              { ...dataProps, onClose: handleRequestClose } as T & { onClose: () => void },
+              {
+                error,
+                stage,
+              },
+            )}
           </Box>
           <Box sx={{ ...primerCss.footerBorder(), ...primerCss.footerLayout() }}>
             {footer ? (
-              footer({ onClose, onSubmit: handleSubmit, loading })
+              footer({ onClose: handleRequestClose, onSubmit: handleSubmit, loading })
             ) : (
               <>
-                <Button variant="default" onClick={onClose} sx={primerCss.buttonMotion()}>
+                <Button
+                  variant="default"
+                  onClick={handleRequestClose}
+                  disabled={loading}
+                  sx={primerCss.buttonMotion()}
+                >
                   Cancel
                 </Button>
                 <Button
