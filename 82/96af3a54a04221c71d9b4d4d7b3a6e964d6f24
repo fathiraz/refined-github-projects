@@ -1,0 +1,46 @@
+src/features/bulk-unpin-modal.tsx
+  s_7a91e60280186a::t_ec98696364f9cc 2-4,6-18
+src/lib/primer-css-helper.ts
+  s_7a91e60280186a::t_4cd60f13c3f006 1,4,6-7
+  s_7a91e60280186a::t_722a74a0084c36 2-3,5,8-92
+src/lib/shadow-ui-factory.tsx
+  s_7a91e60280186a::t_99d25513e5aca6 79
+  s_7a91e60280186a::t_4ecfb46ed77fb3 1-77,80-119
+  s_7a91e60280186a::t_e44ed548b64890 78
+src/features/content-ui.tsx
+  s_7a91e60280186a::t_55b8811fe5e396 1,6,13,38-49,53-55,59-61,65-67,71-81,110-114
+src/ui/actions.tsx
+  s_7a91e60280186a::t_bbf3f33029be97 3
+  s_7a91e60280186a::t_6e3f3d0ff74eb6 12,27,38
+src/lib/modal-factory.tsx
+  s_7a91e60280186a::t_77b5bc7274083b 39
+  s_7a91e60280186a::t_1c2f72eb6b4ab0 1-38,40-91,93-101,104-132
+src/features/bulk-pin-modal.tsx
+  s_7a91e60280186a::t_65ee446ed248a4 2-4,6-23
+src/features/bulk-duplicate-utils.tsx
+  s_7a91e60280186a::t_10ec3de378e2e7 5
+  s_7a91e60280186a::t_4f827c2ac01e55 75
+src/features/bulk-open-modal.tsx
+  s_7a91e60280186a::t_4bc17ba098ef88 2,4,6-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8296af3a54a04221c71d9b4d4d7b3a6e964d6f24",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_7a91e60280186a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ses_193a91a44ffeJpg85R22QUlQ2t",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
