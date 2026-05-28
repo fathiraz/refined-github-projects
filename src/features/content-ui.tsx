@@ -111,11 +111,12 @@ export async function setupContentUi(
 
   ctx.onInvalidated(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload)
+    // LIFO teardown: reverse mount order.
     sprintPanelUi.destroy()
-    hovercardHostUi.destroy()
     onboardingUi.destroy()
     toastUi.destroy()
     queueUi.destroy()
+    hovercardHostUi.destroy()
     bulkBarUi.destroy()
     portalRoot.unmount()
     portalHostDiv.remove()
