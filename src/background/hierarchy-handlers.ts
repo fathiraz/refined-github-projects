@@ -19,7 +19,11 @@ import { HierarchyCache, PreviewCache } from '@/background/cache-service'
 import { provideBackground } from '@/background/runtime-ext'
 
 import { withRateLimitRetry } from '@/background/rest-helpers'
-import { listIssueRelationshipsSafe, listSubIssuesSafe, getBulkRelationshipValidationErrors } from '@/background/relationship-helpers'
+import {
+  listIssueRelationshipsSafe,
+  listSubIssuesSafe,
+  getBulkRelationshipValidationErrors,
+} from '@/background/relationship-helpers'
 import { getProjectFieldsData, resolveProjectItemIds } from '@/background/project-helpers'
 
 type ItemLookupInput = {
@@ -127,6 +131,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
     issueNumber: issue.number,
     title: issue.title,
     body: issue.body,
+    state: issue.state,
     repoOwner: issue.repository.owner.login,
     repoName: issue.repository.name,
     projectId: source.project.id,

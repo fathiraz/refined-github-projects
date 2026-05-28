@@ -13,6 +13,11 @@ export function ensureTippyCss(): void {
 const RGP_CARD_THEME_CSS = [
   '.tippy-box[data-theme~="rgp-card"]{background-color:transparent;color:inherit;border-radius:0;font-size:inherit}',
   '.tippy-box[data-theme~="rgp-card"]>.tippy-content{padding:0}',
+  '.tippy-box[data-theme~="rgp-card"]>.tippy-arrow{color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="top"]>.tippy-arrow:before{border-top-color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="bottom"]>.tippy-arrow:before{border-bottom-color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="left"]>.tippy-arrow:before{border-left-color:var(--color-canvas-overlay)}',
+  '.tippy-box[data-theme~="rgp-card"][data-placement^="right"]>.tippy-arrow:before{border-right-color:var(--color-canvas-overlay)}',
   '@keyframes rgp-shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}',
   '.rgp-skeleton{background:linear-gradient(90deg,var(--color-border-muted,#d0d7de) 25%,var(--color-border-default,#d0d7de) 50%,var(--color-border-muted,#d0d7de) 75%);background-size:400px 100%;animation:rgp-shimmer 1.4s ease infinite;border-radius:4px}',
   '@media(prefers-reduced-motion:reduce){.rgp-skeleton{animation:none;background:var(--color-border-muted,#d0d7de)}}',

@@ -103,6 +103,7 @@ export interface ProjectItemDetails {
       number: number
       title: string
       body: string
+      state: 'OPEN' | 'CLOSED'
       repository: { id: string; owner: { login: string }; name: string }
       assignees: { nodes: { id: string; login: string; name: string; avatarUrl: string }[] }
       labels: { nodes: { id: string; name: string; color: string }[] }

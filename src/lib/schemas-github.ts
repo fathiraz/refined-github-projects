@@ -104,6 +104,7 @@ export const ProjectItemDetails = Schema.Struct({
       number: Schema.Number,
       title: Schema.String,
       body: Schema.String,
+      state: Schema.Literal('OPEN', 'CLOSED'),
       repository: Repository,
       assignees: Schema.Struct({ nodes: Schema.Array(Assignee) }),
       labels: Schema.Struct({ nodes: Schema.Array(Label) }),

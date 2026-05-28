@@ -19,6 +19,7 @@ export const GET_PROJECT_ITEM_DETAILS = `
             number
             title
             body
+            state
             repository { id owner { login } name }
             assignees(first: 10) { nodes { id login name avatarUrl } }
             labels(first: 20) { nodes { id name color } }

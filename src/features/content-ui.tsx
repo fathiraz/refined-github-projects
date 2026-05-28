@@ -10,6 +10,7 @@ import { QueueTracker } from '@/features/queue-tracker'
 import { ToastList } from '@/features/toast-list'
 import { CheckboxPortalHost } from '@/features/checkbox-portal-host'
 import { SprintPanel } from '@/features/sprint-modal'
+import { createHovercardHost } from '@/lib/hovercard-factory'
 import { createFeatureUi } from '@/lib/shadow-ui-factory'
 import { queueStore } from '@/lib/queue-store'
 import { sprintPanelStore } from '@/lib/sprint-store'
@@ -49,6 +50,9 @@ export async function setupContentUi(
     ),
   })
   bulkBarUi.mount()
+
+  const hovercardHostUi = await createHovercardHost(ctx, projectContext)
+  hovercardHostUi.mount()
 
   const queueUi = await createFeatureUi(ctx, {
     name: 'queue-tracker',
@@ -108,6 +112,7 @@ export async function setupContentUi(
   ctx.onInvalidated(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload)
     sprintPanelUi.destroy()
+    hovercardHostUi.destroy()
     onboardingUi.destroy()
     toastUi.destroy()
     queueUi.destroy()
