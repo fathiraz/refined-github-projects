@@ -1,0 +1,40 @@
+src/features/hierarchy-chip-tooltip.tsx
+  s_be8102b25a8fcc::t_adad27e2d488d0 36-39,103,201-211,330-345,355-365
+src/lib/hovercard-trigger-registry.ts
+  s_be8102b25a8fcc::t_9da07fbf6143d6 12,15,36,42,45-46
+src/lib/tippy-utils.ts
+  h_4149ee38f70c87 26
+  s_be8102b25a8fcc::t_76437c8e18832d 5-12,17,19-25,27-29,31-38,54-55
+  s_be8102b25a8fcc::t_ab74cfd0276fce 13-16,18,30
+src/lib/hovercard-factory.tsx
+  s_be8102b25a8fcc::t_a2ebf295e95959 38
+src/lib/tippy-utils.test.ts
+  s_be8102b25a8fcc::t_956d0e2aa974f4 7,23-35,41,57-68
+src/features/hierarchy-injections.test.tsx
+  s_be8102b25a8fcc::t_10836210861eda 1-42
+src/lib/hovercard-trigger-registry.test.ts
+  s_be8102b25a8fcc::t_51e23651e4ebd6 1-54
+src/features/hierarchy-injections.tsx
+  s_be8102b25a8fcc::t_f083322352a4ab 17-24,26,28-31,37-40,42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "a849b0cf4979308fe18deb2b0d4a72b5d1b38097",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_be8102b25a8fcc": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "00e737aa-c4f8-43cd-8295-e63ee020d122",
+        "model": "premium"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
