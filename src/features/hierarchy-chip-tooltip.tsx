@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { Instance } from 'tippy.js'
 import { Avatar, Box, Label, Link, ProgressBar, Text } from '@primer/react'
 import type {
@@ -35,8 +35,10 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
   const pendingRef = useRef<Promise<void> | null>(null)
   const appendTarget = getHovercardAppendTarget()
 
-  ensureTippyCss(appendTarget)
-  ensureRgpCardTheme(appendTarget)
+  useLayoutEffect(() => {
+    ensureTippyCss(appendTarget)
+    ensureRgpCardTheme(appendTarget)
+  }, [appendTarget])
 
   const startFetch = useCallback(
     (instance: Instance) => {
