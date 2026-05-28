@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/fathiraz/refined-github-projects/compare/v1.0.0...v1.1.0) (2026-05-28)
+
+
+### Features
+
+* **app:** add new docs design with modern style ([#32](https://github.com/fathiraz/refined-github-projects/issues/32)) ([c9fa3e4](https://github.com/fathiraz/refined-github-projects/commit/c9fa3e46a8e0036ee75093eee19bf177edb3c3b6))
+* **hovercard:** match GitHub native issue row hover UI ([7bdf0a5](https://github.com/fathiraz/refined-github-projects/commit/7bdf0a5f2bf069805c2086dbbf209537c4abde0e))
+* **hovercard:** match GitHub native issue row hover UI ([782d2cf](https://github.com/fathiraz/refined-github-projects/commit/782d2cf363c1f5270f9f46c8f72ad1d1ed03806f))
+
+
+### Bug Fixes
+
+* **changelog:** scope v1.0.0 entry to real diff against v0.6.0 ([#30](https://github.com/fathiraz/refined-github-projects/issues/30)) ([b4770fe](https://github.com/fathiraz/refined-github-projects/commit/b4770fe64e2af9d757ec7ad3bab6c2a376d8d2ef))
+* **hovercard:** apply theme CSS after mount and key portals by item ([d58a5e1](https://github.com/fathiraz/refined-github-projects/commit/d58a5e1790adb2b99dadb25fad85c20f56f3e189))
+* **hovercard:** key previews by itemId and teardown host last ([bf1d6d0](https://github.com/fathiraz/refined-github-projects/commit/bf1d6d04be549429c57f0a2d7c05b0b36eca28ad))
+* **hovercard:** shadow Tippy CSS and trigger lifecycle ([a849b0c](https://github.com/fathiraz/refined-github-projects/commit/a849b0cf4979308fe18deb2b0d4a72b5d1b38097))
+
 ## [1.0.0](https://github.com/fathiraz/refined-github-projects/compare/v0.6.0...v1.0.0) (2026-04-30)
 
 
