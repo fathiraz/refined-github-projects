@@ -1,0 +1,26 @@
+src/features/hierarchy-chip-tooltip.tsx
+  s_be8102b25a8fcc::t_adde94e7c50586 1,38-41
+src/lib/hovercard-factory.tsx
+  s_be8102b25a8fcc::t_e46f025cd03a2f 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d58a5e1790adb2b99dadb25fad85c20f56f3e189",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_be8102b25a8fcc": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "00e737aa-c4f8-43cd-8295-e63ee020d122",
+        "model": "premium"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
