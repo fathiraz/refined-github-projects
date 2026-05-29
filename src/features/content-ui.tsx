@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import type { ContentScriptContext } from 'wxt/utils/content-script-context'
-import ReactDOM from 'react-dom/client'
-import { StyleSheetManager } from 'styled-components'
-import isPropValid from '@emotion/is-prop-valid'
-import { ThemeProvider } from '@primer/react'
 import { BulkActionsBar } from '@/features/bulk-actions-bar'
 import { OnboardingCoach } from '@/features/onboarding-coach'
 import { QueueTracker } from '@/features/queue-tracker'
@@ -86,19 +82,11 @@ export async function setupContentUi(
   })
   sprintPanelUi.mount()
 
-  const portalStyleHost = document.createElement('div')
-  document.head.appendChild(portalStyleHost)
-  const portalHostDiv = document.createElement('div')
-  portalHostDiv.id = 'rgp-portal-host'
-  document.body.appendChild(portalHostDiv)
-  const portalRoot = ReactDOM.createRoot(portalHostDiv)
-  portalRoot.render(
-    <StyleSheetManager target={portalStyleHost} shouldForwardProp={isPropValid}>
-      <ThemeProvider colorMode="auto">
-        <CheckboxPortalHost />
-      </ThemeProvider>
-    </StyleSheetManager>,
-  )
+  const checkboxPortalUi = await createFeatureUi(ctx, {
+    name: 'checkbox-portal',
+    component: <CheckboxPortalHost />,
+  })
+  checkboxPortalUi.mount()
 
   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
     if (queueStore.hasActive()) {
@@ -112,14 +100,12 @@ export async function setupContentUi(
   ctx.onInvalidated(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload)
     // LIFO teardown: reverse mount order.
+    checkboxPortalUi.destroy()
     sprintPanelUi.destroy()
     onboardingUi.destroy()
     toastUi.destroy()
     queueUi.destroy()
     hovercardHostUi.destroy()
     bulkBarUi.destroy()
-    portalRoot.unmount()
-    portalHostDiv.remove()
-    portalStyleHost.remove()
   })
 }

@@ -129,16 +129,18 @@ export function injectTableEnhancementStyles() {
       z-index: 1;
     }
 
-    .rgp-cb-cell .rgp-selection-control {
+    .rgp-cb-cell:not(.rgp-cb-cell--header) .rgp-selection-control {
       opacity: 0;
       transition: opacity 160ms ease;
     }
-    [role="row"]:hover > .rgp-cb-cell .rgp-selection-control,
-    .rgp-cb-cell:has(.rgp-selection-control input:checked) .rgp-selection-control,
-    .rgp-cb-cell:has(.rgp-selection-control input:indeterminate) .rgp-selection-control {
+    [role="row"]:hover > .rgp-cb-cell:not(.rgp-cb-cell--header) .rgp-selection-control,
+    .rgp-cb-cell:not(.rgp-cb-cell--header):has(.rgp-selection-control input:checked) .rgp-selection-control,
+    .rgp-cb-cell:not(.rgp-cb-cell--header):has(.rgp-selection-control input:indeterminate) .rgp-selection-control,
+    .rgp-cb-cell:not(.rgp-cb-cell--header) .rgp-selection-control:focus-within {
       opacity: 1;
     }
-    .rgp-cb-cell--header .rgp-selection-control {
+    .rgp-cb-cell--header .rgp-selection-control,
+    .rgp-gcb-inline .rgp-selection-control {
       opacity: 1;
     }
 
@@ -180,7 +182,7 @@ export function injectTableEnhancementStyles() {
     }
 
     [role="row"]:has(.rgp-selection-control input:checked) {
-      background-color: var(--color-accent-subtle, rgba(9, 105, 218, 0.06)) !important;
+      background-color: var(--color-accent-subtle) !important;
       box-shadow: inset 2px 0 0 var(--color-accent-emphasis);
     }
 
