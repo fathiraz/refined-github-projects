@@ -1,0 +1,63 @@
+src/features/checkbox-portal-host.tsx
+  s_5b1c288cffaea3::t_3127df753b9533 6-10,26,30-31,34,40,44-45,48
+src/features/table-enhancements.ts
+  s_083cfc6b58c740::t_973d9f466c5c9b 142-143,185
+  s_8bde91fd9ad352::t_7b87f2c0423731 132,136-139
+src/ui/selection-control.tsx
+  s_6306a2cedfa82f::t_70e0ad3d425983 1-76
+src/features/content-ui.tsx
+  s_046b55209a78d7::t_014552c6a5013d 85-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f0187d69b9585c788e35901f3243fe77fe1469c7",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_046b55209a78d7": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "609c3bc6-ea99-4910-9f91-99ae7cecf2ba",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_083cfc6b58c740": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d1ba9910-7061-4b22-9976-45af1dd3c25d",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_5b1c288cffaea3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7c53d1c8-a564-4250-952d-3a85b6c8e1ca",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_6306a2cedfa82f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "f2f3e83b-42a1-4df0-ba88-c7bded4ddc0e",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_8bde91fd9ad352": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "5bdb4d3a-a077-4f04-9cf8-127dd1884a4b",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
