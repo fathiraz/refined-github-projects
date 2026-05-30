@@ -26,6 +26,18 @@ export const primerCss = {
     bg: 'canvas.overlay',
   }),
 
+  toastShell: makePreset({
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 3,
+    p: '12px',
+    bg: 'canvas.overlay',
+    border: '1px solid',
+    borderColor: 'border.default',
+    borderRadius: 2,
+    boxShadow: 'none',
+  }),
+
   modalOverlay: makePreset({
     position: 'fixed',
     inset: 0,

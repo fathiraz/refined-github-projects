@@ -6,8 +6,15 @@ import { queueStore, type ProcessEntry } from '@/lib/queue-store'
 import { sendMessage } from '@/lib/messages'
 import { CheckIcon, XIcon } from '@/ui/icons'
 import { Z_OVERLAY } from '@/lib/z-index'
+import { primerCss } from '@/lib/primer-css-helper'
 
-function ProcessCard({
+export function formatTrackerTitle(entry: Pick<ProcessEntry, 'label' | 'total'>): string {
+  if (entry.total === 0) return entry.label
+  const noun = entry.total === 1 ? 'item' : 'items'
+  return `${entry.label} · ${entry.total} ${noun}`
+}
+
+export function ProcessCard({
   entry,
   onDismiss,
 }: {
@@ -42,16 +49,17 @@ function ProcessCard({
 
   return (
     <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 3,
-        p: 3,
-        bg: 'canvas.overlay',
-        border: '1px solid',
-        borderColor: 'border.default',
-        borderRadius: 2,
-      }}
+      role="status"
+      aria-live="polite"
+      data-testid="rgp-queue-tracker-card"
+      sx={primerCss.toastShell({
+        animation: 'rgp-tracker-in 180ms cubic-bezier(0.4, 0, 0.2, 1)',
+        '@keyframes rgp-tracker-in': {
+          from: { transform: 'translateY(8px)', opacity: 0 },
+          to: { transform: 'translateY(0)', opacity: 1 },
+        },
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+      })}
     >
       {/* Status icon */}
       <Box sx={{ flexShrink: 0, pt: '2px' }}>
@@ -81,14 +89,15 @@ function ProcessCard({
               whiteSpace: 'nowrap',
               color: entry.paused ? 'attention.fg' : 'fg.default',
             }}
-            title={entry.label}
+            title={formatTrackerTitle(entry)}
           >
-            {entry.label}
+            {formatTrackerTitle(entry)}
           </Text>
           {!isDone && (
             <Text
               sx={{
                 fontSize: 0,
+                fontWeight: 'semibold',
                 color: 'fg.muted',
                 flexShrink: 0,
                 fontVariantNumeric: 'tabular-nums',
