@@ -123,3 +123,81 @@ export async function createFeatureUi(
     },
   }
 }
+
+export interface LightDomUiOptions {
+  /** Feature name, used as ErrorBoundary name and as a data attribute on the host */
+  name: string
+  /** React element to render directly into the light DOM */
+  component: React.ReactElement
+  /** DOM anchor element (default: document.body) */
+  anchor?: Element
+  /** Insertion position relative to anchor's children (default: 'last') */
+  append?: 'first' | 'last'
+}
+
+/**
+ * Mount a React tree directly into the light DOM (no shadow root). Use this for
+ * portal *hosts* whose only job is to `createPortal` into existing light-DOM
+ * targets — wrapping such a host in a shadow root would isolate the React tree
+ * from the very DOM it needs to portal into.
+ *
+ * Styled-components styles still flow through a dedicated `styleHost` sibling
+ * so they remain scoped to this UI and can be torn down cleanly. Primer theme
+ * context propagates through `createPortal` via React context (preserved
+ * across portals), so portaled `@primer/react` components still resolve their
+ * `sx` and `colorMode` correctly.
+ */
+export function createLightDomUi(ctx: ContentScriptContext, opts: LightDomUiOptions): FeatureUi {
+  let root: ReactDOM.Root | null = null
+  let host: HTMLDivElement | null = null
+  let styleHost: HTMLDivElement | null = null
+  let mounted = false
+  let invalidated = false
+
+  const teardown = () => {
+    root?.unmount()
+    host?.remove()
+    styleHost?.remove()
+    root = null
+    host = null
+    styleHost = null
+    mounted = false
+  }
+
+  ctx.onInvalidated(() => {
+    invalidated = true
+    teardown()
+  })
+
+  return {
+    mount() {
+      if (mounted || invalidated) return
+      const anchor = opts.anchor ?? document.body
+      host = document.createElement('div')
+      host.setAttribute('data-rgp-light-dom', opts.name)
+      styleHost = document.createElement('div')
+      styleHost.setAttribute('data-rgp-light-dom-styles', opts.name)
+
+      if (opts.append === 'first') {
+        anchor.insertBefore(styleHost, anchor.firstChild)
+        anchor.insertBefore(host, styleHost.nextSibling)
+      } else {
+        anchor.appendChild(styleHost)
+        anchor.appendChild(host)
+      }
+
+      root = ReactDOM.createRoot(host)
+      root.render(
+        <StyleSheetManager target={styleHost} shouldForwardProp={isPropValid}>
+          <ShadowThemeProvider>
+            <ErrorBoundary name={opts.name}>{opts.component}</ErrorBoundary>
+          </ShadowThemeProvider>
+        </StyleSheetManager>,
+      )
+      mounted = true
+    },
+    destroy() {
+      teardown()
+    },
+  }
+}
