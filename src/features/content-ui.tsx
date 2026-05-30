@@ -7,7 +7,7 @@ import { ToastList } from '@/features/toast-list'
 import { CheckboxPortalHost } from '@/features/checkbox-portal-host'
 import { SprintPanel } from '@/features/sprint-modal'
 import { createHovercardHost } from '@/lib/hovercard-factory'
-import { createFeatureUi } from '@/lib/shadow-ui-factory'
+import { createFeatureUi, createLightDomUi } from '@/lib/shadow-ui-factory'
 import { queueStore } from '@/lib/queue-store'
 import { sprintPanelStore } from '@/lib/sprint-store'
 import type { ProjectContext, ProjectData } from '@/lib/github-project'
@@ -82,7 +82,7 @@ export async function setupContentUi(
   })
   sprintPanelUi.mount()
 
-  const checkboxPortalUi = await createFeatureUi(ctx, {
+  const checkboxPortalUi = createLightDomUi(ctx, {
     name: 'checkbox-portal',
     component: <CheckboxPortalHost />,
   })

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useSyncExternalStore } from 'react'
 import { Checkbox } from '@primer/react'
-import { selectionStore } from '@/lib/selection-store'
+import { getSelectionSnapshot, selectionStore } from '@/lib/selection-store'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import Tippy from '@/ui/tooltip'
 
@@ -14,18 +14,14 @@ export interface SelectionControlProps {
   variant?: SelectionVariant
 }
 
-export function useSelectionVersion() {
-  const [, forceUpdate] = useState(0)
-
-  useEffect(() => {
-    return selectionStore.subscribe(() => forceUpdate((value) => value + 1))
-  }, [])
+export function useSelectionSnapshot(): ReadonlySet<string> {
+  return useSyncExternalStore(selectionStore.subscribe, getSelectionSnapshot, getSelectionSnapshot)
 }
 
 export function useBulkSelectionState(ids: string[]) {
-  useSelectionVersion()
+  const selected = useSelectionSnapshot()
 
-  const selectedCount = ids.filter((id) => selectionStore.isSelected(id)).length
+  const selectedCount = ids.reduce((n, id) => (selected.has(id) ? n + 1 : n), 0)
   const checked = ids.length > 0 && selectedCount === ids.length
   const indeterminate = selectedCount > 0 && !checked
 

@@ -6,12 +6,12 @@ import { selectionStore } from '@/lib/selection-store'
 import {
   SelectionControl,
   useBulkSelectionState,
-  useSelectionVersion,
+  useSelectionSnapshot,
 } from '@/ui/selection-control'
 
 function RowCheckbox({ itemId }: { itemId: string }) {
-  useSelectionVersion()
-  const checked = selectionStore.isSelected(itemId)
+  const selected = useSelectionSnapshot()
+  const checked = selected.has(itemId)
 
   return (
     <SelectionControl
