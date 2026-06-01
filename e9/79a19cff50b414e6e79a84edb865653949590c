@@ -1,0 +1,23 @@
+src/features/bulk-rename-utils.ts
+  s_e11663becf2bbf::t_3839f447c6f83d 128
+  s_e11663becf2bbf::t_0115d14f71fae4 109-113,117
+src/features/__tests__/bulk-rename-flyout.test.tsx
+  s_e11663becf2bbf::t_8674f6d815d9f6 69-93
+  s_e11663becf2bbf::t_00cf4a8c38d455 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e979a19cff50b414e6e79a84edb865653949590c",
+  "prompts": {},
+  "sessions": {
+    "s_e11663becf2bbf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "ee20e33d-5122-43e5-8cb3-70ac8416f8bc",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
