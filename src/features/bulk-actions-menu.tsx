@@ -184,7 +184,7 @@ export function BulkActionsMenu({
             >
               admin
             </Box>
-            <Kbd text="D" />
+            {count !== 1 && <Kbd text="D" />}
           </ActionList.TrailingVisual>
         </ActionList.Item>
       </ActionList>

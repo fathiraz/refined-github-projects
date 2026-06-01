@@ -132,12 +132,14 @@ export function BulkTransferModal({
       // §10.5 — when query is empty, fold recent transfer destinations to the
       // top so the user can re-pick frequently used targets without typing.
       if (query.trim() === '' && recentTransferDestinations.length > 0) {
+        const itemsById = new Map(items.map((item) => [item.id, item]))
         const seen = new Set<string>()
         const out: RepoItem[] = []
         for (const recent of recentTransferDestinations) {
-          if (!seen.has(recent.id)) {
-            out.push(recent)
-            seen.add(recent.id)
+          const merged = itemsById.get(recent.id) ?? recent
+          if (!seen.has(merged.id)) {
+            out.push(merged)
+            seen.add(merged.id)
           }
         }
         for (const item of items) {
@@ -203,8 +205,14 @@ export function BulkTransferModal({
     : null
   useEffect(() => {
     setShowIneligibleExpander(false)
-    if (!selectedTarget || !targetKey || !projectId || !itemIds || itemIds.length === 0) return
-    if (eligibilityByTarget[targetKey]) return
+    if (!selectedTarget || !targetKey || !projectId || !itemIds || itemIds.length === 0) {
+      setEligibilityLoading(false)
+      return
+    }
+    if (eligibilityByTarget[targetKey]) {
+      setEligibilityLoading(false)
+      return
+    }
     let cancelled = false
     setEligibilityLoading(true)
     sendMessage('validateTransferEligibility', {

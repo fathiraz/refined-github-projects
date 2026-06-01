@@ -1,7 +1,7 @@
 // bulkUpdate handler — applies field/title/body/comment/relationship updates.
 
 import { onMessage } from '@/lib/messages'
-import type { BulkEditRelationshipsUpdate, BulkUpdateDispatchResult } from '@/lib/messages'
+import type { BulkUpdateDispatchResult, BulkUpdateMessageData } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import {
   ADD_ASSIGNEES,
@@ -24,21 +24,6 @@ import { takeCachedResolvedItems } from '@/background/cache'
 import { broadcastQueue } from '@/background/rest-helpers'
 import { buildBulkRelationshipTasks } from '@/background/relationship-helpers'
 import { resolveProjectItemIds } from '@/background/project-helpers'
-
-export interface BulkUpdateMessageData {
-  itemIds: string[]
-  projectId: string
-  updates: { fieldId: string; value: unknown }[]
-  relationships?: BulkEditRelationshipsUpdate
-  fieldMeta?: Record<
-    string,
-    {
-      name: string
-      options?: { id: string; name: string }[]
-      iterations?: { id: string; title: string; startDate: string; duration: number }[]
-    }
-  >
-}
 
 function formatDetailDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00')
@@ -98,7 +83,8 @@ export async function runBulkUpdate(
           const names: string[] = (array ?? []).map((l: any) => l.name).filter(Boolean)
           detail = names.length > 0 ? `Adding labels: ${names.join(', ')}` : 'Adding labels'
         } else if (dataType === 'MILESTONE') {
-          const milestoneName: string = (array as any)?.[0]?.title ?? (array as any)?.[0]?.name ?? ''
+          const milestoneName: string =
+            (array as any)?.[0]?.title ?? (array as any)?.[0]?.name ?? ''
           detail = milestoneName ? `Setting milestone → ${milestoneName}` : 'Setting milestone'
         } else if (dataType === 'ISSUE_TYPE') {
           const issueTypeName: string = (array as any)?.[0]?.name ?? ''

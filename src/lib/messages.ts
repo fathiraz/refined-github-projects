@@ -78,9 +78,25 @@ export interface BulkRelationshipValidationResult {
 }
 
 /** Immediate accept/reject from the bulkUpdate message handler (work continues in background when ok). */
-export type BulkUpdateDispatchResult =
-  | { ok: true }
-  | { ok: false; reason: 'concurrent' }
+export type BulkUpdateDispatchResult = { ok: true } | { ok: false; reason: 'concurrent' }
+
+/** Shared shape for the `bulkUpdate` message payload — used by both the
+ * content-script sender and the background handler so the contract cannot
+ * drift between the two sides. */
+export interface BulkUpdateMessageData {
+  itemIds: string[]
+  projectId: string
+  updates: { fieldId: string; value: unknown }[]
+  relationships?: BulkEditRelationshipsUpdate
+  fieldMeta?: Record<
+    string,
+    {
+      name: string
+      options?: { id: string; name: string }[]
+      iterations?: { id: string; title: string; startDate: string; duration: number }[]
+    }
+  >
+}
 
 export interface ItemPreviewData {
   resolvedItemId: string
@@ -236,20 +252,7 @@ interface ProtocolMap {
     reason?: 'pull-request' | 'same-repo' | 'unresolved'
     title?: string
   }>
-  bulkUpdate(data: {
-    itemIds: string[]
-    projectId: string
-    updates: { fieldId: string; value: unknown }[]
-    relationships?: BulkEditRelationshipsUpdate
-    fieldMeta?: Record<
-      string,
-      {
-        name: string
-        options?: { id: string; name: string }[]
-        iterations?: { id: string; title: string; startDate: string; duration: number }[]
-      }
-    >
-  }): BulkUpdateDispatchResult
+  bulkUpdate(data: BulkUpdateMessageData): BulkUpdateDispatchResult
   bulkClose(data: {
     itemIds: string[]
     projectId: string

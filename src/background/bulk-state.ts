@@ -36,6 +36,7 @@ export function registerBulkStateHandlers(): void {
     const label = `Bulk close · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
     const tabId = sender.tab?.id
     let lastFailedTaskIds = new Set<string>()
+    let lastCompleted = 0
 
     try {
       await broadcastQueue(
@@ -68,6 +69,7 @@ export function registerBulkStateHandlers(): void {
         tasks,
         async (state) => {
           lastFailedTaskIds = new Set((state.failedItems ?? []).map((f) => f.id))
+          lastCompleted = state.completed
           await broadcastQueue(
             {
               total: state.total,
@@ -88,9 +90,12 @@ export function registerBulkStateHandlers(): void {
         processId,
       )
 
-      // §4.9 — reverse hint for Undo (Close → Reopen). Only the successfully
-      // closed subset is offered for Undo; failed items are excluded.
+      // §4.9 — reverse hint for Undo (Close → Reopen). Only items that were
+      // actually processed and not failed are offered for Undo. Items beyond
+      // `lastCompleted` are unprocessed (e.g. queue cancelled mid-run) and
+      // must not appear in the Undo target list.
       const succeededDomIds = resolvedItems
+        .slice(0, lastCompleted)
         .map((r) => r.domId)
         .filter((domId) => !lastFailedTaskIds.has(`close-${domId}`))
       const reverse =

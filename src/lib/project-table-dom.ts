@@ -100,6 +100,13 @@ export interface ItemStateSnapshot {
   lockedCount: number
   unlockedCount: number
   unknownCount: number
+  /**
+   * Lock/pin state is never reliably surfaced in row markup. Tracked
+   * separately so it does not pollute `unknownCount` (which drives the
+   * status-section fallback). The mark-flyout uses this to decide whether
+   * the lock/pin sections need both paired verbs.
+   */
+  lockOrPinUnknownCount: number
   /** Total number of IDs we attempted to resolve — sum of category counts is `<= total`. */
   total: number
 }
@@ -120,6 +127,7 @@ export function getItemStateSnapshot(itemIds: readonly string[]): ItemStateSnaps
     lockedCount: 0,
     unlockedCount: 0,
     unknownCount: 0,
+    lockOrPinUnknownCount: 0,
     total,
   }
   if (total === 0) return snapshot
@@ -138,13 +146,16 @@ export function getItemStateSnapshot(itemIds: readonly string[]): ItemStateSnaps
     else if (status === 'closed') snapshot.closedCount += 1
     else snapshot.unknownCount += 1
 
-    // pin/lock are not surfaced in the row DOM — count as unknown for those
-    // categories so the flyout shows both paired verbs.
-    snapshot.unknownCount += 0
+    // pin/lock are not surfaced in the row DOM — every located row contributes
+    // to lock/pin uncertainty so the flyout can show both paired verbs.
+    snapshot.lockOrPinUnknownCount += 1
   }
 
-  // any item id we could not locate in the current DOM is unknown
-  snapshot.unknownCount += total - seen.size
+  // any item id we could not locate in the current DOM is unknown for status
+  // AND for lock/pin (we know nothing about it).
+  const missing = total - seen.size
+  snapshot.unknownCount += missing
+  snapshot.lockOrPinUnknownCount += missing
 
   return snapshot
 }

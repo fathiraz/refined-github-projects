@@ -83,7 +83,7 @@ export function BulkRenameFlyout({
   useEffect(() => {
     if (!open || itemIds.length === 0) return
 
-    const requestId = Date.now()
+    const requestId = latestFetch.current + 1
     latestFetch.current = requestId
     setLoading(true)
     setFetchError(null)
@@ -108,7 +108,12 @@ export function BulkRenameFlyout({
       })
 
     return () => {
-      if (latestFetch.current === requestId) latestFetch.current = 0
+      if (latestFetch.current === requestId) {
+        // Bump past the cancelled id so its in-flight response cannot match
+        // again. Resetting to 0 would collide with the next monotonic id.
+        latestFetch.current = requestId + 1
+        setLoading(false)
+      }
     }
   }, [open, projectId, itemIds])
 

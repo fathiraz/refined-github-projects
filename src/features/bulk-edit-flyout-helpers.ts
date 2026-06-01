@@ -52,7 +52,7 @@ export function canApply(value: FieldValue | null): boolean {
     case 'text':
       return value.text.length > 0
     case 'number':
-      return value.number !== null && !Number.isNaN(value.number)
+      return value.number !== null && Number.isFinite(value.number)
     case 'date':
       return value.date.length > 0
     case 'singleSelect':

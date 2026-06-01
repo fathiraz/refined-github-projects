@@ -8,6 +8,44 @@ interface KeyboardHelpOverlayProps {
   onClose: () => void
 }
 
+interface ShortcutRowProps {
+  label: string
+  keyText: string
+}
+
+function ShortcutRow({ label, keyText }: ShortcutRowProps) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        py: '6px',
+      }}
+    >
+      <Text sx={{ fontSize: 1 }}>{label}</Text>
+      <Box
+        as="kbd"
+        sx={{
+          fontSize: 0,
+          fontFamily: 'inherit',
+          fontWeight: 500,
+          px: '6px',
+          py: '2px',
+          borderRadius: 1,
+          bg: 'canvas.inset',
+          border: '1px solid',
+          borderColor: 'border.default',
+          color: 'fg.muted',
+          lineHeight: 1.6,
+        }}
+      >
+        {keyText}
+      </Box>
+    </Box>
+  )
+}
+
 export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
   const [grouped, setGrouped] = useState<Map<string, ShortcutDefinition[]>>(() =>
     shortcutRegistry.getGrouped(),
@@ -111,35 +149,7 @@ export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
               Bulk actions (focus the bar first)
             </Text>
             {barChordLegend.map((entry) => (
-              <Box
-                key={entry.key}
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  py: '6px',
-                }}
-              >
-                <Text sx={{ fontSize: 1 }}>{entry.label}</Text>
-                <Box
-                  as="kbd"
-                  sx={{
-                    fontSize: 0,
-                    fontFamily: 'inherit',
-                    fontWeight: 500,
-                    px: '6px',
-                    py: '2px',
-                    borderRadius: 1,
-                    bg: 'canvas.inset',
-                    border: '1px solid',
-                    borderColor: 'border.default',
-                    color: 'fg.muted',
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {entry.key}
-                </Box>
-              </Box>
+              <ShortcutRow key={entry.key} label={entry.label} keyText={entry.key} />
             ))}
           </Box>
 
@@ -162,35 +172,7 @@ export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
                   {context}
                 </Text>
                 {shortcuts.map((s) => (
-                  <Box
-                    key={s.id}
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      py: '6px',
-                    }}
-                  >
-                    <Text sx={{ fontSize: 1 }}>{s.label}</Text>
-                    <Box
-                      as="kbd"
-                      sx={{
-                        fontSize: 0,
-                        fontFamily: 'inherit',
-                        fontWeight: 500,
-                        px: '6px',
-                        py: '2px',
-                        borderRadius: 1,
-                        bg: 'canvas.inset',
-                        border: '1px solid',
-                        borderColor: 'border.default',
-                        color: 'fg.muted',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {formatShortcut(s)}
-                    </Box>
-                  </Box>
+                  <ShortcutRow key={s.id} label={s.label} keyText={formatShortcut(s)} />
                 ))}
               </Box>
             )

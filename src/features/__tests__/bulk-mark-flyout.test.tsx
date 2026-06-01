@@ -17,6 +17,7 @@ function snap(over: Partial<ItemStateSnapshot> = {}): ItemStateSnapshot {
     lockedCount: 0,
     unlockedCount: 0,
     unknownCount: 0,
+    lockOrPinUnknownCount: 0,
     total: 0,
     ...over,
   }

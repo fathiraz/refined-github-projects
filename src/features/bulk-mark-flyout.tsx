@@ -204,7 +204,8 @@ export function buildRows(state: ItemStateSnapshot): MarkRowSet {
   })
 
   // ── Conversation section ── Lock flips to Unlock when all items provably locked
-  const allLocked = state.lockedCount === state.total && state.unknownCount === 0 && state.total > 0
+  const allLocked =
+    state.lockedCount === state.total && state.lockOrPinUnknownCount === 0 && state.total > 0
   if (allLocked) {
     conversation.push({
       verb: 'unlock',

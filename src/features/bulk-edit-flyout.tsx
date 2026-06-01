@@ -8,7 +8,7 @@
 // per the proposal. The flyout sticks to the GitHub-native "edit one
 // property at a time" idiom.
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActionList,
   Avatar,
@@ -84,6 +84,7 @@ export function BulkEditFlyout({
   const [metaLoading, setMetaLoading] = useState(false)
   const [applyError, setApplyError] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
+  const latestMetaReq = useRef(0)
 
   useEffect(() => {
     if (!open) {
@@ -144,6 +145,8 @@ export function BulkEditFlyout({
     if (!requiresMeta) return
     const repoName = firstRepoNameFromDom(owner)
     if (!repoName) return
+    const requestId = latestMetaReq.current + 1
+    latestMetaReq.current = requestId
     setMetaLoading(true)
     const protocolType: 'ASSIGNEES' | 'LABELS' | 'ISSUE_TYPES' =
       activeField.dataType === 'ISSUE_TYPE'
@@ -158,10 +161,16 @@ export function BulkEditFlyout({
           type: protocolType,
         })
           .then((results) => {
+            if (requestId !== latestMetaReq.current) return
             setMetaResults(results.map((r) => ({ id: r.id, name: r.name, avatarUrl: r.avatarUrl })))
           })
-          .catch(() => setMetaResults([]))
-          .finally(() => setMetaLoading(false))
+          .catch(() => {
+            if (requestId !== latestMetaReq.current) return
+            setMetaResults([])
+          })
+          .finally(() => {
+            if (requestId === latestMetaReq.current) setMetaLoading(false)
+          })
       },
       metaQuery ? 250 : 0,
     )

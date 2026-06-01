@@ -4,7 +4,7 @@
 // "Recent targets" section pinned at the top. Apply dispatches the existing
 // `bulkReorder` message; no protocol change.
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ActionList, Box, Spinner, Text, TextInput } from '@primer/react'
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from '@primer/octicons-react'
 import { SearchIcon } from '@/ui/icons'
@@ -69,9 +69,12 @@ export function BulkReorderFlyout({
   const [direction, setDirection] = useState<'before' | 'after'>('before')
   const [query, setQuery] = useState('')
   const { currentPaneId, setCurrentPaneId } = useDrilldownPane('root', open)
+  const latestReq = useRef(0)
 
   useEffect(() => {
     if (!open || itemIds.length === 0) return
+    const requestId = latestReq.current + 1
+    latestReq.current = requestId
     setLoading(true)
     setFetchError(null)
     const allDomIds = Array.from(document.querySelectorAll('[data-rgp-cb]'))
@@ -86,14 +89,21 @@ export function BulkReorderFlyout({
       allDomIds,
     })
       .then((result) => {
+        if (requestId !== latestReq.current) return
         setAllOrdered(result.allOrderedItems)
         setSelectedMemexIds(new Set(result.selectedItems.map((s) => s.memexItemId)))
         setResolvedProjectId(result.projectId)
       })
       .catch((err: unknown) => {
+        if (requestId !== latestReq.current) return
         setFetchError(err instanceof Error ? err.message : 'Failed to fetch project items.')
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (requestId === latestReq.current) setLoading(false)
+      })
+    return () => {
+      if (latestReq.current === requestId) latestReq.current = 0
+    }
   }, [open, projectId, itemIds, owner, number, isOrg])
 
   useEffect(() => {
@@ -152,6 +162,8 @@ export function BulkReorderFlyout({
       .filter((x): x is OrderedItem => x !== undefined)
   }, [nonSelected, query])
 
+  const reorderUnavailable = loading || fetchError !== null || resolvedProjectId === ''
+
   const rootPane: BulkFlyoutPane = {
     id: 'root',
     title: 'Move items',
@@ -171,7 +183,7 @@ export function BulkReorderFlyout({
           <ActionList.Item
             onSelect={() => applyTopOrBottom('TOP')}
             data-testid="rgp-reorder-top"
-            disabled={loading}
+            disabled={reorderUnavailable}
           >
             <ActionList.LeadingVisual>
               <ArrowUpIcon size={14} />
@@ -182,7 +194,7 @@ export function BulkReorderFlyout({
           <ActionList.Item
             onSelect={() => applyTopOrBottom('BOTTOM')}
             data-testid="rgp-reorder-bottom"
-            disabled={loading}
+            disabled={reorderUnavailable}
           >
             <ActionList.LeadingVisual>
               <ArrowDownIcon size={14} />
@@ -193,7 +205,7 @@ export function BulkReorderFlyout({
           <ActionList.Item
             onSelect={() => setCurrentPaneId('custom')}
             data-testid="rgp-reorder-custom"
-            disabled={loading}
+            disabled={reorderUnavailable}
           >
             <ActionList.LeadingVisual>
               <ArrowRightIcon size={14} />

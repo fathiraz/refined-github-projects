@@ -120,6 +120,7 @@ export function BulkRandomAssignFlyout({
   // Load current assignees per item when preserve is enabled.
   useEffect(() => {
     if (!open || !preserveExisting || itemIds.length === 0) {
+      setLoadingExisting(false)
       if (!preserveExisting) setExistingByItemId(new Map())
       return
     }
