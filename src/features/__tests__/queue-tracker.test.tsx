@@ -26,7 +26,7 @@ import { ProcessCard, formatTrackerTitle } from '@/features/queue-tracker'
 import type { ProcessEntry } from '@/lib/queue-store'
 
 function makeEntry(overrides: Partial<ProcessEntry> = {}): ProcessEntry {
-  return {
+  const base = {
     processId: 'p1',
     label: 'Bulk update',
     total: 4,
@@ -34,6 +34,18 @@ function makeEntry(overrides: Partial<ProcessEntry> = {}): ProcessEntry {
     paused: false,
     done: false,
     ...overrides,
+  }
+  return {
+    ...base,
+    phase: base.done
+      ? base.failedItems && base.failedItems.length > 0
+        ? {
+            kind: 'partial',
+            failedItemIds: base.failedItems.map((f) => f.id),
+            failedItems: base.failedItems,
+          }
+        : { kind: 'success' }
+      : { kind: 'in-flight', progress: { done: base.completed, total: base.total } },
   }
 }
 
@@ -121,5 +133,83 @@ describe('ProcessCard rendering', () => {
     mounted.push(m)
     const text = m.container.textContent ?? ''
     expect(text.includes('1/4')).toBe(true)
+  })
+
+  it("tags 'in-flight' cards with data-phase-testid", () => {
+    const m = renderCards([makeEntry({ done: false })])
+    mounted.push(m)
+    const card = m.container.querySelector('[data-testid="rgp-queue-tracker-card"]')
+    expect(card!.getAttribute('data-phase')).toBe('in-flight')
+    expect(card!.getAttribute('data-phase-testid')).toBe('rgp-tracker-in-flight')
+  })
+
+  it("tags 'success' cards with data-phase-testid", () => {
+    const m = renderCards([makeEntry({ done: true, completed: 4, total: 4 })])
+    mounted.push(m)
+    const card = m.container.querySelector('[data-testid="rgp-queue-tracker-card"]')
+    expect(card!.getAttribute('data-phase-testid')).toBe('rgp-tracker-success')
+  })
+
+  it("tags 'partial' cards with data-phase-testid", () => {
+    const m = renderCards([
+      makeEntry({
+        done: true,
+        completed: 4,
+        total: 4,
+        failedItems: [{ id: 'a', title: 'a', error: 'boom' }],
+      }),
+    ])
+    mounted.push(m)
+    const card = m.container.querySelector('[data-testid="rgp-queue-tracker-card"]')
+    expect(card!.getAttribute('data-phase-testid')).toBe('rgp-tracker-partial')
+  })
+
+  it('renders Undo button when phase=success with a reverse op', () => {
+    const m = renderCards([
+      {
+        ...makeEntry({ done: true, completed: 4, total: 4 }),
+        phase: {
+          kind: 'success',
+          undoableUntil: Date.now() + 10_000,
+          reverse: {
+            messageType: 'bulkUpdate',
+            data: { reopen: true },
+            affectedItemIds: ['x'],
+            label: 'Reopen 4 issues',
+          },
+        },
+      },
+    ])
+    mounted.push(m)
+    const undo = m.container.querySelector('[data-testid="rgp-tracker-undo"]') as HTMLButtonElement
+    expect(undo).not.toBeNull()
+    expect(undo.textContent).toBe('Reopen 4 issues')
+    expect(undo.disabled).toBe(false)
+  })
+
+  it('disables Undo when entry is paused (rate-limited)', () => {
+    const m = renderCards([
+      {
+        ...makeEntry({ done: true, completed: 4, total: 4, paused: true }),
+        phase: {
+          kind: 'success',
+          undoableUntil: Date.now() + 10_000,
+          reverse: {
+            messageType: 'bulkUpdate',
+            data: {},
+            affectedItemIds: ['x'],
+          },
+        },
+      },
+    ])
+    mounted.push(m)
+    const undo = m.container.querySelector('[data-testid="rgp-tracker-undo"]') as HTMLButtonElement
+    expect(undo.disabled).toBe(true)
+  })
+
+  it('hides Undo row when phase=success has no reverse op', () => {
+    const m = renderCards([makeEntry({ done: true, completed: 4, total: 4 })])
+    mounted.push(m)
+    expect(m.container.querySelector('[data-testid="rgp-tracker-undo-row"]')).toBeNull()
   })
 })

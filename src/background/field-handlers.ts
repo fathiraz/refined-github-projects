@@ -20,8 +20,21 @@ import { logger } from '@/lib/debug-logger'
 import { runHandler } from '@/lib/effect-runtime'
 
 import { withRateLimitRetry } from '@/background/rest-helpers'
-import { parseExactIssueReference, buildRelationshipSearchQuery, mapIssueNodeToRelationshipSearchResult, dedupeRelationships } from '@/background/relationship-helpers'
-import { getProjectFieldsData, resolveProjectItemIds, resolveProjectItemIdsWithTitles } from '@/background/project-helpers'
+import {
+  parseExactIssueReference,
+  buildRelationshipSearchQuery,
+  mapIssueNodeToRelationshipSearchResult,
+  dedupeRelationships,
+} from '@/background/relationship-helpers'
+import {
+  getProjectFieldsData,
+  resolveProjectItemIds,
+  resolveProjectItemIdsWithTitles,
+} from '@/background/project-helpers'
+import {
+  classifyTransferEligibilityRows,
+  unresolvedTransferEligibilityRows,
+} from '@/background/transfer-eligibility'
 import { ProjectService } from '@/background/project-service'
 import { provideBackground } from '@/background/runtime-ext'
 
@@ -186,11 +199,23 @@ export function registerFieldHandlers(): void {
       }
     }
     const trimmedQuery = data.q.trim().toLowerCase()
-    const isTransferEligible = (repo: RepoNode) => !repo.isArchived && repo.hasIssuesEnabled
+    const ownerScopePrefix = `${data.owner.toLowerCase()}/`
+    const includeIneligible = data.includeIneligible === true
+    const scope = data.scope ?? 'all'
+    const classify = (repo: RepoNode): 'ok' | 'archived' | 'issues-disabled' => {
+      if (repo.isArchived) return 'archived'
+      if (!repo.hasIssuesEnabled) return 'issues-disabled'
+      return 'ok'
+    }
+    const tag = (repo: RepoNode) => ({ ...repo, eligibility: classify(repo) })
     const matchesQuery = (repo: RepoNode) =>
       trimmedQuery === '' ||
       repo.name.toLowerCase().includes(trimmedQuery) ||
       repo.nameWithOwner.toLowerCase().includes(trimmedQuery)
+    const matchesScope = (repo: RepoNode) =>
+      scope === 'all' || repo.nameWithOwner.toLowerCase().startsWith(ownerScopePrefix)
+    const keepNode = (repo: RepoNode) =>
+      matchesQuery(repo) && matchesScope(repo) && (includeIneligible || classify(repo) === 'ok')
 
     if (data.firstItemId && data.projectId) {
       try {
@@ -200,10 +225,9 @@ export function registerFieldHandlers(): void {
           const result = await gql<{
             node: { possibleTransferRepositoriesForViewer?: { edges: { node: RepoNode }[] } }
           }>(GET_POSSIBLE_TRANSFER_REPOS, { issueId: issueNodeId, first: 100 }, { silent: true })
-          let nodes =
+          const nodes =
             result.node?.possibleTransferRepositoriesForViewer?.edges.map((e) => e.node) ?? []
-          nodes = nodes.filter((r) => isTransferEligible(r) && matchesQuery(r))
-          return nodes
+          return nodes.filter(keepNode).map(tag)
         }
       } catch (e) {
         console.warn('[rgp:bg] possibleTransferRepositoriesForViewer failed, falling back', e)
@@ -235,7 +259,7 @@ export function registerFieldHandlers(): void {
         for (const repo of pageNodes) {
           if (seenRepoIds.has(repo.id)) continue
           seenRepoIds.add(repo.id)
-          if (!isTransferEligible(repo) || !matchesQuery(repo)) continue
+          if (!keepNode(repo)) continue
           matches.push(repo)
           if (matches.length >= 20) break
         }
@@ -246,7 +270,33 @@ export function registerFieldHandlers(): void {
 
       nodes = matches
     }
-    return nodes.filter(isTransferEligible)
+    return nodes.filter(keepNode).map(tag)
+  })
+
+  // §10.7 — per-source-item pre-flight eligibility for transfer.
+  // Resolves every selected DOM id, then classifies each row:
+  //   - typename === 'PullRequest' → 'pull-request' (GitHub only transfers issues)
+  //   - source repo matches destination → 'same-repo' (no-op)
+  //   - failed to resolve via the project's items page → 'unresolved'
+  // Returns one row per requested itemId in the same order they were sent.
+  onMessage('validateTransferEligibility', async ({ data }) => {
+    logger.log('[rgp:bg] validateTransferEligibility received', {
+      itemCount: data.itemIds.length,
+      target: `${data.targetRepoOwner}/${data.targetRepoName}`,
+    })
+    let resolved: Awaited<ReturnType<typeof resolveProjectItemIdsWithTitles>>
+    try {
+      resolved = await resolveProjectItemIdsWithTitles(data.itemIds, data.projectId)
+    } catch (cause) {
+      logger.warn('[rgp:bg] validateTransferEligibility resolver failed', cause)
+      return unresolvedTransferEligibilityRows(data.itemIds)
+    }
+    return classifyTransferEligibilityRows(
+      data.itemIds,
+      resolved,
+      data.targetRepoOwner,
+      data.targetRepoName,
+    )
   })
 
   onMessage('getProjectFields', ({ data }) =>

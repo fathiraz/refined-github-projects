@@ -4,6 +4,9 @@ import {
   distributeBalanced,
   distributeRandom,
   distributeRoundRobin,
+  distributionFromByItem,
+  invertDistribution,
+  mergePreserveExisting,
 } from '@/features/bulk-random-assign-utils'
 
 function collectAllValues(map: Map<string, string[]>): string[] {
@@ -13,6 +16,60 @@ function collectAllValues(map: Map<string, string[]>): string[] {
   }
   return all
 }
+
+describe('invertDistribution / distributionFromByItem', () => {
+  it('inverts assignee buckets to per-item assignee lists', () => {
+    const distribution = new Map([
+      ['a1', ['i1', 'i3']],
+      ['a2', ['i2', 'i3']],
+    ])
+
+    const byItem = invertDistribution(distribution)
+
+    expect(byItem.get('i1')).toEqual(['a1'])
+    expect(byItem.get('i2')).toEqual(['a2'])
+    expect(byItem.get('i3')).toEqual(['a1', 'a2'])
+  })
+
+  it('round-trips through distributionFromByItem', () => {
+    const original = distributeRoundRobin(['i1', 'i2', 'i3', 'i4'], ['a', 'b'])
+    const byItem = invertDistribution(original)
+    const roundTrip = distributionFromByItem(byItem)
+
+    expect(roundTrip.get('a')).toEqual(original.get('a'))
+    expect(roundTrip.get('b')).toEqual(original.get('b'))
+  })
+})
+
+describe('mergePreserveExisting', () => {
+  it('unions existing and new assignees with dedupe', () => {
+    const newByItem = new Map([['i1', ['a2']]])
+    const existingByItem = new Map([['i1', ['a1', 'a2']]])
+
+    const merged = mergePreserveExisting(newByItem, existingByItem)
+
+    expect(merged.get('i1')).toEqual(['a1', 'a2'])
+  })
+
+  it('keeps existing-only assignees when new assigns a different person', () => {
+    const newByItem = new Map([['i1', ['b']]])
+    const existingByItem = new Map([['i1', ['a']]])
+
+    expect(mergePreserveExisting(newByItem, existingByItem).get('i1')).toEqual(['a', 'b'])
+  })
+
+  it('uses only new assignees when item has no existing entry', () => {
+    const newByItem = new Map([['i1', ['a']]])
+    const existingByItem = new Map<string, string[]>()
+
+    expect(mergePreserveExisting(newByItem, existingByItem).get('i1')).toEqual(['a'])
+  })
+
+  it('returns empty list when both maps omit an item', () => {
+    const merged = mergePreserveExisting(new Map(), new Map())
+    expect(merged.size).toBe(0)
+  })
+})
 
 describe('distributeBalanced', () => {
   it('distributes 6 items evenly among 3 assignees', () => {

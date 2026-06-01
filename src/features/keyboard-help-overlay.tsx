@@ -8,6 +8,44 @@ interface KeyboardHelpOverlayProps {
   onClose: () => void
 }
 
+interface ShortcutRowProps {
+  label: string
+  keyText: string
+}
+
+function ShortcutRow({ label, keyText }: ShortcutRowProps) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        py: '6px',
+      }}
+    >
+      <Text sx={{ fontSize: 1 }}>{label}</Text>
+      <Box
+        as="kbd"
+        sx={{
+          fontSize: 0,
+          fontFamily: 'inherit',
+          fontWeight: 500,
+          px: '6px',
+          py: '2px',
+          borderRadius: 1,
+          bg: 'canvas.inset',
+          border: '1px solid',
+          borderColor: 'border.default',
+          color: 'fg.muted',
+          lineHeight: 1.6,
+        }}
+      >
+        {keyText}
+      </Box>
+    </Box>
+  )
+}
+
 export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
   const [grouped, setGrouped] = useState<Map<string, ShortcutDefinition[]>>(() =>
     shortcutRegistry.getGrouped(),
@@ -28,6 +66,20 @@ export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
   }, [onClose])
 
   const contextOrder = ['Global', 'Table Selection', 'Modal Navigation']
+
+  const barChordLegend: Array<{ key: string; label: string }> = [
+    { key: 'E', label: 'Edit fields' },
+    { key: 'M', label: 'Mark menu' },
+    { key: 'R', label: 'Rename' },
+    { key: 'O', label: 'Reorder' },
+    { key: 'A', label: 'Random Assign' },
+    { key: 'C', label: 'Close issues (if any open)' },
+    { key: 'P', label: 'Pin issues (if any unpinned)' },
+    { key: 'L', label: 'Lock conversations' },
+    { key: 'T', label: 'Transfer' },
+    { key: 'D', label: 'Duplicate (1 item) or Delete (2+)' },
+    { key: '?', label: 'Open this help overlay' },
+  ]
 
   return (
     <Box
@@ -82,6 +134,25 @@ export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
         </Box>
 
         <Box sx={{ px: 4, py: 3 }}>
+          <Box sx={{ mb: 4 }} data-testid="rgp-help-bulk-actions">
+            <Text
+              sx={{
+                fontSize: 0,
+                fontWeight: 'bold',
+                color: 'fg.muted',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                mb: 2,
+                display: 'block',
+              }}
+            >
+              Bulk actions (focus the bar first)
+            </Text>
+            {barChordLegend.map((entry) => (
+              <ShortcutRow key={entry.key} label={entry.label} keyText={entry.key} />
+            ))}
+          </Box>
+
           {contextOrder.map((context) => {
             const shortcuts = grouped.get(context)
             if (!shortcuts || shortcuts.length === 0) return null
@@ -101,35 +172,7 @@ export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
                   {context}
                 </Text>
                 {shortcuts.map((s) => (
-                  <Box
-                    key={s.id}
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      py: '6px',
-                    }}
-                  >
-                    <Text sx={{ fontSize: 1 }}>{s.label}</Text>
-                    <Box
-                      as="kbd"
-                      sx={{
-                        fontSize: 0,
-                        fontFamily: 'inherit',
-                        fontWeight: 500,
-                        px: '6px',
-                        py: '2px',
-                        borderRadius: 1,
-                        bg: 'canvas.inset',
-                        border: '1px solid',
-                        borderColor: 'border.default',
-                        color: 'fg.muted',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {formatShortcut(s)}
-                    </Box>
-                  </Box>
+                  <ShortcutRow key={s.id} label={s.label} keyText={formatShortcut(s)} />
                 ))}
               </Box>
             )

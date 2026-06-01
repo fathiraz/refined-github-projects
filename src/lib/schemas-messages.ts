@@ -163,6 +163,14 @@ const RetryContext = Schema.Struct({
   data: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
 })
 
+const ReverseHint = Schema.Struct({
+  messageType: Schema.String,
+  data: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  affectedItemIds: Schema.Array(Schema.String),
+  label: Schema.optional(Schema.String),
+  undoWindowMs: Schema.optional(Schema.Number),
+})
+
 const Empty = Schema.Struct({})
 
 // ─── Per-message schema definitions ─────────────────────────────────────────
@@ -244,6 +252,8 @@ export const Messages = {
       q: Schema.String,
       firstItemId: Schema.optional(Schema.String),
       projectId: Schema.optional(Schema.String),
+      scope: Schema.optional(Schema.Literal('owner-only', 'all')),
+      includeIneligible: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Array(
       Schema.Struct({
@@ -252,6 +262,23 @@ export const Messages = {
         nameWithOwner: Schema.String,
         isPrivate: Schema.Boolean,
         description: Schema.NullOr(Schema.String),
+        eligibility: Schema.optional(Schema.Literal('ok', 'archived', 'issues-disabled')),
+      }),
+    ),
+  },
+  validateTransferEligibility: {
+    input: Schema.Struct({
+      itemIds: Schema.Array(Schema.String),
+      projectId: Schema.String,
+      targetRepoOwner: Schema.String,
+      targetRepoName: Schema.String,
+    }),
+    output: Schema.Array(
+      Schema.Struct({
+        domId: Schema.String,
+        eligible: Schema.Boolean,
+        reason: Schema.optional(Schema.Literal('pull-request', 'same-repo', 'unresolved')),
+        title: Schema.optional(Schema.String),
       }),
     ),
   },
@@ -283,7 +310,10 @@ export const Messages = {
         }),
       ),
     }),
-    output: Schema.Void,
+    output: Schema.Union(
+      Schema.Struct({ ok: Schema.Literal(true) }),
+      Schema.Struct({ ok: Schema.Literal(false), reason: Schema.Literal('concurrent') }),
+    ),
   },
   bulkClose: {
     input: Schema.Struct({
@@ -325,6 +355,13 @@ export const Messages = {
       itemIds: Schema.Array(Schema.String),
       projectId: Schema.String,
       lockReason: Schema.NullOr(Schema.Literal('OFF_TOPIC', 'TOO_HEATED', 'RESOLVED', 'SPAM')),
+    }),
+    output: Schema.Void,
+  },
+  bulkUnlock: {
+    input: Schema.Struct({
+      itemIds: Schema.Array(Schema.String),
+      projectId: Schema.String,
     }),
     output: Schema.Void,
   },
@@ -550,6 +587,7 @@ export const Messages = {
       label: Schema.optional(Schema.String),
       failedItems: Schema.optional(Schema.Array(FailedItem)),
       retryContext: Schema.optional(RetryContext),
+      reverse: Schema.optional(ReverseHint),
     }),
     output: Schema.Void,
   },

@@ -1,4 +1,4 @@
-// bulk state-change handlers: close, open, delete, lock, pin, unpin.
+// bulk state-change handlers: close, open, delete, lock, unlock, pin, unpin.
 
 import { onMessage } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
@@ -6,6 +6,7 @@ import {
   CLOSE_ISSUE,
   REOPEN_ISSUE,
   LOCK_ISSUE,
+  UNLOCK_ISSUE,
   PIN_ISSUE,
   UNPIN_ISSUE,
   DELETE_PROJECT_ITEM,
@@ -34,6 +35,8 @@ export function registerBulkStateHandlers(): void {
     const processId = `close-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
     const label = `Bulk close · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
     const tabId = sender.tab?.id
+    let lastFailedTaskIds = new Set<string>()
+    let lastCompleted = 0
 
     try {
       await broadcastQueue(
@@ -65,6 +68,8 @@ export function registerBulkStateHandlers(): void {
       await processQueue(
         tasks,
         async (state) => {
+          lastFailedTaskIds = new Set((state.failedItems ?? []).map((f) => f.id))
+          lastCompleted = state.completed
           await broadcastQueue(
             {
               total: state.total,
@@ -85,8 +90,26 @@ export function registerBulkStateHandlers(): void {
         processId,
       )
 
+      // §4.9 — reverse hint for Undo (Close → Reopen). Only items that were
+      // actually processed and not failed are offered for Undo. Items beyond
+      // `lastCompleted` are unprocessed (e.g. queue cancelled mid-run) and
+      // must not appear in the Undo target list.
+      const succeededDomIds = resolvedItems
+        .slice(0, lastCompleted)
+        .map((r) => r.domId)
+        .filter((domId) => !lastFailedTaskIds.has(`close-${domId}`))
+      const reverse =
+        succeededDomIds.length > 0
+          ? {
+              messageType: 'bulkOpen',
+              data: { projectId: data.projectId },
+              affectedItemIds: succeededDomIds,
+              label: `Undo close (${succeededDomIds.length})`,
+            }
+          : undefined
+
       await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
+        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label, reverse },
         tabId,
       )
     } finally {
@@ -288,6 +311,71 @@ export function registerBulkStateHandlers(): void {
                 state.completed < resolvedItems.length
                   ? `Locking item ${state.completed + 1} of ${resolvedItems.length}…`
                   : `Locking ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+              processId,
+              label,
+              failedItems: state.failedItems,
+            },
+            tabId,
+          )
+        },
+        processId,
+      )
+      await broadcastQueue(
+        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
+        tabId,
+      )
+    } finally {
+      releaseBulk()
+    }
+  })
+
+  onMessage('bulkUnlock', async ({ data, sender }) => {
+    logger.log('[rgp:bg] bulkUnlock received', { itemCount: data.itemIds.length })
+    if (isBulkFull()) {
+      console.warn('[rgp:bg] max concurrent bulk reached, rejecting bulkUnlock')
+      return
+    }
+    acquireBulk()
+    const processId = `unlock-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    const label = `Unlock · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const tabId = sender.tab?.id
+    try {
+      await broadcastQueue(
+        {
+          total: data.itemIds.length,
+          completed: 0,
+          paused: false,
+          status: 'Resolving items...',
+          processId,
+          label,
+        },
+        tabId,
+      )
+      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
+      if (resolvedItems.length === 0) {
+        console.error('[rgp:bg] no valid items resolved for bulkUnlock, aborting')
+        return
+      }
+      const tasks: QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+        id: `unlock-${domId}`,
+        run: async () => {
+          await gql(UNLOCK_ISSUE, { lockableId: issueNodeId })
+          await sleep(1000)
+        },
+      }))
+      await processQueue(
+        tasks,
+        async (state) => {
+          await broadcastQueue(
+            {
+              total: state.total,
+              completed: state.completed,
+              paused: state.paused,
+              retryAfter: state.retryAfter,
+              status:
+                state.completed < resolvedItems.length
+                  ? `Unlocking item ${state.completed + 1} of ${resolvedItems.length}…`
+                  : `Unlocking ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
               processId,
               label,
               failedItems: state.failedItems,

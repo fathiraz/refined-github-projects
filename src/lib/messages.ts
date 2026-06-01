@@ -77,6 +77,27 @@ export interface BulkRelationshipValidationResult {
   errors: string[]
 }
 
+/** Immediate accept/reject from the bulkUpdate message handler (work continues in background when ok). */
+export type BulkUpdateDispatchResult = { ok: true } | { ok: false; reason: 'concurrent' }
+
+/** Shared shape for the `bulkUpdate` message payload — used by both the
+ * content-script sender and the background handler so the contract cannot
+ * drift between the two sides. */
+export interface BulkUpdateMessageData {
+  itemIds: string[]
+  projectId: string
+  updates: { fieldId: string; value: unknown }[]
+  relationships?: BulkEditRelationshipsUpdate
+  fieldMeta?: Record<
+    string,
+    {
+      name: string
+      options?: { id: string; name: string }[]
+      iterations?: { id: string; title: string; startDate: string; duration: number }[]
+    }
+  >
+}
+
 export interface ItemPreviewData {
   resolvedItemId: string
   issueNumber: number
@@ -202,27 +223,36 @@ interface ProtocolMap {
     q: string
     firstItemId?: string
     projectId?: string
+    /** §10.4 — restrict listing to repos owned by the source `owner`. Default 'all'. */
+    scope?: 'owner-only' | 'all'
+    /** §10.3 — when true, BG returns ineligible repos tagged via `eligibility` instead of filtering. */
+    includeIneligible?: boolean
   }): {
     id: string
     name: string
     nameWithOwner: string
     isPrivate: boolean
     description: string | null
+    /** §10.3 — per-row availability for transfer; `undefined` means eligibility was not computed. */
+    eligibility?: 'ok' | 'archived' | 'issues-disabled'
   }[]
-  bulkUpdate(data: {
+  /**
+   * §10.7 — per-source-item pre-flight eligibility for a transfer destination.
+   * Returns one row per requested itemId so the modal can render a Flash
+   * warning listing ineligible titles and proceed with the eligible subset.
+   */
+  validateTransferEligibility(data: {
     itemIds: string[]
     projectId: string
-    updates: { fieldId: string; value: unknown }[]
-    relationships?: BulkEditRelationshipsUpdate
-    fieldMeta?: Record<
-      string,
-      {
-        name: string
-        options?: { id: string; name: string }[]
-        iterations?: { id: string; title: string; startDate: string; duration: number }[]
-      }
-    >
-  }): void
+    targetRepoOwner: string
+    targetRepoName: string
+  }): Array<{
+    domId: string
+    eligible: boolean
+    reason?: 'pull-request' | 'same-repo' | 'unresolved'
+    title?: string
+  }>
+  bulkUpdate(data: BulkUpdateMessageData): BulkUpdateDispatchResult
   bulkClose(data: {
     itemIds: string[]
     projectId: string
@@ -242,6 +272,7 @@ interface ProtocolMap {
     projectId: string
     lockReason: 'OFF_TOPIC' | 'TOO_HEATED' | 'RESOLVED' | 'SPAM' | null
   }): void
+  bulkUnlock(data: { itemIds: string[]; projectId: string }): void
   bulkPin(data: { itemIds: string[]; projectId: string }): void
   bulkUnpin(data: { itemIds: string[]; projectId: string }): void
   bulkDelete(data: { itemIds: string[]; projectId: string }): void
@@ -358,6 +389,13 @@ interface ProtocolMap {
     label?: string
     failedItems?: Array<{ id: string; title: string; error: string }>
     retryContext?: { messageType: string; data: Record<string, unknown> }
+    reverse?: {
+      messageType: string
+      data: Record<string, unknown>
+      affectedItemIds: readonly string[]
+      label?: string
+      undoWindowMs?: number
+    }
   }): void
 }
 

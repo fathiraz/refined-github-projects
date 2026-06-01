@@ -4,7 +4,7 @@
 import React from 'react'
 import { Box, Spinner } from '@primer/react'
 import type { BulkEditRelationshipsUpdate } from '@/lib/messages'
-import type { RelationshipSelectionState } from '@/features/bulk-edit-modal'
+import type { RelationshipSelectionState } from '@/features/bulk-edit-utils'
 import { isMac } from '@/lib/keyboard'
 import { Z_MODAL } from '@/lib/z-index'
 
@@ -38,13 +38,13 @@ export function createEmptyRelationshipSelection(): RelationshipSelectionState {
 export function hasRelationshipOperations(relationships: BulkEditRelationshipsUpdate): boolean {
   return Boolean(
     relationships.parent.clear ||
-      relationships.parent.set ||
-      relationships.blockedBy.clear ||
-      relationships.blockedBy.add.length > 0 ||
-      relationships.blockedBy.remove.length > 0 ||
-      relationships.blocking.clear ||
-      relationships.blocking.add.length > 0 ||
-      relationships.blocking.remove.length > 0,
+    relationships.parent.set ||
+    relationships.blockedBy.clear ||
+    relationships.blockedBy.add.length > 0 ||
+    relationships.blockedBy.remove.length > 0 ||
+    relationships.blocking.clear ||
+    relationships.blocking.add.length > 0 ||
+    relationships.blocking.remove.length > 0,
   )
 }
 

@@ -1,31 +1,45 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Box, Button, CounterLabel, Text } from '@primer/react'
+import { KebabHorizontalIcon } from '@primer/octicons-react'
 import Tippy from '@/ui/tooltip'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { selectionStore } from '@/lib/selection-store'
-import { getAllInjectedItemIds } from '@/lib/project-table-dom'
-import { shortcutRegistry, isMac, type ShortcutDefinition } from '@/lib/keyboard'
-import { sendMessage, type BulkEditRelationshipsUpdate } from '@/lib/messages'
+import { getAllInjectedItemIds, getTitlesForItemIds } from '@/lib/project-table-dom'
+import { shortcutRegistry, type ShortcutDefinition } from '@/lib/keyboard'
+import { useBarKeyboardChords, type BarChordMap } from '@/lib/use-bar-keyboard-chords'
+import { sendMessage } from '@/lib/messages'
 import { queueStore } from '@/lib/queue-store'
-import { exportSelectedToCSV, flyToTracker } from '@/features/bulk-utils'
-import type {
-  ProjectData,
-  ProjectField,
-  RelationshipSelectionState,
-  WizardStep,
-} from '@/features/bulk-edit-modal'
-import type { ReorderOp } from '@/features/bulk-move-modal'
-import { ListCheckIcon, XIcon } from '@/ui/icons'
+import { exportSelectedToCSV } from '@/features/bulk-utils'
+import type { ProjectData, ProjectField } from '@/features/bulk-edit-utils'
+import type { ReorderOp } from '@/features/bulk-move-utils'
+import { ListCheckIcon, TagIcon, XIcon } from '@/ui/icons'
 import { Z_OVERLAY } from '@/lib/z-index'
-import {
-  createEmptyRelationshipSelection,
-  createEmptyRelationshipUpdates,
-  hasRelationshipOperations,
-} from '@/features/bulk-actions-utils'
 import { BulkActionsMenu } from '@/features/bulk-actions-menu'
 import { BulkActionsModals } from '@/features/bulk-actions-modals'
+import { BulkMarkFlyout, type MarkVerb } from '@/features/bulk-mark-flyout'
+import { BulkEditFlyout } from '@/features/bulk-edit-flyout'
+import { BulkRenameFlyout, type RenameFlyoutConfirm } from '@/features/bulk-rename-flyout'
+import { BulkReorderFlyout } from '@/features/bulk-reorder-flyout'
+import { BulkRandomAssignFlyout } from '@/features/bulk-random-assign-flyout'
+import type { DistributionStrategy } from '@/features/bulk-random-assign-utils'
 
-export type { ReorderOp } from '@/features/bulk-move-modal'
+export type { ReorderOp } from '@/features/bulk-move-utils'
+
+const RECENT_FIELDS_CAP = 3
+
+/** Shared chip styling for the three top-level inline actions on the bar. */
+const chipSx = {
+  boxShadow: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+  '&:active': { transform: 'translateY(0)', transition: '100ms' },
+  '@media (prefers-reduced-motion: reduce)': {
+    transition: 'none',
+    '&:hover:not(:disabled)': { transform: 'none' },
+  },
+} as const
 
 interface Props {
   projectId: string
@@ -35,8 +49,6 @@ interface Props {
   getFields: () => Promise<ProjectData>
 }
 
-type ModalStep = 'CLOSED' | WizardStep
-
 export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: Props) {
   ensureTippyCss()
   const [count, setCount] = useState(() => selectionStore.count())
@@ -44,27 +56,25 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [firstRepoName, setFirstRepoName] = useState('')
   const [tokenStatusError, setTokenStatusError] = useState<string | null>(null)
 
-  const [step, setStep] = useState<ModalStep>('CLOSED')
-  const [selectedFields, setSelectedFields] = useState<ProjectField[]>([])
-  const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({})
-  const [relationshipUpdates, setRelationshipUpdates] = useState<BulkEditRelationshipsUpdate>(
-    createEmptyRelationshipUpdates(),
-  )
-  const [relationshipSelection, setRelationshipSelection] = useState<RelationshipSelectionState>(
-    createEmptyRelationshipSelection(),
-  )
-  const [bulkUpdateValidationErrors, setBulkUpdateValidationErrors] = useState<string[]>([])
-  const [concurrentError, setConcurrentError] = useState(false)
   const [showDupModal, setShowDupModal] = useState(false)
-  const applyBtnRef = useRef<HTMLButtonElement | null>(null)
   const actionsButtonRef = useRef<HTMLButtonElement | null>(null)
+  const editFieldsChipRef = useRef<HTMLButtonElement | null>(null)
+  const markChipRef = useRef<HTMLButtonElement | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const recentFieldIdsRef = useRef<string[]>([])
 
   const [menuOpen, setMenuOpen] = useState(false)
+  const [markOpen, setMarkOpen] = useState(false)
+  const [editFieldsOpen, setEditFieldsOpen] = useState(false)
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [reorderOpen, setReorderOpen] = useState(false)
+  const [randomAssignOpen, setRandomAssignOpen] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
   const [closeReason, setCloseReason] = useState<'COMPLETED' | 'NOT_PLANNED'>('COMPLETED')
   const [showOpenModal, setShowOpenModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteItemTitles, setDeleteItemTitles] = useState<string[]>([])
   const [showLockModal, setShowLockModal] = useState(false)
   const [lockReason, setLockReason] = useState<
     'OFF_TOPIC' | 'TOO_HEATED' | 'RESOLVED' | 'SPAM' | null
@@ -72,9 +82,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [showPinModal, setShowPinModal] = useState(false)
   const [showUnpinModal, setShowUnpinModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
-  const [showRenameModal, setShowRenameModal] = useState(false)
-  const [showMoveModal, setShowMoveModal] = useState(false)
-  const [showRandomAssignModal, setShowRandomAssignModal] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const anyModalOpen =
     showCloseModal ||
@@ -85,10 +92,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     showUnpinModal ||
     showTransferModal ||
     showDupModal ||
-    showRenameModal ||
-    showMoveModal ||
-    showRandomAssignModal ||
     showHelp
+  const anyFlyoutOpen = editFieldsOpen || renameOpen || reorderOpen || randomAssignOpen || markOpen
+
+  const resolvedProjectId = projectData?.id || projectId
 
   // selection subscription
   useEffect(() => {
@@ -96,13 +103,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       const newCount = selectionStore.count()
       setCount(newCount)
       if (newCount === 0) {
-        setStep('CLOSED')
         setMenuOpen(false)
-        setSelectedFields([])
-        setFieldValues({})
-        setRelationshipUpdates(createEmptyRelationshipUpdates())
-        setRelationshipSelection(createEmptyRelationshipSelection())
-        setBulkUpdateValidationErrors([])
         setShowDupModal(false)
         setShowCloseModal(false)
         setShowOpenModal(false)
@@ -111,10 +112,12 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         setShowPinModal(false)
         setShowUnpinModal(false)
         setShowTransferModal(false)
-        setShowRenameModal(false)
-        setShowMoveModal(false)
-        setShowRandomAssignModal(false)
         setShowHelp(false)
+        setMarkOpen(false)
+        setEditFieldsOpen(false)
+        setRenameOpen(false)
+        setReorderOpen(false)
+        setRandomAssignOpen(false)
       }
     })
   }, [])
@@ -157,7 +160,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       label: 'Close / Deselect',
       allowInEditable: true,
       action: () => {
-        if (anyModalOpen) {
+        if (anyModalOpen || anyFlyoutOpen) {
           setShowDupModal(false)
           setShowCloseModal(false)
           setShowOpenModal(false)
@@ -166,17 +169,19 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
           setShowPinModal(false)
           setShowUnpinModal(false)
           setShowTransferModal(false)
-          setShowRenameModal(false)
-          setShowMoveModal(false)
-          setShowRandomAssignModal(false)
           setShowHelp(false)
-        } else if (step === 'CLOSED' && selectionStore.count() > 0) {
+          setEditFieldsOpen(false)
+          setRenameOpen(false)
+          setReorderOpen(false)
+          setRandomAssignOpen(false)
+          setMarkOpen(false)
+        } else if (selectionStore.count() > 0) {
           selectionStore.clear()
         }
       },
     })
 
-    if (step === 'CLOSED' && !anyModalOpen) {
+    if (!anyModalOpen && !anyFlyoutOpen) {
       // select all — works even with zero selection
       reg({
         id: 'select-all',
@@ -193,8 +198,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       })
     }
 
-    if (count > 0 && step === 'CLOSED' && !anyModalOpen) {
-      // help
+    if (count > 0 && !anyModalOpen && !anyFlyoutOpen) {
       reg({
         id: 'help',
         key: '?',
@@ -204,7 +208,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         action: () => setShowHelp(true),
       })
 
-      // focus actions menu
       reg({
         id: 'focus-actions',
         key: 'b',
@@ -216,8 +219,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         },
       })
 
-      // ── Cmd+Shift shortcuts (existing) ──
-
       reg({
         id: 'edit-fields',
         key: 'e',
@@ -226,7 +227,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         label: 'Edit Fields',
         action: () => {
           setMenuOpen(false)
-          handleFieldSelectionOpen()
+          handleEditFields()
         },
       })
 
@@ -337,8 +338,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         })
       }
 
-      // ── NEW bare-key shortcuts ──
-
       reg({
         id: 'quick-edit',
         key: 'e',
@@ -347,7 +346,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         label: 'Quick Edit',
         action: () => {
           setMenuOpen(false)
-          handleFieldSelectionOpen()
+          handleEditFields()
         },
       })
 
@@ -376,7 +375,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     }
 
     return () => ids.forEach((id) => shortcutRegistry.unregister(id))
-  }, [count, step, anyModalOpen])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, anyModalOpen, anyFlyoutOpen])
 
   // extract first repo name from dom issue links
   useEffect(() => {
@@ -432,7 +432,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         const status = await sendMessage('getPatStatus', {})
         setTokenStatusError(null)
         if (status.hasPat) return true
-        setStep('TOKEN_WARNING')
+        setTokenStatusError('No GitHub token configured. Open the extension popup to add one.')
         return false
       } catch {
         if (i < 2) await new Promise((r) => setTimeout(r, 800))
@@ -444,93 +444,33 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     return false
   }
 
-  async function handleBulkUpdate() {
-    if (queueStore.getActiveCount() >= 3) {
-      setConcurrentError(true)
-      return
-    }
-    setConcurrentError(false)
-    setBulkUpdateValidationErrors([])
-    const itemIds = selectionStore.getAll()
-    const updates = selectedFields.map((field) => ({
-      fieldId: field.id,
-      value: {
-        ...((fieldValues[field.id] as Record<string, unknown>) || {}),
-        dataType: field.dataType,
-      },
-    }))
-    const relationships = hasRelationshipOperations(relationshipUpdates)
-      ? relationshipUpdates
-      : undefined
-    const fieldMeta = Object.fromEntries(
-      selectedFields.map((field) => [
-        field.id,
-        {
-          name: field.name,
-          options: field.options,
-          iterations: field.configuration?.iterations,
-        },
-      ]),
-    )
-
-    if (relationships) {
-      const validation = await sendMessage('validateBulkRelationshipUpdates', {
-        itemIds,
-        projectId: projectData?.id || projectId,
-        relationships,
-      })
-
-      if (validation.errors.length > 0) {
-        setBulkUpdateValidationErrors(validation.errors)
-        return
-      }
-    }
-
-    const rect = applyBtnRef.current?.getBoundingClientRect()
-    if (rect) flyToTracker(rect)
-    sendMessage('bulkUpdate', {
-      itemIds,
-      projectId: projectData?.id || projectId,
-      updates,
-      relationships,
-      fieldMeta,
-    })
-    setStep('CLOSED')
-    selectionStore.clear()
-    setSelectedFields([])
-    setFieldValues({})
-    setRelationshipUpdates(createEmptyRelationshipUpdates())
-    setRelationshipSelection(createEmptyRelationshipSelection())
-    setBulkUpdateValidationErrors([])
+  function pushRecentField(fieldId: string) {
+    const cur = recentFieldIdsRef.current
+    const idx = cur.indexOf(fieldId)
+    if (idx !== -1) cur.splice(idx, 1)
+    cur.unshift(fieldId)
+    if (cur.length > RECENT_FIELDS_CAP) cur.length = RECENT_FIELDS_CAP
   }
 
-  async function handleFieldSelectionOpen() {
-    if (await checkToken()) {
-      setStep('FIELDS')
-      setSelectedFields([])
-      setFieldValues({})
-      setRelationshipUpdates(createEmptyRelationshipUpdates())
-      setRelationshipSelection(createEmptyRelationshipSelection())
-      setBulkUpdateValidationErrors([])
-    }
+  async function handleEditFields() {
+    if (queueStore.getActiveCount() >= 3) return
+    if (!(await checkToken())) return
+    setEditFieldsOpen(true)
   }
 
   async function handleRandomAssign() {
     setMenuOpen(false)
     if (!(await checkToken())) return
-    setShowRandomAssignModal(true)
+    setRandomAssignOpen(true)
   }
 
-  async function handleConfirmRandomAssign(
+  function handleConfirmRandomAssign(
     assignments: Map<string, string[]>,
-    strategy: import('@/features/bulk-random-assign-utils').DistributionStrategy,
+    strategy: DistributionStrategy,
   ) {
     const itemIds = selectionStore.getAll()
-    setShowRandomAssignModal(false)
 
-    const assignmentsArray: Array<{ itemId: string; assigneeIds: string[] }> = []
     const itemToAssignees = new Map<string, string[]>()
-
     for (const [assigneeId, assignedItemIds] of assignments.entries()) {
       for (const itemId of assignedItemIds) {
         const existing = itemToAssignees.get(itemId) || []
@@ -538,18 +478,18 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       }
     }
 
+    const assignmentsArray: Array<{ itemId: string; assigneeIds: string[] }> = []
     for (const [itemId, assigneeIds] of itemToAssignees.entries()) {
       assignmentsArray.push({ itemId, assigneeIds })
     }
 
     sendMessage('bulkRandomAssign', {
       itemIds,
-      projectId: projectData?.id || projectId,
+      projectId: resolvedProjectId,
       assignments: assignmentsArray,
       strategy,
     })
-
-    selectionStore.clear()
+    // §3 selection policy — Random Assign preserves selection.
   }
 
   async function handleBulkClose() {
@@ -558,14 +498,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     setShowCloseModal(true)
   }
 
-  async function handleConfirmClose() {
+  function handleConfirmClose() {
     const itemIds = selectionStore.getAll()
     setShowCloseModal(false)
-    sendMessage('bulkClose', {
-      itemIds,
-      projectId: projectData?.id || projectId,
-      reason: closeReason,
-    })
+    sendMessage('bulkClose', { itemIds, projectId: resolvedProjectId, reason: closeReason })
     selectionStore.clear()
   }
 
@@ -575,11 +511,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     setShowOpenModal(true)
   }
 
-  async function handleConfirmOpen() {
+  function handleConfirmOpen() {
     const itemIds = selectionStore.getAll()
     setShowOpenModal(false)
-    sendMessage('bulkOpen', { itemIds, projectId: projectData?.id || projectId })
-    selectionStore.clear()
+    sendMessage('bulkOpen', { itemIds, projectId: resolvedProjectId })
   }
 
   async function handleLock() {
@@ -587,10 +522,11 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     if (!(await checkToken())) return
     setShowLockModal(true)
   }
-  async function handleConfirmLock() {
+
+  function handleConfirmLock() {
     const itemIds = selectionStore.getAll()
     setShowLockModal(false)
-    sendMessage('bulkLock', { itemIds, projectId: projectData?.id || projectId, lockReason })
+    sendMessage('bulkLock', { itemIds, projectId: resolvedProjectId, lockReason })
     selectionStore.clear()
   }
 
@@ -599,11 +535,11 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     if (!(await checkToken())) return
     setShowPinModal(true)
   }
-  async function handleConfirmPin() {
+
+  function handleConfirmPin() {
     const itemIds = selectionStore.getAll()
     setShowPinModal(false)
-    sendMessage('bulkPin', { itemIds, projectId: projectData?.id || projectId })
-    selectionStore.clear()
+    sendMessage('bulkPin', { itemIds, projectId: resolvedProjectId })
   }
 
   async function handleUnpin() {
@@ -611,11 +547,11 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     if (!(await checkToken())) return
     setShowUnpinModal(true)
   }
-  async function handleConfirmUnpin() {
+
+  function handleConfirmUnpin() {
     const itemIds = selectionStore.getAll()
     setShowUnpinModal(false)
-    sendMessage('bulkUnpin', { itemIds, projectId: projectData?.id || projectId })
-    selectionStore.clear()
+    sendMessage('bulkUnpin', { itemIds, projectId: resolvedProjectId })
   }
 
   async function handleTransfer() {
@@ -623,12 +559,21 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     if (!(await checkToken())) return
     setShowTransferModal(true)
   }
-  async function handleConfirmTransfer(targetRepoOwner: string, targetRepoName: string) {
-    const itemIds = selectionStore.getAll()
+
+  function handleConfirmTransfer(
+    targetRepoOwner: string,
+    targetRepoName: string,
+    eligibleItemIds?: readonly string[],
+  ) {
+    // §10.7 — when pre-flight returned an eligible subset, dispatch the
+    // bulkTransfer against that subset only. Otherwise fall back to the full
+    // selection (pre-flight may have been skipped or failed).
+    const itemIds =
+      eligibleItemIds && eligibleItemIds.length > 0 ? [...eligibleItemIds] : selectionStore.getAll()
     setShowTransferModal(false)
     sendMessage('bulkTransfer', {
       itemIds,
-      projectId: projectData?.id || projectId,
+      projectId: resolvedProjectId,
       targetRepoOwner,
       targetRepoName,
     })
@@ -638,113 +583,112 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   async function handleBulkDelete() {
     setMenuOpen(false)
     if (!(await checkToken())) return
+    const ids = selectionStore.getAll()
+    const titles = getTitlesForItemIds(ids).map((entry) => entry.title)
+    setDeleteItemTitles(titles)
     setShowDeleteModal(true)
   }
 
-  async function handleConfirmDelete() {
+  function handleConfirmDelete() {
     const itemIds = selectionStore.getAll()
     setShowDeleteModal(false)
-    sendMessage('bulkDelete', { itemIds, projectId: projectData?.id || projectId })
+    sendMessage('bulkDelete', { itemIds, projectId: resolvedProjectId })
     selectionStore.clear()
   }
 
   async function handleBulkRename() {
     setMenuOpen(false)
     if (!(await checkToken())) return
-    setShowRenameModal(true)
+    setRenameOpen(true)
   }
 
-  function handleConfirmRename(
-    renames: Array<{
-      domId: string
-      issueNodeId: string
-      newTitle: string
-      typename: 'Issue' | 'PullRequest'
-    }>,
-  ) {
-    setShowRenameModal(false)
+  function handleConfirmRename(renames: RenameFlyoutConfirm[]) {
+    setRenameOpen(false)
     sendMessage('bulkRename', {
       itemIds: selectionStore.getAll(),
-      projectId: projectData?.id || projectId,
+      projectId: resolvedProjectId,
       renames,
     })
-    selectionStore.clear()
+    // §3 selection policy — Rename preserves selection.
   }
 
   async function handleBulkReorder() {
     setMenuOpen(false)
     if (!(await checkToken())) return
-    setShowMoveModal(true)
+    setReorderOpen(true)
   }
 
-  function handleConfirmReorder(ops: ReorderOp[], resolvedProjectId: string, label: string) {
-    setShowMoveModal(false)
-    sendMessage('bulkReorder', { projectId: resolvedProjectId, reorderOps: ops, label })
-    selectionStore.clear()
+  function handleConfirmReorder(ops: ReorderOp[], reorderProjectId: string, label: string) {
+    setReorderOpen(false)
+    sendMessage('bulkReorder', { projectId: reorderProjectId, reorderOps: ops, label })
+    // §3 selection policy — Reorder preserves selection.
   }
 
-  function handleUpdateRelationshipSelection(selection: RelationshipSelectionState) {
-    setBulkUpdateValidationErrors([])
-    setRelationshipSelection(selection)
-    setRelationshipUpdates((prev) => ({
-      parent: selection.parent ? prev.parent : { set: undefined, clear: false },
-      blockedBy: selection.blockedBy ? prev.blockedBy : { add: [], remove: [], clear: false },
-      blocking: selection.blocking ? prev.blocking : { add: [], remove: [], clear: false },
-    }))
+  function handleMarkVerb(verb: MarkVerb) {
+    setMarkOpen(false)
+    const itemIds = selectionStore.getAll()
+    switch (verb) {
+      case 'close':
+        sendMessage('bulkClose', {
+          itemIds,
+          projectId: resolvedProjectId,
+          reason: closeReason,
+        })
+        selectionStore.clear()
+        return
+      case 'reopen':
+        sendMessage('bulkOpen', { itemIds, projectId: resolvedProjectId })
+        return
+      case 'pin':
+        sendMessage('bulkPin', { itemIds, projectId: resolvedProjectId })
+        return
+      case 'unpin':
+        sendMessage('bulkUnpin', { itemIds, projectId: resolvedProjectId })
+        return
+      case 'lock':
+        sendMessage('bulkLock', { itemIds, projectId: resolvedProjectId, lockReason: null })
+        selectionStore.clear()
+        return
+      case 'unlock':
+        sendMessage('bulkUnlock', { itemIds, projectId: resolvedProjectId })
+        return
+    }
   }
 
-  const hasChanges = selectedFields.length > 0 || hasRelationshipOperations(relationshipUpdates)
+  const barChords: BarChordMap = {
+    E: { action: () => handleEditFields() },
+    R: { action: () => handleBulkRename() },
+    O: { action: () => handleBulkReorder() },
+    A: { action: () => handleRandomAssign() },
+    M: { action: () => setMarkOpen((open) => !open) },
+    C: { action: () => handleBulkClose() },
+    P: { action: () => handlePin() },
+    L: { action: () => handleLock() },
+    T: { action: () => handleTransfer() },
+    D: {
+      action: () => {
+        if (count === 1) {
+          checkToken().then((ok) => ok && setShowDupModal(true))
+        } else {
+          handleBulkDelete()
+        }
+      },
+    },
+    '?': { action: () => setShowHelp(true) },
+  }
+  useBarKeyboardChords(barRef, barChords)
 
   if (count === 0) return null
 
   return (
     <>
       <BulkActionsModals
-        step={step}
         count={count}
-        projectData={projectData}
-        selectedFields={selectedFields}
-        fieldValues={fieldValues}
-        relationshipUpdates={relationshipUpdates}
-        relationshipSelection={relationshipSelection}
-        hasChanges={hasChanges}
-        bulkUpdateValidationErrors={bulkUpdateValidationErrors}
-        concurrentError={concurrentError}
+        projectIdResolved={resolvedProjectId}
         owner={owner}
         isOrg={isOrg}
         number={number}
-        projectId={projectId}
         firstRepoName={firstRepoName}
-        applyBtnRef={applyBtnRef}
-        onWizardClose={() => setStep('CLOSED')}
-        onToggleField={(f) => {
-          setBulkUpdateValidationErrors([])
-          setSelectedFields((prev) =>
-            prev.some((x) => x.id === f.id) ? prev.filter((x) => x.id !== f.id) : [...prev, f],
-          )
-        }}
-        onUpdateFieldValue={(id, v) => {
-          setBulkUpdateValidationErrors([])
-          setFieldValues((prev) => ({ ...prev, [id]: v }))
-        }}
-        onUpdateRelationships={(relationships) => {
-          setBulkUpdateValidationErrors([])
-          setRelationshipUpdates(relationships)
-        }}
-        onUpdateRelationshipSelection={handleUpdateRelationshipSelection}
-        onSetSelectedFields={(fields) => {
-          setBulkUpdateValidationErrors([])
-          setSelectedFields(fields)
-        }}
-        onGoToStep={(s) => {
-          if (s !== 'SUMMARY') setBulkUpdateValidationErrors([])
-          setStep(s)
-        }}
-        onApply={handleBulkUpdate}
-        onOpenOptions={() => {
-          sendMessage('openOptions', {})
-          setStep('CLOSED')
-        }}
         showCloseModal={showCloseModal}
         closeReason={closeReason}
         onChangeCloseReason={setCloseReason}
@@ -754,6 +698,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         onCloseOpenModal={() => setShowOpenModal(false)}
         onConfirmOpen={handleConfirmOpen}
         showDeleteModal={showDeleteModal}
+        deleteItemTitles={deleteItemTitles}
         onCloseDeleteModal={() => setShowDeleteModal(false)}
         onConfirmDelete={handleConfirmDelete}
         showLockModal={showLockModal}
@@ -772,24 +717,19 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         onConfirmTransfer={handleConfirmTransfer}
         showDupModal={showDupModal}
         onCloseDupModal={() => {
-          selectionStore.clear()
+          // §11.8 — Duplicate preserves selection.
           setShowDupModal(false)
         }}
-        showRenameModal={showRenameModal}
-        onCloseRenameModal={() => setShowRenameModal(false)}
-        onConfirmRename={handleConfirmRename}
-        showMoveModal={showMoveModal}
-        onCloseMoveModal={() => setShowMoveModal(false)}
-        onConfirmReorder={handleConfirmReorder}
-        showRandomAssignModal={showRandomAssignModal}
-        onCloseRandomAssignModal={() => setShowRandomAssignModal(false)}
-        onConfirmRandomAssign={handleConfirmRandomAssign}
         showHelp={showHelp}
         onCloseHelp={() => setShowHelp(false)}
       />
 
       {/* ── persistent bottom bar ── */}
       <Box
+        ref={barRef}
+        role="toolbar"
+        aria-label="Bulk actions"
+        tabIndex={-1}
         sx={{
           position: 'fixed',
           left: '50%',
@@ -806,6 +746,11 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
           display: 'flex',
           flexDirection: 'column',
           gap: tokenStatusError ? 2 : 0,
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'accent.emphasis',
+            outlineOffset: '2px',
+          },
         }}
       >
         {tokenStatusError && (
@@ -838,7 +783,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             <Text sx={{ fontSize: 0, color: 'fg.muted', flexShrink: 0 }}>
               {count === 1 ? 'item' : 'items'} selected
             </Text>
-            {/* ⌘A / Esc hints */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {(['⌘A', 'Esc'] as const).map((key) => (
                 <Box
@@ -865,72 +809,126 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             </Box>
           </Box>
 
-          {/* Divider */}
           <Box sx={{ width: '1px', height: 20, bg: 'border.default', flexShrink: 0 }} />
 
-          {/* Actions dropdown */}
+          {/* Edit fields chip */}
+          <Button
+            ref={editFieldsChipRef}
+            variant="default"
+            size="small"
+            onClick={() => handleEditFields()}
+            aria-keyshortcuts="E"
+            aria-haspopup="dialog"
+            aria-expanded={editFieldsOpen}
+            data-testid="rgp-bar-edit-fields-chip"
+            sx={chipSx}
+          >
+            <ListCheckIcon size={14} />
+            <Text sx={{ fontSize: 1, fontWeight: 'semibold', ml: '6px' }}>Edit fields</Text>
+            <Text sx={{ ml: '4px', color: 'fg.muted' }}>▾</Text>
+          </Button>
+
+          {/* Mark chip */}
+          <Button
+            ref={markChipRef}
+            variant="default"
+            size="small"
+            onClick={() => setMarkOpen((o) => !o)}
+            aria-keyshortcuts="M"
+            aria-haspopup="dialog"
+            aria-expanded={markOpen}
+            data-testid="rgp-bar-mark-chip"
+            sx={chipSx}
+          >
+            <TagIcon size={14} />
+            <Text sx={{ fontSize: 1, fontWeight: 'semibold', ml: '6px' }}>Mark</Text>
+            <Text sx={{ ml: '4px', color: 'fg.muted' }}>▾</Text>
+          </Button>
+
+          {/* Overflow chip */}
           <Box ref={menuRef} sx={{ position: 'relative' }}>
             <Button
               ref={actionsButtonRef}
-              variant="primary"
+              variant="default"
               size="small"
               onClick={() => setMenuOpen((o) => !o)}
-              sx={{
-                boxShadow: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
-              }}
+              aria-label="More actions"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              data-testid="rgp-bar-overflow-chip"
+              sx={chipSx}
             >
-              <ListCheckIcon size={14} />
-              <Text sx={{ fontSize: 1, fontWeight: 'semibold' }}> Actions </Text>
-              <Box
-                as="kbd"
-                sx={{
-                  fontSize: 0,
-                  fontFamily: 'inherit',
-                  fontWeight: 500,
-                  px: '4px',
-                  py: '1px',
-                  borderRadius: 1,
-                  bg: 'rgba(255,255,255,0.18)',
-                  border: '1px solid rgba(255,255,255,0.28)',
-                  color: 'inherit',
-                  cursor: 'default',
-                  lineHeight: 1.5,
-                  opacity: 0.9,
-                }}
-              >
-                {isMac ? ' ⌘⇧B ' : ' ⌃⇧B '}
-              </Box>
+              <KebabHorizontalIcon size={14} />
             </Button>
             {menuOpen && (
               <BulkActionsMenu
                 count={count}
-                onEditFields={() => handleFieldSelectionOpen()}
                 onRandomAssign={handleRandomAssign}
-                onDeepDuplicate={() =>
-                  checkToken().then((ok) => ok && setShowDupModal(true))
-                }
+                onDeepDuplicate={() => checkToken().then((ok) => ok && setShowDupModal(true))}
                 onRename={handleBulkRename}
                 onReorder={handleBulkReorder}
-                onClose={handleBulkClose}
-                onOpen={handleBulkOpen}
-                onLock={handleLock}
-                onPin={handlePin}
-                onUnpin={handleUnpin}
                 onTransfer={handleTransfer}
                 onDelete={handleBulkDelete}
               />
             )}
           </Box>
+
+          <BulkMarkFlyout
+            anchorRef={markChipRef}
+            open={markOpen}
+            onClose={() => setMarkOpen(false)}
+            itemIds={selectionStore.getAll()}
+            onSelectVerb={handleMarkVerb}
+          />
+
+          <BulkEditFlyout
+            anchorRef={editFieldsChipRef}
+            open={editFieldsOpen}
+            onClose={() => setEditFieldsOpen(false)}
+            owner={owner}
+            isOrg={isOrg}
+            projectId={resolvedProjectId}
+            itemIds={selectionStore.getAll()}
+            fields={projectData?.fields ?? []}
+            recentFieldIds={recentFieldIdsRef.current}
+            onAppliedField={pushRecentField}
+          />
+
+          <BulkRenameFlyout
+            anchorRef={actionsButtonRef}
+            open={renameOpen}
+            onClose={() => setRenameOpen(false)}
+            projectId={resolvedProjectId}
+            itemIds={selectionStore.getAll()}
+            count={count}
+            onConfirm={handleConfirmRename}
+          />
+
+          <BulkReorderFlyout
+            anchorRef={actionsButtonRef}
+            open={reorderOpen}
+            onClose={() => setReorderOpen(false)}
+            projectId={resolvedProjectId}
+            itemIds={selectionStore.getAll()}
+            count={count}
+            owner={owner}
+            number={number}
+            isOrg={isOrg}
+            onConfirm={handleConfirmReorder}
+          />
+
+          <BulkRandomAssignFlyout
+            anchorRef={actionsButtonRef}
+            open={randomAssignOpen}
+            onClose={() => setRandomAssignOpen(false)}
+            owner={owner}
+            repoName={firstRepoName}
+            projectNumber={number}
+            isOrg={isOrg}
+            itemIds={selectionStore.getAll()}
+            count={count}
+            onConfirm={handleConfirmRandomAssign}
+          />
 
           {/* spacer + clear */}
           <Box sx={{ flex: 1 }} />
