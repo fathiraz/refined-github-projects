@@ -422,70 +422,66 @@ function ValuePicker({
 
   if (dataType === 'SINGLE_SELECT' && field.options) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
+      <RadioGroup
+        name={`rgp-edit-options-${field.id}`}
+        onChange={(v) => {
+          if (v) onChange({ kind: 'singleSelect', singleSelectOptionId: v })
+        }}
+        sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+      >
+        <RadioGroup.Label sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
           {field.name}
-        </Text>
-        <RadioGroup
-          name={`rgp-edit-options-${field.id}`}
-          onChange={(v) => {
-            if (v) onChange({ kind: 'singleSelect', singleSelectOptionId: v })
-          }}
-          sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
-        >
-          {field.options.map((opt) => {
-            const selected = value?.kind === 'singleSelect' && value.singleSelectOptionId === opt.id
-            return (
-              <Box key={opt.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Radio
-                  value={opt.id}
-                  checked={selected}
-                  onChange={() => onChange({ kind: 'singleSelect', singleSelectOptionId: opt.id })}
-                  data-testid={`rgp-edit-option-${opt.id}`}
-                />
-                <Text sx={{ fontSize: 1 }}>{opt.name}</Text>
-              </Box>
-            )
-          })}
-        </RadioGroup>
-      </Box>
+        </RadioGroup.Label>
+        {field.options.map((opt) => {
+          const selected = value?.kind === 'singleSelect' && value.singleSelectOptionId === opt.id
+          return (
+            <Box key={opt.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Radio
+                value={opt.id}
+                checked={selected}
+                onChange={() => onChange({ kind: 'singleSelect', singleSelectOptionId: opt.id })}
+                data-testid={`rgp-edit-option-${opt.id}`}
+              />
+              <Text sx={{ fontSize: 1 }}>{opt.name}</Text>
+            </Box>
+          )
+        })}
+      </RadioGroup>
     )
   }
 
   if (dataType === 'ITERATION' && field.configuration?.iterations) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
+      <RadioGroup
+        name={`rgp-edit-iter-${field.id}`}
+        onChange={(v) => {
+          if (v) onChange({ kind: 'iteration', iterationId: v })
+        }}
+        sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+      >
+        <RadioGroup.Label sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
           {field.name}
-        </Text>
-        <RadioGroup
-          name={`rgp-edit-iter-${field.id}`}
-          onChange={(v) => {
-            if (v) onChange({ kind: 'iteration', iterationId: v })
-          }}
-          sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
-        >
-          {field.configuration.iterations.map((it) => {
-            const selected = value?.kind === 'iteration' && value.iterationId === it.id
-            return (
-              <Box key={it.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Radio
-                  value={it.id}
-                  checked={selected}
-                  onChange={() => onChange({ kind: 'iteration', iterationId: it.id })}
-                  data-testid={`rgp-edit-iteration-${it.id}`}
-                />
-                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                  <Text sx={{ fontSize: 1 }}>{it.title}</Text>
-                  <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                    Starts {it.startDate} · {it.duration} days
-                  </Text>
-                </Box>
+        </RadioGroup.Label>
+        {field.configuration.iterations.map((it) => {
+          const selected = value?.kind === 'iteration' && value.iterationId === it.id
+          return (
+            <Box key={it.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Radio
+                value={it.id}
+                checked={selected}
+                onChange={() => onChange({ kind: 'iteration', iterationId: it.id })}
+                data-testid={`rgp-edit-iteration-${it.id}`}
+              />
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Text sx={{ fontSize: 1 }}>{it.title}</Text>
+                <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
+                  Starts {it.startDate} · {it.duration} days
+                </Text>
               </Box>
-            )
-          })}
-        </RadioGroup>
-      </Box>
+            </Box>
+          )
+        })}
+      </RadioGroup>
     )
   }
 
