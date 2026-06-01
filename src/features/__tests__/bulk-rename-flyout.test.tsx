@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   DEFAULT_RULE_STATE,
@@ -64,6 +64,31 @@ describe('bulk-rename-utils — evaluateRule', () => {
   it('template tab — {number} extracts #NNN if present', () => {
     const r = rule({ tab: 'template', template: 'PR-{number}: {title}' })
     expect(evaluateRule('Fix #1234 bug', r, 0).newTitle).toBe('PR-1234: Fix #1234 bug')
+  })
+
+  describe('template tab — {date}', () => {
+    const originalTz = process.env.TZ
+
+    beforeEach(() => {
+      vi.stubEnv('TZ', 'Australia/Sydney')
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-05-31T15:00:00.000Z'))
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.unstubAllEnvs()
+      if (originalTz === undefined) {
+        delete process.env.TZ
+      } else {
+        process.env.TZ = originalTz
+      }
+    })
+
+    it('uses local calendar date, not UTC', () => {
+      const r = rule({ tab: 'template', template: '{date}' })
+      expect(evaluateRule('x', r, 0).newTitle).toBe('2026-06-01')
+    })
   })
 
   it('number tab — paren style appends (n)', () => {

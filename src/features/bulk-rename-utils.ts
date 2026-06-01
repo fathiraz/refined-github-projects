@@ -106,10 +106,15 @@ function appendNumber(original: string, style: NumberStyle, n: number): string {
 
 const TOKEN_REGEX = /\{(n|title|number|date)\}/g
 
+function formatLocalCalendarDate(date: Date): string {
+  const pad2 = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
 function expandTemplate(template: string, original: string, index: number): string {
   if (!template) return original
   const today = new Date()
-  const isoDate = today.toISOString().slice(0, 10)
+  const localDate = formatLocalCalendarDate(today)
   const issueNumberMatch = original.match(/#(\d+)/)
   return template.replace(TOKEN_REGEX, (_match, token: string) => {
     switch (token) {
@@ -120,7 +125,7 @@ function expandTemplate(template: string, original: string, index: number): stri
       case 'number':
         return issueNumberMatch ? issueNumberMatch[1] : ''
       case 'date':
-        return isoDate
+        return localDate
       default:
         return ''
     }
