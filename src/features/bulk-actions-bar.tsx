@@ -923,6 +923,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             onClose={() => setRandomAssignOpen(false)}
             owner={owner}
             repoName={firstRepoName}
+            projectNumber={number}
+            isOrg={isOrg}
             itemIds={selectionStore.getAll()}
             count={count}
             onConfirm={handleConfirmRandomAssign}

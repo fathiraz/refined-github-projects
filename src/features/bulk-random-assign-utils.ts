@@ -91,3 +91,57 @@ export function distributeRoundRobin(items: string[], assignees: string[]): Map<
 export type DistributionStrategy = 'balanced' | 'random' | 'round-robin'
 
 export type DistributionFunction = (items: string[], assignees: string[]) => Map<string, string[]>
+
+/** Inverts assignee→itemIds to itemId→assigneeIds. */
+export function invertDistribution(distribution: Map<string, string[]>): Map<string, string[]> {
+  const byItem = new Map<string, string[]>()
+  for (const [assigneeId, assignedItemIds] of distribution.entries()) {
+    for (const itemId of assignedItemIds) {
+      const existing = byItem.get(itemId) ?? []
+      byItem.set(itemId, [...existing, assigneeId])
+    }
+  }
+  return byItem
+}
+
+/** Rebuilds assignee→itemIds from itemId→assigneeIds (inverse of {@link invertDistribution}). */
+export function distributionFromByItem(byItem: Map<string, string[]>): Map<string, string[]> {
+  const distribution = new Map<string, string[]>()
+  for (const [itemId, assigneeIds] of byItem.entries()) {
+    for (const assigneeId of assigneeIds) {
+      const bucket = distribution.get(assigneeId) ?? []
+      bucket.push(itemId)
+      distribution.set(assigneeId, bucket)
+    }
+  }
+  return distribution
+}
+
+/**
+ * Unions strategy assignment with per-item existing assignees (existing first, deduped).
+ */
+export function mergePreserveExisting(
+  newByItem: Map<string, string[]>,
+  existingByItem: Map<string, string[]>,
+): Map<string, string[]> {
+  const merged = new Map<string, string[]>()
+  for (const [itemId, newIds] of newByItem.entries()) {
+    const existing = existingByItem.get(itemId) ?? []
+    const seen = new Set<string>()
+    const ids: string[] = []
+    for (const id of existing) {
+      if (!seen.has(id)) {
+        seen.add(id)
+        ids.push(id)
+      }
+    }
+    for (const id of newIds) {
+      if (!seen.has(id)) {
+        seen.add(id)
+        ids.push(id)
+      }
+    }
+    merged.set(itemId, ids)
+  }
+  return merged
+}

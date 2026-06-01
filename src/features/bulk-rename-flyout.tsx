@@ -67,6 +67,7 @@ export function BulkRenameFlyout({
   const [rule, setRule] = useState<RuleState>(DEFAULT_RULE_STATE)
   const [showAll, setShowAll] = useState(false)
   const templateInputRef = useRef<HTMLInputElement | null>(null)
+  const latestFetch = useRef(0)
 
   // Reset on open
   useEffect(() => {
@@ -81,10 +82,14 @@ export function BulkRenameFlyout({
   // Fetch titles whenever flyout opens
   useEffect(() => {
     if (!open || itemIds.length === 0) return
+
+    const requestId = Date.now()
+    latestFetch.current = requestId
     setLoading(true)
     setFetchError(null)
     sendMessage('getItemTitles', { itemIds: [...itemIds], projectId })
       .then((resolved) => {
+        if (requestId !== latestFetch.current) return
         setItems(
           resolved.map((r) => ({
             domId: r.domId,
@@ -95,9 +100,16 @@ export function BulkRenameFlyout({
         )
       })
       .catch((err: unknown) => {
+        if (requestId !== latestFetch.current) return
         setFetchError(err instanceof Error ? err.message : 'Failed to fetch item titles.')
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (requestId === latestFetch.current) setLoading(false)
+      })
+
+    return () => {
+      if (latestFetch.current === requestId) latestFetch.current = 0
+    }
   }, [open, projectId, itemIds])
 
   const setTab = useCallback((id: string) => {
@@ -481,17 +493,17 @@ interface NumberTabProps {
 function NumberTab({ rule, onChange }: NumberTabProps) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
+      <RadioGroup
+        name="rgp-rename-number-style"
+        onChange={(value) => {
+          if (value) onChange((p) => ({ ...p, numberStyle: value as NumberStyle }))
+        }}
+        sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+      >
+        <RadioGroup.Label sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
           Numbering style
-        </Text>
-        <RadioGroup
-          name="rgp-rename-number-style"
-          onChange={(value) => {
-            if (value) onChange((p) => ({ ...p, numberStyle: value as NumberStyle }))
-          }}
-          sx={{ display: 'flex', gap: 3 }}
-        >
+        </RadioGroup.Label>
+        <Box sx={{ display: 'flex', gap: 3 }}>
           {(
             [
               ['paren', '(1)'],
@@ -508,8 +520,8 @@ function NumberTab({ rule, onChange }: NumberTabProps) {
               <Text sx={{ fontFamily: 'mono', fontSize: 0 }}>{label}</Text>
             </Box>
           ))}
-        </RadioGroup>
-      </Box>
+        </Box>
+      </RadioGroup>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
           Start at

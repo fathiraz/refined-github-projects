@@ -23,9 +23,12 @@ import { SearchIcon } from '@/ui/icons'
 import { BulkFlyout } from '@/ui/bulk-flyout'
 import { sendMessage } from '@/lib/messages'
 import {
+  distributionFromByItem,
   distributeBalanced,
   distributeRandom,
   distributeRoundRobin,
+  invertDistribution,
+  mergePreserveExisting,
   type DistributionStrategy,
 } from '@/features/bulk-random-assign-utils'
 
@@ -41,6 +44,8 @@ export interface BulkRandomAssignFlyoutProps {
   onClose: () => void
   owner: string
   repoName: string
+  projectNumber: number
+  isOrg: boolean
   itemIds: readonly string[]
   count: number
   /** Pinned recent assignee logins (most-recent-first, capped). */
@@ -76,6 +81,8 @@ export function BulkRandomAssignFlyout({
   onClose,
   owner,
   repoName,
+  projectNumber,
+  isOrg,
   itemIds,
   count,
   recentAssignees,
@@ -88,9 +95,13 @@ export function BulkRandomAssignFlyout({
   const [loading, setLoading] = useState(false)
   const [strategy, setStrategy] = useState<DistributionStrategy>('balanced')
   const [preserveExisting, setPreserveExisting] = useState(false)
+  const [existingByItemId, setExistingByItemId] = useState<Map<string, string[]>>(new Map())
+  const [loadingExisting, setLoadingExisting] = useState(false)
   const [showDistribution, setShowDistribution] = useState(false)
   const [shuffleNonce, setShuffleNonce] = useState(0)
   const latestReq = useRef(0)
+  const existingFetchId = useRef(0)
+  const itemIdsKey = itemIds.join('\0')
 
   // Reset state on open
   useEffect(() => {
@@ -99,10 +110,61 @@ export function BulkRandomAssignFlyout({
       setPicked([])
       setStrategy('balanced')
       setPreserveExisting(false)
+      setExistingByItemId(new Map())
+      setLoadingExisting(false)
       setShowDistribution(false)
       setShuffleNonce(0)
     }
   }, [open])
+
+  // Load current assignees per item when preserve is enabled.
+  useEffect(() => {
+    if (!open || !preserveExisting || itemIds.length === 0) {
+      if (!preserveExisting) setExistingByItemId(new Map())
+      return
+    }
+
+    const fetchId = Date.now()
+    existingFetchId.current = fetchId
+    setLoadingExisting(true)
+
+    void (async () => {
+      const next = new Map<string, string[]>()
+      for (const itemId of itemIds) {
+        if (existingFetchId.current !== fetchId) return
+        try {
+          const data = await sendMessage('getItemPreview', {
+            itemId,
+            owner,
+            number: projectNumber,
+            isOrg,
+          })
+          next.set(
+            itemId,
+            data.assignees.map((a) => a.id),
+          )
+          setCache((prev) => {
+            const updated = new Map(prev)
+            for (const a of data.assignees) {
+              if (!updated.has(a.id)) {
+                updated.set(a.id, { id: a.id, name: a.login, avatarUrl: a.avatarUrl })
+              }
+            }
+            return updated
+          })
+        } catch {
+          next.set(itemId, [])
+        }
+      }
+      if (existingFetchId.current !== fetchId) return
+      setExistingByItemId(next)
+      setLoadingExisting(false)
+    })()
+
+    return () => {
+      existingFetchId.current = 0
+    }
+  }, [open, preserveExisting, itemIdsKey, owner, projectNumber, isOrg])
 
   // Search assignees
   useEffect(() => {
@@ -184,20 +246,24 @@ export function BulkRandomAssignFlyout({
     if (picked.length === 0 || itemIds.length === 0) return new Map()
     // shuffleNonce is the dependency on Shuffle clicks — random/balanced re-roll.
     void shuffleNonce
-    return runStrategy(strategy, itemIds, picked)
-  }, [strategy, picked, itemIds, shuffleNonce])
+    const base = runStrategy(strategy, itemIds, picked)
+    if (!preserveExisting) return base
+    const byItem = invertDistribution(base)
+    const merged = mergePreserveExisting(byItem, existingByItemId)
+    return distributionFromByItem(merged)
+  }, [strategy, picked, itemIds, shuffleNonce, preserveExisting, existingByItemId])
 
   function toggle(id: string) {
     setPicked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
   function handleApply() {
-    if (picked.length === 0) return
+    if (picked.length === 0 || (preserveExisting && loadingExisting)) return
     onConfirm(preview, strategy)
     onClose()
   }
 
-  const applyDisabled = picked.length === 0
+  const applyDisabled = picked.length === 0 || (preserveExisting && loadingExisting)
   const idToTarget = (id: string) => cache.get(id)
 
   return (
@@ -322,6 +388,7 @@ export function BulkRandomAssignFlyout({
             data-testid="rgp-random-assign-preserve"
           />
           <Text>Preserve existing assignees</Text>
+          {loadingExisting && <Spinner size="small" aria-label="Loading current assignees" />}
         </Box>
 
         {picked.length > 0 && (
@@ -381,6 +448,7 @@ export function BulkRandomAssignFlyout({
 
         <Box>
           <Button
+            id="rgp-random-assign-disclose"
             variant="invisible"
             size="small"
             onClick={() => setShowDistribution((v) => !v)}
@@ -397,6 +465,7 @@ export function BulkRandomAssignFlyout({
             <Box sx={{ pl: 2, mt: 1 }} data-testid="rgp-random-assign-strategy">
               <RadioGroup
                 name="rgp-strategy"
+                aria-labelledby="rgp-random-assign-disclose"
                 onChange={(value) => {
                   if (value) setStrategy(value as DistributionStrategy)
                 }}
