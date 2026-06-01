@@ -14,6 +14,7 @@ import {
   Avatar,
   Box,
   Checkbox,
+  Flash,
   Radio,
   RadioGroup,
   Spinner,
@@ -28,7 +29,7 @@ import { getFieldIcon, type ProjectField } from '@/features/bulk-edit-utils'
 import {
   canApply,
   defaultValueFor,
-  serializeValue,
+  submitBulkFieldUpdate,
   type FieldValue,
 } from '@/features/bulk-edit-flyout-helpers'
 
@@ -81,6 +82,8 @@ export function BulkEditFlyout({
     Array<{ id: string; name: string; avatarUrl?: string }>
   >([])
   const [metaLoading, setMetaLoading] = useState(false)
+  const [applyError, setApplyError] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -89,6 +92,8 @@ export function BulkEditFlyout({
       setQuery('')
       setMetaQuery('')
       setMetaResults([])
+      setApplyError(null)
+      setApplying(false)
     }
   }, [open])
 
@@ -100,25 +105,31 @@ export function BulkEditFlyout({
   function pickField(field: ProjectField) {
     setActiveFieldId(field.id)
     setValue(defaultValueFor(field))
+    setApplyError(null)
     setCurrentPaneId('value')
   }
 
-  function handleApply() {
-    if (!activeField || !value) return
-    const payload = serializeValue(value)
-    if (payload === null) return
-    sendMessage('bulkUpdate', {
-      itemIds: [...itemIds],
-      projectId,
-      updates: [{ fieldId: activeField.id, value: { ...payload, dataType: activeField.dataType } }],
-      fieldMeta: {
-        [activeField.id]: {
-          name: activeField.name,
-          options: activeField.options,
-          iterations: activeField.configuration?.iterations,
-        },
-      },
-    })
+  async function handleApply() {
+    if (!activeField || !value || applying) return
+
+    setApplying(true)
+    setApplyError(null)
+
+    try {
+      const result = await submitBulkFieldUpdate({
+        activeField,
+        value,
+        itemIds,
+        projectId,
+      })
+      if (!result.ok) {
+        setApplyError(result.message)
+        return
+      }
+    } finally {
+      setApplying(false)
+    }
+
     onAppliedField(activeField.id)
     onClose()
   }
@@ -224,15 +235,22 @@ export function BulkEditFlyout({
     id: 'value',
     title: activeField?.name ?? 'Edit value',
     content: activeField ? (
-      <ValuePicker
-        field={activeField}
-        value={value}
-        onChange={setValue}
-        metaQuery={metaQuery}
-        setMetaQuery={setMetaQuery}
-        metaResults={metaResults}
-        metaLoading={metaLoading}
-      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {applyError && (
+          <Flash variant="warning" data-testid="rgp-edit-apply-error">
+            {applyError}
+          </Flash>
+        )}
+        <ValuePicker
+          field={activeField}
+          value={value}
+          onChange={setValue}
+          metaQuery={metaQuery}
+          setMetaQuery={setMetaQuery}
+          metaResults={metaResults}
+          metaLoading={metaLoading}
+        />
+      </Box>
     ) : (
       <Text sx={{ fontSize: 0, color: 'fg.muted' }}>No field picked.</Text>
     ),
@@ -253,7 +271,7 @@ export function BulkEditFlyout({
       onPaneChange={setCurrentPaneId}
       rootPaneId="list"
       footer={currentPaneId === 'value' ? 'apply-cancel' : null}
-      applyDisabled={!canApply(value)}
+      applyDisabled={!canApply(value) || applying}
       onApply={handleApply}
       applyLabel="Apply"
     />

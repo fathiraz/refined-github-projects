@@ -1,6 +1,28 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { canApply, defaultValueFor, serializeValue } from '@/features/bulk-edit-flyout-helpers'
+const hoisted = vi.hoisted(() => ({
+  sendMessage: vi.fn(),
+  getActiveCount: vi.fn(() => 0),
+}))
+
+vi.mock('@/lib/messages', () => ({
+  sendMessage: hoisted.sendMessage,
+}))
+
+vi.mock('@/lib/queue-store', () => ({
+  queueStore: {
+    getActiveCount: hoisted.getActiveCount,
+  },
+}))
+
+import {
+  BULK_EDIT_CONCURRENT_MESSAGE,
+  BULK_EDIT_DISPATCH_FAILED_MESSAGE,
+  canApply,
+  defaultValueFor,
+  serializeValue,
+  submitBulkFieldUpdate,
+} from '@/features/bulk-edit-flyout-helpers'
 import type { ProjectField } from '@/features/bulk-edit-utils'
 
 function field(over: Partial<ProjectField> = {}): ProjectField {
@@ -76,5 +98,64 @@ describe('bulk-edit-flyout — serializeValue shapes', () => {
   it('array → { array }', () => {
     const arr = [{ id: 'l1', name: 'bug' }]
     expect(serializeValue({ kind: 'array', array: arr })).toEqual({ array: arr })
+  })
+})
+
+describe('bulk-edit-flyout — submitBulkFieldUpdate dispatch', () => {
+  const textField = field({ id: 'f-text', name: 'Note', dataType: 'TEXT' })
+
+  beforeEach(() => {
+    hoisted.sendMessage.mockReset()
+    hoisted.getActiveCount.mockReset()
+    hoisted.getActiveCount.mockReturnValue(0)
+    hoisted.sendMessage.mockResolvedValue({ ok: true })
+  })
+
+  it('returns ok when bulkUpdate accepts dispatch', async () => {
+    const result = await submitBulkFieldUpdate({
+      activeField: textField,
+      value: { kind: 'text', text: 'hello' },
+      itemIds: ['item-1'],
+      projectId: 'proj-1',
+    })
+    expect(result).toEqual({ ok: true })
+    expect(hoisted.sendMessage).toHaveBeenCalledWith(
+      'bulkUpdate',
+      expect.objectContaining({ projectId: 'proj-1', itemIds: ['item-1'] }),
+    )
+  })
+
+  it('returns concurrent message when queue is full', async () => {
+    hoisted.getActiveCount.mockReturnValue(3)
+    const result = await submitBulkFieldUpdate({
+      activeField: textField,
+      value: { kind: 'text', text: 'hello' },
+      itemIds: ['item-1'],
+      projectId: 'proj-1',
+    })
+    expect(result).toEqual({ ok: false, message: BULK_EDIT_CONCURRENT_MESSAGE })
+    expect(hoisted.sendMessage).not.toHaveBeenCalled()
+  })
+
+  it('returns concurrent message when bulkUpdate rejects', async () => {
+    hoisted.sendMessage.mockResolvedValue({ ok: false, reason: 'concurrent' })
+    const result = await submitBulkFieldUpdate({
+      activeField: textField,
+      value: { kind: 'text', text: 'hello' },
+      itemIds: ['item-1'],
+      projectId: 'proj-1',
+    })
+    expect(result).toEqual({ ok: false, message: BULK_EDIT_CONCURRENT_MESSAGE })
+  })
+
+  it('returns dispatch failed message when sendMessage throws', async () => {
+    hoisted.sendMessage.mockRejectedValue(new Error('Receiving end does not exist'))
+    const result = await submitBulkFieldUpdate({
+      activeField: textField,
+      value: { kind: 'text', text: 'hello' },
+      itemIds: ['item-1'],
+      projectId: 'proj-1',
+    })
+    expect(result).toEqual({ ok: false, message: BULK_EDIT_DISPATCH_FAILED_MESSAGE })
   })
 })
