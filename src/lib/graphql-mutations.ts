@@ -157,6 +157,16 @@ export const LOCK_ISSUE = `
   }
 `
 
+export const UNLOCK_ISSUE = `
+  mutation UnlockIssue($lockableId: ID!) {
+    unlockLockable(input: { lockableId: $lockableId }) {
+      unlockedRecord {
+        ... on Issue { id locked }
+      }
+    }
+  }
+`
+
 export const PIN_ISSUE = `
   mutation PinIssue($issueId: ID!) {
     pinIssue(input: { issueId: $issueId }) {

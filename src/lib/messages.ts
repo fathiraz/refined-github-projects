@@ -264,6 +264,7 @@ interface ProtocolMap {
     projectId: string
     lockReason: 'OFF_TOPIC' | 'TOO_HEATED' | 'RESOLVED' | 'SPAM' | null
   }): void
+  bulkUnlock(data: { itemIds: string[]; projectId: string }): void
   bulkPin(data: { itemIds: string[]; projectId: string }): void
   bulkUnpin(data: { itemIds: string[]; projectId: string }): void
   bulkDelete(data: { itemIds: string[]; projectId: string }): void
