@@ -1,0 +1,233 @@
+src/features/bulk-mark-flyout.tsx
+  s_7346b77ea527e0::t_52f934fdc2fc19 1-17,19-84,86-265
+  s_7346b77ea527e0::t_12960d8f5ac344 85
+src/background/field-handlers.ts
+  s_2bd0926fa614df::t_6afe330a4e457a 198-206,211-214,224,226,258,269
+  s_f40aa9777c27e6::t_15adb0aca87afb 284-286
+  s_f40aa9777c27e6::t_b69ef94ee2a804 272-283,287-312
+src/features/__tests__/bulk-duplicate-modal.test.tsx
+  s_f40aa9777c27e6::t_2ae67419e261f6 1-34,37-133,135-136
+src/features/__tests__/bulk-rename-flyout.test.tsx
+  s_51616449731e9c::t_92cca2b4289efc 1-85,88-90
+src/features/bulk-edit-flyout.tsx
+  s_51616449731e9c::t_70804b7797a517 1-27,34-79,83-95,97-107,109-136,141-146,148-557
+  s_51616449731e9c::t_7e2f68482bc829 108
+  s_51616449731e9c::t_3820d6cc407050 137-140,147
+  s_51616449731e9c::t_0a4a06cc91f2cb 28-33
+  s_51616449731e9c::t_4654e6de47eb54 80
+src/features/bulk-rename-utils.ts
+  s_51616449731e9c::t_097d19ab4fef38 1-11,13-15,26,29,31,33,35-64,66-104,107-130,132-134,136-142
+src/ui/bulk-flyout.tsx
+  s_ae7d57acbf1e06::t_cba6bbd4d453d7 7-18
+  s_ae7d57acbf1e06::t_16f98d08cc984b 6,140
+  s_51616449731e9c::t_583d6121464c8b 64-76
+  s_51616449731e9c::t_2590e202e555c4 165-185
+  s_ae7d57acbf1e06::t_8082d6db5d1c2f 202-208
+src/features/__tests__/bulk-transfer-modal.test.tsx
+  s_d860f4efa1e34e::t_c20cd672b91c6b 1-13,22-142,158-171
+  s_d860f4efa1e34e::t_e653afb2339735 14-21
+  s_2bd0926fa614df::t_2a796744445b52 143-157
+src/features/__tests__/bulk-random-assign-flyout.test.tsx
+  s_51616449731e9c::t_506f16a6f082c5 1-59
+src/features/bulk-duplicate-utils.tsx
+  s_f40aa9777c27e6::t_41fe07bf2e96c6 185-236
+  s_f40aa9777c27e6::t_69289530fe8e02 19-29
+src/features/__tests__/bulk-reorder-flyout.test.tsx
+  s_51616449731e9c::t_5410fdbef8c2b4 49-55,60,66,71-72
+  s_51616449731e9c::t_157dc55937c4e8 1-2,4-48,56-59,61-65,67-70,73-75
+src/lib/use-bar-keyboard-chords.ts
+  s_ae7d57acbf1e06::t_d630de4858b626 1-113
+src/features/__tests__/queue-tracker.test.tsx
+  s_ae7d57acbf1e06::t_df227af2eb7997 137-214
+  s_ae7d57acbf1e06::t_5099c71ab9b83a 29,38-48
+src/lib/queue-store.ts
+  s_2bd0926fa614df::t_f0f72e0efc5132 278-285
+  s_f40aa9777c27e6::t_69390b534d8eb0 114-123,126-128
+  s_ae7d57acbf1e06::t_ec1a796b488619 6-32,45-53
+  s_2bd0926fa614df::t_af92407f529367 245-262
+  s_f40aa9777c27e6::t_c13b01951f1dee 75-83,96-113,124-125,129-131
+  s_ae7d57acbf1e06::t_eb4ab79e457dd1 198,208-225
+  s_ae7d57acbf1e06::t_656417c9031119 59,65-74,84-95,132-144
+  s_ae7d57acbf1e06::t_2e2184b143f3dc 264-274,302-317
+  s_2bd0926fa614df::t_a5c5fc3653184c 161,164
+src/features/bulk-actions-menu.tsx
+  s_d860f4efa1e34e::t_96dd560ad65693 112
+  s_d860f4efa1e34e::t_92150b3a1bdb3b 101
+  s_d860f4efa1e34e::t_d531b29db28e07 123
+  s_d860f4efa1e34e::t_5ae50c256ecaf8 134
+  s_7346b77ea527e0::t_0c5290f9f85aac 1-4,24,26,71,73,90,93-100,102-111,113-122,124-133,135-138,141,144,149-153,165
+  s_d860f4efa1e34e::t_f88833e9cd437a 146
+  s_d860f4efa1e34e::t_a85cba5a39a39c 187
+src/features/bulk-reorder-flyout.tsx
+  s_51616449731e9c::t_d73c892f9a8a65 1-382
+src/lib/queue-store.test.ts
+  s_f40aa9777c27e6::t_18fe6899408b6c 271,276-300,309-310,315-316
+  s_f40aa9777c27e6::t_bdb3792e7b6b6c 448-455,457-458,461-473
+  s_f40aa9777c27e6::t_67c3de9a810ba9 456,459-460
+  s_2bd0926fa614df::t_27f48ac65f0956 388-446
+  s_ae7d57acbf1e06::t_49fbbd7fb89c1d 241,243,247,249-252,257,261-262,264-267,272,301,307,314,317-318,322,326,332,337-339,343,350-352,359,363-365,370-371,376-378,385-386
+  s_f40aa9777c27e6::t_78eee1a3791e17 31
+  s_ae7d57acbf1e06::t_e2c2bc4db9fe8a 239-240,242,244-246,248,253-256,258-260,263,268-270,273-275,302-306,308,311-313,319-321,323-325,327-331,333-336,340-342,344-349,353-358,360-362,366-369,372-375,379-384,387,447
+src/features/__tests__/bulk-delete-modal.test.tsx
+  s_ae7d57acbf1e06::t_b0e83293595301 1-94,115-120,122-187
+  s_ae7d57acbf1e06::t_24b44c67567b98 100-114,121
+  s_ae7d57acbf1e06::t_2d0fce65427fd2 95-99
+src/features/bulk-duplicate-modal.tsx
+  s_f40aa9777c27e6::t_570ffa0566f294 638-660,662-675
+  s_f40aa9777c27e6::t_fe645b0c69f69a 1470,1474,1476-1477,1481,1483
+  s_f40aa9777c27e6::t_d736e461891f31 245
+  s_f40aa9777c27e6::t_c3eafde2611071 98
+  s_f40aa9777c27e6::t_ed87a97691eb27 43-46
+  s_f40aa9777c27e6::t_6392e0e6965c7a 252-258,260-262,265,269-271,274,280,282,284,316-332,363
+  s_d860f4efa1e34e::t_36d07c8f8665ec 405-406,419-421
+src/features/__tests__/bulk-edit-flyout.test.tsx
+  s_51616449731e9c::t_6abb7656495dc9 4-60,62-63,65-66,69-71,73-77,79-80
+  s_51616449731e9c::t_4f9c97b6596c39 61,64,72,78
+  s_51616449731e9c::t_c14072c3360c34 1-3
+src/features/__tests__/bulk-mark-flyout.test.tsx
+  s_7346b77ea527e0::t_ed856d12835cb3 1-6
+  s_7346b77ea527e0::t_ec1841e8c4c71c 7-99
+src/features/bulk-actions-utils.tsx
+  s_51616449731e9c::t_26c36e90f88427 7
+src/features/keyboard-help-overlay.tsx
+  s_ae7d57acbf1e06::t_e254844c8e4808 99-145
+  s_ae7d57acbf1e06::t_6705be216dcad6 32-45
+src/features/bulk-edit-flyout-helpers.ts
+  s_51616449731e9c::t_7dc4be084cfe5e 1-78
+src/lib/messages.ts
+  s_2bd0926fa614df::t_7905a00f2ad78b 205-208,215-216
+  s_2bd0926fa614df::t_1eeff879b75df6 383-389
+  s_f40aa9777c27e6::t_eecf975dffc249 218-233
+src/features/bulk-delete-modal.tsx
+  s_ae7d57acbf1e06::t_474c675be0b60e 1-3,10-11,16-51,73,75,77-81,88-155,163,166-167,173-176,178
+src/background/bulk-state.ts
+  s_2bd0926fa614df::t_831157c9670b28 37,69,90-104,106
+src/features/bulk-actions-modals.tsx
+  s_ae7d57acbf1e06::t_031ba2c1724e86 103
+  s_51616449731e9c::t_878d1947aa8e3f 1-4,24,141,151
+  s_f40aa9777c27e6::t_9d4ea7c06eba46 140
+  s_ae7d57acbf1e06::t_bac7311b506bed 42
+  s_f40aa9777c27e6::t_5403394b4a9bdd 64-68
+src/features/bulk-random-assign-flyout.tsx
+  s_51616449731e9c::t_ce7acf761a536b 1-47,49-428
+src/features/bulk-rename-flyout.tsx
+  s_51616449731e9c::t_286dcc405137f9 1-530
+src/lib/schemas-messages.ts
+  s_2bd0926fa614df::t_938246e8ae7c73 255-256,265
+  s_f40aa9777c27e6::t_8b7e6e5a321544 269-281
+  s_2bd0926fa614df::t_9562df59448e15 580
+  s_2bd0926fa614df::t_0aaabbc801fb21 166-173
+src/background/rest-helpers.ts
+  s_2bd0926fa614df::t_3052ce00dae6fc 89-95
+src/features/__tests__/bulk-actions-menu.test.tsx
+  s_7346b77ea527e0::t_1cdb22daa4a376 136,145-150
+  s_7346b77ea527e0::t_d50ed1c948f168 1-135,137-144,151-152
+src/lib/project-table-dom.ts
+  s_7346b77ea527e0::t_85dc02757b72ca 90-163
+  s_ae7d57acbf1e06::t_b1dd545b438396 57-73,75-89
+src/features/bulk-actions-bar.tsx
+  s_7346b77ea527e0::t_631fa4c43e30a2 814-818,820,823-848,852,855-859,861,867,876-881,929
+  s_7346b77ea527e0::t_28a6433a52d3a4 61-62,68
+  s_ae7d57acbf1e06::t_c4a5b4a11b30a5 729-732,749-753
+  s_7346b77ea527e0::t_0d46912d0e616b 8,19
+  s_ae7d57acbf1e06::t_c94ebe5ba00ef8 77
+  s_ae7d57acbf1e06::t_b3b812b5b8c79a 586-588
+  s_51616449731e9c::t_afbde670108c02 10,12-14,20-29,65,69-72,96-98,117-120,163,173-178,184,201,230,349,378-379,447-452,455-458,464,467,469,481,488,492,501,504,514,517,525-526,529,538-539,542,550-551,554,562,576,592,595,602,605-606,609,612,618,621-624,632-637,650,659,687,720,819,821-822,882-928
+  s_7346b77ea527e0::t_bcff353c71b1af 15
+  s_7346b77ea527e0::t_b363f906d6af52 627-631,638-649,651-655
+  s_7346b77ea527e0::t_1de0a3dd2ca6dd 663
+  s_ae7d57acbf1e06::t_6835879db226fb 701
+  s_f40aa9777c27e6::t_30b942cdd2f950 563-572
+  s_7346b77ea527e0::t_93ef26d8b985ee 30-42
+  s_ae7d57acbf1e06::t_346e35c708fdea 64
+  s_ae7d57acbf1e06::t_60214ca4beaf02 9
+  s_ae7d57acbf1e06::t_5b8c8497594a8e 658,660-662,664-679
+  s_7346b77ea527e0::t_a64ad1a1d80c4f 3
+  s_7346b77ea527e0::t_ad767007102bb9 116
+  s_ae7d57acbf1e06::t_90dee4c68850cf 7
+src/features/bulk-transfer-modal.tsx
+  s_2bd0926fa614df::t_6569ba11a2373d 154,158-159,165-174,182,184
+  s_f40aa9777c27e6::t_716b86a57eff44 449-453,457,463
+  s_f40aa9777c27e6::t_f9f8af6e773f00 24-25,38-44
+  s_f40aa9777c27e6::t_6537cc6ffdfb7e 28-37
+  s_f40aa9777c27e6::t_38d196ba489a14 84-96,101,113-119
+  s_f40aa9777c27e6::t_c5aaa790ca56d5 3
+  s_2bd0926fa614df::t_f0c6d1a9ddae2f 17
+  s_f40aa9777c27e6::t_0294402c77785f 199-246,248-256
+  s_d860f4efa1e34e::t_9d173be25757c8 58-83,123-127,130-149,151-152,163-164,175,189-190,247,257,284-288,350-351,408-439,455-456,461
+  s_2bd0926fa614df::t_cd86208cbfb1d5 111-112,128-129
+  s_f40aa9777c27e6::t_d8db7d52b1b8c6 352-407
+  s_2bd0926fa614df::t_2f8facb9a4764d 334-349
+src/features/queue-tracker.tsx
+  s_ae7d57acbf1e06::t_176dee48819260 73-74
+  s_ae7d57acbf1e06::t_035d32238b923a 173-176
+  s_ae7d57acbf1e06::t_7c4cfc3704f5b1 424-466
+  s_f40aa9777c27e6::t_aadf41c3d7ea60 5-10
+  s_ae7d57acbf1e06::t_7e61c2e21afc18 16-27
+  s_8c0782daf5fdea::t_7d0138afd301bc 291-306
+  s_f40aa9777c27e6::t_8cc0931c0ffaa7 307-335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "bc119a15d88d9492f1d9158457b5adb0fe509d70",
+  "prompts": {},
+  "sessions": {
+    "s_2bd0926fa614df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14140e5a-0f7a-45c3-8bc5-ac08f4f82fb4",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_51616449731e9c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dccf9669-0e77-403f-a564-50fc9c9c31a6",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_7346b77ea527e0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9b2a865-d80e-42ea-8043-449d5c76ab94",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_8c0782daf5fdea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "612c9206-4c7e-40dc-8d59-9b085aa8d50d",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_ae7d57acbf1e06": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "186f5b1d-2b5e-4b65-9738-2855edefeac5",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_d860f4efa1e34e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93e81223-055e-4332-94b2-a6388b54fc3c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_f40aa9777c27e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "94c58d7d-7112-413d-9faa-95080b140d43",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
