@@ -1,0 +1,56 @@
+src/features/bulk-transfer-modal.tsx
+  s_c171dba66fbdcd::t_f518e19e488e54 208-215
+  s_c171dba66fbdcd::t_9e3fe2e27e80bb 135,139-142
+src/features/__tests__/bulk-mark-flyout.test.tsx
+  s_c171dba66fbdcd::t_84d42af0d09764 20
+src/features/bulk-edit-flyout-helpers.ts
+  s_c171dba66fbdcd::t_9b7bf29f3b9df2 55
+src/background/bulk-update.ts
+  s_c171dba66fbdcd::t_1653ee6a53d191 4
+src/features/bulk-actions-menu.tsx
+  s_c171dba66fbdcd::t_e1a6dfad9100e7 187
+src/lib/project-table-dom.ts
+  s_c171dba66fbdcd::t_5192703d80ad18 130,149-151,154-158
+  s_c171dba66fbdcd::t_a0adfeb9a31518 103-109
+src/background/bulk-state.ts
+  s_c171dba66fbdcd::t_ad5e7cc9837bb8 72,93-96,98
+  s_c171dba66fbdcd::t_12a1c5f261a902 39
+src/features/bulk-mark-flyout.tsx
+  s_c171dba66fbdcd::t_8b269d497ad3e1 207-208
+src/features/keyboard-help-overlay.tsx
+  s_c171dba66fbdcd::t_b3414fe5603d8e 11-48
+  s_c171dba66fbdcd::t_86533c67c14608 175
+  s_c171dba66fbdcd::t_f809614bc17f08 152
+src/features/bulk-edit-flyout.tsx
+  s_c171dba66fbdcd::t_9fa333468d93ef 87
+  s_c171dba66fbdcd::t_7b06bdd5343367 11
+  s_c171dba66fbdcd::t_79f0dd6d03ba38 148-149,164,167-173
+src/lib/messages.ts
+  s_c171dba66fbdcd::t_3ecaf323842365 255
+  s_c171dba66fbdcd::t_2c8326f3c02263 83-99
+src/features/bulk-random-assign-flyout.tsx
+  s_c171dba66fbdcd::t_3b55568de38663 123
+src/features/bulk-rename-flyout.tsx
+  s_c171dba66fbdcd::t_ae59ce1d1436cf 112-114
+  s_c171dba66fbdcd::t_795ab759940a9d 86,111,115-116
+src/features/bulk-reorder-flyout.tsx
+  s_c171dba66fbdcd::t_b5cfb5702fc616 165-166,186,197,208
+  s_c171dba66fbdcd::t_dafa987f8c1c75 7
+  s_c171dba66fbdcd::t_96fc0ee55e8f19 72,76-77,92,98,101-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "838c46ad6f79da00eca55c59c505c73c9e48049f",
+  "prompts": {},
+  "sessions": {
+    "s_c171dba66fbdcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "281ce4ad-3d60-4824-a555-2fa6c2288bfd",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
