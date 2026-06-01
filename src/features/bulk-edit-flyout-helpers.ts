@@ -3,6 +3,14 @@
 // `bulk-actions-flyouts` change.
 
 import type { ProjectField } from '@/features/bulk-edit-utils'
+import { sendMessage } from '@/lib/messages'
+import { queueStore } from '@/lib/queue-store'
+
+export const BULK_EDIT_CONCURRENT_MESSAGE =
+  '3 processes are already running. Wait for one to finish before starting another.'
+export const BULK_EDIT_DISPATCH_FAILED_MESSAGE = 'Could not start the bulk update. Try again.'
+
+export type SubmitBulkFieldUpdateResult = { ok: true } | { ok: false; message: string }
 
 export type FieldValue =
   | { kind: 'cleared' }
@@ -74,5 +82,55 @@ export function serializeValue(value: FieldValue): Record<string, unknown> | nul
       return value.iterationId ? { iterationId: value.iterationId } : null
     case 'array':
       return { array: value.array }
+  }
+}
+
+export async function submitBulkFieldUpdate(args: {
+  activeField: ProjectField
+  value: FieldValue
+  itemIds: readonly string[]
+  projectId: string
+}): Promise<SubmitBulkFieldUpdateResult> {
+  const payload = serializeValue(args.value)
+  if (payload === null) {
+    return { ok: false, message: BULK_EDIT_DISPATCH_FAILED_MESSAGE }
+  }
+
+  if (queueStore.getActiveCount() >= 3) {
+    return { ok: false, message: BULK_EDIT_CONCURRENT_MESSAGE }
+  }
+
+  try {
+    const result = await sendMessage('bulkUpdate', {
+      itemIds: [...args.itemIds],
+      projectId: args.projectId,
+      updates: [
+        {
+          fieldId: args.activeField.id,
+          value: { ...payload, dataType: args.activeField.dataType },
+        },
+      ],
+      fieldMeta: {
+        [args.activeField.id]: {
+          name: args.activeField.name,
+          options: args.activeField.options,
+          iterations: args.activeField.configuration?.iterations,
+        },
+      },
+    })
+
+    if (!result.ok) {
+      return {
+        ok: false,
+        message:
+          result.reason === 'concurrent'
+            ? BULK_EDIT_CONCURRENT_MESSAGE
+            : BULK_EDIT_DISPATCH_FAILED_MESSAGE,
+      }
+    }
+
+    return { ok: true }
+  } catch {
+    return { ok: false, message: BULK_EDIT_DISPATCH_FAILED_MESSAGE }
   }
 }

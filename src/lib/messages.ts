@@ -77,6 +77,11 @@ export interface BulkRelationshipValidationResult {
   errors: string[]
 }
 
+/** Immediate accept/reject from the bulkUpdate message handler (work continues in background when ok). */
+export type BulkUpdateDispatchResult =
+  | { ok: true }
+  | { ok: false; reason: 'concurrent' }
+
 export interface ItemPreviewData {
   resolvedItemId: string
   issueNumber: number
@@ -244,7 +249,7 @@ interface ProtocolMap {
         iterations?: { id: string; title: string; startDate: string; duration: number }[]
       }
     >
-  }): void
+  }): BulkUpdateDispatchResult
   bulkClose(data: {
     itemIds: string[]
     projectId: string

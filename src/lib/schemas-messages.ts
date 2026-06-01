@@ -310,7 +310,10 @@ export const Messages = {
         }),
       ),
     }),
-    output: Schema.Void,
+    output: Schema.Union(
+      Schema.Struct({ ok: Schema.Literal(true) }),
+      Schema.Struct({ ok: Schema.Literal(false), reason: Schema.Literal('concurrent') }),
+    ),
   },
   bulkClose: {
     input: Schema.Struct({
