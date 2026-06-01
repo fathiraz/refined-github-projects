@@ -355,6 +355,13 @@ export const Messages = {
     }),
     output: Schema.Void,
   },
+  bulkUnlock: {
+    input: Schema.Struct({
+      itemIds: Schema.Array(Schema.String),
+      projectId: Schema.String,
+    }),
+    output: Schema.Void,
+  },
   bulkPin: {
     input: Schema.Struct({
       itemIds: Schema.Array(Schema.String),
