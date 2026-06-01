@@ -31,6 +31,10 @@ import {
   resolveProjectItemIds,
   resolveProjectItemIdsWithTitles,
 } from '@/background/project-helpers'
+import {
+  classifyTransferEligibilityRows,
+  unresolvedTransferEligibilityRows,
+} from '@/background/transfer-eligibility'
 import { ProjectService } from '@/background/project-service'
 import { provideBackground } from '@/background/runtime-ext'
 
@@ -280,36 +284,19 @@ export function registerFieldHandlers(): void {
       itemCount: data.itemIds.length,
       target: `${data.targetRepoOwner}/${data.targetRepoName}`,
     })
-    const resolved = await resolveProjectItemIdsWithTitles(data.itemIds, data.projectId)
-    // `resolved.domId` is a branded ProjectItemDomId; map keys go through the
-    // brand to match the lookup-by-raw-string from the request payload.
-    const resolvedByDomId = new Map(resolved.map((r) => [String(r.domId), r] as const))
-    const targetOwnerLc = data.targetRepoOwner.toLowerCase()
-    const targetNameLc = data.targetRepoName.toLowerCase()
-    return data.itemIds.map((domId) => {
-      const item = resolvedByDomId.get(domId)
-      if (!item) return { domId, eligible: false, reason: 'unresolved' as const }
-      if (item.typename === 'PullRequest') {
-        return {
-          domId,
-          eligible: false,
-          reason: 'pull-request' as const,
-          title: item.title,
-        }
-      }
-      if (
-        item.repoOwner.toLowerCase() === targetOwnerLc &&
-        item.repoName.toLowerCase() === targetNameLc
-      ) {
-        return {
-          domId,
-          eligible: false,
-          reason: 'same-repo' as const,
-          title: item.title,
-        }
-      }
-      return { domId, eligible: true, title: item.title }
-    })
+    let resolved: Awaited<ReturnType<typeof resolveProjectItemIdsWithTitles>>
+    try {
+      resolved = await resolveProjectItemIdsWithTitles(data.itemIds, data.projectId)
+    } catch (cause) {
+      logger.warn('[rgp:bg] validateTransferEligibility resolver failed', cause)
+      return unresolvedTransferEligibilityRows(data.itemIds)
+    }
+    return classifyTransferEligibilityRows(
+      data.itemIds,
+      resolved,
+      data.targetRepoOwner,
+      data.targetRepoName,
+    )
   })
 
   onMessage('getProjectFields', ({ data }) =>
