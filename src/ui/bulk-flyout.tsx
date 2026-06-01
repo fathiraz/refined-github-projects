@@ -204,7 +204,6 @@ export function BulkFlyout(props: BulkFlyoutProps) {
           width,
           maxHeight,
           minWidth: width,
-          ...(bodySx ?? {}),
         }}
         data-testid="rgp-bulk-flyout"
       >
@@ -216,6 +215,7 @@ export function BulkFlyout(props: BulkFlyoutProps) {
             px: 3,
             py: 2,
             minHeight: 0,
+            ...(bodySx ?? {}),
           }}
           data-testid="rgp-bulk-flyout-body"
         >
