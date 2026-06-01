@@ -1,4 +1,4 @@
-// bulk state-change handlers: close, open, delete, lock, pin, unpin.
+// bulk state-change handlers: close, open, delete, lock, unlock, pin, unpin.
 
 import { onMessage } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
@@ -6,6 +6,7 @@ import {
   CLOSE_ISSUE,
   REOPEN_ISSUE,
   LOCK_ISSUE,
+  UNLOCK_ISSUE,
   PIN_ISSUE,
   UNPIN_ISSUE,
   DELETE_PROJECT_ITEM,
@@ -370,6 +371,71 @@ export function registerBulkStateHandlers(): void {
                 state.completed < resolvedItems.length
                   ? `Pinning item ${state.completed + 1} of ${resolvedItems.length}…`
                   : `Pinning ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+              processId,
+              label,
+              failedItems: state.failedItems,
+            },
+            tabId,
+          )
+        },
+        processId,
+      )
+      await broadcastQueue(
+        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
+        tabId,
+      )
+    } finally {
+      releaseBulk()
+    }
+  })
+
+  onMessage('bulkUnlock', async ({ data, sender }) => {
+    logger.log('[rgp:bg] bulkUnlock received', { itemCount: data.itemIds.length })
+    if (isBulkFull()) {
+      console.warn('[rgp:bg] max concurrent bulk reached, rejecting bulkUnlock')
+      return
+    }
+    acquireBulk()
+    const processId = `unlock-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    const label = `Unlock · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const tabId = sender.tab?.id
+    try {
+      await broadcastQueue(
+        {
+          total: data.itemIds.length,
+          completed: 0,
+          paused: false,
+          status: 'Resolving items...',
+          processId,
+          label,
+        },
+        tabId,
+      )
+      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
+      if (resolvedItems.length === 0) {
+        console.error('[rgp:bg] no valid items resolved for bulkUnlock, aborting')
+        return
+      }
+      const tasks: QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
+        id: `unlock-${domId}`,
+        run: async () => {
+          await gql(UNLOCK_ISSUE, { lockableId: issueNodeId })
+          await sleep(1000)
+        },
+      }))
+      await processQueue(
+        tasks,
+        async (state) => {
+          await broadcastQueue(
+            {
+              total: state.total,
+              completed: state.completed,
+              paused: state.paused,
+              retryAfter: state.retryAfter,
+              status:
+                state.completed < resolvedItems.length
+                  ? `Unlocking item ${state.completed + 1} of ${resolvedItems.length}…`
+                  : `Unlocking ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
               processId,
               label,
               failedItems: state.failedItems,

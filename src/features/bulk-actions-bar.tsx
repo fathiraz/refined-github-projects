@@ -650,7 +650,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         selectionStore.clear()
         return
       case 'unlock':
-        sendMessage('bulkLock', { itemIds, projectId: resolvedProjectId, lockReason: null })
+        sendMessage('bulkUnlock', { itemIds, projectId: resolvedProjectId })
         return
     }
   }
