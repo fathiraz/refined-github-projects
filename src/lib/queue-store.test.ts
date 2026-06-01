@@ -51,7 +51,8 @@ beforeEach(() => {
   vi.useFakeTimers()
   toastShow.mockReset()
   // clear any leftover processes between tests
-  for (const pid of ['p1', 'p2', 'bulk']) queueStore.dismiss(pid)
+  for (const pid of ['p1', 'p2', 'bulk', 'hints-auto-1', 'hints-1', 'hints-2', 'hints-bg-1', 'hints-bg-2'])
+    queueStore.dismiss(pid)
 })
 
 afterEach(() => {
@@ -384,6 +385,33 @@ describe('queueStore.attachPhaseHints', () => {
     })
     queueStore.dismiss(pid)
     expect(queueStore.getPhaseHints(pid)).toBeUndefined()
+  })
+
+  it('clears hints after auto-dismiss when undo window elapses', async () => {
+    const pid = 'hints-auto-1'
+    dispatch({ total: 1, completed: 0, paused: false, processId: pid, label: 'A' })
+    queueStore.attachPhaseHints(pid, {
+      reverse: {
+        messageType: 'bulkUpdate',
+        data: { reopen: true },
+        affectedItemIds: ['i1'],
+      },
+    })
+    dispatch({ total: 0, completed: 0, paused: false, status: 'Done!', processId: pid })
+
+    await vi.advanceTimersByTimeAsync(10_500)
+
+    expect(queueStore.getPhaseHints(pid)).toBeUndefined()
+
+    dispatch({ total: 2, completed: 0, paused: false, processId: pid, label: 'Second run' })
+
+    const snapshots: any[][] = []
+    const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
+    const entry = snapshots[snapshots.length - 1].find((p: any) => p.processId === pid)
+    expect(entry.phase.kind).toBe('in-flight')
+    expect(entry.phase.reverse).toBeUndefined()
+    expect(entry.phase.undoableUntil).toBeUndefined()
+    unsub()
   })
 
   it('§4.9 — consumes reverse hint piggy-backed on Done broadcast and exposes Undo', () => {
