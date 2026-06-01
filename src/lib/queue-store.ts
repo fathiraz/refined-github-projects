@@ -158,6 +158,16 @@ function clearDismissTimer(id: string): void {
   }
 }
 
+/** Remove process entry and attached phase hints (manual dismiss + auto-dismiss). */
+function removeProcess(processId: string, opts?: { skipClearTimer?: boolean }): void {
+  if (!opts?.skipClearTimer) clearDismissTimer(processId)
+  phaseHintsMap.delete(processId)
+  if (!processes.has(processId)) return
+  const next = new Map(processes)
+  next.delete(processId)
+  setState(next)
+}
+
 function scheduleDismiss(processId: string, delay: Duration.Duration = DISMISS_DELAY) {
   clearDismissTimer(processId)
   const fiber = Effect.runFork(
@@ -166,10 +176,7 @@ function scheduleDismiss(processId: string, delay: Duration.Duration = DISMISS_D
         Effect.sync(() => {
           if (dismissTimers.get(processId) !== fiber) return
           dismissTimers.delete(processId)
-          if (!processes.has(processId)) return
-          const next = new Map(processes)
-          next.delete(processId)
-          setState(next)
+          removeProcess(processId, { skipClearTimer: true })
         }),
       ),
     ),
@@ -194,16 +201,12 @@ export const queueStore = {
     return queueStore.getActiveCount() > 0
   },
   dismiss(processId: string) {
-    clearDismissTimer(processId)
-    phaseHintsMap.delete(processId)
-    if (!processes.has(processId)) {
+    const existed = processes.has(processId)
+    removeProcess(processId)
+    if (!existed) {
       // still notify so callers observing 'after dismiss' state get a tick.
       setState(new Map(processes))
-      return
     }
-    const next = new Map(processes)
-    next.delete(processId)
-    setState(next)
   },
   /**
    * Attach reverse / retry hints to a process. Verb handlers call this before
