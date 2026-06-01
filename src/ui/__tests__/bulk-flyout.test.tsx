@@ -36,6 +36,7 @@ interface HarnessProps {
   footer?: 'apply-cancel' | null
   applyDisabled?: boolean
   onApply?: () => void
+  bodySx?: Record<string, unknown>
   tabs?: BulkFlyoutTab[]
   panes?: BulkFlyoutPane[]
   rootPaneId?: string
@@ -68,6 +69,7 @@ function Harness(props: HarnessProps) {
             footer={props.footer}
             applyDisabled={props.applyDisabled}
             onApply={props.onApply}
+            bodySx={props.bodySx}
           >
             <div data-testid="rgp-test-body">simple body</div>
           </BulkFlyout>
@@ -170,6 +172,18 @@ describe('<BulkFlyout> simple mode', () => {
   it('mounts the flyout inside an element with role="dialog"', () => {
     const { find } = render(<Harness mode="simple" open={true} onClose={() => {}} />)
     expect(find('[role="dialog"]')).not.toBeNull()
+  })
+
+  it('applies bodySx to the body container, not the shell', () => {
+    const { find } = render(
+      <Harness mode="simple" open={true} onClose={() => {}} bodySx={{ display: 'grid' }} />,
+    )
+    const shell = find('[data-testid="rgp-bulk-flyout"]') as HTMLElement
+    const body = find('[data-testid="rgp-bulk-flyout-body"]') as HTMLElement
+    expect(shell).not.toBeNull()
+    expect(body).not.toBeNull()
+    expect(getComputedStyle(body).display).toBe('grid')
+    expect(getComputedStyle(shell).display).toBe('flex')
   })
 
   it('injects keyframes wrapped in prefers-reduced-motion: no-preference', () => {
