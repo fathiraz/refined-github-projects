@@ -34,6 +34,7 @@ export function registerBulkStateHandlers(): void {
     const processId = `close-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
     const label = `Bulk close · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
     const tabId = sender.tab?.id
+    let lastFailedTaskIds = new Set<string>()
 
     try {
       await broadcastQueue(
@@ -65,6 +66,7 @@ export function registerBulkStateHandlers(): void {
       await processQueue(
         tasks,
         async (state) => {
+          lastFailedTaskIds = new Set((state.failedItems ?? []).map((f) => f.id))
           await broadcastQueue(
             {
               total: state.total,
@@ -85,8 +87,23 @@ export function registerBulkStateHandlers(): void {
         processId,
       )
 
+      // §4.9 — reverse hint for Undo (Close → Reopen). Only the successfully
+      // closed subset is offered for Undo; failed items are excluded.
+      const succeededDomIds = resolvedItems
+        .map((r) => r.domId)
+        .filter((domId) => !lastFailedTaskIds.has(`close-${domId}`))
+      const reverse =
+        succeededDomIds.length > 0
+          ? {
+              messageType: 'bulkOpen',
+              data: { projectId: data.projectId },
+              affectedItemIds: succeededDomIds,
+              label: `Undo close (${succeededDomIds.length})`,
+            }
+          : undefined
+
       await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
+        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label, reverse },
         tabId,
       )
     } finally {

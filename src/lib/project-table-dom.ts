@@ -54,6 +54,114 @@ export function getAllInjectedItemIds(): ProjectItemDomId[] {
 }
 
 /**
+ * Read the displayed title for a given row. Falls back to the row's primary
+ * link text. Returns `null` if neither can be located.
+ */
+export function extractItemTitle(row: Element): string | null {
+  const link = row.querySelector<HTMLAnchorElement>(
+    'a[href*="/issues/"], a[href*="/pull/"], a[data-testid="issue-title-link"]',
+  )
+  const text = link?.textContent?.trim()
+  return text && text.length > 0 ? text : null
+}
+
+/**
+ * Resolve `{ id, title }` pairs for a set of selected item IDs by scanning
+ * injected rows currently in the DOM. Missing rows are skipped (they may be
+ * off-screen or virtualized).
+ */
+export function getTitlesForItemIds(
+  itemIds: readonly string[],
+): Array<{ id: string; title: string }> {
+  if (itemIds.length === 0) return []
+  const wanted = new Set(itemIds)
+  const rows = document.querySelectorAll<HTMLElement>(`[role="row"][${INJECTED_ATTR}]`)
+  const out: Array<{ id: string; title: string }> = []
+  for (const row of rows) {
+    const id = getStoredItemId(row)
+    if (!id || !wanted.has(id)) continue
+    const title = extractItemTitle(row)
+    if (title) out.push({ id, title })
+  }
+  return out
+}
+
+/**
+ * Per-item state read from the DOM at menu-open time. Best-effort: GitHub
+ * Projects rows do not consistently expose pin/lock state, so anything we
+ * cannot prove is reported as `unknown`. The `Mark ▾` flyout falls back to
+ * showing both paired verbs (no count) when `unknownCount > 0` per design D6.
+ */
+export interface ItemStateSnapshot {
+  openCount: number
+  closedCount: number
+  pinnedCount: number
+  unpinnedCount: number
+  lockedCount: number
+  unlockedCount: number
+  unknownCount: number
+  /** Total number of IDs we attempted to resolve — sum of category counts is `<= total`. */
+  total: number
+}
+
+/**
+ * Scrape per-item state from injected rows. State icons emitted by GitHub
+ * use `octicon-issue-{opened,closed,closed-completed}` / `octicon-git-pull-request*`
+ * classes inside the status cell. Pin / lock state is not exposed reliably
+ * in the row markup, so we report it as `unknown` (D6 fallback applies).
+ */
+export function getItemStateSnapshot(itemIds: readonly string[]): ItemStateSnapshot {
+  const total = itemIds.length
+  const snapshot: ItemStateSnapshot = {
+    openCount: 0,
+    closedCount: 0,
+    pinnedCount: 0,
+    unpinnedCount: 0,
+    lockedCount: 0,
+    unlockedCount: 0,
+    unknownCount: 0,
+    total,
+  }
+  if (total === 0) return snapshot
+
+  const wanted = new Set(itemIds)
+  const rows = document.querySelectorAll<HTMLElement>(`[role="row"][${INJECTED_ATTR}]`)
+  const seen = new Set<string>()
+
+  for (const row of rows) {
+    const id = getStoredItemId(row)
+    if (!id || !wanted.has(id) || seen.has(id)) continue
+    seen.add(id)
+
+    const status = readStatusFromRow(row)
+    if (status === 'open') snapshot.openCount += 1
+    else if (status === 'closed') snapshot.closedCount += 1
+    else snapshot.unknownCount += 1
+
+    // pin/lock are not surfaced in the row DOM — count as unknown for those
+    // categories so the flyout shows both paired verbs.
+    snapshot.unknownCount += 0
+  }
+
+  // any item id we could not locate in the current DOM is unknown
+  snapshot.unknownCount += total - seen.size
+
+  return snapshot
+}
+
+function readStatusFromRow(row: Element): 'open' | 'closed' | 'unknown' {
+  const closedIcon = row.querySelector(
+    '.octicon-issue-closed, .octicon-issue-closed-completed, .octicon-skip, .octicon-git-merge, .octicon-issue-completed',
+  )
+  if (closedIcon) return 'closed'
+  const openIcon = row.querySelector(
+    '.octicon-issue-opened, .octicon-git-pull-request, .octicon-git-pull-request-draft',
+  )
+  if (openIcon) return 'open'
+  return 'unknown'
+}
+
+/**
  * Returns true if the event target is a focusable text-input element.
  * Used to suppress keyboard shortcuts while the user is typing.
  * Checks e.target (not document.activeElement) to handle Shadow DOM.

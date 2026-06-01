@@ -2,11 +2,29 @@ import React, { useEffect, useState } from 'react'
 import Tippy from '@/ui/tooltip'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { ActionList, Box, Button, Flash, ProgressBar, Spinner, Text } from '@primer/react'
-import { queueStore, type ProcessEntry } from '@/lib/queue-store'
+import {
+  classifyErrorMessage,
+  queueStore,
+  type ProcessEntry,
+  type ProcessPhase,
+} from '@/lib/queue-store'
 import { sendMessage } from '@/lib/messages'
 import { CheckIcon, XIcon } from '@/ui/icons'
 import { Z_OVERLAY } from '@/lib/z-index'
 import { primerCss } from '@/lib/primer-css-helper'
+
+function phaseTestId(phase: ProcessPhase): string {
+  switch (phase.kind) {
+    case 'in-flight':
+      return 'rgp-tracker-in-flight'
+    case 'success':
+      return 'rgp-tracker-success'
+    case 'partial':
+      return 'rgp-tracker-partial'
+    case 'error':
+      return 'rgp-tracker-error'
+  }
+}
 
 export function formatTrackerTitle(entry: Pick<ProcessEntry, 'label' | 'total'>): string {
   if (entry.total === 0) return entry.label
@@ -52,6 +70,8 @@ export function ProcessCard({
       role="status"
       aria-live="polite"
       data-testid="rgp-queue-tracker-card"
+      data-phase={entry.phase.kind}
+      data-phase-testid={phaseTestId(entry.phase)}
       sx={primerCss.toastShell({
         animation: 'rgp-tracker-in 180ms cubic-bezier(0.4, 0, 0.2, 1)',
         '@keyframes rgp-tracker-in': {
@@ -148,6 +168,10 @@ export function ProcessCard({
           <Flash variant="warning" sx={{ mt: 1, py: 1, px: 2, fontSize: 1 }}>
             Rate limited — retrying in {countdown}s
           </Flash>
+        )}
+
+        {entry.phase.kind === 'success' && entry.phase.reverse && (
+          <SuccessUndoRow phase={entry.phase} paused={entry.paused} />
         )}
 
         {/* Failed items section */}
@@ -264,6 +288,51 @@ export function ProcessCard({
                   >
                     Copy Error Log
                   </Button>
+                  <Button
+                    size="small"
+                    variant="invisible"
+                    onClick={() => {
+                      const text = entry.failedItems!.map((f) => f.title).join('\n')
+                      navigator.clipboard.writeText(text)
+                    }}
+                    sx={{
+                      boxShadow: 'none',
+                      transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                      '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                    }}
+                    data-testid="rgp-tracker-copy-failed-items"
+                  >
+                    Copy Failed Items
+                  </Button>
+                  {/* §2.10 — Copy details: shown only when the phase derives to
+                      `error` (every attempted item failed). Payload includes
+                      label + classification tag + per-item errors so the user
+                      can paste the dump into a bug report. */}
+                  {entry.phase.kind === 'error' && (
+                    <Button
+                      size="small"
+                      variant="invisible"
+                      onClick={() => {
+                        const tag = classifyErrorMessage(
+                          entry.phase.kind === 'error' ? entry.phase.error.message : '',
+                        )
+                        const header = `${entry.label} — failed (${tag})`
+                        const lines = entry.failedItems!.map(
+                          (f) => `- ${f.title} [${classifyErrorMessage(f.error)}]: ${f.error}`,
+                        )
+                        const payload = [header, '', ...lines].join('\n')
+                        navigator.clipboard.writeText(payload)
+                      }}
+                      sx={{
+                        boxShadow: 'none',
+                        transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                      }}
+                      data-testid="rgp-tracker-copy-details"
+                    >
+                      Copy Details
+                    </Button>
+                  )}
                 </Box>
               </Box>
             )}
@@ -348,6 +417,49 @@ export function ProcessCard({
           <XIcon size={16} />
         </Button>
       </Tippy>
+    </Box>
+  )
+}
+
+interface SuccessUndoRowProps {
+  phase: Extract<ProcessPhase, { kind: 'success' }>
+  paused: boolean
+}
+
+/**
+ * Undo action row rendered on a `success` queue-tracker card when the
+ * originating verb attached a reverse op. Disabled during a Retry-After pause
+ * (the underlying queue won't accept new mutations until the pause elapses).
+ */
+function SuccessUndoRow({ phase, paused }: SuccessUndoRowProps) {
+  const reverse = phase.reverse
+  if (!reverse) return null
+
+  const handleUndo = () => {
+    if (paused) return
+    sendMessage(reverse.messageType as any, reverse.data as any).catch((err) =>
+      console.error('[rgp] undo failed', err),
+    )
+  }
+
+  return (
+    <Box
+      sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}
+      data-testid="rgp-tracker-undo-row"
+    >
+      <Button
+        size="small"
+        variant="default"
+        onClick={handleUndo}
+        disabled={paused}
+        data-testid="rgp-tracker-undo"
+        sx={{ boxShadow: 'none' }}
+      >
+        {reverse.label ?? 'Undo'}
+      </Button>
+      {paused && (
+        <Text sx={{ fontSize: 0, color: 'attention.fg' }}>Paused — Undo will resume shortly</Text>
+      )}
     </Box>
   )
 }

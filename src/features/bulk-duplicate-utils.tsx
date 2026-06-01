@@ -16,7 +16,17 @@ import {
 } from '@/ui/icons'
 import { formatIssueReference } from '@/lib/relationship-utils'
 
-export type Step = 'LOADING' | 'SELECT' | 'VALUES' | 'SUMMARY' | 'ERROR'
+/**
+ * §11.2 — three-stage state machine collapsed to two:
+ *   - `SELECT` picks sections,
+ *   - `REVIEW` renders each selected section with its inline editor + a diff
+ *     badge so the user edits and confirms in the same step.
+ *
+ * The legacy `VALUES` / `SUMMARY` constants are retained as aliases so existing
+ * snapshot/log strings keep matching during the transition; they will resolve
+ * to `REVIEW` in practice.
+ */
+export type Step = 'LOADING' | 'SELECT' | 'REVIEW' | 'ERROR'
 export type EditableField = ItemPreviewData['fields'][number]
 export type SectionGroup = 'CONTENT' | 'METADATA' | 'PROJECT_FIELDS' | 'RELATIONSHIPS'
 export type SectionId =
@@ -170,6 +180,58 @@ export function summarizeFieldValue(field: EditableField): string {
   }
 
   return 'None / Cleared'
+}
+
+/**
+ * §11.6 — Diff predicate per section. Compares the user-edited value against
+ * the source preview value and returns `true` when they differ. The REVIEW
+ * step uses this to badge each row as `· edited` (changed) or
+ * `· same as source` (untouched).
+ */
+export function isAssigneesEdited(
+  current: ReadonlyArray<{ id: string }>,
+  source: ReadonlyArray<{ id: string }>,
+): boolean {
+  if (current.length !== source.length) return true
+  const sourceIds = new Set(source.map((a) => a.id))
+  return current.some((a) => !sourceIds.has(a.id))
+}
+
+export function isLabelsEdited(
+  current: ReadonlyArray<{ id: string }>,
+  source: ReadonlyArray<{ id: string }>,
+): boolean {
+  if (current.length !== source.length) return true
+  const sourceIds = new Set(source.map((l) => l.id))
+  return current.some((l) => !sourceIds.has(l.id))
+}
+
+export function isRelationshipsEdited<T>(
+  current: ReadonlyArray<T>,
+  source: ReadonlyArray<T>,
+  key: (t: T) => string,
+): boolean {
+  if (current.length !== source.length) return true
+  const sourceKeys = new Set(source.map(key))
+  return current.some((c) => !sourceKeys.has(key(c)))
+}
+
+export function isFieldEdited(current: EditableField, source: EditableField): boolean {
+  if (current.dataType !== source.dataType) return true
+  switch (current.dataType) {
+    case 'TEXT':
+      return (current.text ?? '') !== (source.text ?? '')
+    case 'SINGLE_SELECT':
+      return (current.optionId ?? '') !== (source.optionId ?? '')
+    case 'ITERATION':
+      return (current.iterationId ?? '') !== (source.iterationId ?? '')
+    case 'NUMBER':
+      return (current.number ?? null) !== (source.number ?? null)
+    case 'DATE':
+      return (current.date ?? '') !== (source.date ?? '')
+    default:
+      return false
+  }
 }
 
 export function buildFieldValue(field: EditableField): Record<string, unknown> {

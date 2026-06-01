@@ -1,39 +1,29 @@
-// dropdown menu rendered inside the persistent bulk-actions bar.
+// Overflow `…` menu rendered next to the inline chips on the bulk-actions
+// bar. Hosts the non-Mark / non-Edit verbs in the order specified by
+// bulk-actions-bar §3.4: Rename · Reorder · Random Assign · Transfer ·
+// Deep Duplicate (count===1) · Export CSV · Delete.
 
 import React from 'react'
 import { ActionList, Box } from '@primer/react'
-import { isMac } from '@/lib/keyboard'
 import { exportSelectedToCSV } from '@/features/bulk-utils'
 import { shortcut } from '@/features/bulk-actions-utils'
 import {
   ArrowRightIcon,
-  CircleSlashIcon,
   CopyIcon,
   DownloadIcon,
-  ListCheckIcon,
-  LockIcon,
   MoveIcon,
   PencilIcon,
   PersonIcon,
-  PinIcon,
-  SyncIcon,
   TrashIcon,
-  UnpinIcon,
 } from '@/ui/icons'
 
 interface Props {
   count: number
-  onEditFields: () => void
-  onRandomAssign: () => void
-  onDeepDuplicate: () => void
   onRename: () => void
   onReorder: () => void
-  onClose: () => void
-  onOpen: () => void
-  onLock: () => void
-  onPin: () => void
-  onUnpin: () => void
+  onRandomAssign: () => void
   onTransfer: () => void
+  onDeepDuplicate: () => void
   onDelete: () => void
 }
 
@@ -76,17 +66,11 @@ function Kbd({ text }: { text: string }) {
 
 export function BulkActionsMenu({
   count,
-  onEditFields,
-  onRandomAssign,
-  onDeepDuplicate,
   onRename,
   onReorder,
-  onClose,
-  onOpen,
-  onLock,
-  onPin,
-  onUnpin,
+  onRandomAssign,
   onTransfer,
+  onDeepDuplicate,
   onDelete,
 }: Props) {
   return (
@@ -103,145 +87,70 @@ export function BulkActionsMenu({
         borderRadius: 2,
         overflow: 'hidden',
       }}
+      data-testid="rgp-bulk-overflow-menu"
     >
       <ActionList>
-        <ActionList.Group>
-          <ActionList.GroupHeading as="h3">Fields</ActionList.GroupHeading>
-          <ActionList.Item onSelect={onEditFields}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
-                <ListCheckIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Edit Fields
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('E')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-          <ActionList.Item onSelect={onRandomAssign}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
-                <PersonIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Random Assign (beta)
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('A')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-          {count === 1 && (
-            <ActionList.Item onSelect={onDeepDuplicate}>
-              <ActionList.LeadingVisual>
-                <Box sx={badgeSx('done.subtle', 'done.fg')}>
-                  <CopyIcon size={13} />
-                </Box>
-              </ActionList.LeadingVisual>
-              Deep Duplicate
-              <ActionList.TrailingVisual>
-                <Kbd text={shortcut('D')} />
-              </ActionList.TrailingVisual>
-            </ActionList.Item>
-          )}
-        </ActionList.Group>
-        <ActionList.Group>
-          <ActionList.GroupHeading as="h3">Content</ActionList.GroupHeading>
-          <ActionList.Item onSelect={onRename}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
-                <PencilIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Rename Titles
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('R')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-          <ActionList.Item onSelect={onReorder}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
-                <MoveIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Reorder Items
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('J')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-        </ActionList.Group>
-        <ActionList.Group>
-          <ActionList.GroupHeading as="h3">Status</ActionList.GroupHeading>
-          <ActionList.Item onSelect={onClose}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('attention.subtle', 'attention.fg')}>
-                <CircleSlashIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Close Issues
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('X')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-          <ActionList.Item onSelect={onOpen}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('success.subtle', 'success.fg')}>
-                <SyncIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Reopen Issues
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('O')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-          <ActionList.Item onSelect={onLock}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('attention.subtle', 'attention.fg')}>
-                <LockIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Lock Conversations
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('L')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-        </ActionList.Group>
-        <ActionList.Group>
-          <ActionList.GroupHeading as="h3">Visibility</ActionList.GroupHeading>
-          <ActionList.Item onSelect={onPin}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
-                <PinIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Pin Issues
-            <ActionList.TrailingVisual>
-              <Kbd text={shortcut('F')} />
-            </ActionList.TrailingVisual>
-          </ActionList.Item>
-          <ActionList.Item onSelect={onUnpin}>
-            <ActionList.LeadingVisual>
-              <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
-                <UnpinIcon size={13} />
-              </Box>
-            </ActionList.LeadingVisual>
-            Unpin
-          </ActionList.Item>
-        </ActionList.Group>
-        <ActionList.Group>
-          <ActionList.GroupHeading as="h3">Move</ActionList.GroupHeading>
-          <ActionList.Item onSelect={onTransfer}>
+        <ActionList.Item onSelect={onRename} data-testid="rgp-overflow-rename">
+          <ActionList.LeadingVisual>
+            <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
+              <PencilIcon size={13} />
+            </Box>
+          </ActionList.LeadingVisual>
+          Rename titles
+          <ActionList.TrailingVisual>
+            <Kbd text="R" />
+          </ActionList.TrailingVisual>
+        </ActionList.Item>
+        <ActionList.Item onSelect={onReorder} data-testid="rgp-overflow-reorder">
+          <ActionList.LeadingVisual>
+            <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
+              <MoveIcon size={13} />
+            </Box>
+          </ActionList.LeadingVisual>
+          Reorder items
+          <ActionList.TrailingVisual>
+            <Kbd text="O" />
+          </ActionList.TrailingVisual>
+        </ActionList.Item>
+        <ActionList.Item onSelect={onRandomAssign} data-testid="rgp-overflow-random-assign">
+          <ActionList.LeadingVisual>
+            <Box sx={badgeSx('accent.subtle', 'accent.fg')}>
+              <PersonIcon size={13} />
+            </Box>
+          </ActionList.LeadingVisual>
+          Random Assign (beta)
+          <ActionList.TrailingVisual>
+            <Kbd text="A" />
+          </ActionList.TrailingVisual>
+        </ActionList.Item>
+        <ActionList.Item onSelect={onTransfer} data-testid="rgp-overflow-transfer">
+          <ActionList.LeadingVisual>
+            <Box sx={badgeSx('done.subtle', 'done.fg')}>
+              <ArrowRightIcon size={13} />
+            </Box>
+          </ActionList.LeadingVisual>
+          Transfer issues
+          <ActionList.TrailingVisual>
+            <Kbd text="T" />
+          </ActionList.TrailingVisual>
+        </ActionList.Item>
+        {count === 1 && (
+          <ActionList.Item onSelect={onDeepDuplicate} data-testid="rgp-overflow-duplicate">
             <ActionList.LeadingVisual>
               <Box sx={badgeSx('done.subtle', 'done.fg')}>
-                <ArrowRightIcon size={13} />
+                <CopyIcon size={13} />
               </Box>
             </ActionList.LeadingVisual>
-            Transfer Issues
+            Deep duplicate
             <ActionList.TrailingVisual>
-              <Kbd text={shortcut('M')} />
+              <Kbd text="D" />
             </ActionList.TrailingVisual>
           </ActionList.Item>
-        </ActionList.Group>
-        <ActionList.Divider />
-        <ActionList.Item onSelect={() => exportSelectedToCSV()}>
+        )}
+        <ActionList.Item
+          onSelect={() => exportSelectedToCSV()}
+          data-testid="rgp-overflow-export-csv"
+        >
           <ActionList.LeadingVisual>
             <Box sx={badgeSx('success.subtle', 'success.fg')}>
               <DownloadIcon size={13} />
@@ -253,7 +162,7 @@ export function BulkActionsMenu({
           </ActionList.TrailingVisual>
         </ActionList.Item>
         <ActionList.Divider />
-        <ActionList.Item variant="danger" onSelect={onDelete}>
+        <ActionList.Item variant="danger" onSelect={onDelete} data-testid="rgp-overflow-delete">
           <ActionList.LeadingVisual>
             <Box sx={badgeSx('danger.subtle', 'danger.fg')}>
               <TrashIcon size={13} />
@@ -275,7 +184,7 @@ export function BulkActionsMenu({
             >
               admin
             </Box>
-            <Kbd text={isMac ? '⌘⇧⌫' : '⌃⇧⌫'} />
+            <Kbd text="D" />
           </ActionList.TrailingVisual>
         </ActionList.Item>
       </ActionList>

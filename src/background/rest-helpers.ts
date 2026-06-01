@@ -86,6 +86,13 @@ export async function broadcastQueue(
     label?: string
     failedItems?: Array<{ id: string; title: string; error: string }>
     retryContext?: { messageType: string; data: Record<string, unknown> }
+    reverse?: {
+      messageType: string
+      data: Record<string, unknown>
+      affectedItemIds: readonly string[]
+      label?: string
+      undoWindowMs?: number
+    }
   },
   tabId?: number,
 ) {

@@ -38,22 +38,21 @@ import {
   buttonMotionSx,
   duplicateValueTooltip,
   fieldSectionId,
-  formatIssueSummary,
   getFieldIcon,
   ISSUE_TYPE_SECTION_ID,
+  isAssigneesEdited,
+  isFieldEdited,
+  isLabelsEdited,
+  isRelationshipsEdited,
   LABELS_SECTION_ID,
   PARENT_SECTION_ID,
   prefixLabelIcon,
   sectionGroupMeta,
   sectionGroupOrder,
   sectionLabel,
-  summarizeFieldValue,
-  summarizeIssueList,
-  summarizeText,
   TITLE_SECTION_ID,
   type DuplicateSection,
   type EditableField,
-  type ReviewRow,
   type SectionGroup,
   type SectionId,
   type Step,
@@ -96,7 +95,7 @@ function SelectSectionsStep({
         icon={bulkDuplicateHeaderIcon}
         subtitle="Choose which details to carry over to the duplicated item."
         step={1}
-        totalSteps={3}
+        totalSteps={2}
         onClose={onClose}
       />
       <Box
@@ -243,34 +242,46 @@ function SelectSectionsStep({
         }}
       >
         <Button variant="primary" onClick={onNext} sx={buttonMotionSx}>
-          Next: Edit Values →
+          Next: Review →
         </Button>
       </Box>
     </>
   )
 }
 
-function ValuesStep({
+/**
+ * §11.2/§11.6 — combined REVIEW step. Renders each selected section's inline
+ * editor (via `renderSection`) with a `· edited` / `· same as source` diff
+ * badge in the row label. Footer hosts Back + Duplicate so the user confirms
+ * in the same screen they edit in.
+ */
+function ReviewStep({
   sections,
+  diffStatus,
+  concurrentError,
+  duplicateBtnRef,
   onClose,
   onBack,
-  onNext,
+  onDuplicate,
   renderSection,
 }: {
   sections: DuplicateSection[]
+  diffStatus: (sectionId: SectionId) => 'edited' | 'same'
+  concurrentError: boolean
+  duplicateBtnRef: React.RefObject<HTMLButtonElement | null>
   onClose: () => void
   onBack: () => void
-  onNext: () => void
+  onDuplicate: () => void
   renderSection: (section: DuplicateSection) => React.ReactNode
 }) {
   return (
     <>
       <ModalStepHeader
-        title="Edit Values"
+        title="Review & Duplicate"
         icon={bulkDuplicateHeaderIcon}
-        subtitle="Adjust the sections that will be copied to the duplicated item."
+        subtitle="Edit and confirm each section before creating the duplicate."
         step={2}
-        totalSteps={3}
+        totalSteps={2}
         onBack={onBack}
         onClose={onClose}
       />
@@ -302,100 +313,27 @@ function ValuesStep({
                   </Box>
                   {sectionGroupMeta[group].label}
                 </Text>
-                {groupSections.map(renderSection)}
+                {groupSections.map((section) => (
+                  <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {renderSection(section)}
+                    {/* §11.6 — diff badge appears under each editor so the user
+                        sees at a glance which rows are edited vs unchanged. */}
+                    <Text
+                      data-testid={`rgp-duplicate-diff-badge-${section.id}`}
+                      data-diff-status={diffStatus(section.id)}
+                      sx={{
+                        fontSize: 0,
+                        color: diffStatus(section.id) === 'edited' ? 'accent.fg' : 'fg.muted',
+                      }}
+                    >
+                      {diffStatus(section.id) === 'edited' ? '· edited' : '· same as source'}
+                    </Text>
+                  </Box>
+                ))}
               </Box>
             )
           })
         )}
-      </Box>
-      <Box
-        sx={{
-          px: 4,
-          py: 3,
-          borderTop: '1px solid',
-          borderColor: 'border.default',
-          display: 'flex',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Button variant="default" onClick={onBack} sx={buttonMotionSx}>
-          ← Back
-        </Button>
-        <Button variant="primary" onClick={onNext} sx={buttonMotionSx}>
-          Review Duplicate →
-        </Button>
-      </Box>
-    </>
-  )
-}
-
-function ReviewStep({
-  rows,
-  concurrentError,
-  duplicateBtnRef,
-  onClose,
-  onBack,
-  onDuplicate,
-}: {
-  rows: ReviewRow[]
-  concurrentError: boolean
-  duplicateBtnRef: React.RefObject<HTMLButtonElement | null>
-  onClose: () => void
-  onBack: () => void
-  onDuplicate: () => void
-}) {
-  return (
-    <>
-      <ModalStepHeader
-        title="Review & Duplicate"
-        icon={bulkDuplicateHeaderIcon}
-        subtitle="Confirm the sections below before creating the duplicate."
-        step={3}
-        totalSteps={3}
-        onBack={onBack}
-        onClose={onClose}
-      />
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
-        <Box
-          sx={{
-            bg: 'canvas.subtle',
-            border: '1px solid',
-            borderColor: 'border.default',
-            borderRadius: 2,
-            overflow: 'hidden',
-          }}
-        >
-          {rows.map((row, index) => (
-            <Box
-              key={row.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 3,
-                px: 3,
-                py: 3,
-                borderBottom: index < rows.length - 1 ? '1px solid' : 'none',
-                borderColor: 'border.default',
-              }}
-            >
-              <Text sx={{ flex: 1, color: 'fg.muted', fontSize: 1, fontWeight: 500 }}>
-                {row.label}
-              </Text>
-              <Text
-                sx={{
-                  flex: 1.5,
-                  color: 'fg.default',
-                  fontSize: 1,
-                  fontWeight: 'bold',
-                  textAlign: 'right',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {row.value}
-              </Text>
-            </Box>
-          ))}
-        </Box>
       </Box>
       <Box
         sx={{
@@ -422,6 +360,7 @@ function ReviewStep({
             variant="primary"
             onClick={onDuplicate}
             sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ...buttonMotionSx }}
+            data-testid="rgp-duplicate-confirm"
           >
             <CopyIcon size={14} />
             Duplicate Item →
@@ -463,7 +402,8 @@ export function BulkDuplicateModal({
     sendMessage('getItemPreview', { itemId, owner, number: projectNumber, isOrg })
       .then((data) => {
         setPreview(data)
-        setEditedTitle(data.title)
+        // §11.5 — default duplicated title is `<original> (copy)` editable inline.
+        setEditedTitle(`${data.title} (copy)`)
         setEditedBody(data.body)
         setEditedAssignees(
           data.assignees.map((assignee) => ({
@@ -476,6 +416,9 @@ export function BulkDuplicateModal({
         setEditedFields(data.fields)
         setBlockedByRelationships(data.relationships.blockedBy)
         setBlockingRelationships(data.relationships.blocking)
+        // §11.4 — default Content (Title, Body) + Metadata (Assignees, Labels,
+        // Issue Type) + every Project Field; Relationships (Parent, Blocked-by,
+        // Blocking) unchecked by default — user opts in explicitly.
         setSelectedSections([
           TITLE_SECTION_ID,
           BODY_SECTION_ID,
@@ -483,9 +426,6 @@ export function BulkDuplicateModal({
           LABELS_SECTION_ID,
           ...(data.issueTypeName ? [ISSUE_TYPE_SECTION_ID] : []),
           ...data.fields.map((field) => fieldSectionId(field.fieldId)),
-          ...(data.relationships.parent ? [PARENT_SECTION_ID] : []),
-          ...(data.relationships.blockedBy.length > 0 ? [BLOCKED_BY_SECTION_ID] : []),
-          ...(data.relationships.blocking.length > 0 ? [BLOCKING_SECTION_ID] : []),
         ])
         setStep('SELECT')
       })
@@ -695,100 +635,44 @@ export function BulkDuplicateModal({
     }
   }
 
-  function buildReviewRows(): ReviewRow[] {
-    return availableSections.map((section) => {
-      if (section.id === TITLE_SECTION_ID) {
-        return {
-          id: section.id,
-          label: section.label,
-          value: isSectionSelected(section.id)
-            ? summarizeText(editedTitle, 'Empty title')
-            : 'Original title (fallback)',
-        }
-      }
-
-      if (section.id === BODY_SECTION_ID) {
-        return {
-          id: section.id,
-          label: section.label,
-          value: isSectionSelected(section.id) ? summarizeText(editedBody, 'Empty') : 'Skipped',
-        }
-      }
-
-      if (section.id === ASSIGNEES_SECTION_ID) {
-        return {
-          id: section.id,
-          label: section.label,
-          value: isSectionSelected(section.id)
-            ? editedAssignees.length > 0
-              ? editedAssignees.map((assignee) => assignee.name).join(', ')
-              : 'None / Cleared'
-            : 'Skipped',
-        }
-      }
-
-      if (section.id === LABELS_SECTION_ID) {
-        return {
-          id: section.id,
-          label: section.label,
-          value: isSectionSelected(section.id)
-            ? editedLabels.length > 0
-              ? editedLabels.map((label) => label.name).join(', ')
-              : 'None / Cleared'
-            : 'Skipped',
-        }
-      }
-
-      if (section.id === ISSUE_TYPE_SECTION_ID) {
-        return {
-          id: section.id,
-          label: section.label,
-          value: isSectionSelected(section.id)
-            ? preview?.issueTypeName || 'None / Cleared'
-            : 'Skipped',
-        }
-      }
-
-      if (section.id === PARENT_SECTION_ID) {
-        return {
-          id: section.id,
-          label: 'Parent relationship',
-          value:
-            isSectionSelected(section.id) && preview?.relationships.parent
-              ? formatIssueSummary(preview.relationships.parent)
-              : 'Skipped',
-        }
-      }
-
-      if (section.id === BLOCKED_BY_SECTION_ID) {
-        return {
-          id: section.id,
-          label: section.label,
-          value: isSectionSelected(section.id)
-            ? summarizeIssueList(blockedByRelationships)
-            : 'Skipped',
-        }
-      }
-
-      if (section.id === BLOCKING_SECTION_ID) {
-        return {
-          id: section.id,
-          label: section.label,
-          value: isSectionSelected(section.id)
-            ? summarizeIssueList(blockingRelationships)
-            : 'Skipped',
-        }
-      }
-
-      const field = editedFields.find(
-        (candidate) => fieldSectionId(candidate.fieldId) === section.id,
+  /**
+   * §11.6 — Diff status for a section: `edited` when the current value differs
+   * from the original preview, `same` otherwise. The default title includes a
+   * `(copy)` suffix so it is `edited` by default; relationships are unchecked
+   * by default per §11.4 so they only appear under REVIEW when the user opts
+   * in (the badge then reflects whether they've also removed any rows).
+   */
+  function diffStatus(sectionId: SectionId): 'edited' | 'same' {
+    if (!preview) return 'same'
+    if (sectionId === TITLE_SECTION_ID) return editedTitle === preview.title ? 'same' : 'edited'
+    if (sectionId === BODY_SECTION_ID) return editedBody === preview.body ? 'same' : 'edited'
+    if (sectionId === ASSIGNEES_SECTION_ID) {
+      const sourceIds = preview.assignees.map((a) => ({ id: a.id }))
+      return isAssigneesEdited(editedAssignees, sourceIds) ? 'edited' : 'same'
+    }
+    if (sectionId === LABELS_SECTION_ID) {
+      return isLabelsEdited(editedLabels, preview.labels) ? 'edited' : 'same'
+    }
+    if (sectionId === ISSUE_TYPE_SECTION_ID) return 'same'
+    if (sectionId === PARENT_SECTION_ID) return 'same'
+    if (sectionId === BLOCKED_BY_SECTION_ID) {
+      return isRelationshipsEdited(blockedByRelationships, preview.relationships.blockedBy, (r) =>
+        relationshipKey(r),
       )
-      return {
-        id: section.id,
-        label: section.label,
-        value: field && isSectionSelected(section.id) ? summarizeFieldValue(field) : 'Skipped',
-      }
-    })
+        ? 'edited'
+        : 'same'
+    }
+    if (sectionId === BLOCKING_SECTION_ID) {
+      return isRelationshipsEdited(blockingRelationships, preview.relationships.blocking, (r) =>
+        relationshipKey(r),
+      )
+        ? 'edited'
+        : 'same'
+    }
+    const field = editedFields.find((f) => fieldSectionId(f.fieldId) === sectionId)
+    const sourceField = preview.fields.find((f) => fieldSectionId(f.fieldId) === sectionId)
+    if (!field || !sourceField) return 'same'
+    return isFieldEdited(field, sourceField) ? 'edited' : 'same'
   }
 
   async function handleDuplicate() {
@@ -1417,8 +1301,6 @@ export function BulkDuplicateModal({
     return null
   }
 
-  const reviewRows = buildReviewRows()
-
   return (
     <Box
       sx={{
@@ -1585,28 +1467,20 @@ export function BulkDuplicateModal({
             onSelectAll={selectAllSections}
             onDeselectAll={() => setSelectedSections([])}
             onClose={onClose}
-            onNext={() => setStep('VALUES')}
+            onNext={() => setStep('REVIEW')}
           />
         )}
 
-        {step === 'VALUES' && preview && (
-          <ValuesStep
-            sections={selectedSectionsInOrder}
-            onClose={onClose}
-            onBack={() => setStep('SELECT')}
-            onNext={() => setStep('SUMMARY')}
-            renderSection={renderValueSection}
-          />
-        )}
-
-        {step === 'SUMMARY' && preview && (
+        {step === 'REVIEW' && preview && (
           <ReviewStep
-            rows={reviewRows}
+            sections={selectedSectionsInOrder}
+            diffStatus={diffStatus}
             concurrentError={concurrentError}
             duplicateBtnRef={duplicateBtnRef}
             onClose={onClose}
-            onBack={() => setStep('VALUES')}
+            onBack={() => setStep('SELECT')}
             onDuplicate={handleDuplicate}
+            renderSection={renderValueSection}
           />
         )}
       </Box>
