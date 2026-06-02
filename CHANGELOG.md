@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/fathiraz/refined-github-projects/compare/v1.1.0...v1.2.0) (2026-06-02)
+
+
+### Features
+
+* **bulk:** replace modals with anchored flyouts ([#38](https://github.com/fathiraz/refined-github-projects/issues/38)) ([c0436d1](https://github.com/fathiraz/refined-github-projects/commit/c0436d1484561018a13a98b0ab0ac887b24c5642))
+* **projects:** align board selection with Primer ([#35](https://github.com/fathiraz/refined-github-projects/issues/35)) ([ec11d67](https://github.com/fathiraz/refined-github-projects/commit/ec11d674c2701d6c4a930ffd04b6809558430a07))
+* **queue-tracker:** mirror GitHub Primer Toast shell ([#37](https://github.com/fathiraz/refined-github-projects/issues/37)) ([d8e4229](https://github.com/fathiraz/refined-github-projects/commit/d8e42296f9990f6324116fa9f663bb29279106a7))
+
+
+### Bug Fixes
+
+* **ui:** isolate flyout and modal keyboard input ([#45](https://github.com/fathiraz/refined-github-projects/issues/45)) ([4ef2717](https://github.com/fathiraz/refined-github-projects/commit/4ef27178c332e51c7b6b34e06ec1356efcf88d8e))
+
 ## [1.1.0](https://github.com/fathiraz/refined-github-projects/compare/v1.0.0...v1.1.0) (2026-05-28)
 
 
