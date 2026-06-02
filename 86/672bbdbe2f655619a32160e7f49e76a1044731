@@ -1,0 +1,19 @@
+wxt.config.ts
+  s_6a4c18bc8ebc00::t_425f3d54deacc8 22-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "86672bbdbe2f655619a32160e7f49e76a1044731",
+  "prompts": {},
+  "sessions": {
+    "s_6a4c18bc8ebc00": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d4e734c2-c8e3-47d0-806b-713dd34f9c87",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
