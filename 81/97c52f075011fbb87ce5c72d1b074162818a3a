@@ -1,0 +1,35 @@
+src/lib/modal-factory.tsx
+  s_8a19b016f72fb8::t_63b04a0b302cc6 114-119
+wxt.config.ts
+  s_9ef006c9d79ddc::t_1c8a9eeee8e679 21-23,26-27
+src/ui/bulk-flyout.tsx
+  s_8a19b016f72fb8::t_de7feda7eb67d9 209-210
+src/ui/__tests__/bulk-flyout.test.tsx
+  s_8a19b016f72fb8::t_c157c06a6e7e6c 196-232
+src/lib/__tests__/modal-factory.test.tsx
+  s_8a19b016f72fb8::t_3b556f465bcbdc 1-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8197c52f075011fbb87ce5c72d1b074162818a3a",
+  "prompts": {},
+  "sessions": {
+    "s_8a19b016f72fb8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef286f33-9b27-4c90-b529-6758205c19c5",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_9ef006c9d79ddc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3767d400-bae4-48b6-9da9-ece98a979d49",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
