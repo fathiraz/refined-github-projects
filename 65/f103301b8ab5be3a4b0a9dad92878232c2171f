@@ -1,0 +1,19 @@
+wxt.config.ts
+  s_3453e0d375c81a::t_dcb591cc589296 21-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "65f103301b8ab5be3a4b0a9dad92878232c2171f",
+  "prompts": {},
+  "sessions": {
+    "s_3453e0d375c81a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "72b4a3b9-2471-43d7-bb56-629f60b2377c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
