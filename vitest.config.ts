@@ -11,6 +11,11 @@ export default defineConfig({
     environment: 'happy-dom',
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/lib/vitest.setup.ts'],
+    server: {
+      deps: {
+        inline: [/@primer\/react/, /@primer\/octicons-react/, /@primer\/live-region-element/],
+      },
+    },
     coverage: {
       provider: 'v8',
       include: ['src/lib/**'],
