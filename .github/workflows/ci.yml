@@ -13,7 +13,7 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.32.1
+          version: 11.5.0
       - name: Set up Node.js
         id: setup-node-act
         uses: actions/setup-node@v6
@@ -30,7 +30,7 @@ jobs:
           export PATH="/opt/hostedtoolcache/node/${node_version}/x64/bin:$PATH"
           node --version
           npm --version
-          npm install --global pnpm@10.32.1
+          npm install --global pnpm@11.5.0
           pnpm install --frozen-lockfile
           pnpm typecheck
           pnpm build
