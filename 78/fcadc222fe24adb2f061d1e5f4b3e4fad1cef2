@@ -1,0 +1,18 @@
+.github/workflows/ci.yml
+  h_4149ee38f70c87 16,33
+.github/workflows/release.yml
+  h_4149ee38f70c87 19,88,127
+.github/workflows/coverage.yml
+  h_4149ee38f70c87 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "78fcadc222fe24adb2f061d1e5f4b3e4fad1cef2",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
