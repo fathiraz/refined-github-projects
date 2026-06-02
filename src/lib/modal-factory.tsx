@@ -114,7 +114,7 @@ export function createModal<T>(opts: CreateModalOptions<T>): React.FC<ModalCompo
         <Box
           sx={primerCss.modalPanel()}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
+          onKeyDown={(e: React.KeyboardEvent) => { if (e.key !== 'Escape') e.stopPropagation() }}
           onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
         >
           <ModalStepHeader title={name} icon={icon} onClose={handleRequestClose} />
