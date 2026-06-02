@@ -193,6 +193,43 @@ describe('<BulkFlyout> simple mode', () => {
     expect(style!.textContent).toContain('prefers-reduced-motion: no-preference')
     expect(style!.textContent).toContain('@keyframes rgp-flyout-in')
   })
+
+  it('stops keydown/keyup propagation to document when typing inside', () => {
+    const anchorRef = { current: document.createElement('button') }
+    document.body.appendChild(anchorRef.current)
+    const { find } = render(
+      <ThemeProvider colorMode="day">
+        <BaseStyles>
+          <BulkFlyout
+            mode="simple"
+            anchorRef={anchorRef as React.RefObject<HTMLElement>}
+            open={true}
+            onClose={() => {}}
+            title="Test"
+          >
+            <input data-testid="rgp-test-input" />
+          </BulkFlyout>
+        </BaseStyles>
+      </ThemeProvider>,
+    )
+    const input = find('[data-testid="rgp-test-input"]') as HTMLInputElement
+    expect(input).not.toBeNull()
+
+    const spy = vi.fn()
+    document.addEventListener('keydown', spy)
+    document.addEventListener('keyup', spy)
+
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }))
+      input.dispatchEvent(new KeyboardEvent('keyup', { key: 'a', bubbles: true }))
+    })
+
+    document.removeEventListener('keydown', spy)
+    document.removeEventListener('keyup', spy)
+    anchorRef.current.remove()
+
+    expect(spy).not.toHaveBeenCalled()
+  })
 })
 
 describe('<BulkFlyout> apply/cancel footer', () => {
