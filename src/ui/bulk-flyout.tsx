@@ -206,6 +206,8 @@ export function BulkFlyout(props: BulkFlyoutProps) {
           minWidth: width,
         }}
         data-testid="rgp-bulk-flyout"
+        onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
+        onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
       >
         <Box sx={{ px: 3, pt: 3, pb: 2 }}>{header}</Box>
         <Box

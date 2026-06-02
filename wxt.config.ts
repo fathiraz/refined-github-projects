@@ -18,7 +18,13 @@ export default defineConfig({
       port: 3000,
     },
     build: {
-      chunkSizeWarningLimit: 900,
+      chunkSizeWarningLimit: 2000,
+      rolldownOptions: {
+        onwarn(warning, handler) {
+          if (warning.code === 'INVALID_ANNOTATION') return
+          handler(warning)
+        },
+      },
     },
     resolve: {
       alias: {
