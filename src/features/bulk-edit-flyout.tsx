@@ -97,6 +97,13 @@ export function BulkEditFlyout({
     onClose()
   }, [onClose, resetFlyoutState])
 
+  useEffect(() => {
+    if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- parent may close via Escape/selection without onClose
+      resetFlyoutState()
+    }
+  }, [open, resetFlyoutState])
+
   const catalog = useMemo(() => buildFieldCatalog(fields), [fields])
 
   const activeField = useMemo(
@@ -142,6 +149,8 @@ export function BulkEditFlyout({
         }
         onAppliedField(activeFieldId)
         handleFlyoutClose()
+      } catch {
+        setApplyError('Could not start the bulk update. Try again.')
       } finally {
         setApplying(false)
       }

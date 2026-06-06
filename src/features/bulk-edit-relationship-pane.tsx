@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { Box, Flash, Radio, RadioGroup, SegmentedControl, Text } from '@primer/react'
@@ -66,6 +67,7 @@ export const BulkEditRelationshipPane = forwardRef<
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [prSkipCount, setPrSkipCount] = useState(0)
   const [validating, setValidating] = useState(false)
+  const latestPreflightReq = useRef(0)
 
   const relationships = useMemo(
     () =>
@@ -92,7 +94,10 @@ export const BulkEditRelationshipPane = forwardRef<
   }, [ready, validationErrors.length, validating, onCanApplyChange])
 
   const runPreflight = useCallback(async () => {
+    const reqId = ++latestPreflightReq.current
+
     if (!ready) {
+      if (reqId !== latestPreflightReq.current) return
       setValidationErrors([])
       setPrSkipCount(0)
       return
@@ -108,13 +113,15 @@ export const BulkEditRelationshipPane = forwardRef<
         }),
         sendMessage('getItemTitles', { itemIds: [...itemIds], projectId }),
       ])
+      if (reqId !== latestPreflightReq.current) return
       setValidationErrors(validation.errors)
       setPrSkipCount(titles.filter((t) => t.typename === 'PullRequest').length)
     } catch {
+      if (reqId !== latestPreflightReq.current) return
       setValidationErrors(['Could not validate relationship changes. Try again.'])
       setPrSkipCount(0)
     } finally {
-      setValidating(false)
+      if (reqId === latestPreflightReq.current) setValidating(false)
     }
   }, [ready, itemIds, projectId, relationships])
 
@@ -135,11 +142,16 @@ export const BulkEditRelationshipPane = forwardRef<
         return { ok: false as const, message: BULK_EDIT_CONCURRENT_MESSAGE }
       }
 
-      const validation = await sendMessage('validateBulkRelationshipUpdates', {
-        itemIds: [...itemIds],
-        projectId,
-        relationships,
-      })
+      let validation: { errors: string[] }
+      try {
+        validation = await sendMessage('validateBulkRelationshipUpdates', {
+          itemIds: [...itemIds],
+          projectId,
+          relationships,
+        })
+      } catch {
+        return { ok: false as const, message: BULK_EDIT_DISPATCH_FAILED_MESSAGE }
+      }
       if (validation.errors.length > 0) {
         setValidationErrors(validation.errors)
         return {
