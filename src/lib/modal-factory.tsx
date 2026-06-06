@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Box, Button, Flash, Spinner } from '@primer/react'
+import { Button, Flash, Spinner } from '@primer/react'
 import { ModalStepHeader } from '@/ui/modal-step-header'
+import { ModalShell } from '@/ui/modal-shell'
 import { primerCss } from '@/lib/primer-css-helper'
 import { toastStore } from '@/lib/toast-store'
 import { ensureTippyCss } from '@/lib/tippy-utils'
@@ -67,14 +68,6 @@ export function createModal<T>(opts: CreateModalOptions<T>): React.FC<ModalCompo
       onClose()
     }, [loading, onClose])
 
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') handleRequestClose()
-      }
-      document.addEventListener('keydown', handleKeyDown)
-      return () => document.removeEventListener('keydown', handleKeyDown)
-    }, [handleRequestClose])
-
     const handleSubmit = async () => {
       if (submitInFlightRef.current) return
       submitInFlightRef.current = true
@@ -103,62 +96,54 @@ export function createModal<T>(opts: CreateModalOptions<T>): React.FC<ModalCompo
       }
     }
 
-    return (
-      <Box
-        sx={primerCss.modalOverlay()}
-        onClick={handleRequestClose}
-        role="dialog"
-        aria-modal="true"
-        aria-label={name}
-      >
-        <Box
-          sx={primerCss.modalPanel()}
-          onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          onKeyDown={(e: React.KeyboardEvent) => { if (e.key !== 'Escape') e.stopPropagation() }}
-          onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
+    const defaultFooter = (
+      <>
+        <Button
+          variant="default"
+          onClick={handleRequestClose}
+          disabled={loading}
+          sx={primerCss.buttonMotion()}
         >
-          <ModalStepHeader title={name} icon={icon} onClose={handleRequestClose} />
-          <Box sx={primerCss.contentArea()}>
-            {error && (
-              <Flash variant="danger" sx={{ mb: 2 }}>
-                {error}
-              </Flash>
-            )}
-            {renderContent(
-              { ...dataProps, onClose: handleRequestClose } as T & { onClose: () => void },
-              {
-                error,
-                stage,
-              },
-            )}
-          </Box>
-          <Box sx={{ ...primerCss.footerBorder(), ...primerCss.footerLayout() }}>
-            {footer ? (
-              footer({ onClose: handleRequestClose, onSubmit: handleSubmit, loading })
-            ) : (
-              <>
-                <Button
-                  variant="default"
-                  onClick={handleRequestClose}
-                  disabled={loading}
-                  sx={primerCss.buttonMotion()}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  sx={primerCss.buttonMotion()}
-                >
-                  {loading && <Spinner size="small" sx={{ mr: 1 }} />}
-                  {confirmLabel}
-                </Button>
-              </>
-            )}
-          </Box>
-        </Box>
-      </Box>
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={loading}
+          sx={primerCss.buttonMotion()}
+        >
+          {loading && <Spinner size="small" sx={{ mr: 1 }} />}
+          {confirmLabel}
+        </Button>
+      </>
+    )
+
+    return (
+      <ModalShell
+        ariaLabel={name}
+        onClose={handleRequestClose}
+        closeOnBackdrop={!loading}
+        closeOnEscape={!loading}
+        header={<ModalStepHeader title={name} icon={icon} onClose={handleRequestClose} />}
+        footer={
+          footer
+            ? footer({ onClose: handleRequestClose, onSubmit: handleSubmit, loading })
+            : defaultFooter
+        }
+      >
+        {error && (
+          <Flash variant="danger" sx={{ mb: 2 }}>
+            {error}
+          </Flash>
+        )}
+        {renderContent(
+          { ...dataProps, onClose: handleRequestClose } as T & { onClose: () => void },
+          {
+            error,
+            stage,
+          },
+        )}
+      </ModalShell>
     )
   }
 

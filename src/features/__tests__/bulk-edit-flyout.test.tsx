@@ -218,6 +218,20 @@ describe('bulk-edit — partitionFieldList', () => {
     if (partition.mode !== 'search') return
     expect(partition.matches.filter((f) => f.id === relationshipFieldId('parent'))).toHaveLength(1)
   })
+
+  it('browse mode with no recents yields empty Recent section data', () => {
+    const partition = partitionFieldList({
+      fields: baseFields,
+      recentIds: [],
+      query: '',
+    })
+    expect(partition.mode).toBe('browse')
+    if (partition.mode !== 'browse') return
+    expect(partition.recent).toEqual([])
+    expect(partition.issueProperties.map((f) => f.name)).toEqual(['Comment', 'Description'])
+    expect(partition.projectFields.map((f) => f.name)).toEqual(['Alpha', 'Status', 'Zeta'])
+    expect(partition.relationships.map((f) => f.name)).toEqual(['Blocked by', 'Blocking', 'Parent'])
+  })
 })
 
 describe('bulk-edit — buildRelationshipsPayload', () => {

@@ -101,4 +101,17 @@ export const primerCss = {
     px: 4,
     py: 3,
   }),
+
+  chipButton: makePreset({
+    boxShadow: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+    '&:active': { transform: 'translateY(0)', transition: '100ms' },
+    '@media (prefers-reduced-motion: reduce)': {
+      transition: 'none',
+      '&:hover:not(:disabled)': { transform: 'none' },
+    },
+  }),
 }

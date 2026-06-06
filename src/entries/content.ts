@@ -1,5 +1,8 @@
 import { setupContentUi } from '@/features/content-ui'
-import { createSprintHeaderInjector, injectStatusBarSprintButton } from '@/features/sprint-injections'
+import {
+  createSprintHeaderInjector,
+  injectStatusBarSprintButton,
+} from '@/features/sprint-injections'
 import {
   injectTableEnhancementStyles,
   initDragAndDrop,
@@ -49,7 +52,7 @@ export default defineContentScript({
       projectContext.isOrg,
     )
 
-    const injectSprintHeaders = createSprintHeaderInjector(projectContext, getFields)
+    const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext, getFields)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)
     const cleanupIssueDetail = setupIssueDetailInjector(projectContext)
     const cleanupTableEnhancements = setupTableEnhancements([

@@ -260,7 +260,14 @@ export function BulkEditFlyout({
           {partition.mode === 'search' ? (
             <ActionList>
               {partition.matches.length === 0 ? (
-                <Box sx={{ p: 2, fontSize: 0, color: 'fg.muted' }}>No fields match.</Box>
+                <Box
+                  sx={{ p: 2, fontSize: 0, color: 'fg.muted' }}
+                  data-testid="rgp-edit-fields-search-empty"
+                >
+                  {query.trim()
+                    ? `No fields match "${query.trim()}". Try a different search.`
+                    : 'No fields match.'}
+                </Box>
               ) : (
                 partition.matches.map((field) => (
                   <FieldRow key={field.id} field={field} onPick={pickField} />
@@ -269,6 +276,21 @@ export function BulkEditFlyout({
             </ActionList>
           ) : (
             <>
+              {partition.recent.length === 0 && (
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 2,
+                    fontSize: 0,
+                    color: 'fg.subtle',
+                    borderBottom: '1px solid',
+                    borderColor: 'border.muted',
+                  }}
+                  data-testid="rgp-edit-fields-recent-empty"
+                >
+                  Fields you edit appear under Recent for quick access.
+                </Box>
+              )}
               {partition.recent.length > 0 && (
                 <Box data-testid="rgp-edit-fields-recent">
                   <SectionHeader>Recent</SectionHeader>
@@ -281,6 +303,7 @@ export function BulkEditFlyout({
               )}
               {partition.issueProperties.length > 0 && (
                 <Box>
+                  {partition.recent.length > 0 && <ActionList.Divider />}
                   <SectionHeader>Issue properties</SectionHeader>
                   <ActionList>
                     {partition.issueProperties.map((field) => (
@@ -291,6 +314,9 @@ export function BulkEditFlyout({
               )}
               {partition.projectFields.length > 0 && (
                 <Box>
+                  {(partition.recent.length > 0 || partition.issueProperties.length > 0) && (
+                    <ActionList.Divider />
+                  )}
                   <SectionHeader>Project fields</SectionHeader>
                   <ActionList>
                     {partition.projectFields.map((field) => (
@@ -301,6 +327,9 @@ export function BulkEditFlyout({
               )}
               {partition.relationships.length > 0 && (
                 <Box>
+                  {(partition.recent.length > 0 ||
+                    partition.issueProperties.length > 0 ||
+                    partition.projectFields.length > 0) && <ActionList.Divider />}
                   <SectionHeader>Relationships</SectionHeader>
                   <ActionList>
                     {partition.relationships.map((field) => (

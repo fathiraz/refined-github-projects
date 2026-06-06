@@ -1,9 +1,8 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { StyleSheetManager } from 'styled-components'
-import isPropValid from '@emotion/is-prop-valid'
+import type { ContentScriptContext } from 'wxt/utils/content-script-context'
 import tippy, { type Instance } from 'tippy.js'
 import { SprintGroupHeaderWidget } from '@/features/sprint-table-widget'
+import { createLightDomUi, type FeatureUi } from '@/lib/shadow-ui-factory'
 import { sprintPanelStore } from '@/lib/sprint-store'
 import { ensureTippyCss, getTippyDelayValue } from '@/lib/tippy-utils'
 import type { ProjectContext, ProjectData } from '@/lib/github-project'
@@ -20,9 +19,17 @@ let showTooltipTimeout: number | null = null
 let hideTooltipTimeout: number | null = null
 
 export function createSprintHeaderInjector(
+  ctx: ContentScriptContext,
   projectContext: ProjectContext,
   getFields: () => Promise<ProjectData>,
 ) {
+  const mountedWidgets = new Map<HTMLElement, FeatureUi>()
+
+  ctx.onInvalidated(() => {
+    for (const ui of mountedWidgets.values()) ui.destroy()
+    mountedWidgets.clear()
+  })
+
   return () => {
     const currentLabels = document.querySelectorAll<HTMLElement>(
       'span[class*="iteration-group-header-label-module__CurrentIterationLabel"]',
@@ -38,8 +45,10 @@ export function createSprintHeaderInjector(
         'display:inline-flex;align-items:center;gap:4px;margin-left:4px;vertical-align:middle'
       label.after(hostSpan)
 
-      ReactDOM.createRoot(hostSpan).render(
-        <StyleSheetManager shouldForwardProp={isPropValid}>
+      const ui = createLightDomUi(ctx, {
+        name: 'sprint-header-widget',
+        anchor: hostSpan,
+        component: (
           <SprintGroupHeaderWidget
             projectId={projectContext.projectId}
             owner={projectContext.owner}
@@ -47,8 +56,10 @@ export function createSprintHeaderInjector(
             number={projectContext.number}
             getFields={getFields}
           />
-        </StyleSheetManager>,
-      )
+        ),
+      })
+      ui.mount()
+      mountedWidgets.set(hostSpan, ui)
     }
   }
 }
@@ -119,10 +130,15 @@ function injectSprintButtonStyles() {
       border: none !important;
       background: transparent !important;
       box-shadow: none !important;
-      transition: background-color 120ms ease !important;
+      transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     [data-rgp-sprint-btn] button:hover {
-      background-color: var(--color-canvas-subtle, rgba(175,184,193,.2)) !important;
+      background-color: var(--color-canvas-subtle) !important;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-rgp-sprint-btn] button {
+        transition: none !important;
+      }
     }
   `
   document.head.appendChild(style)

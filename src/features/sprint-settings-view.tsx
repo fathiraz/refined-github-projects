@@ -5,8 +5,10 @@ import Tippy from '@/ui/tooltip'
 import {
   Box,
   Button,
+  Details,
   Flash,
   FormControl,
+  Label,
   Radio,
   RadioGroup,
   Select,
@@ -14,8 +16,10 @@ import {
   Text,
   TextInput,
 } from '@primer/react'
+import { primerCss } from '@/lib/primer-css-helper'
 import { Z_TOOLTIP } from '@/lib/z-index'
 import {
+  ChevronDownIcon,
   FilterIcon,
   IssueClosedIcon,
   IterationsIcon,
@@ -28,6 +32,7 @@ import {
 import { sendMessage } from '@/lib/messages'
 import type { ExcludeCondition, SprintSettings } from '@/lib/storage'
 import { injectSprintFilter, SPRINT_FILTER, type FieldNode } from '@/lib/sprint-utils'
+import { formatAdvancedSettingsHint, hasAdvancedSettings } from '@/features/sprint-settings-utils'
 import type { ProjectData } from '@/lib/github-project'
 
 const labelIconBoxSx = {
@@ -36,6 +41,38 @@ const labelIconBoxSx = {
   alignItems: 'center',
   flexShrink: 0,
 } as const
+
+const fieldLabelSx = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 2,
+  fontSize: 1,
+  fontWeight: 'semibold',
+  color: 'fg.muted',
+} as const
+
+type FieldLabelIcon = React.ComponentType<{ size?: number }>
+
+/** Shared icon + text content for FormControl/RadioGroup labels (keeps `<label>` semantics). */
+function LabelInner({
+  icon: Icon,
+  label,
+  optional,
+}: {
+  icon: FieldLabelIcon
+  label: string
+  optional?: boolean
+}) {
+  return (
+    <>
+      <Box sx={labelIconBoxSx}>
+        <Icon size={16} />
+      </Box>
+      {label}
+      {optional && <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}> (optional)</Text>}
+    </>
+  )
+}
 
 interface SettingsViewProps {
   projectId: string
@@ -72,6 +109,7 @@ export function SettingsView({
   const [notStartedOptionId, setNotStartedOptionId] = useState(
     currentSettings?.notStartedOptionId ?? '',
   )
+  const [advancedOpen, setAdvancedOpen] = useState(() => hasAdvancedSettings(currentSettings))
 
   useEffect(() => {
     sendMessage('getProjectFields', { owner, number, isOrg })
@@ -99,6 +137,16 @@ export function SettingsView({
     doneFieldId &&
     (selectedDoneField?.dataType === 'TEXT' ? doneTextValue.trim() : doneOptionId) &&
     !hasIncompleteExclude
+
+  const completeExcludeCount = excludeConditions.filter(
+    (c) => c.fieldId && (c.optionId || c.optionName.trim()),
+  ).length
+  const advancedHint = formatAdvancedSettingsHint({
+    notStartedOptionName: selectedDoneField?.options?.find((o) => o.id === notStartedOptionId)
+      ?.name,
+    excludeCount: completeExcludeCount,
+    pointsFieldName: numberFields.find((f) => f.id === pointsFieldId)?.name,
+  })
 
   const addExcludeCondition = () =>
     setExcludeConditions((prev) => [
@@ -173,368 +221,345 @@ export function SettingsView({
         </Flash>
       )}
 
-      {/* sprint field */}
-      <FormControl>
-        <FormControl.Label
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            fontSize: 1,
-            fontWeight: 'semibold',
-            color: 'fg.muted',
-          }}
-        >
-          <Box sx={labelIconBoxSx}>
-            <IterationsIcon size={16} />
-          </Box>
-          Sprint field (Iteration)
-        </FormControl.Label>
-        <Select value={sprintFieldId} onChange={(e) => setSprintFieldId(e.target.value)} block>
-          <Select.Option value="">Select a field…</Select.Option>
-          {iterationFields.map((f) => (
-            <Select.Option key={f.id} value={f.id}>
-              {f.name}
-            </Select.Option>
-          ))}
-        </Select>
-        {selectedSprintField?.configuration && (
-          <FormControl.Caption>
-            {selectedSprintField.configuration.iterations.length} upcoming iteration
-            {selectedSprintField.configuration.iterations.length !== 1 ? 's' : ''}
-          </FormControl.Caption>
-        )}
-      </FormControl>
-
-      {/* done condition field */}
-      <FormControl>
-        <FormControl.Label
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            fontSize: 1,
-            fontWeight: 'semibold',
-            color: 'fg.muted',
-          }}
-        >
-          <Box sx={labelIconBoxSx}>
-            <IssueClosedIcon size={16} />
-          </Box>
-          Done condition field
-        </FormControl.Label>
-        <Select
-          value={doneFieldId}
-          onChange={(e) => {
-            setDoneFieldId(e.target.value)
-            setDoneOptionId('')
-            setNotStartedOptionId('')
-          }}
-          block
-        >
-          <Select.Option value="">Select a field…</Select.Option>
-          {doneFields.map((f) => (
-            <Select.Option key={f.id} value={f.id}>
-              {f.name} ({f.dataType === 'TEXT' ? 'Text' : 'Single select'})
-            </Select.Option>
-          ))}
-        </Select>
-      </FormControl>
-
-      {/* radio options for SINGLE_SELECT done field */}
-      {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
-        <RadioGroup name="doneOption" onChange={(v) => setDoneOptionId(v ?? '')} sx={{ pl: 2 }}>
-          <RadioGroup.Label
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              fontSize: 1,
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-            }}
-          >
-            <Box sx={labelIconBoxSx}>
-              <OptionsSelectIcon size={16} />
-            </Box>
-            Done option
-          </RadioGroup.Label>
-          {selectedDoneField.options.map((opt) => (
-            <Tippy
-              key={opt.id}
-              content={`Items with "${opt.name}" on this field count as done for sprint workflows.`}
-              placement="top"
-              delay={[400, 0]}
-              zIndex={Z_TOOLTIP}
-            >
-              <Box>
-                <FormControl>
-                  <Radio
-                    value={opt.id}
-                    checked={doneOptionId === opt.id}
-                    onChange={() => setDoneOptionId(opt.id)}
-                  />
-                  <FormControl.Label sx={{ fontSize: 1 }}>{opt.name}</FormControl.Label>
-                </FormControl>
-              </Box>
-            </Tippy>
-          ))}
-        </RadioGroup>
-      )}
-
-      {/* not started option — items in this state are excluded from "done" count */}
-      {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
+      <Box
+        sx={{ ...primerCss.flatPanel(), p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}
+      >
+        {/* sprint field */}
         <FormControl>
-          <FormControl.Label
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              fontSize: 1,
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-            }}
-          >
-            <Box sx={labelIconBoxSx}>
-              <OptionsSelectIcon size={16} />
-            </Box>
-            Not started option{' '}
-            <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
+          <FormControl.Label sx={fieldLabelSx}>
+            <LabelInner icon={IterationsIcon} label="Sprint field (Iteration)" />
           </FormControl.Label>
-          <Select
-            value={notStartedOptionId}
-            onChange={(e) => {
-              const selected = e.target.value
-              if (selected && selected === doneOptionId) {
-                setError('Not started option cannot be the same as the done option')
-                return
-              }
-              setError(null)
-              setNotStartedOptionId(selected)
-            }}
-            block
-          >
-            <Select.Option value="">None (only count exact done option)</Select.Option>
-            {selectedDoneField.options
-              .filter((opt) => opt.id !== doneOptionId)
-              .map((opt) => (
-                <Select.Option key={opt.id} value={opt.id}>
-                  {opt.name}
-                </Select.Option>
-              ))}
-          </Select>
-          <FormControl.Caption>
-            When set, all statuses except this one count toward sprint progress — not just the done
-            option.
-          </FormControl.Caption>
-        </FormControl>
-      )}
-
-      {/* text input for TEXT done field */}
-      {selectedDoneField?.dataType === 'TEXT' && (
-        <FormControl>
-          <FormControl.Label
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              fontSize: 1,
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-            }}
-          >
-            <Box sx={labelIconBoxSx}>
-              <TextLineIcon size={16} />
-            </Box>
-            Done value
-          </FormControl.Label>
-          <TextInput
-            block
-            placeholder="e.g. Done"
-            value={doneTextValue}
-            onChange={(e) => setDoneTextValue(e.target.value)}
-          />
-        </FormControl>
-      )}
-
-      {/* exclude from migration */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={labelIconBoxSx}>
-            <FilterIcon size={16} />
-          </Box>
-          <Text sx={{ fontSize: 1, fontWeight: 'semibold', color: 'fg.muted' }}>
-            Exclude from migration{' '}
-            <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
-          </Text>
-        </Box>
-        {excludeConditions.map((cond, idx) => {
-          const selectedField = excludableFields.find((f) => f.id === cond.fieldId)
-          return (
-            <Box
-              key={idx}
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 2,
-                flexWrap: 'wrap',
-                width: '100%',
-              }}
-            >
-              <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
-                <Select
-                  value={cond.fieldId}
-                  onChange={(e) => {
-                    const f = excludableFields.find((ef) => ef.id === e.target.value)
-                    updateExcludeCondition(idx, {
-                      fieldId: e.target.value,
-                      fieldName: f?.name ?? '',
-                      fieldType: f?.dataType === 'TEXT' ? 'TEXT' : 'SINGLE_SELECT',
-                      optionId: '',
-                      optionName: '',
-                    })
-                  }}
-                  block
-                >
-                  <Select.Option value="">Select field…</Select.Option>
-                  {excludableFields.map((f) => (
-                    <Select.Option key={f.id} value={f.id}>
-                      {f.name} ({f.dataType === 'TEXT' ? 'Text' : 'Single select'})
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Box>
-
-              {selectedField?.dataType === 'SINGLE_SELECT' && selectedField.options && (
-                <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
-                  <Select
-                    value={cond.optionId}
-                    onChange={(e) => {
-                      const opt = selectedField.options!.find((o) => o.id === e.target.value)
-                      updateExcludeCondition(idx, {
-                        optionId: e.target.value,
-                        optionName: opt?.name ?? '',
-                      })
-                    }}
-                    block
-                  >
-                    <Select.Option value="">Select option…</Select.Option>
-                    {selectedField.options.map((opt) => (
-                      <Select.Option key={opt.id} value={opt.id}>
-                        {opt.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Box>
-              )}
-
-              {selectedField?.dataType === 'TEXT' && (
-                <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
-                  <TextInput
-                    block
-                    placeholder="Exact text value"
-                    value={cond.optionName}
-                    onChange={(e) =>
-                      updateExcludeCondition(idx, { optionName: e.target.value, optionId: '' })
-                    }
-                  />
-                </Box>
-              )}
-
-              <Tippy
-                content="Remove exclusion rule"
-                placement="top"
-                delay={[400, 0]}
-                zIndex={Z_TOOLTIP}
-              >
-                <Button
-                  variant="invisible"
-                  size="small"
-                  aria-label="Remove exclusion"
-                  onClick={() => removeExcludeCondition(idx)}
-                  sx={{
-                    p: '5px',
-                    color: 'fg.muted',
-                    flexShrink: 0,
-                    boxShadow: 'none',
-                    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                    '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                    '@media (prefers-reduced-motion: reduce)': {
-                      transition: 'none',
-                      '&:hover:not(:disabled)': { transform: 'none' },
-                    },
-                  }}
-                >
-                  <XIcon size={12} />
-                </Button>
-              </Tippy>
-            </Box>
-          )
-        })}
-        <Tippy
-          content="Add a field exclusion rule"
-          placement="top"
-          delay={[400, 0]}
-          zIndex={Z_TOOLTIP}
-        >
-          <Button
-            variant="invisible"
-            size="small"
-            onClick={addExcludeCondition}
-            sx={{
-              alignSelf: 'flex-start',
-              color: 'fg.muted',
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}
-          >
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-              <PlusIcon size={12} />
-              <Text sx={{ fontSize: 0 }}>Add exclusion</Text>
-            </Box>
-          </Button>
-        </Tippy>
-      </Box>
-
-      {/* story points field (optional) */}
-      {numberFields.length > 0 && (
-        <FormControl>
-          <FormControl.Label
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              fontSize: 1,
-              fontWeight: 'semibold',
-              color: 'fg.muted',
-            }}
-          >
-            <Box sx={labelIconBoxSx}>
-              <SlidersIcon size={16} />
-            </Box>
-            Story points field{' '}
-            <Text sx={{ fontWeight: 'normal', color: 'fg.subtle' }}>(optional)</Text>
-          </FormControl.Label>
-          <Select value={pointsFieldId} onChange={(e) => setPointsFieldId(e.target.value)} block>
-            <Select.Option value="">None</Select.Option>
-            {numberFields.map((f) => (
+          <Select value={sprintFieldId} onChange={(e) => setSprintFieldId(e.target.value)} block>
+            <Select.Option value="">Select a field…</Select.Option>
+            {iterationFields.map((f) => (
               <Select.Option key={f.id} value={f.id}>
                 {f.name}
               </Select.Option>
             ))}
           </Select>
-          <FormControl.Caption>
-            Used to display point totals in the sprint progress view.
-          </FormControl.Caption>
+          {selectedSprintField?.configuration && (
+            <FormControl.Caption>
+              {selectedSprintField.configuration.iterations.length} upcoming iteration
+              {selectedSprintField.configuration.iterations.length !== 1 ? 's' : ''}
+            </FormControl.Caption>
+          )}
         </FormControl>
-      )}
+
+        {/* done condition field */}
+        <FormControl>
+          <FormControl.Label sx={fieldLabelSx}>
+            <LabelInner icon={IssueClosedIcon} label="Done condition field" />
+          </FormControl.Label>
+          <Select
+            value={doneFieldId}
+            onChange={(e) => {
+              setDoneFieldId(e.target.value)
+              setDoneOptionId('')
+              setNotStartedOptionId('')
+            }}
+            block
+          >
+            <Select.Option value="">Select a field…</Select.Option>
+            {doneFields.map((f) => (
+              <Select.Option key={f.id} value={f.id}>
+                {f.name} ({f.dataType === 'TEXT' ? 'Text' : 'Single select'})
+              </Select.Option>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* radio options for SINGLE_SELECT done field */}
+        {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
+          <RadioGroup name="doneOption" onChange={(v) => setDoneOptionId(v ?? '')} sx={{ pl: 2 }}>
+            <RadioGroup.Label sx={fieldLabelSx}>
+              <LabelInner icon={OptionsSelectIcon} label="Done option" />
+            </RadioGroup.Label>
+            {selectedDoneField.options.map((opt) => (
+              <Tippy
+                key={opt.id}
+                content={`Items with "${opt.name}" on this field count as done for sprint workflows.`}
+                placement="top"
+                delay={[400, 0]}
+                zIndex={Z_TOOLTIP}
+              >
+                <Box>
+                  <FormControl>
+                    <Radio
+                      value={opt.id}
+                      checked={doneOptionId === opt.id}
+                      onChange={() => setDoneOptionId(opt.id)}
+                    />
+                    <FormControl.Label sx={{ fontSize: 1 }}>{opt.name}</FormControl.Label>
+                  </FormControl>
+                </Box>
+              </Tippy>
+            ))}
+          </RadioGroup>
+        )}
+
+        {/* text input for TEXT done field */}
+        {selectedDoneField?.dataType === 'TEXT' && (
+          <FormControl>
+            <FormControl.Label sx={fieldLabelSx}>
+              <LabelInner icon={TextLineIcon} label="Done value" />
+            </FormControl.Label>
+            <TextInput
+              block
+              placeholder="e.g. Done"
+              value={doneTextValue}
+              onChange={(e) => setDoneTextValue(e.target.value)}
+            />
+          </FormControl>
+        )}
+      </Box>
+
+      <Details
+        open={advancedOpen}
+        onToggle={(e) => setAdvancedOpen((e.currentTarget as HTMLDetailsElement).open)}
+        data-testid="rgp-sprint-advanced-settings"
+        sx={{
+          ...primerCss.flatPanel(),
+          p: 0,
+          boxShadow: 'none',
+          '& > summary': {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            px: 3,
+            py: 2,
+            listStyle: 'none',
+            cursor: 'pointer',
+            fontWeight: 'semibold',
+            color: 'fg.default',
+            borderRadius: 2,
+            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': { bg: 'canvas.subtle' },
+            '&:focus-visible': { outline: '2px solid', outlineColor: 'accent.emphasis' },
+          },
+          '& > summary::-webkit-details-marker': { display: 'none' },
+          '&[open] > summary .rgp-advanced-chevron': { transform: 'rotate(180deg)' },
+          '& .rgp-advanced-chevron': {
+            display: 'inline-flex',
+            color: 'fg.muted',
+            transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+          },
+          '@media (prefers-reduced-motion: reduce)': {
+            '& > summary': { transition: 'none' },
+            '& .rgp-advanced-chevron': { transition: 'none' },
+          },
+        }}
+      >
+        <Details.Summary>
+          <Box as="span" className="rgp-advanced-chevron">
+            <ChevronDownIcon size={16} />
+          </Box>
+          <Box sx={labelIconBoxSx}>
+            <SlidersIcon size={16} />
+          </Box>
+          <Text sx={{ fontSize: 1, fontWeight: 'semibold' }}>Advanced settings</Text>
+          {!advancedOpen && advancedHint && (
+            <Label variant="secondary" sx={{ ml: 'auto', fontWeight: 'normal' }}>
+              {advancedHint}
+            </Label>
+          )}
+        </Details.Summary>
+        <Box
+          sx={{
+            px: 3,
+            pb: 3,
+            pt: 3,
+            borderTop: '1px solid',
+            borderColor: 'border.default',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3,
+          }}
+        >
+          {/* not started option — items in this state are excluded from "done" count */}
+          {selectedDoneField?.dataType === 'SINGLE_SELECT' && selectedDoneField.options && (
+            <FormControl>
+              <FormControl.Label sx={fieldLabelSx}>
+                <LabelInner icon={OptionsSelectIcon} label="Not started option" optional />
+              </FormControl.Label>
+              <Select
+                value={notStartedOptionId}
+                onChange={(e) => {
+                  const selected = e.target.value
+                  if (selected && selected === doneOptionId) {
+                    setError('Not started option cannot be the same as the done option')
+                    return
+                  }
+                  setError(null)
+                  setNotStartedOptionId(selected)
+                }}
+                block
+              >
+                <Select.Option value="">None (only count exact done option)</Select.Option>
+                {selectedDoneField.options
+                  .filter((opt) => opt.id !== doneOptionId)
+                  .map((opt) => (
+                    <Select.Option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </Select.Option>
+                  ))}
+              </Select>
+              <FormControl.Caption>
+                When set, all statuses except this one count toward sprint progress — not just the
+                done option.
+              </FormControl.Caption>
+            </FormControl>
+          )}
+
+          {/* exclude from migration */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={fieldLabelSx}>
+              <LabelInner icon={FilterIcon} label="Exclude from migration" optional />
+            </Box>
+            {excludeConditions.length === 0 && (
+              <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
+                No exclusion rules yet. Matching items are skipped during sprint migration.
+              </Text>
+            )}
+            {excludeConditions.map((cond, idx) => {
+              const selectedField = excludableFields.find((f) => f.id === cond.fieldId)
+              return (
+                <Box
+                  key={idx}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 2,
+                    flexWrap: 'wrap',
+                    width: '100%',
+                  }}
+                >
+                  <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
+                    <Select
+                      value={cond.fieldId}
+                      onChange={(e) => {
+                        const f = excludableFields.find((ef) => ef.id === e.target.value)
+                        updateExcludeCondition(idx, {
+                          fieldId: e.target.value,
+                          fieldName: f?.name ?? '',
+                          fieldType: f?.dataType === 'TEXT' ? 'TEXT' : 'SINGLE_SELECT',
+                          optionId: '',
+                          optionName: '',
+                        })
+                      }}
+                      block
+                    >
+                      <Select.Option value="">Select field…</Select.Option>
+                      {excludableFields.map((f) => (
+                        <Select.Option key={f.id} value={f.id}>
+                          {f.name} ({f.dataType === 'TEXT' ? 'Text' : 'Single select'})
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Box>
+
+                  {selectedField?.dataType === 'SINGLE_SELECT' && selectedField.options && (
+                    <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
+                      <Select
+                        value={cond.optionId}
+                        onChange={(e) => {
+                          const opt = selectedField.options!.find((o) => o.id === e.target.value)
+                          updateExcludeCondition(idx, {
+                            optionId: e.target.value,
+                            optionName: opt?.name ?? '',
+                          })
+                        }}
+                        block
+                      >
+                        <Select.Option value="">Select option…</Select.Option>
+                        {selectedField.options.map((opt) => (
+                          <Select.Option key={opt.id} value={opt.id}>
+                            {opt.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Box>
+                  )}
+
+                  {selectedField?.dataType === 'TEXT' && (
+                    <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
+                      <TextInput
+                        block
+                        placeholder="Exact text value"
+                        value={cond.optionName}
+                        onChange={(e) =>
+                          updateExcludeCondition(idx, { optionName: e.target.value, optionId: '' })
+                        }
+                      />
+                    </Box>
+                  )}
+
+                  <Tippy
+                    content="Remove exclusion rule"
+                    placement="top"
+                    delay={[400, 0]}
+                    zIndex={Z_TOOLTIP}
+                  >
+                    <Button
+                      variant="invisible"
+                      size="small"
+                      aria-label="Remove exclusion"
+                      onClick={() => removeExcludeCondition(idx)}
+                      sx={{
+                        ...primerCss.buttonMotion(),
+                        p: '5px',
+                        color: 'fg.muted',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <XIcon size={12} />
+                    </Button>
+                  </Tippy>
+                </Box>
+              )
+            })}
+            <Tippy
+              content="Add a field exclusion rule"
+              placement="top"
+              delay={[400, 0]}
+              zIndex={Z_TOOLTIP}
+            >
+              <Button
+                variant="default"
+                size="small"
+                leadingVisual={() => <PlusIcon size={12} />}
+                onClick={addExcludeCondition}
+                sx={{ ...primerCss.buttonMotion(), alignSelf: 'flex-start' }}
+              >
+                Add exclusion
+              </Button>
+            </Tippy>
+          </Box>
+
+          {/* story points field (optional) */}
+          {numberFields.length > 0 && (
+            <FormControl>
+              <FormControl.Label sx={fieldLabelSx}>
+                <LabelInner icon={SlidersIcon} label="Story points field" optional />
+              </FormControl.Label>
+              <Select
+                value={pointsFieldId}
+                onChange={(e) => setPointsFieldId(e.target.value)}
+                block
+              >
+                <Select.Option value="">None</Select.Option>
+                {numberFields.map((f) => (
+                  <Select.Option key={f.id} value={f.id}>
+                    {f.name}
+                  </Select.Option>
+                ))}
+              </Select>
+              <FormControl.Caption>
+                Used to display point totals in the sprint progress view.
+              </FormControl.Caption>
+            </FormControl>
+          )}
+        </Box>
+      </Details>
 
       {/* footer */}
       <Box sx={{ pt: 2, borderTop: '1px solid', borderColor: 'border.default' }}>
@@ -551,16 +576,7 @@ export function SettingsView({
               variant="primary"
               disabled={!canSave || saving}
               onClick={handleSave}
-              sx={{
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
-              }}
+              sx={primerCss.buttonMotion()}
             >
               {saving ? <Spinner size="small" /> : 'Save Settings →'}
             </Button>
