@@ -1,0 +1,38 @@
+src/ui/__tests__/modal-shell.test.tsx
+  s_6a4c18bc8ebc00::t_d269af7cf855c5 1-79
+src/features/bulk-close-modal.tsx
+  ai_agent 36-40
+  s_6a4c18bc8ebc00::t_11fd6fe5c2240d 1-35,41-134
+src/features/bulk-actions-bar.tsx
+  s_6a4c18bc8ebc00::t_a56ef71d8cd7c2 216
+  s_6a4c18bc8ebc00::t_99b71f8b7a476c 83
+  s_6a4c18bc8ebc00::t_a8adc11c0c4606 589
+  s_6a4c18bc8ebc00::t_dd07a8e7613313 560
+  s_6a4c18bc8ebc00::t_7ef3bf7d33e1cc 63-64,69-70
+  s_6a4c18bc8ebc00::t_008ae0a78a3f16 616-620
+  s_6a4c18bc8ebc00::t_36213d873b47a7 136
+src/features/bulk-actions-modals.tsx
+  s_6a4c18bc8ebc00::t_c8bef617d30a92 51-60
+  s_6a4c18bc8ebc00::t_82834051061e21 5
+  s_6a4c18bc8ebc00::t_93097363abb9a9 22-27
+src/ui/modal-shell.tsx
+  s_6a4c18bc8ebc00::t_6a6f80333d3a9c 43-46,48-49
+src/features/sprint-injections.tsx
+  s_6a4c18bc8ebc00::t_4ce9d054cfc652 64-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "349ea42df8e2a40da8e1a7882a625a1cd070f449",
+  "prompts": {},
+  "sessions": {
+    "s_6a4c18bc8ebc00": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d4e734c2-c8e3-47d0-806b-713dd34f9c87",
+        "model": "composer-2.5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
