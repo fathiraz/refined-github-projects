@@ -7,6 +7,7 @@ import { sendMessage } from '@/lib/messages'
 import type { SprintInfo } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
 import type { ProjectData } from '@/lib/github-project'
+import { primerCss } from '@/lib/primer-css-helper'
 import { sprintConfirmEndStore, sprintPanelStore } from '@/lib/sprint-store'
 
 interface Props {
@@ -19,6 +20,24 @@ interface Props {
 
 type WidgetState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
 
+const accentTextButtonSx = {
+  ...primerCss.buttonMotion(),
+  color: 'accent.fg',
+  fontWeight: 500,
+  fontSize: 0,
+  px: '8px',
+  py: '3px',
+  height: 'auto',
+  lineHeight: 1.5,
+  border: 'none',
+  borderRadius: 2,
+  '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
+  '@media (prefers-reduced-motion: reduce)': {
+    transition: 'none',
+    '&:hover:not(:disabled)': { transform: 'none' },
+  },
+}
+
 interface SprintStatus {
   hasSettings: boolean
   activeSprint: SprintInfo | null
@@ -28,7 +47,13 @@ interface SprintStatus {
   settings: SprintSettings | null
 }
 
-export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFields }: Props) {
+export function SprintGroupHeaderWidget({
+  projectId,
+  owner,
+  isOrg,
+  number,
+  getFields: _getFields,
+}: Props) {
   ensureTippyCss()
   const [state, setState] = useState<WidgetState>('loading')
   const [status, setStatus] = useState<SprintStatus | null>(null)
@@ -57,7 +82,8 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
   }, [projectId, owner, number, isOrg])
 
   useEffect(() => {
-    fetchStatus()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load widget status when project context changes
+    void fetchStatus()
   }, [fetchStatus])
 
   const handleAcknowledge = async () => {
@@ -138,25 +164,7 @@ export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number, getFi
                 variant="invisible"
                 onClick={handleAcknowledge}
                 disabled={acknowledging}
-                sx={{
-                  color: 'accent.fg',
-                  fontWeight: 500,
-                  fontSize: 0,
-                  px: '8px',
-                  py: '3px',
-                  height: 'auto',
-                  lineHeight: 1.5,
-                  border: 'none',
-                  borderRadius: 2,
-                  boxShadow: 'none',
-                  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover:not(:disabled)': { transform: 'translateY(-1px)', bg: 'accent.subtle' },
-                  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                  '@media (prefers-reduced-motion: reduce)': {
-                    transition: 'none',
-                    '&:hover:not(:disabled)': { transform: 'none' },
-                  },
-                }}
+                sx={accentTextButtonSx}
               >
                 {acknowledging ? <Spinner size="small" /> : 'Start Sprint'}
               </Button>

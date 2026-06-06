@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Avatar, Box, Button, Flash, Label, Spinner, Text } from '@primer/react'
+import { Avatar, Box, Button, Flash, Label, ProgressBar, Spinner, Text } from '@primer/react'
+import { primerCss } from '@/lib/primer-css-helper'
 import Tippy from '@/ui/tooltip'
 import { Z_TOOLTIP } from '@/lib/z-index'
 import { sendMessage, type SprintInfo, type SprintProgressData } from '@/lib/messages'
@@ -38,10 +39,10 @@ interface MetricBarProps {
   label: string
   done: number
   total: number
-  color?: string
+  barSx?: Record<string, unknown>
 }
 
-function MetricBar({ label, done, total, color = 'accent.emphasis' }: MetricBarProps) {
+function MetricBar({ label, done, total, barSx }: MetricBarProps) {
   const percent = pct(done, total)
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -51,18 +52,7 @@ function MetricBar({ label, done, total, color = 'accent.emphasis' }: MetricBarP
           {done} of {total} ({percent}%)
         </Text>
       </Box>
-      <Box sx={{ height: '6px', borderRadius: '3px', bg: 'neutral.muted', overflow: 'hidden' }}>
-        <Box
-          sx={{
-            height: '100%',
-            borderRadius: '3px',
-            bg: color,
-            width: `${percent}%`,
-            transition: 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-            '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-          }}
-        />
-      </Box>
+      <ProgressBar progress={percent} sx={{ width: '100%', boxShadow: 'none', ...barSx }} />
     </Box>
   )
 }
@@ -101,6 +91,7 @@ export function SprintProgressView({
 
   useEffect(() => {
     let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset fetch state when sprint inputs change
     setLoadState('loading')
     setErrorMsg(null)
     sendMessage('getSprintProgress', {
@@ -177,7 +168,10 @@ export function SprintProgressView({
                 label={progress.pointsFieldName || 'Points'}
                 done={progress.donePoints}
                 total={progress.totalPoints}
-                color="success.emphasis"
+                barSx={{
+                  '& > span': { bg: 'success.emphasis' },
+                  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                }}
               />
             )}
           </Box>
@@ -312,37 +306,13 @@ export function SprintProgressView({
             variant="invisible"
             size="small"
             onClick={onOpenSettings}
-            sx={{
-              color: 'fg.muted',
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}
+            sx={{ ...primerCss.buttonMotion(), color: 'fg.muted' }}
           >
             Settings
           </Button>
         </Tippy>
         <Tippy content="End the current sprint" placement="top" delay={[400, 0]} zIndex={Z_TOOLTIP}>
-          <Button
-            variant="danger"
-            size="small"
-            onClick={onEndSprint}
-            sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
-            }}
-          >
+          <Button variant="danger" size="small" onClick={onEndSprint} sx={primerCss.buttonMotion()}>
             End Sprint
           </Button>
         </Tippy>

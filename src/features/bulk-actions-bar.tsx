@@ -13,6 +13,7 @@ import { exportSelectedToCSV } from '@/features/bulk-utils'
 import type { ProjectData, ProjectField } from '@/features/bulk-edit-utils'
 import type { ReorderOp } from '@/features/bulk-move-utils'
 import { ListCheckIcon, TagIcon, XIcon } from '@/ui/icons'
+import { primerCss } from '@/lib/primer-css-helper'
 import { Z_OVERLAY } from '@/lib/z-index'
 import { BulkActionsMenu } from '@/features/bulk-actions-menu'
 import { BulkActionsModals } from '@/features/bulk-actions-modals'
@@ -28,18 +29,7 @@ export type { ReorderOp } from '@/features/bulk-move-utils'
 const RECENT_FIELDS_CAP = 3
 
 /** Shared chip styling for the three top-level inline actions on the bar. */
-const chipSx = {
-  boxShadow: 'none',
-  display: 'inline-flex',
-  alignItems: 'center',
-  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-  '@media (prefers-reduced-motion: reduce)': {
-    transition: 'none',
-    '&:hover:not(:disabled)': { transform: 'none' },
-  },
-} as const
+const chipSx = primerCss.chipButton()
 
 interface Props {
   projectId: string
@@ -72,27 +62,12 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [randomAssignOpen, setRandomAssignOpen] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
   const [closeReason, setCloseReason] = useState<'COMPLETED' | 'NOT_PLANNED'>('COMPLETED')
-  const [showOpenModal, setShowOpenModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteItemTitles, setDeleteItemTitles] = useState<string[]>([])
-  const [showLockModal, setShowLockModal] = useState(false)
-  const [lockReason, setLockReason] = useState<
-    'OFF_TOPIC' | 'TOO_HEATED' | 'RESOLVED' | 'SPAM' | null
-  >(null)
-  const [showPinModal, setShowPinModal] = useState(false)
-  const [showUnpinModal, setShowUnpinModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const anyModalOpen =
-    showCloseModal ||
-    showOpenModal ||
-    showDeleteModal ||
-    showLockModal ||
-    showPinModal ||
-    showUnpinModal ||
-    showTransferModal ||
-    showDupModal ||
-    showHelp
+    showCloseModal || showDeleteModal || showTransferModal || showDupModal || showHelp
   const anyFlyoutOpen = editFieldsOpen || renameOpen || reorderOpen || randomAssignOpen || markOpen
 
   const resolvedProjectId = projectData?.id || projectId
@@ -106,11 +81,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         setMenuOpen(false)
         setShowDupModal(false)
         setShowCloseModal(false)
-        setShowOpenModal(false)
         setShowDeleteModal(false)
-        setShowLockModal(false)
-        setShowPinModal(false)
-        setShowUnpinModal(false)
         setShowTransferModal(false)
         setShowHelp(false)
         setMarkOpen(false)
@@ -163,11 +134,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         if (anyModalOpen || anyFlyoutOpen) {
           setShowDupModal(false)
           setShowCloseModal(false)
-          setShowOpenModal(false)
           setShowDeleteModal(false)
-          setShowLockModal(false)
-          setShowPinModal(false)
-          setShowUnpinModal(false)
           setShowTransferModal(false)
           setShowHelp(false)
           setEditFieldsOpen(false)
@@ -246,7 +213,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         modifiers: { meta: true, shift: true },
         context: 'Table Selection',
         label: 'Close Issues',
-        action: handleBulkClose,
+        action: () => handleBulkClose(),
       })
 
       reg({
@@ -255,7 +222,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         modifiers: { meta: true, shift: true },
         context: 'Table Selection',
         label: 'Reopen Issues',
-        action: handleBulkOpen,
+        action: () => runMarkVerb('reopen'),
       })
 
       reg({
@@ -264,7 +231,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         modifiers: { meta: true, shift: true },
         context: 'Table Selection',
         label: 'Lock Conversations',
-        action: handleLock,
+        action: () => runMarkVerb('lock'),
       })
 
       reg({
@@ -273,7 +240,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         modifiers: { meta: true, shift: true },
         context: 'Table Selection',
         label: 'Pin Issues',
-        action: handlePin,
+        action: () => runMarkVerb('pin'),
       })
 
       reg({
@@ -493,66 +460,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     // §3 selection policy — Random Assign preserves selection.
   }
 
-  async function handleBulkClose() {
+  async function runMarkVerb(verb: MarkVerb) {
     setMenuOpen(false)
     if (!(await checkToken())) return
-    setShowCloseModal(true)
-  }
-
-  function handleConfirmClose() {
-    const itemIds = selectionStore.getAll()
-    setShowCloseModal(false)
-    sendMessage('bulkClose', { itemIds, projectId: resolvedProjectId, reason: closeReason })
-    selectionStore.clear()
-  }
-
-  async function handleBulkOpen() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setShowOpenModal(true)
-  }
-
-  function handleConfirmOpen() {
-    const itemIds = selectionStore.getAll()
-    setShowOpenModal(false)
-    sendMessage('bulkOpen', { itemIds, projectId: resolvedProjectId })
-  }
-
-  async function handleLock() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setShowLockModal(true)
-  }
-
-  function handleConfirmLock() {
-    const itemIds = selectionStore.getAll()
-    setShowLockModal(false)
-    sendMessage('bulkLock', { itemIds, projectId: resolvedProjectId, lockReason })
-    selectionStore.clear()
-  }
-
-  async function handlePin() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setShowPinModal(true)
-  }
-
-  function handleConfirmPin() {
-    const itemIds = selectionStore.getAll()
-    setShowPinModal(false)
-    sendMessage('bulkPin', { itemIds, projectId: resolvedProjectId })
-  }
-
-  async function _handleUnpin() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setShowUnpinModal(true)
-  }
-
-  function handleConfirmUnpin() {
-    const itemIds = selectionStore.getAll()
-    setShowUnpinModal(false)
-    sendMessage('bulkUnpin', { itemIds, projectId: resolvedProjectId })
+    handleMarkVerb(verb)
   }
 
   async function handleTransfer() {
@@ -625,6 +536,20 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     // §3 selection policy — Reorder preserves selection.
   }
 
+  async function handleBulkClose() {
+    setMenuOpen(false)
+    if (!(await checkToken())) return
+    if (selectionStore.count() === 0) return
+    setShowCloseModal(true)
+  }
+
+  function handleConfirmClose() {
+    const itemIds = selectionStore.getAll()
+    setShowCloseModal(false)
+    sendMessage('bulkClose', { itemIds, projectId: resolvedProjectId, reason: closeReason })
+    selectionStore.clear()
+  }
+
   function handleMarkVerb(verb: MarkVerb) {
     setMarkOpen(false)
     const itemIds = selectionStore.getAll()
@@ -633,7 +558,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         sendMessage('bulkClose', {
           itemIds,
           projectId: resolvedProjectId,
-          reason: closeReason,
+          reason: 'COMPLETED',
         })
         selectionStore.clear()
         return
@@ -663,8 +588,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     A: { action: () => handleRandomAssign() },
     M: { action: () => setMarkOpen((open) => !open) },
     C: { action: () => handleBulkClose() },
-    P: { action: () => handlePin() },
-    L: { action: () => handleLock() },
+    P: { action: () => runMarkVerb('pin') },
+    L: { action: () => runMarkVerb('lock') },
     T: { action: () => handleTransfer() },
     D: {
       action: () => {
@@ -689,30 +614,15 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         owner={owner}
         isOrg={isOrg}
         number={number}
-        firstRepoName={firstRepoName}
         showCloseModal={showCloseModal}
         closeReason={closeReason}
         onChangeCloseReason={setCloseReason}
         onCloseCloseModal={() => setShowCloseModal(false)}
         onConfirmClose={handleConfirmClose}
-        showOpenModal={showOpenModal}
-        onCloseOpenModal={() => setShowOpenModal(false)}
-        onConfirmOpen={handleConfirmOpen}
         showDeleteModal={showDeleteModal}
         deleteItemTitles={deleteItemTitles}
         onCloseDeleteModal={() => setShowDeleteModal(false)}
         onConfirmDelete={handleConfirmDelete}
-        showLockModal={showLockModal}
-        lockReason={lockReason}
-        onChangeLockReason={setLockReason}
-        onCloseLockModal={() => setShowLockModal(false)}
-        onConfirmLock={handleConfirmLock}
-        showPinModal={showPinModal}
-        onClosePinModal={() => setShowPinModal(false)}
-        onConfirmPin={handleConfirmPin}
-        showUnpinModal={showUnpinModal}
-        onCloseUnpinModal={() => setShowUnpinModal(false)}
-        onConfirmUnpin={handleConfirmUnpin}
         showTransferModal={showTransferModal}
         onCloseTransferModal={() => setShowTransferModal(false)}
         onConfirmTransfer={handleConfirmTransfer}

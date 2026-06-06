@@ -202,9 +202,9 @@ export const BulkEditRelationshipPane = forwardRef<
         </Flash>
       )}
       {prSkipCount > 0 && validationErrors.length === 0 && (
-        <Flash variant="warning" data-testid="rgp-edit-relationship-pr-skip">
-          {prSkipCount} pull request{prSkipCount === 1 ? '' : 's'} will be skipped — relationships
-          apply to issues only.
+        <Flash variant="default" data-testid="rgp-edit-relationship-pr-skip">
+          {prSkipCount} pull request{prSkipCount === 1 ? '' : 's'} in the selection will be skipped.
+          Relationship updates apply to issues only; you can proceed with the issue subset.
         </Flash>
       )}
 
