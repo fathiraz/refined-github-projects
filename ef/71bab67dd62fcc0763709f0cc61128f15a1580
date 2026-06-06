@@ -1,0 +1,100 @@
+src/features/bulk-actions-bar.tsx
+  s_ed73068688b0cd::t_c9bee88520ff54 16
+  s_ed73068688b0cd::t_31fc9f1b37e60c 211,220,229,238
+  s_ed73068688b0cd::t_247ab76a5d8658 32
+  s_ed73068688b0cd::t_6956e6a1b16732 458,461
+  s_ed73068688b0cd::t_ce64423db2c475 67
+  s_ed73068688b0cd::t_1460066ce26425 542
+  s_ed73068688b0cd::t_6439222ba14781 571-573
+src/features/bulk-actions-modals.tsx
+  s_ed73068688b0cd::t_77cb4a8a76f1f5 1
+src/features/bulk-edit-flyout.tsx
+  s_ed73068688b0cd::t_90e762d1185f1e 263-270,279-286,288-293,306,317-319,330-332
+  h_4149ee38f70c87 287
+src/lib/primer-css-helper.ts
+  s_ed73068688b0cd::t_a0c32432791eac 104-116
+src/features/__tests__/bulk-edit-flyout.test.tsx
+  s_ed73068688b0cd::t_58c24b2b18b6be 232
+  s_ed73068688b0cd::t_bf297dafa4b6ec 221-231,233-234
+src/features/bulk-delete-modal.tsx
+  s_ed73068688b0cd::t_fc0a3f2c3314ed 6-7,51,53-60,65,74,79-157,159
+src/entries/content.ts
+  h_4149ee38f70c87 4
+  s_ed73068688b0cd::t_f26b4465cef669 55
+src/features/sprint-modal.tsx
+  s_ed73068688b0cd::t_09676d33ec7f1f 395
+  s_ed73068688b0cd::t_dc4b664000ecf6 119
+  s_ed73068688b0cd::t_1191e94eca666c 204,206-213
+  s_ed73068688b0cd::t_8933085f0191c0 5-6
+  s_043381c377248a::t_da86c2d9bd7f08 76-77
+  h_4149ee38f70c87 139-143,146-158,160-169,257-281,289,291-299,302,308,310-311,323,326-375,377
+src/features/sprint-progress-view.tsx
+  s_043381c377248a::t_da86c2d9bd7f08 94
+  s_ed73068688b0cd::t_85538376251c3f 42,45,55
+  s_ed73068688b0cd::t_88b11535430a62 2-3
+  s_ed73068688b0cd::t_644be6b35a18c7 309,315
+  s_ed73068688b0cd::t_83a256daa05288 171-174
+src/features/sprint-table-widget.tsx
+  s_043381c377248a::t_da86c2d9bd7f08 50-54,56,85-86
+  s_ed73068688b0cd::t_196c27a75be1b8 34-39
+src/features/sprint-settings-view.tsx
+  s_ed73068688b0cd::t_1ec93b45852632 561-562
+  s_ed73068688b0cd::t_9715ba95b234cb 579
+  s_ed73068688b0cd::t_7a06ae864b54bc 11,22,35,45-75
+  s_ed73068688b0cd::t_1a3829dda031bb 274-275
+  s_ed73068688b0cd::t_3e34283953517d 303-304,316-324,328-331,333-342,344-355,357,359-364,366-375
+  s_ed73068688b0cd::t_e9a5b1f6ed19f3 507-510,512
+  s_ed73068688b0cd::t_ce75006f2df941 415-416,418-422
+  s_ed73068688b0cd::t_afa0ae24aed2fa 228,231,246-247
+  s_ed73068688b0cd::t_c177449f11d0bc 527,529,531,533
+  s_ed73068688b0cd::t_2aeef95919ed41 8,19
+  s_ed73068688b0cd::t_8c569c5d373af5 250-251
+  s_ed73068688b0cd::t_3f635f0b4a75f8 381-382
+  s_ed73068688b0cd::t_c682310b55768f 224-227,232-245,248,254-273,276-297,300-302,305-314,365,378-380,383-411,413-414,423-506,513-519,521,526,528,530,532,534,538-540,543-547,549-560
+  s_ed73068688b0cd::t_0cc7e7eb51cf74 541-542
+  s_ed73068688b0cd::t_080bd3c6242d60 112
+  s_ed73068688b0cd::t_7c836a355b2044 229-230
+  s_ed73068688b0cd::t_602b15093272a9 141-150
+src/features/sprint-injections.tsx
+  s_ed73068688b0cd::t_68f98924d2f1a3 2,5,22,26-32,48-51,59-62,133,136-141
+src/features/bulk-edit-relationship-pane.tsx
+  s_ed73068688b0cd::t_810ebc03e0a01a 205-207
+src/features/sprint-settings-utils.test.ts
+  s_ed73068688b0cd::t_ad6fac7640e95b 1-41,43-87
+  h_4149ee38f70c87 42
+src/features/sprint-settings-utils.ts
+  s_ed73068688b0cd::t_c75083392f0f93 1-31
+src/lib/modal-factory.tsx
+  s_ed73068688b0cd::t_7381aeb9192575 2,4,99-120,122-132,134-146
+src/ui/modal-shell.tsx
+  s_ed73068688b0cd::t_0aa9eecc8ab1bc 1-4,6-8,10-23,26-39,42-48,52-56,60-63,65-70,72-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "ef71bab67dd62fcc0763709f0cc61128f15a1580",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_043381c377248a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c0336ba2-d7c6-4070-9764-d4e3054c4be0",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_ed73068688b0cd": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a4e259e6-42f1-4d08-9065-f5338a8f532c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
