@@ -1,0 +1,31 @@
+src/features/bulk-edit-relationship-pane.tsx
+  s_6a4c18bc8ebc00::t_639f0148a08c56 70
+  s_6a4c18bc8ebc00::t_3cc6bf1aaab8b7 145-154
+  s_6a4c18bc8ebc00::t_82afac3103ee7d 7
+  s_6a4c18bc8ebc00::t_e1fadd86eba633 97-98,100,116,120,124
+src/features/bulk-edit-flyout.tsx
+  s_6a4c18bc8ebc00::t_c0772589a4b8e7 101-104
+  s_6a4c18bc8ebc00::t_413854d38b6d29 100,105-106
+  s_6a4c18bc8ebc00::t_7b00e5ab74b138 152-153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "55228a41b3ff842b146b4135ffe2da69895dcd32",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_6a4c18bc8ebc00": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d4e734c2-c8e3-47d0-806b-713dd34f9c87",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
