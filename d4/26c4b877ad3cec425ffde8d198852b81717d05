@@ -1,0 +1,62 @@
+src/features/bulk-edit-utils.tsx
+  s_b07c91efb5a735::t_7df5cdeeddb3f5 218-219
+  s_b07c91efb5a735::t_00c815b6d1c866 98-193
+  s_b07c91efb5a735::t_02e9893aa5b7dd 7
+  s_b07c91efb5a735::t_0198f6a9357f89 51-75
+src/features/bulk-edit-flyout-helpers.ts
+  s_b07c91efb5a735::t_7a619e064c8337 29
+src/features/bulk-edit-relationship-pane.tsx
+  s_b07c91efb5a735::t_ae2a6c8b77c02f 41
+  s_b07c91efb5a735::t_0b8bb987bb7f31 11-13,16
+  s_b07c91efb5a735::t_6940d5bccaaf74 17
+  s_b07c91efb5a735::t_748eea5620a299 209,218
+  s_b07c91efb5a735::t_037e2378f9243a 14-15
+  s_b07c91efb5a735::t_bbdbff29524f5e 25-26
+  s_b07c91efb5a735::t_8a577a0346acad 1-10,18-24,27-40,42-146,148-208,210-217,219-270
+src/features/bulk-edit-flyout.tsx
+  s_ae2a5216d5a436::t_a14fa13bf5deb6 84-98,100,144,172,183,204,368
+  s_b07c91efb5a735::t_fd83c6b69df282 2-3,22-29,36-39,50,61,65,80,82,99,103-104,107-110,112-143,145-151,173-182,184-186,195,207,226,251-303,335-362,373,377-382,467,480-481
+src/features/bulk-actions-bar.tsx
+  s_ae2a5216d5a436::t_a14fa13bf5deb6 390,546
+  s_b07c91efb5a735::t_0904486067b601 894
+  s_b07c91efb5a735::t_6c9094e11e3a44 409
+src/features/bulk-actions-utils.tsx
+  s_b07c91efb5a735::t_e1c2b641a3dd0b 51-93
+  s_b07c91efb5a735::t_e525c1743f7cee 6-7
+src/features/__tests__/bulk-edit-flyout.test.tsx
+  s_b07c91efb5a735::t_deea33d78716c1 39,43
+  s_b07c91efb5a735::t_7b30ce59e5f292 32
+  s_b07c91efb5a735::t_df4bbdc1495887 175-245
+  h_4149ee38f70c87 71-72
+  s_b07c91efb5a735::t_3c353901b8641c 26-31
+  s_b07c91efb5a735::t_121cba7a29f8f0 69-70,73-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "d426c4b877ad3cec425ffde8d198852b81717d05",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_ae2a5216d5a436": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "cbe31e02-8122-40a8-8f60-23ae53bf8cc4",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_b07c91efb5a735": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "fd50111c-4ed4-4a33-9812-5e0b86cb839c",
+        "model": "default"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
