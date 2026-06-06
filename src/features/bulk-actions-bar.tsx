@@ -387,6 +387,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     for (const link of links) {
       const match = link.href.match(/github\.com\/([^/]+)\/([^/]+)\/(issues|pull)\/\d+/)
       if (match && match[1] === owner) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- derive repo from DOM when selection changes
         setFirstRepoName(match[2])
         break
       }
@@ -405,7 +406,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
           }
           defaultFields.unshift(
             { id: '__body__', name: 'Description', dataType: 'BODY' },
-            { id: '__comment__', name: 'Add Comment', dataType: 'COMMENT' },
+            { id: '__comment__', name: 'Comment', dataType: 'COMMENT' },
           )
           if (!existingTypes.includes('ASSIGNEES')) {
             defaultFields.push({ id: '__assignees__', name: 'Assignees', dataType: 'ASSIGNEES' })
@@ -542,7 +543,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     sendMessage('bulkPin', { itemIds, projectId: resolvedProjectId })
   }
 
-  async function handleUnpin() {
+  async function _handleUnpin() {
     setMenuOpen(false)
     if (!(await checkToken())) return
     setShowUnpinModal(true)
@@ -890,6 +891,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             projectId={resolvedProjectId}
             itemIds={selectionStore.getAll()}
             fields={projectData?.fields ?? []}
+            repoName={firstRepoName || undefined}
             recentFieldIds={recentFieldIdsRef.current}
             onAppliedField={pushRecentField}
           />

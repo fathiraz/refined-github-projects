@@ -1,12 +1,6 @@
 // Drilldown flyout for editing a single project field across the current
-// selection (§5 of bulk-actions-flyouts). Pane 1: field list with Recent /
-// All. Pane 2: per-`dataType` value picker. Apply dispatches the existing
-// `bulkUpdate` message with a single field update.
-//
-// Multi-field editing and the relationships sub-form (parent / blockedBy /
-// blocking) live in the legacy modal; both are out of scope for this pass
-// per the proposal. The flyout sticks to the GitHub-native "edit one
-// property at a time" idiom.
+// selection (§5 of bulk-actions-flyouts). Pane 1: four-section field list.
+// Pane 2: per-`dataType` value picker or operation-first relationship editor.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -25,13 +19,24 @@ import {
 import { SearchIcon } from '@/ui/icons'
 import { BulkFlyout, type BulkFlyoutPane, useDrilldownPane } from '@/ui/bulk-flyout'
 import { sendMessage } from '@/lib/messages'
-import { getFieldIcon, type ProjectField } from '@/features/bulk-edit-utils'
+import {
+  buildFieldCatalog,
+  getFieldIcon,
+  isRelationshipFieldId,
+  partitionFieldList,
+  relationshipKeyFromFieldId,
+  type ProjectField,
+} from '@/features/bulk-edit-utils'
 import {
   canApply,
   defaultValueFor,
   submitBulkFieldUpdate,
   type FieldValue,
 } from '@/features/bulk-edit-flyout-helpers'
+import {
+  BulkEditRelationshipPane,
+  type BulkEditRelationshipPaneHandle,
+} from '@/features/bulk-edit-relationship-pane'
 
 export interface BulkEditFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
@@ -42,33 +47,22 @@ export interface BulkEditFlyoutProps {
   projectId: string
   itemIds: readonly string[]
   fields: readonly ProjectField[]
+  repoName?: string
   /** Pinned field IDs (last three edited). Read-only; the bar manages persistence. */
   recentFieldIds: readonly string[]
   onAppliedField: (fieldId: string) => void
 }
-
-const FALLBACK_DATATYPES = new Set([
-  'TEXT',
-  'NUMBER',
-  'DATE',
-  'SINGLE_SELECT',
-  'ITERATION',
-  'ASSIGNEES',
-  'LABELS',
-  'ISSUE_TYPE',
-  'TITLE',
-  'BODY',
-])
 
 export function BulkEditFlyout({
   anchorRef,
   open,
   onClose,
   owner,
-  isOrg,
+  isOrg: _isOrg,
   projectId,
   itemIds,
   fields,
+  repoName,
   recentFieldIds,
   onAppliedField,
 }: BulkEditFlyoutProps) {
@@ -76,7 +70,6 @@ export function BulkEditFlyout({
   const [value, setValue] = useState<FieldValue | null>(null)
   const [query, setQuery] = useState('')
   const { currentPaneId, setCurrentPaneId } = useDrilldownPane('list', open)
-  // Track metadata search state when the picked field is ASSIGNEES/LABELS/ISSUE_TYPE.
   const [metaQuery, setMetaQuery] = useState('')
   const [metaResults, setMetaResults] = useState<
     Array<{ id: string; name: string; avatarUrl?: string }>
@@ -84,34 +77,78 @@ export function BulkEditFlyout({
   const [metaLoading, setMetaLoading] = useState(false)
   const [applyError, setApplyError] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
+  const [relationshipCanApply, setRelationshipCanApply] = useState(false)
   const latestMetaReq = useRef(0)
+  const relationshipPaneRef = useRef<BulkEditRelationshipPaneHandle>(null)
 
-  useEffect(() => {
-    if (!open) {
-      setActiveFieldId(null)
-      setValue(null)
-      setQuery('')
-      setMetaQuery('')
-      setMetaResults([])
-      setApplyError(null)
-      setApplying(false)
-    }
-  }, [open])
+  const resetFlyoutState = useCallback(() => {
+    setActiveFieldId(null)
+    setValue(null)
+    setQuery('')
+    setMetaQuery('')
+    setMetaResults([])
+    setApplyError(null)
+    setApplying(false)
+    setRelationshipCanApply(false)
+  }, [])
+
+  const handleFlyoutClose = useCallback(() => {
+    resetFlyoutState()
+    onClose()
+  }, [onClose, resetFlyoutState])
+
+  const catalog = useMemo(() => buildFieldCatalog(fields), [fields])
 
   const activeField = useMemo(
-    () => (activeFieldId ? (fields.find((f) => f.id === activeFieldId) ?? null) : null),
-    [activeFieldId, fields],
+    () => (activeFieldId ? (catalog.find((f) => f.id === activeFieldId) ?? null) : null),
+    [activeFieldId, catalog],
   )
 
-  function pickField(field: ProjectField) {
-    setActiveFieldId(field.id)
-    setValue(defaultValueFor(field))
-    setApplyError(null)
-    setCurrentPaneId('value')
-  }
+  const activeRelationshipKey = useMemo(
+    () => (activeFieldId ? relationshipKeyFromFieldId(activeFieldId) : null),
+    [activeFieldId],
+  )
 
-  async function handleApply() {
-    if (!activeField || !value || applying) return
+  const partition = useMemo(
+    () => partitionFieldList({ fields, recentIds: recentFieldIds, query }),
+    [fields, recentFieldIds, query],
+  )
+
+  const pickField = useCallback(
+    (field: ProjectField) => {
+      setActiveFieldId(field.id)
+      setApplyError(null)
+      if (isRelationshipFieldId(field.id)) {
+        setCurrentPaneId('relationship')
+        return
+      }
+      setValue(defaultValueFor(field))
+      setCurrentPaneId('value')
+    },
+    [setCurrentPaneId],
+  )
+
+  const handleApply = useCallback(async () => {
+    if (applying) return
+
+    if (currentPaneId === 'relationship' && activeFieldId && activeRelationshipKey) {
+      setApplying(true)
+      setApplyError(null)
+      try {
+        const result = await relationshipPaneRef.current?.apply()
+        if (!result?.ok) {
+          setApplyError(result?.message ?? 'Could not start the bulk update. Try again.')
+          return
+        }
+        onAppliedField(activeFieldId)
+        handleFlyoutClose()
+      } finally {
+        setApplying(false)
+      }
+      return
+    }
+
+    if (!activeField || !value) return
 
     setApplying(true)
     setApplyError(null)
@@ -132,10 +169,22 @@ export function BulkEditFlyout({
     }
 
     onAppliedField(activeField.id)
-    onClose()
-  }
+    handleFlyoutClose()
+  }, [
+    applying,
+    currentPaneId,
+    activeFieldId,
+    activeRelationshipKey,
+    activeField,
+    value,
+    itemIds,
+    projectId,
+    onAppliedField,
+    handleFlyoutClose,
+  ])
 
-  // Metadata search (ASSIGNEES / LABELS / ISSUE_TYPE)
+  const resolvedRepoName = repoName ?? firstRepoNameFromDom(owner)
+
   useEffect(() => {
     if (!activeField) return
     const requiresMeta =
@@ -143,20 +192,19 @@ export function BulkEditFlyout({
       activeField.dataType === 'LABELS' ||
       activeField.dataType === 'ISSUE_TYPE'
     if (!requiresMeta) return
-    const repoName = firstRepoNameFromDom(owner)
-    if (!repoName) return
+    if (!resolvedRepoName) return
     const requestId = latestMetaReq.current + 1
     latestMetaReq.current = requestId
-    setMetaLoading(true)
     const protocolType: 'ASSIGNEES' | 'LABELS' | 'ISSUE_TYPES' =
       activeField.dataType === 'ISSUE_TYPE'
         ? 'ISSUE_TYPES'
         : (activeField.dataType as 'ASSIGNEES' | 'LABELS')
     const timer = setTimeout(
       () => {
+        setMetaLoading(true)
         sendMessage('searchRepoMetadata', {
           owner,
-          name: repoName,
+          name: resolvedRepoName,
           q: metaQuery,
           type: protocolType,
         })
@@ -175,22 +223,7 @@ export function BulkEditFlyout({
       metaQuery ? 250 : 0,
     )
     return () => clearTimeout(timer)
-  }, [activeField, owner, metaQuery])
-
-  const recentFields = useMemo(() => {
-    const idxed = new Map(fields.map((f) => [f.id, f]))
-    return recentFieldIds
-      .map((id) => idxed.get(id))
-      .filter((f): f is ProjectField => f !== undefined)
-  }, [fields, recentFieldIds])
-
-  const filteredFields = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return fields.filter((f) => FALLBACK_DATATYPES.has(f.dataType))
-    return fields
-      .filter((f) => FALLBACK_DATATYPES.has(f.dataType))
-      .filter((f) => f.name.toLowerCase().includes(q))
-  }, [fields, query])
+  }, [activeField, owner, metaQuery, resolvedRepoName])
 
   const listPane: BulkFlyoutPane = {
     id: 'list',
@@ -215,26 +248,60 @@ export function BulkEditFlyout({
           }}
           data-testid="rgp-edit-field-list"
         >
-          {!query && recentFields.length > 0 && (
-            <Box>
-              <SectionHeader>Recent</SectionHeader>
-              <ActionList>
-                {recentFields.map((field) => (
-                  <FieldRow key={`recent-${field.id}`} field={field} onPick={pickField} />
-                ))}
-              </ActionList>
-              <SectionHeader>All fields</SectionHeader>
-            </Box>
+          {partition.mode === 'search' ? (
+            <ActionList>
+              {partition.matches.length === 0 ? (
+                <Box sx={{ p: 2, fontSize: 0, color: 'fg.muted' }}>No fields match.</Box>
+              ) : (
+                partition.matches.map((field) => (
+                  <FieldRow key={field.id} field={field} onPick={pickField} />
+                ))
+              )}
+            </ActionList>
+          ) : (
+            <>
+              {partition.recent.length > 0 && (
+                <Box data-testid="rgp-edit-fields-recent">
+                  <SectionHeader>Recent</SectionHeader>
+                  <ActionList>
+                    {partition.recent.map((field) => (
+                      <FieldRow key={`recent-${field.id}`} field={field} onPick={pickField} />
+                    ))}
+                  </ActionList>
+                </Box>
+              )}
+              {partition.issueProperties.length > 0 && (
+                <Box>
+                  <SectionHeader>Issue properties</SectionHeader>
+                  <ActionList>
+                    {partition.issueProperties.map((field) => (
+                      <FieldRow key={field.id} field={field} onPick={pickField} />
+                    ))}
+                  </ActionList>
+                </Box>
+              )}
+              {partition.projectFields.length > 0 && (
+                <Box>
+                  <SectionHeader>Project fields</SectionHeader>
+                  <ActionList>
+                    {partition.projectFields.map((field) => (
+                      <FieldRow key={field.id} field={field} onPick={pickField} />
+                    ))}
+                  </ActionList>
+                </Box>
+              )}
+              {partition.relationships.length > 0 && (
+                <Box>
+                  <SectionHeader>Relationships</SectionHeader>
+                  <ActionList>
+                    {partition.relationships.map((field) => (
+                      <FieldRow key={field.id} field={field} onPick={pickField} />
+                    ))}
+                  </ActionList>
+                </Box>
+              )}
+            </>
           )}
-          <ActionList>
-            {filteredFields.length === 0 ? (
-              <Box sx={{ p: 2, fontSize: 0, color: 'fg.muted' }}>No fields match.</Box>
-            ) : (
-              filteredFields.map((field) => (
-                <FieldRow key={field.id} field={field} onPick={pickField} />
-              ))
-            )}
-          </ActionList>
         </Box>
       </Box>
     ),
@@ -265,22 +332,54 @@ export function BulkEditFlyout({
     ),
   }
 
+  const relationshipPane: BulkFlyoutPane = {
+    id: 'relationship',
+    title: activeField?.name ?? 'Relationships',
+    content:
+      activeRelationshipKey && activeField ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {applyError && (
+            <Flash variant="warning" data-testid="rgp-edit-apply-error">
+              {applyError}
+            </Flash>
+          )}
+          <BulkEditRelationshipPane
+            ref={relationshipPaneRef}
+            relationshipKey={activeRelationshipKey}
+            itemIds={itemIds}
+            projectId={projectId}
+            owner={owner}
+            repoName={resolvedRepoName ?? undefined}
+            onCanApplyChange={setRelationshipCanApply}
+          />
+        </Box>
+      ) : (
+        <Text sx={{ fontSize: 0, color: 'fg.muted' }}>No relationship picked.</Text>
+      ),
+  }
+
+  const footerPane = currentPaneId === 'relationship' ? 'relationship' : currentPaneId
+
   return (
     <BulkFlyout
       mode="drilldown"
       anchorRef={anchorRef as React.RefObject<HTMLElement>}
       open={open}
-      onClose={onClose}
+      onClose={handleFlyoutClose}
       title="Edit fields"
       ariaLabel="Edit fields"
       width={400}
       maxHeight={560}
-      panes={[listPane, valuePane]}
+      panes={[listPane, valuePane, relationshipPane]}
       currentPaneId={currentPaneId}
       onPaneChange={setCurrentPaneId}
       rootPaneId="list"
-      footer={currentPaneId === 'value' ? 'apply-cancel' : null}
-      applyDisabled={!canApply(value) || applying}
+      footer={footerPane === 'value' || footerPane === 'relationship' ? 'apply-cancel' : null}
+      applyDisabled={
+        footerPane === 'relationship'
+          ? !relationshipCanApply || applying
+          : !canApply(value) || applying
+      }
       onApply={handleApply}
       applyLabel="Apply"
     />
@@ -365,7 +464,7 @@ function ValuePicker({
     )
   }
 
-  if (dataType === 'BODY') {
+  if (dataType === 'BODY' || dataType === 'COMMENT') {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Text as="label" sx={{ fontSize: 0, fontWeight: 'semibold', color: 'fg.muted' }}>
@@ -378,8 +477,8 @@ function ValuePicker({
           }
           rows={6}
           aria-label={field.name}
-          sx={{ width: '100%', fontFamily: 'mono' }}
-          data-testid="rgp-edit-value-body"
+          sx={{ width: '100%', fontFamily: dataType === 'BODY' ? 'mono' : 'inherit' }}
+          data-testid={dataType === 'COMMENT' ? 'rgp-edit-value-comment' : 'rgp-edit-value-body'}
         />
       </Box>
     )
