@@ -2,6 +2,7 @@
 
 import React, { Suspense } from 'react'
 import { selectionStore } from '@/lib/selection-store'
+import { BulkCloseModal } from '@/features/bulk-close-modal'
 import { BulkDeleteModal } from '@/features/bulk-delete-modal'
 import { BulkTransferModal } from '@/features/bulk-transfer-modal'
 import { KeyboardHelpOverlay } from '@/features/keyboard-help-overlay'
@@ -17,6 +18,12 @@ interface Props {
   owner: string
   isOrg: boolean
   number: number
+
+  showCloseModal: boolean
+  closeReason: 'COMPLETED' | 'NOT_PLANNED'
+  onChangeCloseReason: (r: 'COMPLETED' | 'NOT_PLANNED') => void
+  onCloseCloseModal: () => void
+  onConfirmClose: () => void
 
   showDeleteModal: boolean
   deleteItemTitles?: string[]
@@ -41,6 +48,16 @@ interface Props {
 export function BulkActionsModals(props: Props) {
   return (
     <>
+      {props.showCloseModal && (
+        <BulkCloseModal
+          count={props.count}
+          closeReason={props.closeReason}
+          onChangeReason={props.onChangeCloseReason}
+          onClose={props.onCloseCloseModal}
+          onConfirm={props.onConfirmClose}
+        />
+      )}
+
       {props.showDeleteModal && (
         <BulkDeleteModal
           count={props.count}

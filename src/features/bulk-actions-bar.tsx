@@ -60,11 +60,14 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [renameOpen, setRenameOpen] = useState(false)
   const [reorderOpen, setReorderOpen] = useState(false)
   const [randomAssignOpen, setRandomAssignOpen] = useState(false)
+  const [showCloseModal, setShowCloseModal] = useState(false)
+  const [closeReason, setCloseReason] = useState<'COMPLETED' | 'NOT_PLANNED'>('COMPLETED')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteItemTitles, setDeleteItemTitles] = useState<string[]>([])
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
-  const anyModalOpen = showDeleteModal || showTransferModal || showDupModal || showHelp
+  const anyModalOpen =
+    showCloseModal || showDeleteModal || showTransferModal || showDupModal || showHelp
   const anyFlyoutOpen = editFieldsOpen || renameOpen || reorderOpen || randomAssignOpen || markOpen
 
   const resolvedProjectId = projectData?.id || projectId
@@ -77,6 +80,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       if (newCount === 0) {
         setMenuOpen(false)
         setShowDupModal(false)
+        setShowCloseModal(false)
         setShowDeleteModal(false)
         setShowTransferModal(false)
         setShowHelp(false)
@@ -129,6 +133,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       action: () => {
         if (anyModalOpen || anyFlyoutOpen) {
           setShowDupModal(false)
+          setShowCloseModal(false)
           setShowDeleteModal(false)
           setShowTransferModal(false)
           setShowHelp(false)
@@ -208,7 +213,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         modifiers: { meta: true, shift: true },
         context: 'Table Selection',
         label: 'Close Issues',
-        action: () => runMarkVerb('close'),
+        action: () => handleBulkClose(),
       })
 
       reg({
@@ -531,6 +536,19 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     // §3 selection policy — Reorder preserves selection.
   }
 
+  async function handleBulkClose() {
+    setMenuOpen(false)
+    if (!(await checkToken())) return
+    setShowCloseModal(true)
+  }
+
+  function handleConfirmClose() {
+    const itemIds = selectionStore.getAll()
+    setShowCloseModal(false)
+    sendMessage('bulkClose', { itemIds, projectId: resolvedProjectId, reason: closeReason })
+    selectionStore.clear()
+  }
+
   function handleMarkVerb(verb: MarkVerb) {
     setMarkOpen(false)
     const itemIds = selectionStore.getAll()
@@ -539,7 +557,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         sendMessage('bulkClose', {
           itemIds,
           projectId: resolvedProjectId,
-          reason: 'COMPLETED',
+          reason: closeReason,
         })
         selectionStore.clear()
         return
@@ -568,7 +586,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     O: { action: () => handleBulkReorder() },
     A: { action: () => handleRandomAssign() },
     M: { action: () => setMarkOpen((open) => !open) },
-    C: { action: () => runMarkVerb('close') },
+    C: { action: () => handleBulkClose() },
     P: { action: () => runMarkVerb('pin') },
     L: { action: () => runMarkVerb('lock') },
     T: { action: () => handleTransfer() },
@@ -595,6 +613,11 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         owner={owner}
         isOrg={isOrg}
         number={number}
+        showCloseModal={showCloseModal}
+        closeReason={closeReason}
+        onChangeCloseReason={setCloseReason}
+        onCloseCloseModal={() => setShowCloseModal(false)}
+        onConfirmClose={handleConfirmClose}
         showDeleteModal={showDeleteModal}
         deleteItemTitles={deleteItemTitles}
         onCloseDeleteModal={() => setShowDeleteModal(false)}

@@ -61,6 +61,13 @@ export function createSprintHeaderInjector(
       ui.mount()
       mountedWidgets.set(hostSpan, ui)
     }
+
+    for (const [host, ui] of mountedWidgets) {
+      if (!host.isConnected) {
+        ui.destroy()
+        mountedWidgets.delete(host)
+      }
+    }
   }
 }
 

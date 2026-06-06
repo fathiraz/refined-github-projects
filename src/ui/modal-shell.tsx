@@ -39,12 +39,14 @@ export function ModalShell({
   }, [onClose])
 
   useEffect(() => {
-    if (!closeOnEscape) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleRequestClose()
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (closeOnEscape) handleRequestClose()
     }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown, true)
+    return () => document.removeEventListener('keydown', handleKeyDown, true)
   }, [closeOnEscape, handleRequestClose])
 
   return (
