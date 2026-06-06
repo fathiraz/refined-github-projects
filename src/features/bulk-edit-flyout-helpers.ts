@@ -26,6 +26,7 @@ export function defaultValueFor(field: ProjectField): FieldValue {
     case 'TEXT':
     case 'TITLE':
     case 'BODY':
+    case 'COMMENT':
       return { kind: 'text', text: '' }
     case 'NUMBER':
       return { kind: 'number', number: null }

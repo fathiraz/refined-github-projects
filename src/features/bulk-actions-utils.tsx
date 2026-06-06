@@ -3,8 +3,8 @@
 
 import React from 'react'
 import { Box, Spinner } from '@primer/react'
-import type { BulkEditRelationshipsUpdate } from '@/lib/messages'
-import type { RelationshipSelectionState } from '@/features/bulk-edit-utils'
+import type { BulkEditRelationshipsUpdate, IssueSearchResultData } from '@/lib/messages'
+import type { RelationshipKey, RelationshipSelectionState } from '@/features/bulk-edit-utils'
 import { isMac } from '@/lib/keyboard'
 import { Z_MODAL } from '@/lib/z-index'
 
@@ -46,6 +46,49 @@ export function hasRelationshipOperations(relationships: BulkEditRelationshipsUp
     relationships.blocking.add.length > 0 ||
     relationships.blocking.remove.length > 0,
   )
+}
+
+export type ParentOperation = 'set' | 'clear'
+export type ListOperation = 'add' | 'remove' | 'clear'
+
+function mapSearchResult(item: IssueSearchResultData) {
+  return {
+    databaseId: item.databaseId,
+    number: item.number,
+    title: item.title,
+    repoOwner: item.repoOwner,
+    repoName: item.repoName,
+    state: item.state,
+  }
+}
+
+export function buildRelationshipsPayload(
+  key: RelationshipKey,
+  parentOp: ParentOperation,
+  parentTarget: IssueSearchResultData | null,
+  listOp: ListOperation,
+  listTargets: IssueSearchResultData[],
+): BulkEditRelationshipsUpdate {
+  const base = createEmptyRelationshipUpdates()
+
+  if (key === 'parent') {
+    if (parentOp === 'clear') {
+      base.parent.clear = true
+    } else if (parentTarget) {
+      base.parent.set = mapSearchResult(parentTarget)
+    }
+    return base
+  }
+
+  const list = key === 'blockedBy' ? base.blockedBy : base.blocking
+  if (listOp === 'clear') {
+    list.clear = true
+  } else if (listOp === 'add') {
+    list.add = listTargets.map(mapSearchResult)
+  } else if (listOp === 'remove') {
+    list.remove = listTargets.map(mapSearchResult)
+  }
+  return base
 }
 
 /** display string for a ctrl/cmd+shift+key shortcut */
