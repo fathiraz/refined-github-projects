@@ -539,6 +539,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   async function handleBulkClose() {
     setMenuOpen(false)
     if (!(await checkToken())) return
+    if (selectionStore.count() === 0) return
     setShowCloseModal(true)
   }
 
@@ -557,7 +558,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         sendMessage('bulkClose', {
           itemIds,
           projectId: resolvedProjectId,
-          reason: closeReason,
+          reason: 'COMPLETED',
         })
         selectionStore.clear()
         return
