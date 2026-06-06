@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/fathiraz/refined-github-projects/compare/v1.2.0...v1.3.0) (2026-06-06)
+
+
+### Features
+
+* **bulk-edit:** sectioned field list with A–Z sorting in flyout ([#46](https://github.com/fathiraz/refined-github-projects/issues/46)) ([a64fe74](https://github.com/fathiraz/refined-github-projects/commit/a64fe7443c2e01ea354fde13c20dc67de9034c03))
+
 ## [1.2.0](https://github.com/fathiraz/refined-github-projects/compare/v1.1.0...v1.2.0) (2026-06-02)
 
 
