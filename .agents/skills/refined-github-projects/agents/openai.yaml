@@ -1,0 +1,6 @@
+interface:
+  display_name: "Refined Github Projects"
+  short_description: "Repo-specific patterns and workflows for refined-github-projects"
+  default_prompt: "Use the refined-github-projects repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
