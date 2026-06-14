@@ -1,0 +1,509 @@
+# Instincts generated from https://github.com/fathiraz/refined-github-projects
+# Generated: 2026-06-14T13:40:56.446Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: refined-github-projects-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: fix, refactor
+
+## Evidence
+
+- 3 commits analyzed
+- Detected conventional commit pattern
+- Examples: refactor(ui): consolidate bulk modals and sprint Primer shell, fix(pr): address cubic review on close reason, sprint prune, modal Escape
+
+---
+id: refined-github-projects-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Commit Length
+
+## Action
+
+Write moderate-length commit messages (~65 characters)
+
+## Evidence
+
+- Average commit message length: 65 chars
+- Based on 3 commits
+
+---
+id: refined-github-projects-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: refined-github-projects-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: refined-github-projects-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: refined-github-projects-test-colocate
+trigger: "when writing tests"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Test Colocate
+
+## Action
+
+Place test file next to the source file (e.g., Button.test.tsx next to Button.tsx)
+
+## Evidence
+
+- Colocated test pattern detected
+- Tests live alongside source files
+
+---
+id: refined-github-projects-test-framework
+trigger: "when writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Test Framework
+
+## Action
+
+Use vitest as the test framework
+
+## Evidence
+
+- Test framework detected: vitest
+- File pattern: *.test.tsx
+
+---
+id: refined-github-projects-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.tsx
+
+## Evidence
+
+- File pattern: *.test.tsx
+- Consistent across test files
+
+---
+id: refined-github-projects-test-mocking
+trigger: "when mocking dependencies in tests"
+confidence: 0.75
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Test Mocking
+
+## Action
+
+Use vi.mock for mocking
+
+## Evidence
+
+- Mocking pattern detected: vi.mock
+- Consistent across test files
+
+---
+id: refined-github-projects-test-types
+trigger: "when planning tests for a feature"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Test Types
+
+## Action
+
+Write unit, integration tests to match project standards
+
+## Evidence
+
+- Test types detected: unit, integration
+- Coverage config: no
+
+---
+id: refined-github-projects-workflow-modal-shell-refactor-or-bugfix
+trigger: "when doing modal shell refactor or bugfix"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Workflow Modal Shell Refactor Or Bugfix
+
+## Action
+
+Follow the modal-shell-refactor-or-bugfix workflow:
+1. Update or refactor shared modal shell (src/ui/modal-shell.tsx)
+2. Update individual modal components (src/features/bulk-*-modal.tsx, src/features/bulk-actions-modals.tsx)
+3. Update or add tests for modal shell or modal logic (src/ui/__tests__/modal-shell.test.tsx, src/features/__tests__/*.test.tsx)
+4. Update related UI or utility files as needed (e.g., src/lib/modal-factory.tsx, src/features/bulk-actions-bar.tsx)
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/ui/modal-shell.tsx, src/features/bulk-actions-modals.tsx, src/features/bulk-close-modal.tsx
+
+---
+id: refined-github-projects-workflow-sprint-ui-enhancement-or-bugfix
+trigger: "when doing sprint ui enhancement or bugfix"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Workflow Sprint Ui Enhancement Or Bugfix
+
+## Action
+
+Follow the sprint-ui-enhancement-or-bugfix workflow:
+1. Modify sprint UI components (src/features/sprint-*.tsx)
+2. Update sprint utility files and add/modify their tests (src/features/sprint-settings-utils.ts, src/features/sprint-settings-utils.test.ts)
+3. Update injection points or widgets (src/features/sprint-injections.tsx, src/features/sprint-table-widget.tsx)
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/features/sprint-injections.tsx, src/features/sprint-modal.tsx, src/features/sprint-progress-view.tsx
+
+---
+id: refined-github-projects-instinct-file-naming
+trigger: "When creating or renaming files in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct File Naming
+
+## Action
+
+Use kebab-case for all file names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files
+- Consistent kebab-case in src/features/bulk-actions-modals.tsx, src/ui/modal-shell.tsx
+
+---
+id: refined-github-projects-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Function Naming
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions
+
+---
+id: refined-github-projects-instinct-class-naming
+trigger: "When creating a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Class Naming
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes
+
+---
+id: refined-github-projects-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants
+
+---
+id: refined-github-projects-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Import Style
+
+## Action
+
+Use alias import style
+
+## Evidence
+
+- Pattern in codeStyle.importStyle
+
+---
+id: refined-github-projects-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle
+
+---
+id: refined-github-projects-instinct-test-file-pattern
+trigger: "When creating a test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Test File Pattern
+
+## Action
+
+Name the file with a .test.tsx suffix and colocate it with the code under test
+
+## Evidence
+
+- Pattern in testing.filePattern
+- Pattern in architecture.folderStructure.testLocation
+- Seen in src/ui/__tests__/modal-shell.test.tsx
+
+---
+id: refined-github-projects-instinct-testing-framework
+trigger: "When writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Testing Framework
+
+## Action
+
+Use vitest as the testing framework
+
+## Evidence
+
+- Pattern in testing.framework
+
+---
+id: refined-github-projects-instinct-mocking-style
+trigger: "When mocking modules in tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Mocking Style
+
+## Action
+
+Use vi.mock for mocking
+
+## Evidence
+
+- Pattern in testing.mockingStyle
+
+---
+id: refined-github-projects-instinct-test-types
+trigger: "When designing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Test Types
+
+## Action
+
+Write both unit and integration tests as appropriate
+
+## Evidence
+
+- Pattern in testing.testTypes
+
+---
+id: refined-github-projects-instinct-git-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Git Commit Format
+
+## Action
+
+Use conventional commits with fix or refactor prefixes and a concise, descriptive message (~65 characters)
+
+## Evidence
+
+- Pattern in commits.type and commits.prefixes
+- Examples: 'refactor(ui): consolidate bulk modals and sprint Primer shell', 'fix(pr): address cubic review on close reason, sprint prune, modal Escape'
+
+---
+id: refined-github-projects-instinct-modal-shell-workflow
+trigger: "When refactoring or fixing modal-related UI components"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Modal Shell Workflow
+
+## Action
+
+Update shared modal shell, update individual modal components, update/add modal tests, and update related UI/util files
+
+## Evidence
+
+- Workflow: modal-shell-refactor-or-bugfix
+- Pattern in commit sequence and files: src/ui/modal-shell.tsx, src/features/bulk-*-modal.tsx, src/ui/__tests__/modal-shell.test.tsx
+
+---
+id: refined-github-projects-instinct-sprint-ui-workflow
+trigger: "When enhancing or fixing sprint-related UI features or utilities"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Sprint Ui Workflow
+
+## Action
+
+Modify sprint UI components, update sprint utility files and their tests, update injection points or widgets
+
+## Evidence
+
+- Workflow: sprint-ui-enhancement-or-bugfix
+- Pattern in commit sequence and files: src/features/sprint-*.tsx, src/features/sprint-settings-utils.ts, src/features/sprint-injections.tsx
+
