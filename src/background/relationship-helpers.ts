@@ -20,15 +20,8 @@ import type {
   RelationshipSearchIssueNode,
 } from '@/background/types'
 
-import {
-  githubRest,
-  parseRepoFromUrl,
-  withRateLimitRetry,
-} from '@/background/rest-helpers'
-import {
-  formatIssueReference,
-  relationshipKey,
-} from '@/lib/relationship-utils'
+import { githubRest, parseRepoFromUrl, withRateLimitRetry } from '@/background/rest-helpers'
+import { formatIssueReference, relationshipKey } from '@/lib/relationship-utils'
 
 export { relationshipKey } from '@/lib/relationship-utils'
 

@@ -49,6 +49,7 @@ export function ProcessCard({
 
   useEffect(() => {
     if (!entry.paused || !entry.retryAfter) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- countdown reset synced to queue retry state
       setCountdown(0)
       return
     }

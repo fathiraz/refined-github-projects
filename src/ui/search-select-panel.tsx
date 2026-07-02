@@ -281,6 +281,7 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
 
     log('panel:disabled-reset')
     requestGen.current += 1
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset panel state when the control is disabled
     setPanelOpen(false)
     setFilterQuery('')
     setFetchError(null)

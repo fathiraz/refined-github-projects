@@ -75,6 +75,7 @@ export function BulkReorderFlyout({
     if (!open || itemIds.length === 0) return
     const requestId = latestReq.current + 1
     latestReq.current = requestId
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state for the reorder-context fetch effect
     setLoading(true)
     setFetchError(null)
     const allDomIds = Array.from(document.querySelectorAll('[data-rgp-cb]'))
@@ -108,6 +109,7 @@ export function BulkReorderFlyout({
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset local draft state when the flyout closes
       setQuery('')
       setDirection('before')
     }

@@ -204,6 +204,7 @@ export function BulkTransferModal({
     ? `${selectedTarget.targetRepoOwner}/${selectedTarget.targetRepoName}`.toLowerCase()
     : null
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset expander before eligibility recheck
     setShowIneligibleExpander(false)
     if (!selectedTarget || !targetKey || !projectId || !itemIds || itemIds.length === 0) {
       setEligibilityLoading(false)

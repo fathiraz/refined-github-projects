@@ -2,10 +2,7 @@
 
 import { onMessage } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
-import {
-  GET_PROJECT_ITEMS_FOR_REORDER,
-  UPDATE_PROJECT_ITEM_POSITION,
-} from '@/lib/graphql-queries'
+import { GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '@/lib/graphql-queries'
 import { processQueue, sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'

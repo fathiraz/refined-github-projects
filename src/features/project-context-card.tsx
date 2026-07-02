@@ -19,6 +19,7 @@ export function ProjectContextCard({ itemId, projectContext }: ProjectContextCar
 
   useEffect(() => {
     let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset to loading before refetch on input change
     setState({ status: 'loading' })
 
     Promise.all([

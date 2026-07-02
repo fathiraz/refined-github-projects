@@ -9,7 +9,11 @@ import { allSprintSettingsStorage } from '@/lib/storage'
 import { todayUtc, isActive, nearestUpcoming, iterationEndDate } from '@/lib/sprint-utils'
 import { logger } from '@/lib/debug-logger'
 
-import { sprintProgressCache, SPRINT_PROGRESS_CACHE_TTL_MS, pruneExpiredCache } from '@/background/cache'
+import {
+  sprintProgressCache,
+  SPRINT_PROGRESS_CACHE_TTL_MS,
+  pruneExpiredCache,
+} from '@/background/cache'
 
 import { isSprintEndFull, acquireSprintEnd, releaseSprintEnd } from '@/background/concurrency'
 
@@ -46,15 +50,15 @@ export function registerSprintHandlers(): void {
     ]
     const today = todayUtc()
 
+    const withEndDate = <T extends Parameters<typeof iterationEndDate>[0]>(
+      iter: T,
+    ): T & { endDate: string } => ({ ...iter, endDate: iterationEndDate(iter) })
+
     const active = allIters.find((i) => isActive(i, today)) ?? null
-    const activeSprint: SprintInfo | null = active
-      ? { ...active, endDate: iterationEndDate(active) }
-      : null
+    const activeSprint: SprintInfo | null = active ? withEndDate(active) : null
 
     const upcoming = nearestUpcoming(iterField.configuration.iterations ?? [], today)
-    const nearestUpcomingSprint: SprintInfo | null = upcoming
-      ? { ...upcoming, endDate: iterationEndDate(upcoming) }
-      : null
+    const nearestUpcomingSprint: SprintInfo | null = upcoming ? withEndDate(upcoming) : null
 
     // check acknowledged sprint (if any) — clear stale IDs
     let acknowledgedSprint: SprintInfo | null = null
@@ -63,7 +67,7 @@ export function registerSprintHandlers(): void {
         (i) => i.id === settings.acknowledgedSprintId,
       )
       if (ackIter) {
-        acknowledgedSprint = { ...ackIter, endDate: iterationEndDate(ackIter) }
+        acknowledgedSprint = withEndDate(ackIter)
       } else {
         // stale — clear it
         const updated = { ...settings, acknowledgedSprintId: undefined }
