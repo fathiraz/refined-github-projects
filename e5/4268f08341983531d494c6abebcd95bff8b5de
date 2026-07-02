@@ -1,0 +1,53 @@
+src/background/bulk-position.ts
+  s_997d9096f13f5e::t_245b7bbecc0aaa 5
+src/features/bulk-reorder-flyout.tsx
+  s_997d9096f13f5e::t_13c509e0b28086 78
+  s_997d9096f13f5e::t_c2e64d25ae7bfa 112
+src/background/__tests__/bulk-update-dispatch.test.ts
+  s_997d9096f13f5e::t_245b7bbecc0aaa 24-27,34-36
+src/features/bulk-transfer-modal.tsx
+  s_997d9096f13f5e::t_ef71deb36d671f 207
+src/features/bulk-random-assign-flyout.tsx
+  s_997d9096f13f5e::t_5d62cf5cace70f 209
+  s_997d9096f13f5e::t_dd14839bd33af4 109
+  s_997d9096f13f5e::t_8fc89b97248930 124
+  s_997d9096f13f5e::t_dbc18ddfa3c43a 177
+src/features/project-context-card.tsx
+  s_997d9096f13f5e::t_70913696f9f19a 22
+src/ui/search-select-panel.tsx
+  s_997d9096f13f5e::t_5bb2496991a8c9 284
+src/background/project-service.ts
+  s_997d9096f13f5e::t_245b7bbecc0aaa 3-12
+src/background/relationship-helpers.ts
+  s_997d9096f13f5e::t_245b7bbecc0aaa 23-24
+src/background/transfer-eligibility.ts
+  s_997d9096f13f5e::t_245b7bbecc0aaa 12-14
+src/background/sprint-handlers.ts
+  s_997d9096f13f5e::t_b027e5f757e1c6 53-56,58
+  s_997d9096f13f5e::t_245b7bbecc0aaa 12-16
+  s_997d9096f13f5e::t_49f8b958bcbc13 61
+  s_997d9096f13f5e::t_deede113347def 70
+src/lib/queue-store.test.ts
+  s_997d9096f13f5e::t_245b7bbecc0aaa 54-63
+src/features/queue-tracker.tsx
+  s_997d9096f13f5e::t_765f8e88a522ab 52
+src/features/bulk-rename-flyout.tsx
+  s_997d9096f13f5e::t_20c5430141c1a9 89
+  s_997d9096f13f5e::t_1e6c4fc67c05ee 75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "e54268f08341983531d494c6abebcd95bff8b5de",
+  "prompts": {},
+  "sessions": {
+    "s_997d9096f13f5e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f49ebc46-1d7f-40c7-8c40-edf096530f02",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
