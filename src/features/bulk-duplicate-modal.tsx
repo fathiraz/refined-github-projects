@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Tippy from '@/ui/tooltip'
-import { Box, Button, Checkbox, Flash, FormControl, Text, TextInput } from '@primer/react'
+import { Box, Button, Flash, FormControl, Text, TextInput } from '@primer/react'
 import {
   sendMessage,
   type DuplicateItemPlan,
@@ -15,7 +15,6 @@ import {
   AlertIcon,
   ArrowRightIcon,
   CheckIcon,
-  CopyIcon,
   PersonIcon,
   ProjectBoardIcon,
   ShieldIcon,
@@ -47,13 +46,9 @@ import {
   LABELS_SECTION_ID,
   PARENT_SECTION_ID,
   prefixLabelIcon,
-  sectionGroupMeta,
-  sectionGroupOrder,
-  sectionLabel,
   TITLE_SECTION_ID,
   type DuplicateSection,
   type EditableField,
-  type SectionGroup,
   type SectionId,
   type Step,
 } from '@/features/bulk-duplicate-utils'

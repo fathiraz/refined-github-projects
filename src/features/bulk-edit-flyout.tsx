@@ -3,19 +3,7 @@
 // Pane 2: per-`dataType` value picker or operation-first relationship editor.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ActionList,
-  Avatar,
-  Box,
-  Checkbox,
-  Flash,
-  Radio,
-  RadioGroup,
-  Spinner,
-  Text,
-  TextInput,
-  Textarea,
-} from '@primer/react'
+import { ActionList, Box, Flash, Text, TextInput } from '@primer/react'
 import { ValuePicker } from '@/features/bulk-edit-value-picker'
 import { FieldRow, SectionHeader } from '@/features/bulk-edit-field-row'
 import { SearchIcon } from '@/ui/icons'
@@ -23,7 +11,6 @@ import { BulkFlyout, type BulkFlyoutPane, useDrilldownPane } from '@/ui/bulk-fly
 import { sendMessage } from '@/lib/messages'
 import {
   buildFieldCatalog,
-  getFieldIcon,
   isRelationshipFieldId,
   partitionFieldList,
   relationshipKeyFromFieldId,
