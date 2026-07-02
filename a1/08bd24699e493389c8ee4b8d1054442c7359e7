@@ -1,0 +1,21 @@
+src/features/bulk-duplicate-modal.tsx
+  s_997d9096f13f5e::t_d901328d88cb63 3
+src/features/bulk-edit-flyout.tsx
+  s_997d9096f13f5e::t_d901328d88cb63 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "a108bd24699e493389c8ee4b8d1054442c7359e7",
+  "prompts": {},
+  "sessions": {
+    "s_997d9096f13f5e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f49ebc46-1d7f-40c7-8c40-edf096530f02",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
