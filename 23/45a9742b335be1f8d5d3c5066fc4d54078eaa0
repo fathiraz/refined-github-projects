@@ -1,0 +1,26 @@
+src/features/bulk-edit-value-picker.tsx
+  s_997d9096f13f5e::t_a48a0ca2d00918 2-12
+  s_997d9096f13f5e::t_6ee65881840da3 1,13-257
+src/features/bulk-edit-flyout.tsx
+  s_997d9096f13f5e::t_6ee65881840da3 19-20,37
+src/features/bulk-edit-field-row.tsx
+  s_997d9096f13f5e::t_6ee65881840da3 1-41
+src/features/bulk-edit-flyout-helpers.ts
+  s_997d9096f13f5e::t_6ee65881840da3 138-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "2345a9742b335be1f8d5d3c5066fc4d54078eaa0",
+  "prompts": {},
+  "sessions": {
+    "s_997d9096f13f5e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f49ebc46-1d7f-40c7-8c40-edf096530f02",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
