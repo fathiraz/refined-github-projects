@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Tippy from '@/ui/tooltip'
 import { Box, Button, Flash, FormControl, Text, TextInput } from '@primer/react'
 import {
@@ -84,6 +84,7 @@ export function BulkDuplicateModal({
   const [preview, setPreview] = useState<ItemPreviewData | null>(null)
   const [error, setError] = useState('')
   const [concurrentError, setConcurrentError] = useState(false)
+  const [createMore, setCreateMore] = useState(false)
   const duplicateBtnRef = useRef<HTMLButtonElement | null>(null)
 
   const [selectedSections, setSelectedSections] = useState<SectionId[]>([])
@@ -99,35 +100,41 @@ export function BulkDuplicateModal({
     ensureTippyCss()
   }, [])
 
+  // Reset edit state to the source item's defaults. Shared by the initial
+  // preview load and the "Create more" re-arm (both revert to source defaults).
+  const applyPreviewDefaults = useCallback((data: ItemPreviewData) => {
+    // §11.5 — default duplicated title is `<original> (copy)` editable inline.
+    setEditedTitle(`${data.title} (copy)`)
+    setEditedBody(data.body)
+    setEditedAssignees(
+      data.assignees.map((assignee) => ({
+        id: assignee.id,
+        name: assignee.login,
+        avatarUrl: assignee.avatarUrl,
+      })),
+    )
+    setEditedLabels(data.labels)
+    setEditedFields(data.fields)
+    setBlockedByRelationships(data.relationships.blockedBy)
+    setBlockingRelationships(data.relationships.blocking)
+    // §11.4 — default Content (Title, Body) + Metadata (Assignees, Labels,
+    // Issue Type) + every Project Field; Relationships (Parent, Blocked-by,
+    // Blocking) unchecked by default — user opts in explicitly.
+    setSelectedSections([
+      TITLE_SECTION_ID,
+      BODY_SECTION_ID,
+      ASSIGNEES_SECTION_ID,
+      LABELS_SECTION_ID,
+      ...(data.issueTypeName ? [ISSUE_TYPE_SECTION_ID] : []),
+      ...data.fields.map((field) => fieldSectionId(field.fieldId)),
+    ])
+  }, [])
+
   useEffect(() => {
     sendMessage('getItemPreview', { itemId, owner, number: projectNumber, isOrg })
       .then((data) => {
         setPreview(data)
-        // §11.5 — default duplicated title is `<original> (copy)` editable inline.
-        setEditedTitle(`${data.title} (copy)`)
-        setEditedBody(data.body)
-        setEditedAssignees(
-          data.assignees.map((assignee) => ({
-            id: assignee.id,
-            name: assignee.login,
-            avatarUrl: assignee.avatarUrl,
-          })),
-        )
-        setEditedLabels(data.labels)
-        setEditedFields(data.fields)
-        setBlockedByRelationships(data.relationships.blockedBy)
-        setBlockingRelationships(data.relationships.blocking)
-        // §11.4 — default Content (Title, Body) + Metadata (Assignees, Labels,
-        // Issue Type) + every Project Field; Relationships (Parent, Blocked-by,
-        // Blocking) unchecked by default — user opts in explicitly.
-        setSelectedSections([
-          TITLE_SECTION_ID,
-          BODY_SECTION_ID,
-          ASSIGNEES_SECTION_ID,
-          LABELS_SECTION_ID,
-          ...(data.issueTypeName ? [ISSUE_TYPE_SECTION_ID] : []),
-          ...data.fields.map((field) => fieldSectionId(field.fieldId)),
-        ])
+        applyPreviewDefaults(data)
         setStep('SELECT')
       })
       .catch((cause: Error) => {
@@ -135,7 +142,7 @@ export function BulkDuplicateModal({
         setError(cause.message || 'Failed to load item details')
         setStep('ERROR')
       })
-  }, [isOrg, itemId, owner, projectNumber])
+  }, [isOrg, itemId, owner, projectNumber, applyPreviewDefaults])
 
   const availableSections = useMemo<DuplicateSection[]>(() => {
     if (!preview) return []
@@ -376,7 +383,7 @@ export function BulkDuplicateModal({
     return isFieldEdited(field, sourceField) ? 'edited' : 'same'
   }
 
-  async function handleDuplicate() {
+  function handleDuplicate() {
     if (!preview) return
     if (queueStore.getActiveCount() >= 3) {
       setConcurrentError(true)
@@ -387,13 +394,23 @@ export function BulkDuplicateModal({
     const rect = duplicateBtnRef.current?.getBoundingClientRect()
     if (rect) flyToTracker(rect)
 
-    await sendMessage('duplicateItem', {
+    // Fire-and-forget: the duplication runs to completion in the background SW
+    // regardless of the modal's lifecycle; errors surface via the queue tracker.
+    void sendMessage('duplicateItem', {
       itemId: preview.resolvedItemId || itemId,
       projectId: preview.projectId || projectId,
       plan: buildDuplicatePlan(),
+    }).catch((cause: Error) => {
+      console.error('[rgp] duplicateItem failed', cause)
     })
 
-    onClose()
+    // Create more: re-arm the form with source defaults, keep the modal open.
+    // Otherwise hand off to the queue and close.
+    if (createMore) {
+      applyPreviewDefaults(preview)
+    } else {
+      onClose()
+    }
   }
 
   function renderValueSection(section: DuplicateSection): React.ReactNode {
@@ -1178,6 +1195,8 @@ export function BulkDuplicateModal({
             diffStatus={diffStatus}
             concurrentError={concurrentError}
             duplicateBtnRef={duplicateBtnRef}
+            createMore={createMore}
+            onToggleCreateMore={() => setCreateMore((value) => !value)}
             onClose={onClose}
             onBack={() => setStep('SELECT')}
             onDuplicate={handleDuplicate}

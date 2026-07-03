@@ -199,6 +199,8 @@ export function ReviewStep({
   diffStatus,
   concurrentError,
   duplicateBtnRef,
+  createMore,
+  onToggleCreateMore,
   onClose,
   onBack,
   onDuplicate,
@@ -208,6 +210,8 @@ export function ReviewStep({
   diffStatus: (sectionId: SectionId) => 'edited' | 'same'
   concurrentError: boolean
   duplicateBtnRef: React.RefObject<HTMLButtonElement | null>
+  createMore: boolean
+  onToggleCreateMore: () => void
   onClose: () => void
   onBack: () => void
   onDuplicate: () => void
@@ -294,16 +298,31 @@ export function ReviewStep({
           <Button variant="default" onClick={onBack} sx={buttonMotionSx}>
             ← Back
           </Button>
-          <Button
-            ref={duplicateBtnRef}
-            variant="primary"
-            onClick={onDuplicate}
-            sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ...buttonMotionSx }}
-            data-testid="rgp-duplicate-confirm"
-          >
-            <CopyIcon size={14} />
-            Duplicate Item →
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box
+              as="label"
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+            >
+              <Checkbox checked={createMore} onChange={onToggleCreateMore} />
+              <Text sx={{ fontSize: 1, color: 'fg.muted' }}>Create more</Text>
+            </Box>
+            <Button
+              ref={duplicateBtnRef}
+              variant="primary"
+              onClick={onDuplicate}
+              sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ...buttonMotionSx }}
+              data-testid="rgp-duplicate-confirm"
+            >
+              <CopyIcon size={14} />
+              Duplicate Item →
+            </Button>
+          </Box>
         </Box>
       </Box>
     </>
