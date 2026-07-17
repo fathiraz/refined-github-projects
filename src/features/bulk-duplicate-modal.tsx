@@ -422,13 +422,24 @@ export function BulkDuplicateModal({
 
     // Fire-and-forget: the duplication runs to completion in the background SW
     // regardless of the modal's lifecycle; errors surface via the queue tracker.
+    // The background handler still returns an immediate accept/reject verdict
+    // (rejected when its concurrency gate is saturated, e.g. by another tab)
+    // so we can roll back the optimistic tally above instead of leaking it.
     void sendMessage('duplicateItem', {
       itemId: preview.resolvedItemId || itemId,
       projectId: preview.projectId || projectId,
       plan: buildDuplicatePlan(),
-    }).catch((cause: Error) => {
-      console.error('[rgp] duplicateItem failed', cause)
     })
+      .then((result) => {
+        if (!result?.accepted) {
+          pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
+          setConcurrentError(true)
+        }
+      })
+      .catch((cause: Error) => {
+        pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
+        console.error('[rgp] duplicateItem failed', cause)
+      })
 
     // Create more: re-arm the form with source defaults, keep the modal open.
     // Otherwise hand off to the queue and close.

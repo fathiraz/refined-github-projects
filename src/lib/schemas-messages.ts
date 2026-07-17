@@ -189,7 +189,7 @@ export const Messages = {
       projectId: Schema.String,
       plan: Schema.optional(Schema.Unknown),
     }),
-    output: Schema.Void,
+    output: Schema.Struct({ accepted: Schema.Boolean }),
   },
   getItemPreview: {
     input: Schema.Struct({

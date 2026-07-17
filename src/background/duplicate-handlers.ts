@@ -30,6 +30,9 @@ async function runDeepDuplicate(
   tabId?: number,
   plan?: DuplicateItemPlan,
 ) {
+  // Defensive backstop: the caller in registerDuplicateHandlers below already
+  // checks isDuplicateFull() before invoking this (and returns the verdict to
+  // the sender), so this only matters for other/future callers.
   if (isDuplicateFull()) {
     console.warn('[rgp:bg] max concurrent duplicates reached, rejecting new request')
     return
@@ -416,6 +419,14 @@ export function registerDuplicateHandlers(): void {
       projectId: data.projectId,
     })
     const tabId = sender.tab?.id
-    await runDeepDuplicate(data.itemId, data.projectId, tabId, data.plan)
+    // Decide acceptance synchronously (no await between this check and
+    // acquireDuplicate() inside runDeepDuplicate) so the verdict returned to
+    // the sender is truthful, then let the duplication run in the background.
+    if (isDuplicateFull()) {
+      console.warn('[rgp:bg] max concurrent duplicates reached, rejecting new request')
+      return { accepted: false }
+    }
+    void runDeepDuplicate(data.itemId, data.projectId, tabId, data.plan)
+    return { accepted: true }
   })
 }
