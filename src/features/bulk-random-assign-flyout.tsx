@@ -106,6 +106,7 @@ export function BulkRandomAssignFlyout({
   // Reset state on open
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset local draft state when the flyout closes
       setQuery('')
       setPicked([])
       setStrategy('balanced')
@@ -120,6 +121,7 @@ export function BulkRandomAssignFlyout({
   // Load current assignees per item when preserve is enabled.
   useEffect(() => {
     if (!open || !preserveExisting || itemIds.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state for the assignee-fetch effect
       setLoadingExisting(false)
       if (!preserveExisting) setExistingByItemId(new Map())
       return
@@ -172,6 +174,7 @@ export function BulkRandomAssignFlyout({
     if (!open || !repoName) return
     const requestId = Date.now()
     latestReq.current = requestId
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state for the debounced search effect
     setLoading(true)
     const timer = setTimeout(
       () => {
@@ -203,6 +206,7 @@ export function BulkRandomAssignFlyout({
   // Seed cache with recents the first time the flyout opens.
   useEffect(() => {
     if (!recentAssignees || recentAssignees.length === 0) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time seed of recents into local cache
     setCache((prev) => {
       const next = new Map(prev)
       for (const r of recentAssignees) {

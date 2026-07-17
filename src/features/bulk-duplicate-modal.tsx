@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Tippy from '@/ui/tooltip'
-import { Box, Button, Checkbox, Flash, FormControl, Text, TextInput } from '@primer/react'
+import { Box, Button, Flash, FormControl, Text, TextInput } from '@primer/react'
 import {
   sendMessage,
   type DuplicateItemPlan,
@@ -15,7 +15,6 @@ import {
   AlertIcon,
   ArrowRightIcon,
   CheckIcon,
-  CopyIcon,
   PersonIcon,
   ProjectBoardIcon,
   ShieldIcon,
@@ -36,6 +35,7 @@ import {
   buildFieldValue,
   bulkDuplicateHeaderIcon,
   buttonMotionSx,
+  drainPendingDuplicates,
   duplicateValueTooltip,
   fieldSectionId,
   getFieldIcon,
@@ -45,19 +45,18 @@ import {
   isLabelsEdited,
   isRelationshipsEdited,
   LABELS_SECTION_ID,
+  MAX_CONCURRENT_DUPLICATES,
   PARENT_SECTION_ID,
   prefixLabelIcon,
-  sectionGroupMeta,
-  sectionGroupOrder,
-  sectionLabel,
   TITLE_SECTION_ID,
   type DuplicateSection,
   type EditableField,
-  type SectionGroup,
   type SectionId,
   type Step,
 } from '@/features/bulk-duplicate-utils'
 import { RelationshipListEditor } from '@/features/bulk-duplicate-relationship-list'
+
+import { ReviewStep, SelectSectionsStep } from '@/features/bulk-duplicate-steps'
 
 interface Props {
   itemId: string
@@ -68,308 +67,12 @@ interface Props {
   onClose: () => void
 }
 
-function SelectSectionsStep({
-  sections,
-  selectedSections,
-  onToggleSection,
-  onSelectAll,
-  onDeselectAll,
-  onClose,
-  onNext,
-}: {
-  sections: DuplicateSection[]
-  selectedSections: SectionId[]
-  onToggleSection: (sectionId: SectionId) => void
-  onSelectAll: () => void
-  onDeselectAll: () => void
-  onClose: () => void
-  onNext: () => void
-}) {
-  const allSelected =
-    sections.length > 0 && sections.every((section) => selectedSections.includes(section.id))
-
-  return (
-    <>
-      <ModalStepHeader
-        title="Select Sections"
-        icon={bulkDuplicateHeaderIcon}
-        subtitle="Choose which details to carry over to the duplicated item."
-        step={1}
-        totalSteps={2}
-        onClose={onClose}
-      />
-      <Box
-        sx={{
-          px: 4,
-          pt: 2,
-          pb: 1,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 3,
-        }}
-      >
-        <Button
-          variant="invisible"
-          size="small"
-          onClick={allSelected ? onDeselectAll : onSelectAll}
-          sx={{ p: 0, color: 'accent.fg', fontSize: 1, fontWeight: 'bold', ...buttonMotionSx }}
-        >
-          {allSelected ? 'Deselect all' : 'Select all'}
-        </Button>
-        <Text sx={{ fontSize: 0, color: 'fg.muted', textAlign: 'right' }}>
-          If Title is skipped, the duplicate falls back to the original title.
-        </Text>
-      </Box>
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: 'auto',
-          px: 4,
-          py: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 4,
-        }}
-      >
-        {sectionGroupOrder.map((group) => {
-          const groupSections = sections.filter((section) => section.group === group)
-          if (groupSections.length === 0) return null
-
-          return (
-            <Box key={group} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Text sx={sectionLabel}>
-                <Box as="span" sx={prefixLabelIcon}>
-                  {sectionGroupMeta[group].icon}
-                </Box>
-                {sectionGroupMeta[group].label}
-              </Text>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {groupSections.map((section) => {
-                  const isSelected = selectedSections.includes(section.id)
-                  return (
-                    <Box
-                      key={section.id}
-                      as="button"
-                      type="button"
-                      onClick={() => onToggleSection(section.id)}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 3,
-                        width: '100%',
-                        textAlign: 'left',
-                        border: 'none',
-                        borderRadius: 2,
-                        bg: isSelected ? 'accent.subtle' : 'transparent',
-                        px: 3,
-                        py: 2,
-                        cursor: 'pointer',
-                        transition: 'background-color 150ms ease',
-                        ':hover': { bg: isSelected ? 'accent.subtle' : 'canvas.subtle' },
-                        '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                      }}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onChange={() => {}}
-                        sx={{ pointerEvents: 'none' }}
-                      />
-                      <Box
-                        as="span"
-                        sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, minWidth: 0 }}
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            flexShrink: 0,
-                            color: isSelected ? 'accent.fg' : 'fg.default',
-                          }}
-                        >
-                          {section.icon}
-                        </Box>
-                        <Box
-                          sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}
-                        >
-                          <Text
-                            sx={{
-                              fontSize: 1,
-                              fontWeight: 'bold',
-                              color: isSelected ? 'accent.fg' : 'fg.default',
-                            }}
-                          >
-                            {section.label}
-                          </Text>
-                          {section.helperText && (
-                            <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                              {section.helperText}
-                            </Text>
-                          )}
-                        </Box>
-                      </Box>
-                      {section.badge && (
-                        <Text
-                          sx={{
-                            fontSize: 0,
-                            px: 1,
-                            py: '2px',
-                            bg: 'neutral.muted',
-                            color: 'fg.muted',
-                            borderRadius: 2,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {section.badge}
-                        </Text>
-                      )}
-                    </Box>
-                  )
-                })}
-              </Box>
-            </Box>
-          )
-        })}
-      </Box>
-      <Box
-        sx={{
-          px: 4,
-          py: 3,
-          borderTop: '1px solid',
-          borderColor: 'border.default',
-          display: 'flex',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <Button variant="primary" onClick={onNext} sx={buttonMotionSx}>
-          Next: Review →
-        </Button>
-      </Box>
-    </>
-  )
-}
-
 /**
  * §11.2/§11.6 — combined REVIEW step. Renders each selected section's inline
  * editor (via `renderSection`) with a `· edited` / `· same as source` diff
  * badge in the row label. Footer hosts Back + Duplicate so the user confirms
  * in the same screen they edit in.
  */
-function ReviewStep({
-  sections,
-  diffStatus,
-  concurrentError,
-  duplicateBtnRef,
-  onClose,
-  onBack,
-  onDuplicate,
-  renderSection,
-}: {
-  sections: DuplicateSection[]
-  diffStatus: (sectionId: SectionId) => 'edited' | 'same'
-  concurrentError: boolean
-  duplicateBtnRef: React.RefObject<HTMLButtonElement | null>
-  onClose: () => void
-  onBack: () => void
-  onDuplicate: () => void
-  renderSection: (section: DuplicateSection) => React.ReactNode
-}) {
-  return (
-    <>
-      <ModalStepHeader
-        title="Review & Duplicate"
-        icon={bulkDuplicateHeaderIcon}
-        subtitle="Edit and confirm each section before creating the duplicate."
-        step={2}
-        totalSteps={2}
-        onBack={onBack}
-        onClose={onClose}
-      />
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: 'auto',
-          px: 4,
-          py: 3,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 4,
-        }}
-      >
-        {sections.length === 0 ? (
-          <Box sx={{ py: 6, textAlign: 'center', color: 'fg.muted', fontSize: 1 }}>
-            No sections selected. The duplicate will use the original title only.
-          </Box>
-        ) : (
-          sectionGroupOrder.map((group) => {
-            const groupSections = sections.filter((section) => section.group === group)
-            if (groupSections.length === 0) return null
-
-            return (
-              <Box key={group} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <Text sx={sectionLabel}>
-                  <Box as="span" sx={prefixLabelIcon}>
-                    {sectionGroupMeta[group].icon}
-                  </Box>
-                  {sectionGroupMeta[group].label}
-                </Text>
-                {groupSections.map((section) => (
-                  <Box key={section.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {renderSection(section)}
-                    {/* §11.6 — diff badge appears under each editor so the user
-                        sees at a glance which rows are edited vs unchanged. */}
-                    <Text
-                      data-testid={`rgp-duplicate-diff-badge-${section.id}`}
-                      data-diff-status={diffStatus(section.id)}
-                      sx={{
-                        fontSize: 0,
-                        color: diffStatus(section.id) === 'edited' ? 'accent.fg' : 'fg.muted',
-                      }}
-                    >
-                      {diffStatus(section.id) === 'edited' ? '· edited' : '· same as source'}
-                    </Text>
-                  </Box>
-                ))}
-              </Box>
-            )
-          })
-        )}
-      </Box>
-      <Box
-        sx={{
-          px: 4,
-          py: 3,
-          borderTop: '1px solid',
-          borderColor: 'border.default',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3,
-        }}
-      >
-        {concurrentError && (
-          <Flash variant="warning">
-            3 duplications are already in progress. Wait for one to finish before starting another.
-          </Flash>
-        )}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button variant="default" onClick={onBack} sx={buttonMotionSx}>
-            ← Back
-          </Button>
-          <Button
-            ref={duplicateBtnRef}
-            variant="primary"
-            onClick={onDuplicate}
-            sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ...buttonMotionSx }}
-            data-testid="rgp-duplicate-confirm"
-          >
-            <CopyIcon size={14} />
-            Duplicate Item →
-          </Button>
-        </Box>
-      </Box>
-    </>
-  )
-}
 
 export function BulkDuplicateModal({
   itemId,
@@ -383,7 +86,19 @@ export function BulkDuplicateModal({
   const [preview, setPreview] = useState<ItemPreviewData | null>(null)
   const [error, setError] = useState('')
   const [concurrentError, setConcurrentError] = useState(false)
+  const [createMore, setCreateMore] = useState(false)
+  // Lock the single-copy submit path while a non-Create-more request awaits
+  // its verdict, so repeated clicks can't queue extra copies in a mode that's
+  // meant to create exactly one and close (§cubic-dev-ai PR #50).
+  const [submitting, setSubmitting] = useState(false)
   const duplicateBtnRef = useRef<HTMLButtonElement | null>(null)
+  // Race-window guard (§cubic-dev-ai): `queueStore.getActiveCount()` only
+  // reflects a fired duplicate once the BG's `queueStateUpdate` broadcast
+  // lands, one round-trip after the fire. Rapid "Create more" clicks can fire
+  // ahead of that broadcast, so track just-fired-but-not-yet-reflected
+  // duplicates locally and drain the tally as the real count catches up.
+  const pendingDuplicatesRef = useRef(0)
+  const prevActiveCountRef = useRef(0)
 
   const [selectedSections, setSelectedSections] = useState<SectionId[]>([])
   const [editedTitle, setEditedTitle] = useState('')
@@ -398,35 +113,57 @@ export function BulkDuplicateModal({
     ensureTippyCss()
   }, [])
 
+  // Drain the pending-duplicates tally as `queueStore` catches up. `subscribe`
+  // pushes the current snapshot immediately, so `prevActiveCountRef`
+  // bootstraps to the real global count even if other duplicates are already
+  // active when this modal opens.
+  useEffect(() => {
+    return queueStore.subscribe(() => {
+      const nowActive = queueStore.getActiveCount()
+      pendingDuplicatesRef.current = drainPendingDuplicates(
+        prevActiveCountRef.current,
+        nowActive,
+        pendingDuplicatesRef.current,
+      )
+      prevActiveCountRef.current = nowActive
+    })
+  }, [])
+
+  // Reset edit state to the source item's defaults. Shared by the initial
+  // preview load and the "Create more" re-arm (both revert to source defaults).
+  const applyPreviewDefaults = useCallback((data: ItemPreviewData) => {
+    // §11.5 — default duplicated title is `<original> (copy)` editable inline.
+    setEditedTitle(`${data.title} (copy)`)
+    setEditedBody(data.body)
+    setEditedAssignees(
+      data.assignees.map((assignee) => ({
+        id: assignee.id,
+        name: assignee.login,
+        avatarUrl: assignee.avatarUrl,
+      })),
+    )
+    setEditedLabels(data.labels)
+    setEditedFields(data.fields)
+    setBlockedByRelationships(data.relationships.blockedBy)
+    setBlockingRelationships(data.relationships.blocking)
+    // §11.4 — default Content (Title, Body) + Metadata (Assignees, Labels,
+    // Issue Type) + every Project Field; Relationships (Parent, Blocked-by,
+    // Blocking) unchecked by default — user opts in explicitly.
+    setSelectedSections([
+      TITLE_SECTION_ID,
+      BODY_SECTION_ID,
+      ASSIGNEES_SECTION_ID,
+      LABELS_SECTION_ID,
+      ...(data.issueTypeName ? [ISSUE_TYPE_SECTION_ID] : []),
+      ...data.fields.map((field) => fieldSectionId(field.fieldId)),
+    ])
+  }, [])
+
   useEffect(() => {
     sendMessage('getItemPreview', { itemId, owner, number: projectNumber, isOrg })
       .then((data) => {
         setPreview(data)
-        // §11.5 — default duplicated title is `<original> (copy)` editable inline.
-        setEditedTitle(`${data.title} (copy)`)
-        setEditedBody(data.body)
-        setEditedAssignees(
-          data.assignees.map((assignee) => ({
-            id: assignee.id,
-            name: assignee.login,
-            avatarUrl: assignee.avatarUrl,
-          })),
-        )
-        setEditedLabels(data.labels)
-        setEditedFields(data.fields)
-        setBlockedByRelationships(data.relationships.blockedBy)
-        setBlockingRelationships(data.relationships.blocking)
-        // §11.4 — default Content (Title, Body) + Metadata (Assignees, Labels,
-        // Issue Type) + every Project Field; Relationships (Parent, Blocked-by,
-        // Blocking) unchecked by default — user opts in explicitly.
-        setSelectedSections([
-          TITLE_SECTION_ID,
-          BODY_SECTION_ID,
-          ASSIGNEES_SECTION_ID,
-          LABELS_SECTION_ID,
-          ...(data.issueTypeName ? [ISSUE_TYPE_SECTION_ID] : []),
-          ...data.fields.map((field) => fieldSectionId(field.fieldId)),
-        ])
+        applyPreviewDefaults(data)
         setStep('SELECT')
       })
       .catch((cause: Error) => {
@@ -434,7 +171,7 @@ export function BulkDuplicateModal({
         setError(cause.message || 'Failed to load item details')
         setStep('ERROR')
       })
-  }, [isOrg, itemId, owner, projectNumber])
+  }, [isOrg, itemId, owner, projectNumber, applyPreviewDefaults])
 
   const availableSections = useMemo<DuplicateSection[]>(() => {
     if (!preview) return []
@@ -675,24 +412,50 @@ export function BulkDuplicateModal({
     return isFieldEdited(field, sourceField) ? 'edited' : 'same'
   }
 
-  async function handleDuplicate() {
+  function handleDuplicate() {
     if (!preview) return
-    if (queueStore.getActiveCount() >= 3) {
+    if (submitting) return
+    if (queueStore.getActiveCount() + pendingDuplicatesRef.current >= MAX_CONCURRENT_DUPLICATES) {
       setConcurrentError(true)
       return
     }
 
     setConcurrentError(false)
+    pendingDuplicatesRef.current += 1
+    if (!createMore) setSubmitting(true)
     const rect = duplicateBtnRef.current?.getBoundingClientRect()
     if (rect) flyToTracker(rect)
 
-    await sendMessage('duplicateItem', {
+    // Fire-and-forget: the duplication runs to completion in the background SW
+    // regardless of the modal's lifecycle; errors surface via the queue tracker.
+    // The background handler still returns an immediate accept/reject verdict
+    // (rejected when its concurrency gate is saturated, e.g. by another tab)
+    // so we can roll back the optimistic tally above instead of leaking it.
+    void sendMessage('duplicateItem', {
       itemId: preview.resolvedItemId || itemId,
       projectId: preview.projectId || projectId,
       plan: buildDuplicatePlan(),
     })
-
-    onClose()
+      .then((result) => {
+        if (!result?.accepted) {
+          pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
+          setConcurrentError(true)
+          setSubmitting(false)
+          return
+        }
+        // Accepted: re-arm for another (Create more) or hand off and close.
+        if (createMore) {
+          applyPreviewDefaults(preview)
+        } else {
+          onClose()
+        }
+      })
+      .catch((cause: Error) => {
+        pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
+        setConcurrentError(true)
+        setSubmitting(false)
+        console.error('[rgp] duplicateItem failed', cause)
+      })
   }
 
   function renderValueSection(section: DuplicateSection): React.ReactNode {
@@ -1477,6 +1240,9 @@ export function BulkDuplicateModal({
             diffStatus={diffStatus}
             concurrentError={concurrentError}
             duplicateBtnRef={duplicateBtnRef}
+            submitting={submitting}
+            createMore={createMore}
+            onToggleCreateMore={() => setCreateMore((value) => !value)}
             onClose={onClose}
             onBack={() => setStep('SELECT')}
             onDuplicate={handleDuplicate}

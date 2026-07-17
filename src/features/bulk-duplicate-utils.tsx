@@ -234,6 +234,32 @@ export function isFieldEdited(current: EditableField, source: EditableField): bo
   }
 }
 
+/** Max duplicates the background SW runs at once (`MAX_CONCURRENT_DUPLICATES`
+ *  in `src/background/concurrency.ts`) — kept in sync manually since the two
+ *  files live in separate bundles (content script vs. background SW). */
+export const MAX_CONCURRENT_DUPLICATES = 3
+
+/**
+ * `queueStore.getActiveCount()` only reflects a duplicate once the
+ * background SW's `queueStateUpdate` broadcast lands, one round-trip after
+ * the fire. Rapid "Create more" clicks fire ahead of that broadcast, so a
+ * local pending tally covers the gap; this drains it as the real count
+ * catches up (and clears any phantom once the queue is empty).
+ */
+export function drainPendingDuplicates(
+  prevActive: number,
+  nowActive: number,
+  pending: number,
+): number {
+  // A drop to empty (not merely "still empty") means the queue just finished
+  // — any leftover pending tally is a phantom (e.g. a fire the BG silently
+  // dropped), so clear it. `prevActive === 0 && nowActive === 0` is the
+  // ordinary lag window and must NOT be treated as a completion.
+  if (nowActive === 0 && prevActive > 0) return 0
+  const rise = Math.max(0, nowActive - prevActive)
+  return Math.max(0, pending - rise)
+}
+
 export function buildFieldValue(field: EditableField): Record<string, unknown> {
   if (field.dataType === 'TEXT') return { text: field.text ?? '' }
   if (field.dataType === 'SINGLE_SELECT')

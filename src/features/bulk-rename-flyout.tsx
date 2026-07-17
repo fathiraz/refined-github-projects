@@ -72,6 +72,7 @@ export function BulkRenameFlyout({
   // Reset on open
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset local draft state when the flyout closes
       setRule(DEFAULT_RULE_STATE)
       setShowAll(false)
       setItems([])
@@ -85,6 +86,7 @@ export function BulkRenameFlyout({
 
     const requestId = latestFetch.current + 1
     latestFetch.current = requestId
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state for the rename-preview fetch effect
     setLoading(true)
     setFetchError(null)
     sendMessage('getItemTitles', { itemIds: [...itemIds], projectId })

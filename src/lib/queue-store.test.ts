@@ -51,7 +51,16 @@ beforeEach(() => {
   vi.useFakeTimers()
   toastShow.mockReset()
   // clear any leftover processes between tests
-  for (const pid of ['p1', 'p2', 'bulk', 'hints-auto-1', 'hints-1', 'hints-2', 'hints-bg-1', 'hints-bg-2'])
+  for (const pid of [
+    'p1',
+    'p2',
+    'bulk',
+    'hints-auto-1',
+    'hints-1',
+    'hints-2',
+    'hints-bg-1',
+    'hints-bg-2',
+  ])
     queueStore.dismiss(pid)
 })
 

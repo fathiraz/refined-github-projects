@@ -21,14 +21,19 @@ vi.mock('@/background/concurrency', () => ({
 }))
 
 vi.mock('@/lib/messages', () => ({
-  onMessage: (type: string, handler: (typeof hoisted.handlers) extends Map<string, infer H> ? H : never) => {
+  onMessage: (
+    type: string,
+    handler: typeof hoisted.handlers extends Map<string, infer H> ? H : never,
+  ) => {
     hoisted.handlers.set(type, handler)
   },
 }))
 
 vi.mock('@/background/cache', () => ({ takeCachedResolvedItems: vi.fn() }))
 vi.mock('@/background/rest-helpers', () => ({ broadcastQueue: vi.fn(async () => {}) }))
-vi.mock('@/background/relationship-helpers', () => ({ buildBulkRelationshipTasks: vi.fn(() => []) }))
+vi.mock('@/background/relationship-helpers', () => ({
+  buildBulkRelationshipTasks: vi.fn(() => []),
+}))
 vi.mock('@/background/project-helpers', () => ({ resolveProjectItemIds: vi.fn(async () => []) }))
 vi.mock('@/lib/queue', () => ({ processQueue: vi.fn(async () => {}), sleep: vi.fn() }))
 vi.mock('@/lib/graphql-client', () => ({ gql: vi.fn() }))

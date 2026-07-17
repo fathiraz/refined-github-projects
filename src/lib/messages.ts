@@ -188,7 +188,9 @@ export interface BulkRandomAssignData {
 }
 
 interface ProtocolMap {
-  duplicateItem(data: { itemId: string; projectId: string; plan?: DuplicateItemPlan }): void
+  duplicateItem(data: { itemId: string; projectId: string; plan?: DuplicateItemPlan }): {
+    accepted: boolean
+  }
   getItemPreview(data: {
     itemId: string
     owner: string

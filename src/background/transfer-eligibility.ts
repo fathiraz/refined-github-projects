@@ -9,7 +9,9 @@ export interface TransferEligibilityRow {
   title?: string
 }
 
-export function unresolvedTransferEligibilityRows(itemIds: readonly string[]): TransferEligibilityRow[] {
+export function unresolvedTransferEligibilityRows(
+  itemIds: readonly string[],
+): TransferEligibilityRow[] {
   return itemIds.map((domId) => ({
     domId,
     eligible: false,

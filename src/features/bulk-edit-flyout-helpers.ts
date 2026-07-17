@@ -135,3 +135,15 @@ export async function submitBulkFieldUpdate(args: {
     return { ok: false, message: BULK_EDIT_DISPATCH_FAILED_MESSAGE }
   }
 }
+
+export function firstRepoNameFromDom(owner: string): string | null {
+  if (typeof document === 'undefined') return null
+  const links = document.querySelectorAll<HTMLAnchorElement>(
+    'a[href*="/issues/"], a[href*="/pull/"]',
+  )
+  for (const link of Array.from(links)) {
+    const match = link.href.match(/github\.com\/([^/]+)\/([^/]+)\/(issues|pull)\/\d+/)
+    if (match && match[1] === owner) return match[2]
+  }
+  return null
+}
