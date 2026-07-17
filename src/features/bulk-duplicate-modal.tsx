@@ -434,20 +434,20 @@ export function BulkDuplicateModal({
         if (!result?.accepted) {
           pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
           setConcurrentError(true)
+          return
+        }
+        // Accepted: re-arm for another (Create more) or hand off and close.
+        if (createMore) {
+          applyPreviewDefaults(preview)
+        } else {
+          onClose()
         }
       })
       .catch((cause: Error) => {
         pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
+        setConcurrentError(true)
         console.error('[rgp] duplicateItem failed', cause)
       })
-
-    // Create more: re-arm the form with source defaults, keep the modal open.
-    // Otherwise hand off to the queue and close.
-    if (createMore) {
-      applyPreviewDefaults(preview)
-    } else {
-      onClose()
-    }
   }
 
   function renderValueSection(section: DuplicateSection): React.ReactNode {
