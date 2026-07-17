@@ -35,6 +35,7 @@ import {
   buildFieldValue,
   bulkDuplicateHeaderIcon,
   buttonMotionSx,
+  drainPendingDuplicates,
   duplicateValueTooltip,
   fieldSectionId,
   getFieldIcon,
@@ -44,6 +45,7 @@ import {
   isLabelsEdited,
   isRelationshipsEdited,
   LABELS_SECTION_ID,
+  MAX_CONCURRENT_DUPLICATES,
   PARENT_SECTION_ID,
   prefixLabelIcon,
   TITLE_SECTION_ID,
@@ -86,6 +88,13 @@ export function BulkDuplicateModal({
   const [concurrentError, setConcurrentError] = useState(false)
   const [createMore, setCreateMore] = useState(false)
   const duplicateBtnRef = useRef<HTMLButtonElement | null>(null)
+  // Race-window guard (§cubic-dev-ai): `queueStore.getActiveCount()` only
+  // reflects a fired duplicate once the BG's `queueStateUpdate` broadcast
+  // lands, one round-trip after the fire. Rapid "Create more" clicks can fire
+  // ahead of that broadcast, so track just-fired-but-not-yet-reflected
+  // duplicates locally and drain the tally as the real count catches up.
+  const pendingDuplicatesRef = useRef(0)
+  const prevActiveCountRef = useRef(0)
 
   const [selectedSections, setSelectedSections] = useState<SectionId[]>([])
   const [editedTitle, setEditedTitle] = useState('')
@@ -98,6 +107,22 @@ export function BulkDuplicateModal({
 
   useEffect(() => {
     ensureTippyCss()
+  }, [])
+
+  // Drain the pending-duplicates tally as `queueStore` catches up. `subscribe`
+  // pushes the current snapshot immediately, so `prevActiveCountRef`
+  // bootstraps to the real global count even if other duplicates are already
+  // active when this modal opens.
+  useEffect(() => {
+    return queueStore.subscribe(() => {
+      const nowActive = queueStore.getActiveCount()
+      pendingDuplicatesRef.current = drainPendingDuplicates(
+        prevActiveCountRef.current,
+        nowActive,
+        pendingDuplicatesRef.current,
+      )
+      prevActiveCountRef.current = nowActive
+    })
   }, [])
 
   // Reset edit state to the source item's defaults. Shared by the initial
@@ -385,12 +410,13 @@ export function BulkDuplicateModal({
 
   function handleDuplicate() {
     if (!preview) return
-    if (queueStore.getActiveCount() >= 3) {
+    if (queueStore.getActiveCount() + pendingDuplicatesRef.current >= MAX_CONCURRENT_DUPLICATES) {
       setConcurrentError(true)
       return
     }
 
     setConcurrentError(false)
+    pendingDuplicatesRef.current += 1
     const rect = duplicateBtnRef.current?.getBoundingClientRect()
     if (rect) flyToTracker(rect)
 

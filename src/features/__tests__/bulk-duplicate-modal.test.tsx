@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  drainPendingDuplicates,
   isAssigneesEdited,
   isFieldEdited,
   isLabelsEdited,
@@ -132,5 +133,35 @@ describe('isFieldEdited', () => {
 
   it('ITERATION: cleared → edited', () => {
     expect(isFieldEdited({ ...baseIteration, iterationId: undefined }, baseIteration)).toBe(true)
+  })
+})
+
+// §11.9 — race-window guard: `getActiveCount()` only reflects a duplicate
+// once the BG's `queueStateUpdate` broadcast lands, one round-trip after the
+// fire. `drainPendingDuplicates` tracks fires not yet reflected so rapid
+// "Create more" clicks can't slip past the concurrency cap.
+describe('drainPendingDuplicates', () => {
+  it('holds pending steady while the queue count has not moved (still in the lag window)', () => {
+    expect(drainPendingDuplicates(0, 0, 2)).toBe(2)
+  })
+
+  it('drains pending by the full rise once the queue catches up', () => {
+    expect(drainPendingDuplicates(0, 2, 2)).toBe(0)
+  })
+
+  it('drains only by the observed rise on a partial catch-up', () => {
+    expect(drainPendingDuplicates(1, 2, 2)).toBe(1)
+  })
+
+  it('never drains below zero when the rise exceeds pending', () => {
+    expect(drainPendingDuplicates(0, 5, 1)).toBe(0)
+  })
+
+  it('ignores a drop in active count (no negative rise)', () => {
+    expect(drainPendingDuplicates(2, 1, 2)).toBe(2)
+  })
+
+  it('clears any phantom once the queue is fully empty', () => {
+    expect(drainPendingDuplicates(3, 0, 2)).toBe(0)
   })
 })
