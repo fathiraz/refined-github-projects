@@ -1,0 +1,28 @@
+src/features/bulk-duplicate-modal.tsx
+  s_6b9a6c2a398aaa::t_a953d84e4c7bed 91-97
+  s_6b9a6c2a398aaa::t_5bf9fac25cb6b2 38,48
+  s_6b9a6c2a398aaa::t_b15d9772974395 112-127
+  s_6b9a6c2a398aaa::t_5f8c07deb00ac4 413,419
+src/features/__tests__/bulk-duplicate-modal.test.tsx
+  s_6b9a6c2a398aaa::t_6d94da5f556024 138-167
+  s_6b9a6c2a398aaa::t_13a110af20e1c1 4
+src/features/bulk-duplicate-utils.tsx
+  s_6b9a6c2a398aaa::t_156b8f52bd9b3a 254-258
+  s_6b9a6c2a398aaa::t_2e764ab43ecaa1 237-253,259-262
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ed4920462ce7581d8b4a565d6a8aa4a892af6b50",
+  "prompts": {},
+  "sessions": {
+    "s_6b9a6c2a398aaa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "650bdda9-9318-4032-80a9-476300b9aafe",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
