@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/fathiraz/refined-github-projects/compare/v1.3.0...v1.4.0) (2026-07-17)
+
+
+### Features
+
+* **bulk-duplicate:** add "Create more" toggle to Deep Duplicate modal ([#50](https://github.com/fathiraz/refined-github-projects/issues/50)) ([5213003](https://github.com/fathiraz/refined-github-projects/commit/52130036dd6218cf44bb87c48749af54172c7a98))
+
 ## [1.3.0](https://github.com/fathiraz/refined-github-projects/compare/v1.2.0...v1.3.0) (2026-06-06)
 
 
