@@ -87,6 +87,10 @@ export function BulkDuplicateModal({
   const [error, setError] = useState('')
   const [concurrentError, setConcurrentError] = useState(false)
   const [createMore, setCreateMore] = useState(false)
+  // Lock the single-copy submit path while a non-Create-more request awaits
+  // its verdict, so repeated clicks can't queue extra copies in a mode that's
+  // meant to create exactly one and close (§cubic-dev-ai PR #50).
+  const [submitting, setSubmitting] = useState(false)
   const duplicateBtnRef = useRef<HTMLButtonElement | null>(null)
   // Race-window guard (§cubic-dev-ai): `queueStore.getActiveCount()` only
   // reflects a fired duplicate once the BG's `queueStateUpdate` broadcast
@@ -410,6 +414,7 @@ export function BulkDuplicateModal({
 
   function handleDuplicate() {
     if (!preview) return
+    if (submitting) return
     if (queueStore.getActiveCount() + pendingDuplicatesRef.current >= MAX_CONCURRENT_DUPLICATES) {
       setConcurrentError(true)
       return
@@ -417,6 +422,7 @@ export function BulkDuplicateModal({
 
     setConcurrentError(false)
     pendingDuplicatesRef.current += 1
+    if (!createMore) setSubmitting(true)
     const rect = duplicateBtnRef.current?.getBoundingClientRect()
     if (rect) flyToTracker(rect)
 
@@ -434,6 +440,7 @@ export function BulkDuplicateModal({
         if (!result?.accepted) {
           pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
           setConcurrentError(true)
+          setSubmitting(false)
           return
         }
         // Accepted: re-arm for another (Create more) or hand off and close.
@@ -446,6 +453,7 @@ export function BulkDuplicateModal({
       .catch((cause: Error) => {
         pendingDuplicatesRef.current = Math.max(0, pendingDuplicatesRef.current - 1)
         setConcurrentError(true)
+        setSubmitting(false)
         console.error('[rgp] duplicateItem failed', cause)
       })
   }
@@ -1232,6 +1240,7 @@ export function BulkDuplicateModal({
             diffStatus={diffStatus}
             concurrentError={concurrentError}
             duplicateBtnRef={duplicateBtnRef}
+            submitting={submitting}
             createMore={createMore}
             onToggleCreateMore={() => setCreateMore((value) => !value)}
             onClose={onClose}

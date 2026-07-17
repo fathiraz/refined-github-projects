@@ -199,6 +199,7 @@ export function ReviewStep({
   diffStatus,
   concurrentError,
   duplicateBtnRef,
+  submitting,
   createMore,
   onToggleCreateMore,
   onClose,
@@ -210,6 +211,7 @@ export function ReviewStep({
   diffStatus: (sectionId: SectionId) => 'edited' | 'same'
   concurrentError: boolean
   duplicateBtnRef: React.RefObject<HTMLButtonElement | null>
+  submitting: boolean
   createMore: boolean
   onToggleCreateMore: () => void
   onClose: () => void
@@ -316,6 +318,7 @@ export function ReviewStep({
               ref={duplicateBtnRef}
               variant="primary"
               onClick={onDuplicate}
+              disabled={submitting}
               sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ...buttonMotionSx }}
               data-testid="rgp-duplicate-confirm"
             >
