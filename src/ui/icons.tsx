@@ -4,7 +4,6 @@ import {
   ArrowSwitchIcon as PrimerArrowSwitchIcon,
   ArrowRightIcon as PrimerArrowRightIcon,
   CalendarIcon as PrimerCalendarIcon,
-  CheckCircleIcon as PrimerCheckCircleIcon,
   CheckIcon as PrimerCheckIcon,
   ChevronDownIcon as PrimerChevronDownIcon,
   CircleSlashIcon as PrimerCircleSlashIcon,
@@ -22,7 +21,6 @@ import {
   LockIcon as PrimerLockIcon,
   PencilIcon as PrimerPencilIcon,
   PinIcon as PrimerPinIcon,
-  PinSlashIcon as PrimerPinSlashIcon,
   PersonIcon as PrimerPersonIcon,
   PlusIcon as PrimerPlusIcon,
   ProjectIcon as PrimerProjectIcon,
@@ -122,10 +120,6 @@ export function ChevronDownIcon(props: IconProps) {
   return <Octicon icon={PrimerChevronDownIcon} {...props} />
 }
 
-export function CircleCheckIcon(props: IconProps) {
-  return <Octicon icon={PrimerCheckCircleIcon} {...props} />
-}
-
 export function CircleSlashIcon(props: IconProps) {
   return <Octicon icon={PrimerCircleSlashIcon} {...props} />
 }
@@ -192,10 +186,6 @@ export function LockIcon({ size = 16, color = 'currentColor' }: IconProps) {
 
 export function PinIcon({ size = 16, color = 'currentColor' }: IconProps) {
   return <Octicon icon={PrimerPinIcon} size={size} color={color} />
-}
-
-export function UnpinIcon({ size = 16, color = 'currentColor' }: IconProps) {
-  return <Octicon icon={PrimerPinSlashIcon} size={size} color={color} />
 }
 
 export function ArrowRightIcon({ size = 16, color = 'currentColor' }: IconProps) {

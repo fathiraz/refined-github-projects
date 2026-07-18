@@ -1,16 +1,8 @@
-import { Effect, Stream, SubscriptionRef } from 'effect'
-
 import { logger } from '@/lib/debug-logger'
 
 type Listener = () => void
 
-// internal SubscriptionRef holds the canonical state. A synchronous mirror
-// (`current`) is kept so that getters / isSelected / count / getAll stay
-// synchronous and zero-cost. Mutations always go through `setState` which
-// updates the ref AND the mirror in one shot before firing legacy listeners
-// — meaning `selectionChanges` Stream subscribers see the same sequence of
-// values as legacy callback subscribers.
-const _ref = Effect.runSync(SubscriptionRef.make<ReadonlySet<string>>(new Set<string>()))
+// synchronous state mirror; all mutations go through setState
 let current: ReadonlySet<string> = new Set<string>()
 
 const listeners = new Set<Listener>()
@@ -18,7 +10,6 @@ const focusListeners = new Set<() => void>()
 
 function setState(next: ReadonlySet<string>): void {
   current = next
-  Effect.runSync(SubscriptionRef.set(_ref, next))
   listeners.forEach((fn) => fn())
 }
 
@@ -79,13 +70,6 @@ export const selectionStore = {
     return () => focusListeners.delete(fn)
   },
 }
-
-/**
- * Stream of selection-set changes. Subscribers receive the current value
- * immediately (SubscriptionRef semantics), then every subsequent update.
- * Useful from Effect-first callsites and from `useSubscriptionRef` consumers.
- */
-export const selectionChanges: Stream.Stream<ReadonlySet<string>> = _ref.changes
 
 /**
  * Synchronous snapshot accessor matching `useSyncExternalStore` semantics.

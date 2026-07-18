@@ -22,17 +22,6 @@ export function PrimaryAction({ children, loading, icon, ...props }: ActionButto
   )
 }
 
-export function SecondaryAction({ children, icon, ...props }: ActionButtonProps) {
-  return (
-    <Button variant="default" {...props} sx={primerCss.buttonMotion(props.sx)}>
-      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-        {icon}
-        {children}
-      </Box>
-    </Button>
-  )
-}
-
 export function GhostAction({ children, icon, ...props }: ActionButtonProps) {
   return (
     <Button variant="invisible" {...props} sx={primerCss.buttonMotion(props.sx)}>

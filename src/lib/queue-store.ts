@@ -1,4 +1,4 @@
-import { Duration, Effect, Fiber, Stream, SubscriptionRef } from 'effect'
+import { Duration, Effect, Fiber } from 'effect'
 
 import { onMessage } from '@/lib/messages'
 import { toastStore } from '@/lib/toast-store'
@@ -58,7 +58,6 @@ type Listener = (entries: ProcessEntry[]) => void
 const DISMISS_DELAY = Duration.millis(3000)
 const DEFAULT_UNDO_WINDOW_MS = 10_000
 
-const _ref = Effect.runSync(SubscriptionRef.make<ReadonlyMap<string, ProcessEntry>>(new Map()))
 let processes: Map<string, ProcessEntry> = new Map()
 const listeners = new Set<Listener>()
 const dismissTimers = new Map<string, Fiber.RuntimeFiber<void>>()
@@ -145,7 +144,6 @@ function withPhase(entry: Omit<ProcessEntry, 'phase'>): ProcessEntry {
 
 function setState(next: Map<string, ProcessEntry>): void {
   processes = next
-  Effect.runSync(SubscriptionRef.set(_ref, next))
   const entries = Array.from(next.values())
   listeners.forEach((fn) => fn(entries))
 }
@@ -228,12 +226,6 @@ export const queueStore = {
     return phaseHintsMap.get(processId)
   },
 }
-
-export const queueChanges: Stream.Stream<ReadonlyMap<string, ProcessEntry>> = _ref.changes
-
-// return a defensive copy so external consumers cannot mutate the live ref
-// and bypass setState's notify/SubscriptionRef updates.
-export const getQueueSnapshot = (): ReadonlyMap<string, ProcessEntry> => new Map(processes)
 
 // single central listener for the whole CS context
 onMessage('queueStateUpdate', ({ data }) => {

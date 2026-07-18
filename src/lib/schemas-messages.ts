@@ -592,5 +592,3 @@ export const Messages = {
     output: Schema.Void,
   },
 } as const
-
-export type MessageKey = keyof typeof Messages

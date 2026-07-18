@@ -17,7 +17,6 @@ const FLYOUT_SHELL_SX = {
   overflow: 'hidden',
 } as const
 
-export type BulkFlyoutMode = 'simple' | 'tabbed' | 'drilldown'
 export type BulkFlyoutFooter = 'apply-cancel' | null
 
 export interface BulkFlyoutTab {

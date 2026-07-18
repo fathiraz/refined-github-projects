@@ -90,8 +90,6 @@ export function distributeRoundRobin(items: string[], assignees: string[]): Map<
 
 export type DistributionStrategy = 'balanced' | 'random' | 'round-robin'
 
-export type DistributionFunction = (items: string[], assignees: string[]) => Map<string, string[]>
-
 /** Inverts assignee→itemIds to itemId→assigneeIds. */
 export function invertDistribution(distribution: Map<string, string[]>): Map<string, string[]> {
   const byItem = new Map<string, string[]>()
