@@ -10,6 +10,7 @@ import {
 } from '@/features/table-enhancements'
 import { createHierarchyChipInjector } from '@/features/hierarchy-injections'
 import { setupIssueDetailInjector } from '@/features/issue-detail-injections'
+import { setupCreateIssueFieldInjector } from '@/features/create-issue-injections'
 import { selectionStore } from '@/lib/selection-store'
 import { logger, initDebugLogger } from '@/lib/debug-logger'
 // eager-load the ManagedRuntime so the content script shares one runtime
@@ -55,6 +56,7 @@ export default defineContentScript({
     const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext, getFields)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)
     const cleanupIssueDetail = setupIssueDetailInjector(projectContext)
+    const cleanupCreateIssueFields = setupCreateIssueFieldInjector(ctx, projectContext, getFields)
     const cleanupTableEnhancements = setupTableEnhancements([
       injectSprintHeaders,
       injectStatusBarSprintButton,
@@ -64,6 +66,7 @@ export default defineContentScript({
     ctx.onInvalidated(() => {
       cleanupTableEnhancements()
       cleanupIssueDetail()
+      cleanupCreateIssueFields()
       document.removeEventListener('click', handleProjectItemOpen, true)
     })
   },
