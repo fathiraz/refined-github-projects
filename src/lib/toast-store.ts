@@ -1,4 +1,4 @@
-import { Duration, Effect, Fiber, Stream, SubscriptionRef } from 'effect'
+import { Duration, Effect, Fiber } from 'effect'
 
 export interface ToastEntry {
   id: string
@@ -12,7 +12,6 @@ const AUTO_DISMISS = Duration.millis(5000)
 
 type Listener = (entries: ToastEntry[]) => void
 
-const _ref = Effect.runSync(SubscriptionRef.make<ToastEntry[]>([]))
 let current: ToastEntry[] = []
 const listeners = new Set<Listener>()
 
@@ -23,7 +22,6 @@ const dismissTimers = new Map<string, Fiber.RuntimeFiber<void>>()
 
 function setState(next: ToastEntry[]): void {
   current = next
-  Effect.runSync(SubscriptionRef.set(_ref, next))
   const snapshot = [...next]
   listeners.forEach((fn) => fn(snapshot))
 }
@@ -78,9 +76,3 @@ export const toastStore = {
     return () => listeners.delete(fn)
   },
 }
-
-export const toastChanges: Stream.Stream<ToastEntry[]> = _ref.changes
-
-// return a defensive copy so external consumers cannot mutate the live ref
-// and bypass setState's notify/SubscriptionRef updates.
-export const getToastSnapshot = (): ToastEntry[] => [...current]

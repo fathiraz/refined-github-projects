@@ -377,28 +377,6 @@ export const GET_VIEWER_REPOS_PAGE = `
   }
 `
 
-export const SEARCH_OWNER_REPOS = `
-  query SearchOwnerRepos($login: String!, $query: String!, $first: Int!) {
-    repositoryOwner(login: $login) {
-      repositories(
-        first: $first
-        query: $query
-        orderBy: { field: PUSHED_AT, direction: DESC }
-      ) {
-        nodes {
-          id
-          name
-          nameWithOwner
-          isPrivate
-          description
-          hasIssuesEnabled
-          isArchived
-        }
-      }
-    }
-  }
-`
-
 export const GET_POSSIBLE_TRANSFER_REPOS = `
   query GetPossibleTransferRepos($issueId: ID!, $first: Int!) {
     node(id: $issueId) {

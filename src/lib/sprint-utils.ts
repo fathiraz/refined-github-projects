@@ -34,17 +34,6 @@ export function daysLeft(endDate: string): number {
   )
 }
 
-export function sprintProgress(startDate: string, endDate: string): number {
-  const total = Math.max(
-    1,
-    Math.ceil(
-      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(startDate + 'T00:00:00Z').getTime()) /
-        86_400_000,
-    ),
-  )
-  return Math.min(100, Math.round(((total - daysLeft(endDate)) / total) * 100))
-}
-
 export function todayUtc(): string {
   return new Date().toISOString().slice(0, 10)
 }

@@ -7,8 +7,3 @@ export function getHovercardAppendTarget(): HTMLElement {
 export function setHovercardAppendTarget(target: HTMLElement | null): void {
   hovercardAppendTarget = target
 }
-
-/** @internal test helper */
-export function resetHovercardAppendTargetForTests(): void {
-  hovercardAppendTarget = null
-}

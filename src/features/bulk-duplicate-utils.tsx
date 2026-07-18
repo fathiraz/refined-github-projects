@@ -1,7 +1,7 @@
 // types, constants, and pure helpers for the bulk-duplicate modal.
 
 import React from 'react'
-import type { IssueRelationshipData, ItemPreviewData } from '@/lib/messages'
+import type { ItemPreviewData } from '@/lib/messages'
 import { primerCss } from '@/lib/primer-css-helper'
 import {
   AlertIcon,
@@ -14,7 +14,6 @@ import {
   SyncIcon,
   TextLineIcon,
 } from '@/ui/icons'
-import { formatIssueReference } from '@/lib/relationship-utils'
 
 /**
  * §11.2 — three-stage state machine collapsed to two:
@@ -47,12 +46,6 @@ export interface DuplicateSection {
   icon: React.ReactNode
   badge?: string
   helperText?: string
-}
-
-export interface ReviewRow {
-  id: SectionId
-  label: string
-  value: string
 }
 
 export const TITLE_SECTION_ID = 'TITLE' as const
@@ -134,52 +127,6 @@ export function getFieldIcon(dataType: EditableField['dataType']): React.ReactNo
 
 export function duplicateValueTooltip(fieldName: string): string {
   return `Value applied to the duplicated item for ${fieldName}.`
-}
-
-export function formatIssueSummary(issue: IssueRelationshipData): string {
-  return `${formatIssueReference(issue)} — ${issue.title}`
-}
-
-export function summarizeText(value: string, fallback = 'Empty'): string {
-  const trimmed = value.trim()
-  if (!trimmed) return fallback
-  return trimmed.length > 80 ? `${trimmed.slice(0, 77)}…` : trimmed
-}
-
-export function summarizeIssueList(issues: IssueRelationshipData[]): string {
-  if (issues.length === 0) return 'Skipped'
-  const preview = issues.slice(0, 2).map(formatIssueSummary).join('; ')
-  return issues.length > 2 ? `${preview} +${issues.length - 2} more` : preview
-}
-
-export function summarizeFieldValue(field: EditableField): string {
-  if (field.dataType === 'TEXT') {
-    return summarizeText(field.text ?? '', 'None / Cleared')
-  }
-
-  if (field.dataType === 'SINGLE_SELECT') {
-    return field.optionName || 'None / Cleared'
-  }
-
-  if (field.dataType === 'ITERATION') {
-    return field.iterationTitle || 'None / Cleared'
-  }
-
-  if (field.dataType === 'NUMBER') {
-    return field.number === undefined || field.number === null
-      ? 'None / Cleared'
-      : String(field.number)
-  }
-
-  if (field.dataType === 'DATE') {
-    if (!field.date) return 'None / Cleared'
-    const parsed = new Date(`${field.date}T00:00:00`)
-    return Number.isNaN(parsed.getTime())
-      ? field.date
-      : parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-  }
-
-  return 'None / Cleared'
 }
 
 /**

@@ -4,7 +4,7 @@
 import React from 'react'
 import { Box, Spinner } from '@primer/react'
 import type { BulkEditRelationshipsUpdate, IssueSearchResultData } from '@/lib/messages'
-import type { RelationshipKey, RelationshipSelectionState } from '@/features/bulk-edit-utils'
+import type { RelationshipKey } from '@/features/bulk-edit-utils'
 import { isMac } from '@/lib/keyboard'
 import { Z_MODAL } from '@/lib/z-index'
 
@@ -25,27 +25,6 @@ export function createEmptyRelationshipUpdates(): BulkEditRelationshipsUpdate {
       clear: false,
     },
   }
-}
-
-export function createEmptyRelationshipSelection(): RelationshipSelectionState {
-  return {
-    parent: false,
-    blockedBy: false,
-    blocking: false,
-  }
-}
-
-export function hasRelationshipOperations(relationships: BulkEditRelationshipsUpdate): boolean {
-  return Boolean(
-    relationships.parent.clear ||
-    relationships.parent.set ||
-    relationships.blockedBy.clear ||
-    relationships.blockedBy.add.length > 0 ||
-    relationships.blockedBy.remove.length > 0 ||
-    relationships.blocking.clear ||
-    relationships.blocking.add.length > 0 ||
-    relationships.blocking.remove.length > 0,
-  )
 }
 
 export type ParentOperation = 'set' | 'clear'

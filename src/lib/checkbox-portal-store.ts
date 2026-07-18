@@ -1,5 +1,3 @@
-import { Effect, Stream, SubscriptionRef } from 'effect'
-
 export type PortalEntry =
   | { type: 'row'; container: HTMLElement; itemId: string }
   | { type: 'group'; container: HTMLElement; getItemIds: () => string[] }
@@ -7,9 +5,6 @@ export type PortalEntry =
 
 type Listener = (entries: readonly PortalEntry[]) => void
 
-const _ref = Effect.runSync(
-  SubscriptionRef.make<readonly PortalEntry[]>([] as readonly PortalEntry[]),
-)
 let current: readonly PortalEntry[] = []
 
 const listeners = new Set<Listener>()
@@ -20,7 +15,6 @@ function isConnected(entry: PortalEntry): boolean {
 
 function setState(next: readonly PortalEntry[]): void {
   current = next
-  Effect.runSync(SubscriptionRef.set(_ref, next))
   listeners.forEach((fn) => fn(current))
 }
 
@@ -65,7 +59,3 @@ export const checkboxPortalStore = {
     return () => listeners.delete(fn)
   },
 }
-
-export const checkboxPortalChanges: Stream.Stream<readonly PortalEntry[]> = _ref.changes
-
-export const getCheckboxPortalSnapshot = (): readonly PortalEntry[] => current

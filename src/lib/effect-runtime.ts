@@ -52,10 +52,3 @@ export const runHandler = <A, E>(label: string, effect: Effect.Effect<A, E, neve
       ),
     ),
   )
-
-/**
- * Releases the underlying runtime and finalizes scoped resources.
- * Mainly useful from tests (`afterAll`) — the SW lifecycle implicitly tears
- * the runtime down when the worker is terminated.
- */
-export const disposeRuntime = (): Promise<void> => AppRuntime.dispose()
