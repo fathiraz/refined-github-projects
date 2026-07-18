@@ -1,0 +1,337 @@
+# Instincts generated from https://github.com/fathiraz/refined-github-projects
+# Generated: 2026-07-18T23:49:49.681Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: refined-github-projects-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat
+
+## Evidence
+
+- 1 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat(create-issue): stage project custom fields in native Create modal
+
+---
+id: refined-github-projects-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Commit Length
+
+## Action
+
+Write moderate-length commit messages (~70 characters)
+
+## Evidence
+
+- Average commit message length: 70 chars
+- Based on 1 commits
+
+---
+id: refined-github-projects-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: refined-github-projects-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: refined-github-projects-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: refined-github-projects-arch-type-based
+trigger: "when adding new code"
+confidence: 0.8
+domain: architecture
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Arch Type Based
+
+## Action
+
+Place code in the appropriate type folder (components/, services/, utils/, etc.)
+
+## Evidence
+
+- Type-based module organization detected
+- Folders: entries, features, lib
+
+---
+id: refined-github-projects-test-colocate
+trigger: "when writing tests"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Test Colocate
+
+## Action
+
+Place test file next to the source file (e.g., Button.test.tsx next to Button.tsx)
+
+## Evidence
+
+- Colocated test pattern detected
+- Tests live alongside source files
+
+---
+id: refined-github-projects-instinct-file-naming
+trigger: "When creating a new file in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct File Naming
+
+## Action
+
+Name the file using kebab-case
+
+## Evidence
+
+- Pattern in files: src/features/create-issue.ts, src/lib/utils.ts
+
+---
+id: refined-github-projects-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Function Naming
+
+## Action
+
+Use camelCase for the function name
+
+## Evidence
+
+- Pattern in files: src/lib/utils.ts
+
+---
+id: refined-github-projects-instinct-class-naming
+trigger: "When declaring a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Class Naming
+
+## Action
+
+Use PascalCase for the class name
+
+## Evidence
+
+- Pattern in files: src/features/project/ProjectManager.ts
+
+---
+id: refined-github-projects-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for the constant name
+
+## Evidence
+
+- Pattern in files: src/lib/constants.ts
+
+---
+id: refined-github-projects-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Import Style
+
+## Action
+
+Use alias import paths
+
+## Evidence
+
+- Pattern in files: src/features/create-issue.ts
+
+---
+id: refined-github-projects-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in files: src/lib/utils.ts
+
+---
+id: refined-github-projects-instinct-test-location
+trigger: "When adding tests for a module"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Test Location
+
+## Action
+
+Co-locate the test file with the source file
+
+## Evidence
+
+- Pattern in files: src/features/create-issue.test.ts next to src/features/create-issue.ts
+
+---
+id: refined-github-projects-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Commit Format
+
+## Action
+
+Use the conventional commit format with a 'feat' prefix for features
+
+## Evidence
+
+- Seen in commit: feat(create-issue): stage project custom fields in native Create modal
+
+---
+id: refined-github-projects-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Commit Length
+
+## Action
+
+Keep the commit message around 70 characters on average
+
+## Evidence
+
+- Pattern: average commit length is 70 characters
+
+---
+id: refined-github-projects-instinct-error-handling
+trigger: "When handling errors in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: fathiraz/refined-github-projects
+---
+
+# Refined Github Projects Instinct Error Handling
+
+## Action
+
+Use try-catch blocks for error handling
+
+## Evidence
+
+- Pattern in files: src/lib/api.ts
+
