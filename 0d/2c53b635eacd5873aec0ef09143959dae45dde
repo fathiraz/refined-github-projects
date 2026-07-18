@@ -1,0 +1,27 @@
+src/features/bulk-actions-utils.tsx
+  s_7aae5fb04f86f0::t_db551959601711 7
+src/features/bulk-duplicate-utils.tsx
+  s_7aae5fb04f86f0::t_bf8039dd5ccb24 4
+src/lib/queue-store.ts
+  s_7aae5fb04f86f0::t_2b9cf28624804d 1
+src/lib/selection-store.ts
+  s_7aae5fb04f86f0::t_820e63591f72a3 5
+src/lib/toast-store.ts
+  s_7aae5fb04f86f0::t_537d98e5397a68 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0d2c53b635eacd5873aec0ef09143959dae45dde",
+  "prompts": {},
+  "sessions": {
+    "s_7aae5fb04f86f0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a76013f7-52ca-4b34-8db7-3004abd770fd",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
