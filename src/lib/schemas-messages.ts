@@ -6,12 +6,12 @@ import { PatErrorType } from '@/lib/schemas-errors'
 /**
  * Schemas for every entry in `ProtocolMap` (src/lib/messages.ts).
  *
- * The plain TypeScript `interface` declarations in messages.ts remain the
- * authoritative wire types so we don't have to rewrite all call sites at
- * once; these schemas mirror them and are used by background message
- * handlers to:
- *   - decode untrusted incoming payloads (`Schema.decodeUnknown(input)`),
- *   - encode handler return values (`Schema.encode(output)`).
+ * **These schemas are the single source of truth** for the message contract.
+ * The derived types (`ProtocolMapFromSchemas`, input/output type aliases) are
+ * re-exported from messages.ts so that `@webext-core/messaging` consumes
+ * schema-derived types end-to-end. Background handlers use the schemas to:
+ *   - decode untrusted incoming payloads (`Schema.decodeUnknownSync(input)`),
+ *   - encode handler return values (`Schema.encodeSync(output)`).
  *
  * Where a payload contains a value already validated upstream (e.g. `value:
  * Record<string, unknown>` for arbitrary field updates), `Schema.Unknown`
@@ -644,3 +644,31 @@ export const Messages = {
     output: Schema.Void,
   },
 } as const
+
+// ─── Derived ProtocolMap ────────────────────────────────────────────────────
+
+/**
+ * Extracts the plain TypeScript type from a Schema value declaration.
+ * `typeof Messages[key].input` is `{ input: Schema<X> }` — this unwraps to `X`.
+ */
+type SchemaInput<T> = T extends { input: Schema.Schema<infer I, any, any> } ? I : never
+type SchemaOutput<T> = T extends { output: Schema.Schema<infer O, any, any> } ? O : never
+
+/**
+ * Derives the `ProtocolMap` interface from the `Messages` schema record.
+ *
+ * Each key `K` becomes `(data: SchemaInput<Messages[K]>) => SchemaOutput<Messages[K]>`,
+ * matching the function-signature syntax expected by `@webext-core/messaging`.
+ */
+export type ProtocolMapFromSchemas = {
+  [K in keyof typeof Messages]: (
+    data: SchemaInput<(typeof Messages)[K]>,
+  ) => SchemaOutput<(typeof Messages)[K]>
+}
+
+/**
+ * Convenience type aliases — re-exported from messages.ts so call sites can
+ * import `XxxData` etc. without knowing about the schema layer.
+ */
+export type MessageInput<K extends keyof typeof Messages> = SchemaInput<(typeof Messages)[K]>
+export type MessageOutput<K extends keyof typeof Messages> = SchemaOutput<(typeof Messages)[K]>
