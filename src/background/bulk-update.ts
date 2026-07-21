@@ -53,8 +53,25 @@ export async function runBulkUpdate(
     const cachedResolvedItems = data.relationships
       ? takeCachedResolvedItems(data.projectId, data.itemIds)
       : undefined
-    const resolvedItems =
+    let resolvedItems =
       cachedResolvedItems ?? (await resolveProjectItemIds(data.itemIds, data.projectId, tabId))
+
+    // ponytail: a just-created issue's project item lands in the project's `items`
+    // connection asynchronously (~100ms after the board row renders), so the first
+    // resolve can come back empty/partial. Re-run the same idempotent read until it
+    // appears. Reads only → anti-abuse safe. Attempt ceiling is the tuning knob.
+    if (!cachedResolvedItems && resolvedItems.length < data.itemIds.length) {
+      const MAX_RESOLVE_ATTEMPTS = 6 // 1.5s backoff ⇒ ≈9s ceiling; bump if QA still races
+      for (let attempt = 1; attempt <= MAX_RESOLVE_ATTEMPTS; attempt++) {
+        await sleep(1500)
+        try {
+          resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
+        } catch (err) {
+          logger.warn('[rgp:bg] resolution retry threw, will retry', { attempt, err })
+        }
+        if (resolvedItems.length >= data.itemIds.length) break
+      }
+    }
     logger.log('[rgp:bg] resolved item IDs', resolvedItems)
 
     if (resolvedItems.length === 0) {

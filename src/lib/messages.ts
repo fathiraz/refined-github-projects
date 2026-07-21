@@ -98,6 +98,20 @@ export interface BulkUpdateMessageData {
   >
 }
 
+/** Payload for `createIssueWithFields` — RGP creates the issue itself (native
+ * Create button intercepted), then attaches it to the project and applies
+ * staged custom-field values, reading ids straight from the API responses. */
+export interface CreateIssueWithFieldsMessageData {
+  projectId: string
+  repoOwner: string
+  repoName: string
+  title: string
+  body: string
+  createMore: boolean
+  updates: { fieldId: string; value: unknown }[]
+  fieldMeta?: BulkUpdateMessageData['fieldMeta']
+}
+
 export interface ItemPreviewData {
   resolvedItemId: string
   issueNumber: number
@@ -255,6 +269,7 @@ interface ProtocolMap {
     title?: string
   }>
   bulkUpdate(data: BulkUpdateMessageData): BulkUpdateDispatchResult
+  createIssueWithFields(data: CreateIssueWithFieldsMessageData): BulkUpdateDispatchResult
   bulkClose(data: {
     itemIds: string[]
     projectId: string

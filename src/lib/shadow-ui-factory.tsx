@@ -82,6 +82,13 @@ export async function createFeatureUi(
     anchor: opts.anchor ?? document.body,
     append: opts.append ?? 'last',
     onMount(container, shadow) {
+      if (opts.anchor) {
+        const host = (container.getRootNode() as ShadowRoot).host as HTMLElement
+        host.style.display = 'inline-flex'
+        host.style.alignItems = 'center'
+        host.style.verticalAlign = 'middle'
+      }
+
       styleHost = document.createElement('div')
       container.parentElement!.insertBefore(styleHost, container)
 

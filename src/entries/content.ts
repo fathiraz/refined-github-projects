@@ -56,7 +56,7 @@ export default defineContentScript({
     const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext, getFields)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)
     const cleanupIssueDetail = setupIssueDetailInjector(projectContext)
-    const cleanupCreateIssueFields = setupCreateIssueFieldInjector(ctx, projectContext, getFields)
+    const cleanupCreateIssueFields = setupCreateIssueFieldInjector(ctx, getFields)
     const cleanupTableEnhancements = setupTableEnhancements([
       injectSprintHeaders,
       injectStatusBarSprintButton,
