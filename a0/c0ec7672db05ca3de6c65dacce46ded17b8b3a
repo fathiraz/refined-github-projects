@@ -1,0 +1,36 @@
+src/background/bulk-update.ts
+  s_c5ba997a476079::t_26907171e05ca7 56,58-74
+src/background/create-issue.ts
+  s_c5ba997a476079::t_88794317787c4e 1-152
+src/entries/background.ts
+  s_c5ba997a476079::t_d7a2dd33dadeb2 11,28
+src/entries/content.ts
+  s_c5ba997a476079::t_9052b468bf9409 59
+src/lib/messages.ts
+  s_c5ba997a476079::t_78f51e2a7a84a8 101-114,272
+src/lib/project-table-dom.ts
+  s_c5ba997a476079::t_575a4ae96aa3e1 56-72
+src/lib/shadow-ui-factory.tsx
+  s_c5ba997a476079::t_189ea144773fd4 85-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a0c0ec7672db05ca3de6c65dacce46ded17b8b3a",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_c5ba997a476079": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8094c9b3-dd73-4cab-bdd8-31fed1b83734",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
