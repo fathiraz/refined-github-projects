@@ -59,6 +59,68 @@ const SubIssueData = Schema.Struct({
   state: Schema.Literal('OPEN', 'CLOSED'),
 })
 
+const DuplicateItemPlanRelationshipSection = Schema.Struct({
+  enabled: Schema.Boolean,
+  issue: Schema.optional(IssueRelationshipData),
+})
+
+const DuplicateItemPlan = Schema.Struct({
+  title: Schema.Struct({ enabled: Schema.Boolean, value: Schema.String }),
+  body: Schema.Struct({ enabled: Schema.Boolean, value: Schema.String }),
+  assignees: Schema.Struct({ enabled: Schema.Boolean, ids: Schema.Array(Schema.String) }),
+  labels: Schema.Struct({ enabled: Schema.Boolean, ids: Schema.Array(Schema.String) }),
+  issueType: Schema.Struct({
+    enabled: Schema.Boolean,
+    id: Schema.optional(Schema.String),
+    name: Schema.optional(Schema.String),
+  }),
+  fieldValues: Schema.Array(
+    Schema.Struct({
+      fieldId: Schema.String,
+      enabled: Schema.Boolean,
+      value: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+    }),
+  ),
+  relationships: Schema.Struct({
+    parent: DuplicateItemPlanRelationshipSection,
+    blockedBy: Schema.Struct({
+      enabled: Schema.Boolean,
+      issues: Schema.Array(IssueRelationshipData),
+    }),
+    blocking: Schema.Struct({
+      enabled: Schema.Boolean,
+      issues: Schema.Array(IssueRelationshipData),
+    }),
+  }),
+})
+export type DuplicateItemPlan = Schema.Schema.Type<typeof DuplicateItemPlan>
+
+// Shared shape for BulkUpdate/createIssueWithFields inputs.
+const BulkUpdateDispatchResult = Schema.Union(
+  Schema.Struct({ ok: Schema.Literal(true) }),
+  Schema.Struct({ ok: Schema.Literal(false), reason: Schema.Literal('concurrent') }),
+)
+
+const FieldMetaValue = Schema.Struct({
+  name: Schema.String,
+  options: Schema.optional(Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String }))),
+  iterations: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        title: Schema.String,
+        startDate: Schema.String,
+        duration: Schema.Number,
+      }),
+    ),
+  ),
+})
+
+const BulkUpdateFieldUpdate = Schema.Struct({
+  fieldId: Schema.String,
+  value: Schema.Unknown,
+})
+
 const PreviewFieldEntry = Schema.Struct({
   fieldId: Schema.String,
   fieldName: Schema.String,
@@ -187,7 +249,7 @@ export const Messages = {
     input: Schema.Struct({
       itemId: Schema.String,
       projectId: Schema.String,
-      plan: Schema.optional(Schema.Unknown),
+      plan: Schema.optional(DuplicateItemPlan),
     }),
     output: Schema.Struct({ accepted: Schema.Boolean }),
   },
@@ -286,34 +348,24 @@ export const Messages = {
     input: Schema.Struct({
       itemIds: Schema.Array(Schema.String),
       projectId: Schema.String,
-      updates: Schema.Array(Schema.Struct({ fieldId: Schema.String, value: Schema.Unknown })),
+      updates: Schema.Array(BulkUpdateFieldUpdate),
       relationships: Schema.optional(BulkEditRelationshipsUpdate),
-      fieldMeta: Schema.optional(
-        Schema.Record({
-          key: Schema.String,
-          value: Schema.Struct({
-            name: Schema.String,
-            options: Schema.optional(
-              Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String })),
-            ),
-            iterations: Schema.optional(
-              Schema.Array(
-                Schema.Struct({
-                  id: Schema.String,
-                  title: Schema.String,
-                  startDate: Schema.String,
-                  duration: Schema.Number,
-                }),
-              ),
-            ),
-          }),
-        }),
-      ),
+      fieldMeta: Schema.optional(Schema.Record({ key: Schema.String, value: FieldMetaValue })),
     }),
-    output: Schema.Union(
-      Schema.Struct({ ok: Schema.Literal(true) }),
-      Schema.Struct({ ok: Schema.Literal(false), reason: Schema.Literal('concurrent') }),
-    ),
+    output: BulkUpdateDispatchResult,
+  },
+  createIssueWithFields: {
+    input: Schema.Struct({
+      projectId: Schema.String,
+      repoOwner: Schema.String,
+      repoName: Schema.String,
+      title: Schema.String,
+      body: Schema.String,
+      createMore: Schema.Boolean,
+      updates: Schema.Array(BulkUpdateFieldUpdate),
+      fieldMeta: Schema.optional(Schema.Record({ key: Schema.String, value: FieldMetaValue })),
+    }),
+    output: BulkUpdateDispatchResult,
   },
   bulkClose: {
     input: Schema.Struct({
