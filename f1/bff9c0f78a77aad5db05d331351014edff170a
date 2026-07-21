@@ -1,0 +1,12 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f1bff9c0f78a77aad5db05d331351014edff170a",
+  "prompts": {},
+  "humans": {
+    "h_4149ee38f70c87": {
+      "author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
