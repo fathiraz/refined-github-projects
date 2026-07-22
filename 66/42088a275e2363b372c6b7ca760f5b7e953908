@@ -1,0 +1,21 @@
+src/lib/github-project.test.ts
+  s_c28b6c3345c715::t_4b8da8b7e0d8ba 11,13
+wxt.config.ts
+  s_c28b6c3345c715::t_f74379eaa99bb7 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "6642088a275e2363b372c6b7ca760f5b7e953908",
+  "prompts": {},
+  "sessions": {
+    "s_c28b6c3345c715": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "116611ba-3c61-435a-a58a-cdc3e0917484",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
