@@ -1,0 +1,42 @@
+src/features/create-issue-field-flyout.tsx
+  s_f5d29cb63f91d7::t_e50fe3a04b8cae 120-124
+  s_f5d29cb63f91d7::t_5f90b168b970c6 15
+src/lib/schemas-messages.ts
+  s_f5d29cb63f91d7::t_56188c3ea2cf83 367-368
+src/features/create-issue-injections.tsx
+  s_f5d29cb63f91d7::t_9dcfd7dfe0bb4d 130-153
+  s_f5d29cb63f91d7::t_3876e6bf330260 66-68
+  s_f5d29cb63f91d7::t_a61659fd71ecd2 199-201,211-212
+  s_f5d29cb63f91d7::t_9cc28564ce9101 304,311-312
+  s_f5d29cb63f91d7::t_1b427412f0bd9e 374-376
+  s_f5d29cb63f91d7::t_b54f2e0ee9259f 259-265
+  s_f5d29cb63f91d7::t_ba16ad46305734 50-56
+  s_f5d29cb63f91d7::t_935c8a9a35ec38 226-234,242-251
+  s_f5d29cb63f91d7::t_4953d10b8cb77d 252
+src/lib/messages.ts
+  s_f5d29cb63f91d7::t_1398ec70870745 426-434,438
+  s_f5d29cb63f91d7::t_54a76a12324ac0 422-425,435-437
+  s_f5d29cb63f91d7::t_dc4af3a73d3471 114-115
+  s_f5d29cb63f91d7::t_e714a9a10d0a68 4
+src/background/create-issue.ts
+  s_f5d29cb63f91d7::t_b6ec903361d61b 20-48
+  s_f5d29cb63f91d7::t_b0e392c6c8f7af 86-87
+  s_f5d29cb63f91d7::t_39e6a0143efcbb 11
+  s_f5d29cb63f91d7::t_9db0491a32b77e 49-50,88-89,100-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "edc36921080657562041c1ef2ac8bd05281227b0",
+  "prompts": {},
+  "sessions": {
+    "s_f5d29cb63f91d7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3ef41fae-5b5e-4a21-b29d-412a013cf0b3",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
