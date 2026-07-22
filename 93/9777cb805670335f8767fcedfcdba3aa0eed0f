@@ -1,0 +1,38 @@
+src/features/create-issue-injections.tsx
+  s_c5ba997a476079::t_47cb73b846efd4 61-67
+  s_c5ba997a476079::t_76b2e7d094fa4f 188-193
+  s_c5ba997a476079::t_fa9af2fb8ede89 50-55
+  s_95ffb3deb5f39b::t_791acb18af9773 245
+  s_c5ba997a476079::t_a896daf5fc1c78 56-60
+  s_c5ba997a476079::t_9a4e7faa40a921 234-241
+  s_95ffb3deb5f39b::t_8a5961cb057b3b 198
+  s_95ffb3deb5f39b::t_7635654e9c1d10 195-197,199-209
+  s_c5ba997a476079::t_c22e6681622874 247-250
+  s_c5ba997a476079::t_e8a626f6a0ded7 251,309-315
+  s_c5ba997a476079::t_278363bb1b94a3 246
+  s_95ffb3deb5f39b::t_a543172b636fc8 68,194,242,316
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "939777cb805670335f8767fcedfcdba3aa0eed0f",
+  "prompts": {},
+  "sessions": {
+    "s_95ffb3deb5f39b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "00feaee2-e9bc-4d55-b4d5-e5699807e8de",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_c5ba997a476079": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8094c9b3-dd73-4cab-bdd8-31fed1b83734",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
