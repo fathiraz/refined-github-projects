@@ -8,9 +8,9 @@ import { extractProjectContext, fetchProjectFields } from '@/lib/github-project'
 
 describe('extractProjectContext', () => {
   it('extracts org project context', () => {
-    const ctx = extractProjectContext('/orgs/kitabisa/projects/58')
+    const ctx = extractProjectContext('/orgs/octocat/projects/58')
     expect(ctx).toEqual({
-      owner: 'kitabisa',
+      owner: 'octocat',
       number: 58,
       isOrg: true,
       projectId: 'org-project-58',
