@@ -12,6 +12,7 @@ import { primerCss } from '@/lib/primer-css-helper'
 import { ListCheckIcon } from '@/ui/icons'
 import { EDITABLE_PROJECT_FIELD_DATATYPES, type ProjectData } from '@/features/bulk-edit-utils'
 import { ValuePicker } from '@/features/bulk-edit-value-picker'
+import { canApply } from '@/features/bulk-edit-flyout-helpers'
 import { createIssueFieldsStore } from '@/lib/create-issue-fields-store'
 
 const chipSx = primerCss.chipButton()
@@ -116,7 +117,11 @@ export function CreateIssueFieldsChip({ getFields }: CreateIssueFieldsChipProps)
                   key={field.id}
                   field={field}
                   value={staged?.value ?? null}
-                  onChange={(next) => createIssueFieldsStore.set(field, next)}
+                  onChange={(next) =>
+                    canApply(next)
+                      ? createIssueFieldsStore.set(field, next)
+                      : createIssueFieldsStore.remove(field.id)
+                  }
                   metaQuery=""
                   setMetaQuery={noop}
                   metaResults={[]}

@@ -364,6 +364,8 @@ export const Messages = {
       createMore: Schema.Boolean,
       updates: Schema.Array(BulkUpdateFieldUpdate),
       fieldMeta: Schema.optional(Schema.Record({ key: Schema.String, value: FieldMetaValue })),
+      assignees: Schema.optional(Schema.Array(Schema.String)),
+      labels: Schema.optional(Schema.Array(Schema.String)),
     }),
     output: BulkUpdateDispatchResult,
   },

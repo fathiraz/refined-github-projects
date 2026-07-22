@@ -1,6 +1,7 @@
 import { defineExtensionMessaging } from '@webext-core/messaging'
 import type { ExcludeCondition, SprintSettings } from '@/lib/storage'
 import type { PatErrorType } from '@/lib/errors'
+import type { ProtocolMapFromSchemas } from '@/lib/schemas-messages'
 
 export interface IssueRelationshipData {
   nodeId?: string
@@ -110,6 +111,8 @@ export interface CreateIssueWithFieldsMessageData {
   createMore: boolean
   updates: { fieldId: string; value: unknown }[]
   fieldMeta?: BulkUpdateMessageData['fieldMeta']
+  assignees?: string[]
+  labels?: string[]
 }
 
 export interface ItemPreviewData {
@@ -415,6 +418,23 @@ interface ProtocolMap {
     }
   }): void
 }
+
+// Compile-time drift guard: `ProtocolMap` above is hand-written (kept, rather
+// than replaced by `ProtocolMapFromSchemas`, because the schema record's
+// `Schema.Array` fields are `readonly T[]` and swapping the messaging generic
+// cascades ~40 readonly/mutable mismatches into unrelated call sites). This
+// fails typecheck if the two maps' key sets diverge, so schemas-messages.ts
+// stays the source of truth for which messages exist without forcing every
+// caller onto `readonly` arrays.
+type _KeysEqual<A, B> = [keyof A] extends [keyof B]
+  ? [keyof B] extends [keyof A]
+    ? true
+    : false
+  : false
+type _AssertProtocolMapMatchesSchema =
+  _KeysEqual<ProtocolMap, ProtocolMapFromSchemas> extends true ? true : never
+
+const _protocolMapMatchesSchema: _AssertProtocolMapMatchesSchema = true
 
 const _messaging = defineExtensionMessaging<ProtocolMap>()
 export const onMessage = _messaging.onMessage

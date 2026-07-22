@@ -47,6 +47,13 @@ const TITLE_INPUT_SELECTORS = [
 
 const BODY_INPUT_SELECTORS = ['textarea[aria-label="Markdown value"]']
 
+// The dialog's metadata sidebar renders the currently-picked assignees/labels
+// as tokens once selected via their own pickers. Best-effort read: if none of
+// these match, we simply omit assignees/labels from the create payload rather
+// than failing the create.
+const ASSIGNEES_CONTAINER_SELECTORS = ['[data-testid="assignees-select-menu"]']
+const LABELS_CONTAINER_SELECTORS = ['[data-testid="labels-select-menu"]']
+
 // The board's native "+ Add item" omnibar row that (when typed into) spawns
 // this dialog with its text as the initial title. Closing the dialog through
 // our intercepted Create button skips GitHub's own handler, which normally
@@ -56,8 +63,9 @@ const OMNIBAR_INPUT_SELECTORS = ['[class*="omnibarInput"]']
 // After a "Create more" cycle, GitHub's dialog considers its form dirty and,
 // on Close, shows this native confirmation instead of closing directly. RGP's
 // own Close click doesn't know about it, so the dialog appears stuck.
-const CONFIRM_DISCARD_SELECTOR =
-  '[data-component="ConfirmationDialog"] button[data-variant="danger"]'
+const CONFIRM_DISCARD_DIALOG_SELECTOR = '[data-component="ConfirmationDialog"]'
+const CONFIRM_DISCARD_BUTTON_SELECTOR = 'button[data-variant="danger"]'
+const CONFIRM_DISCARD_TEXT_PATTERN = /discard/i
 
 // The board re-renders once the new item lands (the background's
 // create→attach→field-update chain, several seconds after dispatch), and that
@@ -119,6 +127,30 @@ function readCreateMore(dialog: Element): boolean {
   return dialog.querySelector<HTMLInputElement>(CREATE_MORE_SELECTOR)?.checked ?? false
 }
 
+function readAssignees(dialog: Element): string[] {
+  for (const sel of ASSIGNEES_CONTAINER_SELECTORS) {
+    const container = dialog.querySelector(sel)
+    if (!container) continue
+    const logins = Array.from(container.querySelectorAll<HTMLImageElement>('img[alt]'))
+      .map((img) => img.alt.replace(/^@/, '').trim())
+      .filter(Boolean)
+    if (logins.length) return logins
+  }
+  return []
+}
+
+function readLabels(dialog: Element): string[] {
+  for (const sel of LABELS_CONTAINER_SELECTORS) {
+    const container = dialog.querySelector(sel)
+    if (!container) continue
+    const names = Array.from(container.querySelectorAll('[data-testid="label-token"]'))
+      .map((el) => el.textContent?.trim() ?? '')
+      .filter(Boolean)
+    if (names.length) return names
+  }
+  return []
+}
+
 function readRepo(dialog: Element): { owner: string; name: string } | null {
   for (const sel of REPO_HEADING_SELECTORS) {
     const el = dialog.querySelector(sel)
@@ -164,6 +196,9 @@ function buildCreatePayload(
     }
   }
 
+  const assignees = readAssignees(dialog)
+  const labels = readLabels(dialog)
+
   return {
     projectId,
     repoOwner: repo.owner,
@@ -173,6 +208,8 @@ function buildCreatePayload(
     createMore: readCreateMore(dialog),
     updates,
     fieldMeta,
+    ...(assignees.length ? { assignees } : {}),
+    ...(labels.length ? { labels } : {}),
   }
 }
 
@@ -186,10 +223,30 @@ export function setupCreateIssueFieldInjector(
   let rafId: number | null = null
   let intercepting = false
   let omnibarWatchUntil: number | null = null
+  let omnibarSeedText: string | null = null
+
+  function readOmnibarValue(): string {
+    for (const sel of OMNIBAR_INPUT_SELECTORS) {
+      const el = document.querySelector<HTMLInputElement>(sel)
+      if (el) return el.value
+    }
+    return ''
+  }
 
   function clearOmnibar(): void {
     for (const sel of OMNIBAR_INPUT_SELECTORS) {
       document.querySelectorAll<HTMLInputElement>(sel).forEach(clearInput)
+    }
+  }
+
+  // Same as clearOmnibar, but only touches inputs whose value still matches
+  // the draft text captured at dispatch time — a value the user has since
+  // typed over is left alone instead of being wiped by the re-render watch.
+  function clearOmnibarIfUnchanged(seed: string): void {
+    for (const sel of OMNIBAR_INPUT_SELECTORS) {
+      document.querySelectorAll<HTMLInputElement>(sel).forEach((el) => {
+        if (el.value === seed) clearInput(el)
+      })
     }
   }
 
@@ -199,10 +256,13 @@ export function setupCreateIssueFieldInjector(
   async function dismissDiscardConfirm(timeoutMs = 5000): Promise<void> {
     const deadline = Date.now() + timeoutMs
     while (Date.now() < deadline) {
-      const btn = document.querySelector<HTMLButtonElement>(CONFIRM_DISCARD_SELECTOR)
-      if (btn) {
-        btn.click()
-        return
+      const dialog = document.querySelector<HTMLElement>(CONFIRM_DISCARD_DIALOG_SELECTOR)
+      if (dialog && CONFIRM_DISCARD_TEXT_PATTERN.test(dialog.textContent ?? '')) {
+        const btn = dialog.querySelector<HTMLButtonElement>(CONFIRM_DISCARD_BUTTON_SELECTOR)
+        if (btn) {
+          btn.click()
+          return
+        }
       }
       await new Promise((resolve) => requestAnimationFrame(resolve))
     }
@@ -241,13 +301,15 @@ export function setupCreateIssueFieldInjector(
 
       if (!payload.createMore) {
         createIssueFieldsStore.clearAll()
+        omnibarSeedText = readOmnibarValue()
         dialog.querySelector<HTMLButtonElement>('[data-component="Dialog.CloseButton"]')?.click()
         // Fallback in case some other field still marks the form dirty.
         await dismissDiscardConfirm()
         clearOmnibar()
         // The board re-renders once the new item lands (async, seconds later),
         // and that re-render restores the omnibar's original draft text once.
-        // check() re-clears it on every subsequent mutation until this expires.
+        // check() re-clears it on every subsequent mutation until this expires,
+        // but only if the user hasn't since typed a new draft into it.
         omnibarWatchUntil = Date.now() + OMNIBAR_WATCH_MS
       }
     } catch {
@@ -309,8 +371,9 @@ export function setupCreateIssueFieldInjector(
     if (omnibarWatchUntil !== null) {
       if (Date.now() > omnibarWatchUntil) {
         omnibarWatchUntil = null
-      } else {
-        clearOmnibar()
+        omnibarSeedText = null
+      } else if (omnibarSeedText !== null) {
+        clearOmnibarIfUnchanged(omnibarSeedText)
       }
     }
 
