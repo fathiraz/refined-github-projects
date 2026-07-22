@@ -47,6 +47,25 @@ const TITLE_INPUT_SELECTORS = [
 
 const BODY_INPUT_SELECTORS = ['textarea[aria-label="Markdown value"]']
 
+// The board's native "+ Add item" omnibar row that (when typed into) spawns
+// this dialog with its text as the initial title. Closing the dialog through
+// our intercepted Create button skips GitHub's own handler, which normally
+// clears this input — so we clear it ourselves.
+const OMNIBAR_INPUT_SELECTORS = ['[class*="omnibarInput"]']
+
+// After a "Create more" cycle, GitHub's dialog considers its form dirty and,
+// on Close, shows this native confirmation instead of closing directly. RGP's
+// own Close click doesn't know about it, so the dialog appears stuck.
+const CONFIRM_DISCARD_SELECTOR =
+  '[data-component="ConfirmationDialog"] button[data-variant="danger"]'
+
+// The board re-renders once the new item lands (the background's
+// create→attach→field-update chain, several seconds after dispatch), and that
+// re-render restores the omnibar's original draft text. Re-clear it on every
+// mutation `check()` sees for this long after a create, rather than guessing
+// a fixed delay.
+const OMNIBAR_WATCH_MS = 15000
+
 // No repo-picker exists inside the dialog — the repo is fixed before it opens
 // (via a `#repo` hashtag in the board's inline combobox) and only surfaces
 // inside the dialog as static heading text: "Create new issue in owner/repo".
@@ -166,6 +185,28 @@ export function setupCreateIssueFieldInjector(
   let mounting = false
   let rafId: number | null = null
   let intercepting = false
+  let omnibarWatchUntil: number | null = null
+
+  function clearOmnibar(): void {
+    for (const sel of OMNIBAR_INPUT_SELECTORS) {
+      document.querySelectorAll<HTMLInputElement>(sel).forEach(clearInput)
+    }
+  }
+
+  // GitHub's "Discard changes?" confirmation (if our Close click triggers one)
+  // mounts asynchronously — it isn't in the DOM yet on the same tick as the
+  // click. Poll a few animation frames instead of checking once.
+  async function dismissDiscardConfirm(timeoutMs = 5000): Promise<void> {
+    const deadline = Date.now() + timeoutMs
+    while (Date.now() < deadline) {
+      const btn = document.querySelector<HTMLButtonElement>(CONFIRM_DISCARD_SELECTOR)
+      if (btn) {
+        btn.click()
+        return
+      }
+      await new Promise((resolve) => requestAnimationFrame(resolve))
+    }
+  }
 
   async function handleCreate(dialog: Element): Promise<void> {
     if (intercepting) return
@@ -190,14 +231,24 @@ export function setupCreateIssueFieldInjector(
         return
       }
 
-      if (payload.createMore) {
-        const titleEl = readInput(dialog, TITLE_INPUT_SELECTORS)
-        const bodyEl = readInput(dialog, BODY_INPUT_SELECTORS)
-        if (titleEl) clearInput(titleEl)
-        if (bodyEl) clearInput(bodyEl)
-      } else {
+      // Clear title + body before closing (or before staging the next issue) so
+      // GitHub's dirty-form guard never sees unsaved content and pops its own
+      // "Discard changes?" confirmation on close.
+      const titleEl = readInput(dialog, TITLE_INPUT_SELECTORS)
+      const bodyEl = readInput(dialog, BODY_INPUT_SELECTORS)
+      if (titleEl) clearInput(titleEl)
+      if (bodyEl) clearInput(bodyEl)
+
+      if (!payload.createMore) {
         createIssueFieldsStore.clearAll()
         dialog.querySelector<HTMLButtonElement>('[data-component="Dialog.CloseButton"]')?.click()
+        // Fallback in case some other field still marks the form dirty.
+        await dismissDiscardConfirm()
+        clearOmnibar()
+        // The board re-renders once the new item lands (async, seconds later),
+        // and that re-render restores the omnibar's original draft text once.
+        // check() re-clears it on every subsequent mutation until this expires.
+        omnibarWatchUntil = Date.now() + OMNIBAR_WATCH_MS
       }
     } catch {
       toastStore.show({ type: 'error', message: BULK_EDIT_DISPATCH_FAILED_MESSAGE })
@@ -255,6 +306,14 @@ export function setupCreateIssueFieldInjector(
   }
 
   function check(): void {
+    if (omnibarWatchUntil !== null) {
+      if (Date.now() > omnibarWatchUntil) {
+        omnibarWatchUntil = null
+      } else {
+        clearOmnibar()
+      }
+    }
+
     const dialog = findDialog()
 
     if (dialog && dialog !== currentDialog) {
