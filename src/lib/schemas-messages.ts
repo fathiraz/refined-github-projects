@@ -657,6 +657,18 @@ type SchemaInput<T> = T extends { input: Schema.Schema<infer I, any, any> } ? I 
 type SchemaOutput<T> = T extends { output: Schema.Schema<infer O, any, any> } ? O : never
 
 /**
+ * Effect `Schema.Struct`/`Schema.Array` produce deeply `readonly` types, but
+ * `@webext-core/messaging`'s `ProtocolMap` and its call sites expect plain
+ * mutable data. Strips `readonly` recursively so the schema-derived map is a
+ * drop-in for the hand-written one it replaces.
+ */
+type DeepMutable<T> = T extends readonly (infer U)[]
+  ? DeepMutable<U>[]
+  : T extends object
+    ? { -readonly [K in keyof T]: DeepMutable<T[K]> }
+    : T
+
+/**
  * Derives the `ProtocolMap` interface from the `Messages` schema record.
  *
  * Each key `K` becomes `(data: SchemaInput<Messages[K]>) => SchemaOutput<Messages[K]>`,
@@ -664,8 +676,8 @@ type SchemaOutput<T> = T extends { output: Schema.Schema<infer O, any, any> } ? 
  */
 export type ProtocolMapFromSchemas = {
   [K in keyof typeof Messages]: (
-    data: SchemaInput<(typeof Messages)[K]>,
-  ) => SchemaOutput<(typeof Messages)[K]>
+    data: DeepMutable<SchemaInput<(typeof Messages)[K]>>,
+  ) => DeepMutable<SchemaOutput<(typeof Messages)[K]>>
 }
 
 /**

@@ -89,7 +89,7 @@ export async function broadcastQueue(
     reverse?: {
       messageType: string
       data: Record<string, unknown>
-      affectedItemIds: readonly string[]
+      affectedItemIds: string[]
       label?: string
       undoWindowMs?: number
     }

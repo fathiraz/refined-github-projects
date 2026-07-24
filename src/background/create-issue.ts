@@ -26,13 +26,22 @@ async function resolveAssigneeIds(
   logins: string[],
 ): Promise<string[]> {
   if (logins.length === 0) return []
-  const result = await gql<{
-    repository: { assignableUsers: { nodes: { id: string; login: string }[] } }
-  }>(GET_REPO_ASSIGNEES, { owner, name, q: '' })
-  const byLogin = new Map(
-    (result.repository?.assignableUsers?.nodes || []).map((u) => [u.login, u.id]),
+  // Query per login with the login itself as the search filter — an unfiltered
+  // (q: '') query only returns the repo's first 20 assignable users, silently
+  // dropping any selected login that doesn't sort into that page.
+  const results = await Promise.all(
+    logins.map((login) =>
+      gql<{
+        repository: { assignableUsers: { nodes: { id: string; login: string }[] } }
+      }>(GET_REPO_ASSIGNEES, { owner, name, q: login }),
+    ),
   )
-  return logins.map((login) => byLogin.get(login)).filter((id): id is string => Boolean(id))
+  return results
+    .map(
+      (result, i) =>
+        result.repository?.assignableUsers?.nodes?.find((u) => u.login === logins[i])?.id,
+    )
+    .filter((id): id is string => Boolean(id))
 }
 
 async function resolveLabelIds(
@@ -41,11 +50,18 @@ async function resolveLabelIds(
   labelNames: string[],
 ): Promise<string[]> {
   if (labelNames.length === 0) return []
-  const result = await gql<{
-    repository: { labels: { nodes: { id: string; name: string }[] } }
-  }>(GET_REPO_LABELS, { owner, name, q: '' })
-  const byName = new Map((result.repository?.labels?.nodes || []).map((l) => [l.name, l.id]))
-  return labelNames.map((n) => byName.get(n)).filter((id): id is string => Boolean(id))
+  // Same fix as resolveAssigneeIds: query per label name so selections beyond
+  // the first 20 unfiltered results aren't silently dropped.
+  const results = await Promise.all(
+    labelNames.map((labelName) =>
+      gql<{
+        repository: { labels: { nodes: { id: string; name: string }[] } }
+      }>(GET_REPO_LABELS, { owner, name, q: labelName }),
+    ),
+  )
+  return results
+    .map((result, i) => result.repository?.labels?.nodes?.find((l) => l.name === labelNames[i])?.id)
+    .filter((id): id is string => Boolean(id))
 }
 
 function toFieldValue(value: unknown): Record<string, unknown> {
