@@ -1,0 +1,29 @@
+src/lib/messages.ts
+  s_517bd37a15e5fc::t_5d425662027275 205
+src/background/create-issue.ts
+  s_517bd37a15e5fc::t_10e055d9b24d7b 29-37,39,43-44,53-61,63
+  s_517bd37a15e5fc::t_708a21cce8ce37 40-42
+  s_517bd37a15e5fc::t_ceeb427e6ac38f 62
+  s_517bd37a15e5fc::t_f5398fcecc7d18 64
+src/background/rest-helpers.ts
+  s_517bd37a15e5fc::t_fe91c5e42805ad 92
+src/lib/schemas-messages.ts
+  s_517bd37a15e5fc::t_47e73ff81eb1c7 660-670,679-680
+  s_517bd37a15e5fc::t_2035beb41493f4 659
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "1291f14a8e6f695d37c272dc7824769529e60f31",
+  "prompts": {},
+  "sessions": {
+    "s_517bd37a15e5fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9fa2946a-0c34-4136-a17c-ed26b996ab2d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
