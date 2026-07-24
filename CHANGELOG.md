@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/fathiraz/refined-github-projects/compare/v1.4.0...v1.5.0) (2026-07-24)
+
+
+### Features
+
+* **create-issue:** stage project custom fields in native Create modal ([#53](https://github.com/fathiraz/refined-github-projects/issues/53)) ([e3cd674](https://github.com/fathiraz/refined-github-projects/commit/e3cd674b283abe969e93d4960d6222796120a7c4))
+
 ## [1.4.0](https://github.com/fathiraz/refined-github-projects/compare/v1.3.0...v1.4.0) (2026-07-17)
 
 
