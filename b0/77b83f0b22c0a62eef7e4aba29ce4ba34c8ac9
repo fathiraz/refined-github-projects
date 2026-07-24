@@ -1,0 +1,19 @@
+src/lib/errors.ts
+  s_65ca2e3a924043::t_8d9b885077f850 79-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "b077b83f0b22c0a62eef7e4aba29ce4ba34c8ac9",
+  "prompts": {},
+  "sessions": {
+    "s_65ca2e3a924043": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0412f50f-98a5-4bf2-a641-f6510fa621e3",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
