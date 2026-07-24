@@ -54,6 +54,23 @@ export function getAllInjectedItemIds(): ProjectItemDomId[] {
 }
 
 /**
+ * Collect item IDs from GitHub's native rows, keyed off `data-hovercard-subject-tag`.
+ * Present the moment GitHub renders a row — no dependency on RGP's own
+ * `data-rgp-cb` injection, which is stamped asynchronously and separately.
+ * Used by the create-issue capture watcher, which must see a brand-new row
+ * before injection stamps it.
+ */
+export function getAllNativeItemIds(): ProjectItemDomId[] {
+  const rows = document.querySelectorAll<HTMLElement>('[role="row"][data-hovercard-subject-tag]')
+  const ids: ProjectItemDomId[] = []
+  for (const row of rows) {
+    const id = extractItemId(row)
+    if (id) ids.push(id)
+  }
+  return ids
+}
+
+/**
  * Read the displayed title for a given row. Falls back to the row's primary
  * link text. Returns `null` if neither can be located.
  */

@@ -8,6 +8,7 @@ import { registerHierarchyHandlers } from '@/background/hierarchy-handlers'
 import { registerSprintHandlers } from '@/background/sprint-handlers'
 import { registerDuplicateHandlers } from '@/background/duplicate-handlers'
 import { registerBulkHandlers } from '@/background/bulk-handlers'
+import { registerCreateIssueHandler } from '@/background/create-issue'
 
 export default defineBackground(() => {
   initDebugLogger()
@@ -24,4 +25,5 @@ export default defineBackground(() => {
   registerSprintHandlers()
   registerDuplicateHandlers()
   registerBulkHandlers()
+  registerCreateIssueHandler()
 })

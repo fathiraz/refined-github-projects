@@ -6,12 +6,12 @@ import { PatErrorType } from '@/lib/schemas-errors'
 /**
  * Schemas for every entry in `ProtocolMap` (src/lib/messages.ts).
  *
- * The plain TypeScript `interface` declarations in messages.ts remain the
- * authoritative wire types so we don't have to rewrite all call sites at
- * once; these schemas mirror them and are used by background message
- * handlers to:
- *   - decode untrusted incoming payloads (`Schema.decodeUnknown(input)`),
- *   - encode handler return values (`Schema.encode(output)`).
+ * **These schemas are the single source of truth** for the message contract.
+ * The derived types (`ProtocolMapFromSchemas`, input/output type aliases) are
+ * re-exported from messages.ts so that `@webext-core/messaging` consumes
+ * schema-derived types end-to-end. Background handlers use the schemas to:
+ *   - decode untrusted incoming payloads (`Schema.decodeUnknownSync(input)`),
+ *   - encode handler return values (`Schema.encodeSync(output)`).
  *
  * Where a payload contains a value already validated upstream (e.g. `value:
  * Record<string, unknown>` for arbitrary field updates), `Schema.Unknown`
@@ -57,6 +57,68 @@ const SubIssueData = Schema.Struct({
   repoOwner: Schema.String,
   repoName: Schema.String,
   state: Schema.Literal('OPEN', 'CLOSED'),
+})
+
+const DuplicateItemPlanRelationshipSection = Schema.Struct({
+  enabled: Schema.Boolean,
+  issue: Schema.optional(IssueRelationshipData),
+})
+
+const DuplicateItemPlan = Schema.Struct({
+  title: Schema.Struct({ enabled: Schema.Boolean, value: Schema.String }),
+  body: Schema.Struct({ enabled: Schema.Boolean, value: Schema.String }),
+  assignees: Schema.Struct({ enabled: Schema.Boolean, ids: Schema.Array(Schema.String) }),
+  labels: Schema.Struct({ enabled: Schema.Boolean, ids: Schema.Array(Schema.String) }),
+  issueType: Schema.Struct({
+    enabled: Schema.Boolean,
+    id: Schema.optional(Schema.String),
+    name: Schema.optional(Schema.String),
+  }),
+  fieldValues: Schema.Array(
+    Schema.Struct({
+      fieldId: Schema.String,
+      enabled: Schema.Boolean,
+      value: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+    }),
+  ),
+  relationships: Schema.Struct({
+    parent: DuplicateItemPlanRelationshipSection,
+    blockedBy: Schema.Struct({
+      enabled: Schema.Boolean,
+      issues: Schema.Array(IssueRelationshipData),
+    }),
+    blocking: Schema.Struct({
+      enabled: Schema.Boolean,
+      issues: Schema.Array(IssueRelationshipData),
+    }),
+  }),
+})
+export type DuplicateItemPlan = Schema.Schema.Type<typeof DuplicateItemPlan>
+
+// Shared shape for BulkUpdate/createIssueWithFields inputs.
+const BulkUpdateDispatchResult = Schema.Union(
+  Schema.Struct({ ok: Schema.Literal(true) }),
+  Schema.Struct({ ok: Schema.Literal(false), reason: Schema.Literal('concurrent') }),
+)
+
+const FieldMetaValue = Schema.Struct({
+  name: Schema.String,
+  options: Schema.optional(Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String }))),
+  iterations: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        title: Schema.String,
+        startDate: Schema.String,
+        duration: Schema.Number,
+      }),
+    ),
+  ),
+})
+
+const BulkUpdateFieldUpdate = Schema.Struct({
+  fieldId: Schema.String,
+  value: Schema.Unknown,
 })
 
 const PreviewFieldEntry = Schema.Struct({
@@ -187,7 +249,7 @@ export const Messages = {
     input: Schema.Struct({
       itemId: Schema.String,
       projectId: Schema.String,
-      plan: Schema.optional(Schema.Unknown),
+      plan: Schema.optional(DuplicateItemPlan),
     }),
     output: Schema.Struct({ accepted: Schema.Boolean }),
   },
@@ -286,34 +348,26 @@ export const Messages = {
     input: Schema.Struct({
       itemIds: Schema.Array(Schema.String),
       projectId: Schema.String,
-      updates: Schema.Array(Schema.Struct({ fieldId: Schema.String, value: Schema.Unknown })),
+      updates: Schema.Array(BulkUpdateFieldUpdate),
       relationships: Schema.optional(BulkEditRelationshipsUpdate),
-      fieldMeta: Schema.optional(
-        Schema.Record({
-          key: Schema.String,
-          value: Schema.Struct({
-            name: Schema.String,
-            options: Schema.optional(
-              Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String })),
-            ),
-            iterations: Schema.optional(
-              Schema.Array(
-                Schema.Struct({
-                  id: Schema.String,
-                  title: Schema.String,
-                  startDate: Schema.String,
-                  duration: Schema.Number,
-                }),
-              ),
-            ),
-          }),
-        }),
-      ),
+      fieldMeta: Schema.optional(Schema.Record({ key: Schema.String, value: FieldMetaValue })),
     }),
-    output: Schema.Union(
-      Schema.Struct({ ok: Schema.Literal(true) }),
-      Schema.Struct({ ok: Schema.Literal(false), reason: Schema.Literal('concurrent') }),
-    ),
+    output: BulkUpdateDispatchResult,
+  },
+  createIssueWithFields: {
+    input: Schema.Struct({
+      projectId: Schema.String,
+      repoOwner: Schema.String,
+      repoName: Schema.String,
+      title: Schema.String,
+      body: Schema.String,
+      createMore: Schema.Boolean,
+      updates: Schema.Array(BulkUpdateFieldUpdate),
+      fieldMeta: Schema.optional(Schema.Record({ key: Schema.String, value: FieldMetaValue })),
+      assignees: Schema.optional(Schema.Array(Schema.String)),
+      labels: Schema.optional(Schema.Array(Schema.String)),
+    }),
+    output: BulkUpdateDispatchResult,
   },
   bulkClose: {
     input: Schema.Struct({
@@ -592,3 +646,43 @@ export const Messages = {
     output: Schema.Void,
   },
 } as const
+
+// ─── Derived ProtocolMap ────────────────────────────────────────────────────
+
+/**
+ * Extracts the plain TypeScript type from a Schema value declaration.
+ * `typeof Messages[key].input` is `{ input: Schema<X> }` — this unwraps to `X`.
+ */
+type SchemaInput<T> = T extends { input: Schema.Schema<infer I, any, any> } ? I : never
+type SchemaOutput<T> = T extends { output: Schema.Schema<infer O, any, any> } ? O : never
+
+/**
+ * Effect `Schema.Struct`/`Schema.Array` produce deeply `readonly` types, but
+ * `@webext-core/messaging`'s `ProtocolMap` and its call sites expect plain
+ * mutable data. Strips `readonly` recursively so the schema-derived map is a
+ * drop-in for the hand-written one it replaces.
+ */
+type DeepMutable<T> = T extends readonly (infer U)[]
+  ? DeepMutable<U>[]
+  : T extends object
+    ? { -readonly [K in keyof T]: DeepMutable<T[K]> }
+    : T
+
+/**
+ * Derives the `ProtocolMap` interface from the `Messages` schema record.
+ *
+ * Each key `K` becomes `(data: SchemaInput<Messages[K]>) => SchemaOutput<Messages[K]>`,
+ * matching the function-signature syntax expected by `@webext-core/messaging`.
+ */
+export type ProtocolMapFromSchemas = {
+  [K in keyof typeof Messages]: (
+    data: DeepMutable<SchemaInput<(typeof Messages)[K]>>,
+  ) => DeepMutable<SchemaOutput<(typeof Messages)[K]>>
+}
+
+/**
+ * Convenience type aliases — re-exported from messages.ts so call sites can
+ * import `XxxData` etc. without knowing about the schema layer.
+ */
+export type MessageInput<K extends keyof typeof Messages> = SchemaInput<(typeof Messages)[K]>
+export type MessageOutput<K extends keyof typeof Messages> = SchemaOutput<(typeof Messages)[K]>

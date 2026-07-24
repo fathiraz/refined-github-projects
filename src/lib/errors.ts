@@ -76,7 +76,12 @@ export class GithubGraphQLError extends Data.TaggedError('GithubGraphQLError')<{
 
 export class GithubNetworkError extends Data.TaggedError('GithubNetworkError')<{
   readonly cause: unknown
-}> {}
+}> {
+  constructor(args: { readonly cause: unknown }) {
+    super(args)
+    redefineMessage(this, args.cause instanceof Error ? args.cause.message : String(args.cause))
+  }
+}
 
 export class GithubDecodeError extends Data.TaggedError('GithubDecodeError')<{
   readonly message: string

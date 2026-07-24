@@ -10,7 +10,7 @@ export default defineConfig({
   entrypointsDir: 'entries',
   modules: ['@wxt-dev/module-react'],
   webExt: {
-    startUrls: ['https://github.com/orgs/kitabisa/projects/58/views/8'],
+    startUrls: process.env.WXT_DEV_START_URL ? [process.env.WXT_DEV_START_URL] : [],
   },
   vite: () => ({
     server: {

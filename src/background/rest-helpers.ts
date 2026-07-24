@@ -89,7 +89,7 @@ export async function broadcastQueue(
     reverse?: {
       messageType: string
       data: Record<string, unknown>
-      affectedItemIds: readonly string[]
+      affectedItemIds: string[]
       label?: string
       undoWindowMs?: number
     }
@@ -110,13 +110,15 @@ export async function broadcastQueue(
 // retrying in N seconds" UI broadcast for any *remaining* rate-limit error
 // that escapes the service's own retries. We keep one extra attempt so the
 // UI gets to show the pause; if the call still fails we surface the error.
+// ponytail: only ever wraps idempotent read queries (item resolution) — safe
+// to retry. Do NOT wrap a mutation with this; blind retry would double-write.
 export async function withRateLimitRetry<T>(fn: () => Promise<T>, tabId?: number): Promise<T> {
-  let lastErr: unknown
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const MAX_RATE_LIMIT_PAUSES = 2
+  let rateLimitPauses = 0
+  for (;;) {
     try {
       return await fn()
     } catch (err) {
-      lastErr = err
       // accept either the new tagged `GithubRateLimitError` or the legacy
       // `{ status, retryAfter }` shape (still used by direct fetch callers
       // such as `validatePat`).
@@ -126,22 +128,24 @@ export async function withRateLimitRetry<T>(fn: () => Promise<T>, tabId?: number
         retryAfter?: number
       }
       const isRateLimit = e._tag === 'GithubRateLimitError' || e.status === 403 || e.status === 429
-      if (isRateLimit) {
+      if (isRateLimit && rateLimitPauses < MAX_RATE_LIMIT_PAUSES) {
+        rateLimitPauses++
         const retryAfter = e.retryAfter ?? 60
         logger.warn('[rgp:bg] rate limited, broadcasting pause', {
           retryAfter,
-          attempt: attempt + 1,
-          maxAttempts: 2,
+          attempt: rateLimitPauses,
+          maxAttempts: MAX_RATE_LIMIT_PAUSES,
         })
-        logger.verbose(`⏸ paused ${retryAfter}s — attempt ${attempt + 1}/2`)
+        logger.verbose(
+          `⏸ paused ${retryAfter}s — attempt ${rateLimitPauses}/${MAX_RATE_LIMIT_PAUSES}`,
+        )
         await broadcastQueue({ total: 0, completed: 0, paused: true, retryAfter }, tabId)
         await sleep(retryAfter * 1000)
         await broadcastQueue({ total: 0, completed: 0, paused: false }, tabId)
-      } else {
-        logger.error('[rgp:bg] task failed permanently', err)
-        throw err
+        continue
       }
+      logger.error('[rgp:bg] task failed permanently', err)
+      throw err
     }
   }
-  throw lastErr
 }
