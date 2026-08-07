@@ -1,7 +1,26 @@
 import React from 'react'
 import { Box, Button, Heading, Text } from '@primer/react'
 import { XIcon } from '@/ui/icons'
-import { StepIndicator } from '@/ui/step-indicator'
+
+function StepIndicator({ current, total }: { current: number; total: number }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {Array.from({ length: total }, (_, i) => (
+        <Box
+          key={i}
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bg: i < current ? 'accent.emphasis' : 'border.default',
+            transition: 'background-color 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+          }}
+        />
+      ))}
+    </Box>
+  )
+}
 
 type ModalStepHeaderProps =
   | {

@@ -12,22 +12,12 @@ const GithubLayer = GithubGraphQLLive.pipe(
   Layer.provide(Layer.mergeAll(HttpClientLive, StorageLive)),
 )
 
-export const AppLayer = Layer.mergeAll(RgpLoggerLive, HttpClientLive, StorageLive, GithubLayer)
-
-/**
- * Background-only layer extension. Lives in
- * `src/entries/background/services/index.ts` so that content-script /
- * popup / options bundles do not pull in handler-side code (which would
- * tree-shake poorly given onMessage handlers register at module load).
- *
- * Re-exported here as a type so callsites can use `runWithBackground` et al.
- */
-export { AppLayer as BaseAppLayer }
+const AppLayer = Layer.mergeAll(RgpLoggerLive, HttpClientLive, StorageLive, GithubLayer)
 
 // single ManagedRuntime per execution context (background SW, content script,
-// popup, options page). Each module that imports `AppRuntime` shares the same
-// instance within its context — module evaluation is per-context in WXT.
-export const AppRuntime = ManagedRuntime.make(AppLayer)
+// popup, options page). Each module that imports this shares the same instance
+// within its context — module evaluation is per-context in WXT.
+const AppRuntime = ManagedRuntime.make(AppLayer)
 
 export const runPromise: typeof AppRuntime.runPromise = (effect, options) =>
   AppRuntime.runPromise(effect, options)

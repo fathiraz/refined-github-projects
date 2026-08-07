@@ -53,7 +53,7 @@ export default defineContentScript({
       projectContext.isOrg,
     )
 
-    const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext, getFields)
+    const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)
     const cleanupIssueDetail = setupIssueDetailInjector(projectContext)
     const cleanupCreateIssueFields = setupCreateIssueFieldInjector(ctx, getFields)

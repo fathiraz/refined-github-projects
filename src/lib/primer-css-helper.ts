@@ -61,28 +61,7 @@ export const primerCss = {
     flexDirection: 'column',
   }),
 
-  borderedContainer: makePreset({
-    border: '1px solid',
-    borderColor: 'border.default',
-    borderRadius: 1,
-    overflow: 'hidden',
-  }),
-
-  card: makePreset({
-    border: '1px solid',
-    borderColor: 'border.default',
-    borderRadius: 2,
-    boxShadow: 'none',
-    overflow: 'hidden',
-    bg: 'canvas.default',
-  }),
-
   divider: makePreset({
-    borderTop: '1px solid',
-    borderColor: 'border.default',
-  }),
-
-  footerBorder: makePreset({
     borderTop: '1px solid',
     borderColor: 'border.default',
   }),

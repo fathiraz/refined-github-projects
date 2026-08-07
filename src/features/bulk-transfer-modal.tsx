@@ -330,7 +330,6 @@ export function BulkTransferModal({
                 errorTitle="Could not load repositories"
                 selectedPlacement="selected-first-when-filter-empty"
                 anchorAriaLabel="Select a repository"
-                debugName="TransferSelectPanel"
                 emptyState={({ filterQuery }) => ({
                   title: 'No repositories found',
                   body: filterQuery.trim()

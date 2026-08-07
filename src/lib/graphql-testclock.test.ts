@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Effect, Layer, Schema, TestClock, TestContext } from 'effect'
+import { FetchHttpClient } from '@effect/platform'
 
 vi.mock('@/lib/storage', () => ({
   patStorage: { getValue: vi.fn().mockResolvedValue('') },
@@ -8,8 +9,14 @@ vi.mock('@/lib/storage', () => ({
 }))
 
 import { GithubGraphQL, GithubGraphQLLive } from '@/lib/graphql-service'
+import { Storage } from '@/lib/storage-service'
 
-import { makeRecordedHttpLayer, makeTestStorageLayer } from '@/lib/effect-test-helpers'
+const httpLayerReturning = (respond: () => Response) =>
+  FetchHttpClient.layer.pipe(
+    Layer.provide(Layer.succeed(FetchHttpClient.Fetch, (async () => respond()) as typeof fetch)),
+  )
+
+const storageLayer = Layer.succeed(Storage, Storage.of({ getPat: Effect.succeed('fake-pat') }))
 
 const VIEWER_QUERY = 'query Viewer { viewer { login } }'
 
@@ -20,7 +27,7 @@ const ViewerSchema = Schema.Struct({
 describe('GithubGraphQL service — TestClock-driven retry behavior', () => {
   it('retries on 429 and succeeds on the second attempt', async () => {
     let calls = 0
-    const [httpLayer] = makeRecordedHttpLayer(() => {
+    const httpLayer = httpLayerReturning(() => {
       calls++
       if (calls === 1) {
         return new Response(JSON.stringify({}), {
@@ -34,7 +41,6 @@ describe('GithubGraphQL service — TestClock-driven retry behavior', () => {
       })
     })
 
-    const storageLayer = makeTestStorageLayer({ pat: 'fake-pat' })
     const services = GithubGraphQLLive.pipe(Layer.provide(Layer.mergeAll(httpLayer, storageLayer)))
 
     const program = Effect.gen(function* () {
@@ -59,7 +65,7 @@ describe('GithubGraphQL service — TestClock-driven retry behavior', () => {
 
   it('exhausts retries on persistent 429 and surfaces GithubRateLimitError', async () => {
     let calls = 0
-    const [httpLayer] = makeRecordedHttpLayer(() => {
+    const httpLayer = httpLayerReturning(() => {
       calls++
       return new Response(JSON.stringify({}), {
         status: 429,
@@ -67,7 +73,6 @@ describe('GithubGraphQL service — TestClock-driven retry behavior', () => {
       })
     })
 
-    const storageLayer = makeTestStorageLayer({ pat: 'fake-pat' })
     const services = GithubGraphQLLive.pipe(Layer.provide(Layer.mergeAll(httpLayer, storageLayer)))
 
     const program = Effect.gen(function* () {

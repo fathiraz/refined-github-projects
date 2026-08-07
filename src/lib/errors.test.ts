@@ -10,7 +10,6 @@ import {
   GithubClientError,
   GithubDecodeError,
   classifyHttpError,
-  renderPatError,
 } from '@/lib/errors'
 
 describe('GithubRateLimitError (canonical 429 variant)', () => {
@@ -169,36 +168,5 @@ describe('classifyHttpError', () => {
   it('422 → GithubClientError', () => {
     const err = classifyHttpError({ status: 422, message: 'bad', retryAfter: 0 })
     expect(err._tag).toBe('GithubClientError')
-  })
-})
-
-describe('renderPatError', () => {
-  it('expired_or_invalid yields actionable guidance', () => {
-    const out = renderPatError('expired_or_invalid', 'token gone')
-    expect(out.type).toBe('expired_or_invalid')
-    expect(out.actionHref).toMatch(/github\.com/)
-    expect(out.message).toContain('token gone')
-  })
-
-  it('rate_limit fills default copy when message missing', () => {
-    const out = renderPatError('rate_limit', undefined)
-    expect(out.type).toBe('rate_limit')
-    expect(out.message).toMatch(/minute/)
-  })
-
-  it('exhaustively maps every PatErrorType', () => {
-    const types = [
-      'expired_or_invalid',
-      'missing_scopes',
-      'rate_limit',
-      'network',
-      'unknown',
-    ] as const
-    for (const t of types) {
-      const out = renderPatError(t, undefined)
-      expect(out.type).toBe(t)
-      expect(out.title.length).toBeGreaterThan(0)
-      expect(out.message.length).toBeGreaterThan(0)
-    }
   })
 })

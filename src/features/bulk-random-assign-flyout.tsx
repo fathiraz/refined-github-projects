@@ -49,7 +49,6 @@ export interface BulkRandomAssignFlyoutProps {
   itemIds: readonly string[]
   count: number
   /** Pinned recent assignee logins (most-recent-first, capped). */
-  recentAssignees?: readonly RandomAssignTarget[]
   onConfirm: (assignments: Map<string, string[]>, strategy: DistributionStrategy) => void
 }
 
@@ -85,7 +84,6 @@ export function BulkRandomAssignFlyout({
   isOrg,
   itemIds,
   count,
-  recentAssignees,
   onConfirm,
 }: BulkRandomAssignFlyoutProps) {
   const [query, setQuery] = useState('')
@@ -203,31 +201,9 @@ export function BulkRandomAssignFlyout({
     return () => clearTimeout(timer)
   }, [open, owner, repoName, query])
 
-  // Seed cache with recents the first time the flyout opens.
-  useEffect(() => {
-    if (!recentAssignees || recentAssignees.length === 0) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time seed of recents into local cache
-    setCache((prev) => {
-      const next = new Map(prev)
-      for (const r of recentAssignees) {
-        if (!next.has(r.id)) next.set(r.id, r)
-      }
-      return next
-    })
-  }, [recentAssignees])
-
   const visible = useMemo(() => {
     const seen = new Set<string>()
     const out: RandomAssignTarget[] = []
-    // Pinned recents first when query is empty.
-    if (!query && recentAssignees) {
-      for (const r of recentAssignees) {
-        if (!seen.has(r.id)) {
-          seen.add(r.id)
-          out.push(r)
-        }
-      }
-    }
     // Selected entries always visible.
     for (const id of picked) {
       if (!seen.has(id)) {
@@ -245,7 +221,7 @@ export function BulkRandomAssignFlyout({
       }
     }
     return out
-  }, [candidates, picked, recentAssignees, cache, query])
+  }, [candidates, picked, cache])
 
   const preview = useMemo<Distribution>(() => {
     if (picked.length === 0 || itemIds.length === 0) return new Map()
@@ -318,7 +294,6 @@ export function BulkRandomAssignFlyout({
           )}
           {visible.map((target, idx) => {
             const checked = picked.includes(target.id)
-            const isRecent = !query && recentAssignees?.some((r) => r.id === target.id) === true
             return (
               <Box
                 key={target.id}
@@ -365,9 +340,6 @@ export function BulkRandomAssignFlyout({
                   />
                 )}
                 <Text sx={{ fontSize: 1, flex: 1, minWidth: 0 }}>{target.name}</Text>
-                {isRecent && (
-                  <Text sx={{ fontSize: 0, color: 'fg.muted', flexShrink: 0 }}>Recent</Text>
-                )}
               </Box>
             )
           })}

@@ -10,7 +10,6 @@ import { sendMessage } from '@/lib/messages'
 import type { SprintInfo } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
 import { fmt, SPRINT_FILTER } from '@/lib/sprint-utils'
-import type { ProjectData } from '@/lib/github-project'
 import { sprintConfirmEndStore } from '@/lib/sprint-store'
 import { SprintProgressView } from '@/features/sprint-progress-view'
 import { SettingsView } from '@/features/sprint-settings-view'
@@ -21,7 +20,6 @@ interface Props {
   owner: string
   isOrg: boolean
   number: number
-  getFields: () => Promise<ProjectData>
   visible: boolean
   onClose: () => void
 }
@@ -37,15 +35,7 @@ interface SprintStatus {
   settings: SprintSettings | null
 }
 
-export function SprintPanel({
-  projectId,
-  owner,
-  isOrg,
-  number,
-  getFields,
-  visible,
-  onClose,
-}: Props) {
+export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose }: Props) {
   ensureTippyCss()
 
   const [state, setState] = useState<PanelState>('loading')
@@ -217,7 +207,6 @@ export function SprintPanel({
             owner={owner}
             isOrg={isOrg}
             number={number}
-            getFields={getFields}
             currentSettings={status?.settings ?? null}
             onSaved={async () => {
               setShowSettings(false)

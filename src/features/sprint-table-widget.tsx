@@ -6,7 +6,6 @@ import { SlidersIcon } from '@/ui/icons'
 import { sendMessage } from '@/lib/messages'
 import type { SprintInfo } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
-import type { ProjectData } from '@/lib/github-project'
 import { primerCss } from '@/lib/primer-css-helper'
 import { sprintConfirmEndStore, sprintPanelStore } from '@/lib/sprint-store'
 
@@ -15,7 +14,6 @@ interface Props {
   owner: string
   isOrg: boolean
   number: number
-  getFields: () => Promise<ProjectData>
 }
 
 type WidgetState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
@@ -47,13 +45,42 @@ interface SprintStatus {
   settings: SprintSettings | null
 }
 
-export function SprintGroupHeaderWidget({
-  projectId,
-  owner,
-  isOrg,
-  number,
-  getFields: _getFields,
-}: Props) {
+function SprintSettingsButton() {
+  return (
+    <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
+      <Button
+        variant="invisible"
+        aria-label="Sprint settings"
+        onClick={() => sprintPanelStore.set(true)}
+        sx={{
+          color: 'fg.muted',
+          p: '3px',
+          height: 'auto',
+          minWidth: 0,
+          lineHeight: 1,
+          border: 'none',
+          borderRadius: 1,
+          boxShadow: 'none',
+          transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover:not(:disabled)': {
+            transform: 'translateY(-1px)',
+            color: 'fg.default',
+            bg: 'canvas.subtle',
+          },
+          '&:active': { transform: 'translateY(0)', transition: '100ms' },
+          '@media (prefers-reduced-motion: reduce)': {
+            transition: 'none',
+            '&:hover:not(:disabled)': { transform: 'none' },
+          },
+        }}
+      >
+        <SlidersIcon size={14} />
+      </Button>
+    </Tippy>
+  )
+}
+
+export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number }: Props) {
   ensureTippyCss()
   const [state, setState] = useState<WidgetState>('loading')
   const [status, setStatus] = useState<SprintStatus | null>(null)
@@ -170,36 +197,7 @@ export function SprintGroupHeaderWidget({
               </Button>
             </Tippy>
           )}
-          <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
-            <Button
-              variant="invisible"
-              aria-label="Sprint settings"
-              onClick={() => sprintPanelStore.set(true)}
-              sx={{
-                color: 'fg.muted',
-                p: '3px',
-                height: 'auto',
-                minWidth: 0,
-                lineHeight: 1,
-                border: 'none',
-                borderRadius: 1,
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': {
-                  transform: 'translateY(-1px)',
-                  color: 'fg.default',
-                  bg: 'canvas.subtle',
-                },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
-              }}
-            >
-              <SlidersIcon size={14} />
-            </Button>
-          </Tippy>
+          <SprintSettingsButton />
         </>
       )}
 
@@ -235,36 +233,7 @@ export function SprintGroupHeaderWidget({
               End Sprint
             </Button>
           </Tippy>
-          <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
-            <Button
-              variant="invisible"
-              aria-label="Sprint settings"
-              onClick={() => sprintPanelStore.set(true)}
-              sx={{
-                color: 'fg.muted',
-                p: '3px',
-                height: 'auto',
-                minWidth: 0,
-                lineHeight: 1,
-                border: 'none',
-                borderRadius: 1,
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': {
-                  transform: 'translateY(-1px)',
-                  color: 'fg.default',
-                  bg: 'canvas.subtle',
-                },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
-              }}
-            >
-              <SlidersIcon size={14} />
-            </Button>
-          </Tippy>
+          <SprintSettingsButton />
         </>
       )}
     </Box>

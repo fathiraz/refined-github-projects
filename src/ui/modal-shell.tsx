@@ -73,9 +73,7 @@ export function ModalShell({
       >
         {header}
         <Box sx={primerCss.contentArea()}>{children}</Box>
-        {footer && (
-          <Box sx={{ ...primerCss.footerBorder(), ...primerCss.footerLayout() }}>{footer}</Box>
-        )}
+        {footer && <Box sx={{ ...primerCss.divider(), ...primerCss.footerLayout() }}>{footer}</Box>}
       </Box>
     </Box>
   )

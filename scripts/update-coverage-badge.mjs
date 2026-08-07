@@ -3,25 +3,17 @@
 /**
  * Updates the coverage badge (and optionally the coverage summary block) in README.md.
  *
- * Modes:
- *   1. Local default (no flags):
- *        pnpm test:coverage-badge
- *      Runs `npx vitest run --coverage --reporter=default`, parses the text
- *      "All files" row, and swaps the COVERAGE_BADGE markers.
+ *   node scripts/update-coverage-badge.mjs [--from-markdown <path>]
  *
- *   2. CI-friendly (recommended in workflows):
- *        node scripts/update-coverage-badge.mjs --from-summary [--from-markdown <path>]
- *      Reads `coverage/coverage-summary.json` (written by vitest json-summary
- *      reporter) without re-running the test suite, swaps the COVERAGE_BADGE
- *      markers, and — if `--from-markdown` is given — injects the contents of
- *      the irongut/CodeCoverageSummary markdown file between the
- *      COVERAGE_REPORT markers.
+ * Reads `coverage/coverage-summary.json` (written by the vitest json-summary
+ * reporter) and swaps the COVERAGE_BADGE markers. With `--from-markdown`, also
+ * injects the irongut/CodeCoverageSummary markdown file between the
+ * COVERAGE_REPORT markers.
  */
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execSync } from "node:child_process";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -29,11 +21,10 @@ const README = resolve(ROOT, "README.md");
 const SUMMARY_JSON = resolve(ROOT, "coverage", "coverage-summary.json");
 
 function parseArgs(argv) {
-  const args = { fromSummary: false, fromMarkdown: null };
+  const args = { fromMarkdown: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--from-summary") args.fromSummary = true;
-    else if (a === "--from-markdown") {
+    if (a === "--from-markdown") {
       args.fromMarkdown = argv[++i];
       if (!args.fromMarkdown) {
         console.error("--from-markdown requires a file path argument.");
@@ -42,28 +33,6 @@ function parseArgs(argv) {
     }
   }
   return args;
-}
-
-function coverageFromVitestText() {
-  const output = execSync("npx vitest run --coverage --reporter=default", {
-    cwd: ROOT,
-    encoding: "utf-8",
-    stdio: ["pipe", "pipe", "pipe"],
-  });
-
-  const match = output.match(
-    /All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/,
-  );
-  if (!match) {
-    console.error("Could not parse coverage from vitest output.");
-    process.exit(1);
-  }
-  return {
-    statements: parseFloat(match[1]),
-    branches: parseFloat(match[2]),
-    functions: parseFloat(match[3]),
-    lines: parseFloat(match[4]),
-  };
 }
 
 function pctOrFail(total, key) {
@@ -156,7 +125,7 @@ function replaceReportBlock(readme, markdownPath) {
 
 const args = parseArgs(process.argv.slice(2));
 
-const coverage = args.fromSummary ? coverageFromJsonSummary() : coverageFromVitestText();
+const coverage = coverageFromJsonSummary();
 const pct = coverage.statements;
 
 const original = readFileSync(README, "utf-8");

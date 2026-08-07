@@ -76,7 +76,6 @@ export async function setupContentUi(
         owner={projectContext.owner}
         isOrg={projectContext.isOrg}
         number={projectContext.number}
-        getFields={getFields}
       />
     ),
   })

@@ -1,29 +1,20 @@
 import { Context, Effect, Layer } from 'effect'
 
-import { patStorage, usernameStorage, debugStorage } from '@/lib/storage'
+import { patStorage } from '@/lib/storage'
 
 /**
- * Read-side wrapper for `wxt`'s `storage.defineItem` items. Other Effect
- * code consumes Pat / username / debug-flag through this service so that
- * tests can substitute the layer with `Layer.succeed(Storage, { ... })`.
- *
- * Writes intentionally stay on the imperative `storage` API for now —
- * existing handlers (`saveSprintSettings`, etc.) call them directly. We can
- * widen this service in a later phase if needed.
+ * Read-side wrapper for the PAT stored via `wxt`'s `storage.defineItem`.
+ * Effect code reads it through this service so tests can substitute the layer
+ * with `Layer.succeed(Storage, { ... })`. Writes stay on the imperative
+ * `storage` API — handlers call those directly.
  */
-export interface StorageService {
+interface StorageService {
   readonly getPat: Effect.Effect<string>
-  readonly getUsername: Effect.Effect<string>
-  readonly getDebug: Effect.Effect<boolean>
 }
 
 export class Storage extends Context.Tag('rgp/Storage')<Storage, StorageService>() {}
 
 export const StorageLive: Layer.Layer<Storage> = Layer.succeed(
   Storage,
-  Storage.of({
-    getPat: Effect.promise(() => patStorage.getValue()),
-    getUsername: Effect.promise(() => usernameStorage.getValue()),
-    getDebug: Effect.promise(() => debugStorage.getValue()),
-  }),
+  Storage.of({ getPat: Effect.promise(() => patStorage.getValue()) }),
 )

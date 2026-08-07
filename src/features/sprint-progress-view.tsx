@@ -5,28 +5,7 @@ import Tippy from '@/ui/tooltip'
 import { Z_TOOLTIP } from '@/lib/z-index'
 import { sendMessage, type SprintInfo, type SprintProgressData } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
-import { iterationEndDate } from '@/lib/sprint-utils'
-
-// ── Helpers ──────────────────────────────────────────────────
-
-function fmt(iso: string): string {
-  return new Date(iso + 'T00:00:00Z').toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
-}
-
-function daysLeft(endDate: string): number {
-  const today = new Date().toISOString().slice(0, 10)
-  return Math.max(
-    0,
-    Math.ceil(
-      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) /
-        86_400_000,
-    ),
-  )
-}
+import { daysLeft, fmt, iterationEndDate } from '@/lib/sprint-utils'
 
 function pct(done: number, total: number): number {
   if (total === 0) return 0

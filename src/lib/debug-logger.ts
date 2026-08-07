@@ -48,12 +48,6 @@ export const logger = {
     console.debug(`%c[rgp ${ts()}]`, 'color:#8b949e', first, ...rest)
   },
 
-  info: (...args: unknown[]): void => {
-    if (!isDebugEnabled) return
-    const [first, ...rest] = args
-    console.info(`%c[rgp ${ts()}]`, 'color:#3fb950;font-weight:bold', first, ...rest)
-  },
-
   verbose: (step: string, context?: unknown): void => {
     if (!isDebugEnabled) return
     if (context !== undefined) {

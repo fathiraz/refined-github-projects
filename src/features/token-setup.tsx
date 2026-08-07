@@ -127,13 +127,6 @@ export function useTokenSetup() {
   }
 }
 
-export type TokenSetupMode = 'compact' | 'full'
-
-export interface TokenSetupCardProps {
-  mode?: TokenSetupMode
-  onOpenOptions?: () => void
-}
-
 const requiredScopes = ['project', 'read:org', 'repo'] as const
 
 const cardSx = {
@@ -155,7 +148,7 @@ const actionButtonSx = {
   },
 } as const
 
-export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardProps) {
+export function TokenSetupCard() {
   const {
     token,
     setToken,
@@ -177,7 +170,7 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            py: mode === 'compact' ? 3 : 5,
+            py: 5,
           }}
         >
           <Spinner size="small" />
@@ -190,7 +183,7 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
     <Box sx={cardSx}>
       <Box
         sx={{
-          px: mode === 'compact' ? 3 : 4,
+          px: 4,
           py: 3,
           borderBottom: '1px solid',
           borderColor: 'border.default',
@@ -204,17 +197,16 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
         </Box>
         <Box>
           <Heading as="h2" sx={{ fontSize: 2, fontWeight: 'semibold', m: 0, color: 'fg.default' }}>
-            {mode === 'compact' ? 'GitHub access' : 'Connect your GitHub token'}
+            Connect your GitHub token
           </Heading>
           <Text as="p" sx={{ m: 0, mt: '2px', color: 'fg.muted', fontSize: 1 }}>
-            {mode === 'compact'
-              ? 'Validated once, works across the popup, options, and in-page toolbar.'
-              : 'Save once and all features — bulk edits, deep duplicate, field search — share the same token.'}
+            Save once and all features — bulk edits, deep duplicate, field search — share the same
+            token.
           </Text>
         </Box>
       </Box>
 
-      <Box sx={{ p: mode === 'compact' ? 3 : 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
         {saved && (
           <Flash variant="success">
             <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>
@@ -260,7 +252,7 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: mode === 'compact' ? '1fr' : ['1fr', null, '1.4fr 1fr'],
+            gridTemplateColumns: ['1fr', null, '1.4fr 1fr'],
             gap: 3,
           }}
         >
@@ -327,9 +319,9 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
         <Box
           sx={{
             display: 'flex',
-            flexDirection: mode === 'compact' ? 'column' : 'row',
+            flexDirection: 'row',
             gap: 2,
-            alignItems: mode === 'compact' ? 'stretch' : 'center',
+            alignItems: 'center',
           }}
         >
           <Button
@@ -341,11 +333,6 @@ export function TokenSetupCard({ mode = 'full', onOpenOptions }: TokenSetupCardP
           >
             {hasToken ? 'Validate and save token' : 'Add a token to continue'}
           </Button>
-          {onOpenOptions && (
-            <Button variant="default" onClick={onOpenOptions} sx={actionButtonSx}>
-              Open full setup
-            </Button>
-          )}
         </Box>
 
         <Text sx={{ fontSize: 1, color: 'fg.muted' }}>

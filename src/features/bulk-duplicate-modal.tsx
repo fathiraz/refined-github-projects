@@ -26,7 +26,6 @@ import { ModalStepHeader } from '@/ui/modal-step-header'
 import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { formatIssueReference, relationshipKey } from '@/lib/relationship-utils'
-import { getFieldOptionTooltip } from '@/features/field-helpers'
 import {
   ASSIGNEES_SECTION_ID,
   BLOCKED_BY_SECTION_ID,
@@ -57,6 +56,9 @@ import {
 import { RelationshipListEditor } from '@/features/bulk-duplicate-relationship-list'
 
 import { ReviewStep, SelectSectionsStep } from '@/features/bulk-duplicate-steps'
+
+const getFieldOptionTooltip = (fieldName: string, optionName: string) =>
+  `Set ${fieldName} to ${optionName}.`
 
 interface Props {
   itemId: string

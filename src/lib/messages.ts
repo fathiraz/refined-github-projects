@@ -195,13 +195,6 @@ export interface HierarchyData {
   blocking: IssueRelationshipData[]
 }
 
-export interface BulkRandomAssignData {
-  itemIds: string[]
-  projectId: string
-  assignments: Array<{ itemId: string; assigneeIds: string[] }>
-  strategy: 'balanced' | 'random' | 'round-robin'
-}
-
 const _messaging = defineExtensionMessaging<ProtocolMapFromSchemas>()
 export const onMessage = _messaging.onMessage
 

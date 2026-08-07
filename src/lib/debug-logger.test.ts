@@ -44,12 +44,6 @@ describe('logger', () => {
     expect(spy).not.toHaveBeenCalled()
   })
 
-  it('info does not output when debug is disabled', () => {
-    const spy = vi.spyOn(console, 'info').mockImplementation(() => {})
-    logger.info('should be silent')
-    expect(spy).not.toHaveBeenCalled()
-  })
-
   it('verbose does not output when debug is disabled', () => {
     const spy = vi.spyOn(console, 'debug').mockImplementation(() => {})
     logger.verbose('should be silent')
@@ -86,16 +80,6 @@ describe('logger', () => {
     const spy = vi.spyOn(console, 'debug').mockImplementation(() => {})
 
     logger.debug('debug-msg')
-
-    expect(spy).toHaveBeenCalled()
-  })
-
-  it('info logs when debug is enabled', async () => {
-    debugFlag.value = true
-    await initDebugLogger()
-    const spy = vi.spyOn(console, 'info').mockImplementation(() => {})
-
-    logger.info('info-msg')
 
     expect(spy).toHaveBeenCalled()
   })
