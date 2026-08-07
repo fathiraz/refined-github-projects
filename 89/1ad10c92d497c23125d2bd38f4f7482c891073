@@ -1,0 +1,39 @@
+src/features/queue-tracker.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 409
+src/features/sprint-modal.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 17,153,173,249,282,325
+src/ui/icons.tsx
+  s_5ec27133517f51::t_55cbffc4ea6be7 45-46,48,50-53
+  s_5ec27133517f51::t_42ff926d6fdd94 5,20,24,34,40-44,54-93
+src/ui/modal-step-header.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 4,78,119
+src/ui/search-select-panel.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 7,28
+src/features/token-setup.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 17,142
+src/features/sprint-end-view.tsx
+  s_5ec27133517f51::t_f6de90544306b1 18
+  s_5ec27133517f51::t_d940b92b6dc3a6 187
+src/features/toast-list.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 6,82,97
+src/features/onboarding-coach.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 17,187,198
+src/features/bulk-transfer-modal.tsx
+  s_5ec27133517f51::t_d940b92b6dc3a6 10,49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "891ad10c92d497c23125d2bd38f4f7482c891073",
+  "prompts": {},
+  "sessions": {
+    "s_5ec27133517f51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "00d1b49e-fdc5-4ee4-81af-fe3fbf6394db",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
