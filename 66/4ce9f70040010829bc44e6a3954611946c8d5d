@@ -1,0 +1,37 @@
+src/lib/selection-store.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 56
+src/lib/graphql-client.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 82
+src/lib/project-table-dom.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 86,90,99
+src/features/bulk-random-assign-utils.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 105,114,131,143,163,181-183,203,212,223,225,227
+src/lib/debug-logger.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 172
+src/lib/graphql-testclock.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 62
+src/lib/queue-store.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 77,136,158,188,212,261,299,349,375
+src/lib/queue.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 71,114,150
+src/lib/errors.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 31
+src/lib/schema-snapshots.test.ts
+  s_5ec27133517f51::t_04d27a0ece5dc5 19,21,27,37,47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "664ce9f70040010829bc44e6a3954611946c8d5d",
+  "prompts": {},
+  "sessions": {
+    "s_5ec27133517f51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "00d1b49e-fdc5-4ee4-81af-fe3fbf6394db",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
