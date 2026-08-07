@@ -16,23 +16,17 @@ export function registerConfigHandlers(): void {
   onMessage('getPatStatus', () =>
     runHandler(
       'getPatStatus',
-      Effect.tryPromise({
-        try: async () => {
-          const pat = await patStorage.getValue()
-          return { hasPat: Boolean(pat?.trim()) }
-        },
-        catch: (err) => err as unknown,
-      }).pipe(Effect.orDie),
+      Effect.promise(async () => {
+        const pat = await patStorage.getValue()
+        return { hasPat: Boolean(pat?.trim()) }
+      }),
     ),
   )
 
   onMessage('validatePat', ({ data }) =>
     runHandler(
       'validatePat',
-      Effect.tryPromise({
-        try: () => validatePatAsync(data.token),
-        catch: (err) => err as unknown,
-      }).pipe(Effect.orDie),
+      Effect.promise(() => validatePatAsync(data.token)),
     ),
   )
 

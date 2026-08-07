@@ -35,8 +35,6 @@ import {
   classifyTransferEligibilityRows,
   unresolvedTransferEligibilityRows,
 } from '@/background/transfer-eligibility'
-import { ProjectService } from '@/background/project-service'
-import { provideBackground } from '@/background/runtime-ext'
 
 import type {
   IssueTypeNode,
@@ -302,47 +300,38 @@ export function registerFieldHandlers(): void {
   onMessage('getProjectFields', ({ data }) =>
     runHandler(
       'getProjectFields',
-      provideBackground(
-        Effect.gen(function* () {
-          logger.log('[rgp:bg] getProjectFields received', data)
-          const projectService = yield* ProjectService
-          const { project } = yield* projectService.getProjectFieldsData(
-            data.owner,
-            data.number,
-            data.isOrg,
-          )
-          return {
-            id: project?.id || '',
-            title: project?.title || 'Project',
-            fields: project?.fields.nodes.filter(Boolean) || [],
-          }
-        }),
-      ),
+      Effect.gen(function* () {
+        logger.log('[rgp:bg] getProjectFields received', data)
+        const { project } = yield* Effect.promise(() =>
+          getProjectFieldsData(data.owner, data.number, data.isOrg),
+        )
+        return {
+          id: project?.id || '',
+          title: project?.title || 'Project',
+          fields: project?.fields.nodes.filter(Boolean) || [],
+        }
+      }),
     ),
   )
 
   onMessage('getItemTitles', ({ data }) =>
     runHandler(
       'getItemTitles',
-      provideBackground(
-        Effect.gen(function* () {
-          logger.log('[rgp:bg] getItemTitles received', {
-            itemCount: data.itemIds.length,
-            projectId: data.projectId,
-          })
-          const projectService = yield* ProjectService
-          const resolved = yield* projectService.resolveProjectItemIdsWithTitles(
-            data.itemIds,
-            data.projectId,
-          )
-          return resolved.map((r) => ({
-            domId: r.domId,
-            issueNodeId: r.issueNodeId,
-            title: r.title,
-            typename: r.typename,
-          }))
-        }),
-      ),
+      Effect.gen(function* () {
+        logger.log('[rgp:bg] getItemTitles received', {
+          itemCount: data.itemIds.length,
+          projectId: data.projectId,
+        })
+        const resolved = yield* Effect.promise(() =>
+          resolveProjectItemIdsWithTitles(data.itemIds, data.projectId),
+        )
+        return resolved.map((r) => ({
+          domId: r.domId,
+          issueNodeId: r.issueNodeId,
+          title: r.title,
+          typename: r.typename,
+        }))
+      }),
     ),
   )
 
