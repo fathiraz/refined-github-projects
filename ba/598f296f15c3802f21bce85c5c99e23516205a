@@ -1,0 +1,66 @@
+src/entries/background.ts
+  s_5ec27133517f51::t_93538ae1bae5e3 30-33
+  s_5ec27133517f51::t_d07ccd172376a4 10-13
+src/entries/content.ts
+  s_5ec27133517f51::t_778291582fbc8a 56
+src/features/sprint-progress-view.tsx
+  s_5ec27133517f51::t_09c115c47455e0 8
+src/ui/modal-step-header.tsx
+  s_5ec27133517f51::t_0a4de52c490123 4-23
+src/features/sprint-modal.tsx
+  s_5ec27133517f51::t_a31ed90d18b33c 38
+src/lib/primer-shadow-dom-compat.test.ts
+  s_5ec27133517f51::t_7eaf3000cf5206 10
+src/lib/vitest.setup.ts
+  s_5ec27133517f51::t_7cee300f18c100 2-4
+vitest.config.ts
+  s_5ec27133517f51::t_1f1dd8f279f416 12-14
+src/features/token-setup.tsx
+  s_5ec27133517f51::t_3df43952d30565 151,173,186,200,209,255,322,324
+  s_5ec27133517f51::t_a31ed90d18b33c 203-204
+src/lib/z-index.test.ts
+  s_5ec27133517f51::t_f860eba249d89c 6
+src/lib/graphql-testclock.test.ts
+  s_5ec27133517f51::t_8b5db9b6168c02 3,12,14-19
+  s_5ec27133517f51::t_037f4955657432 68
+  s_5ec27133517f51::t_4bffb47ac35122 30
+src/features/sprint-injections.tsx
+  s_5ec27133517f51::t_fb2816bbbf752b 8
+src/features/bulk-duplicate-modal.tsx
+  s_5ec27133517f51::t_cc97eb718ab2d8 60-62
+src/lib/storage-service.ts
+  s_5ec27133517f51::t_b555a675f43b21 3,6-9,11,19
+src/ui/search-select-panel.tsx
+  s_5ec27133517f51::t_e45c0e09fcb6c3 231
+  s_5ec27133517f51::t_ce4f703ee27efa 175-176,178-183,185-187
+  s_5ec27133517f51::t_989161968803a6 206,221
+src/ui/modal-shell.tsx
+  s_5ec27133517f51::t_ce4f703ee27efa 76
+src/features/sprint-table-widget.tsx
+  s_5ec27133517f51::t_70f06d89e41d4f 48-82,200,236
+  s_5ec27133517f51::t_778291582fbc8a 83
+src/features/bulk-random-assign-flyout.tsx
+  s_5ec27133517f51::t_3c35c51a184b79 224
+scripts/update-coverage-badge.mjs
+  s_5ec27133517f51::t_b3468ff1335b92 6,8-11,24,27,128
+.github/workflows/coverage.yml
+  s_5ec27133517f51::t_c599a4ba3c4f3b 66
+src/lib/effect-runtime.ts
+  s_5ec27133517f51::t_09b00e7082c4d8 15,18-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "ba598f296f15c3802f21bce85c5c99e23516205a",
+  "prompts": {},
+  "sessions": {
+    "s_5ec27133517f51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "00d1b49e-fdc5-4ee4-81af-fe3fbf6394db",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
