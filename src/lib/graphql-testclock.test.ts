@@ -59,7 +59,7 @@ describe('GithubGraphQL service — TestClock-driven retry behavior', () => {
       program.pipe(Effect.provide(services), Effect.provide(TestContext.TestContext)),
     )
 
-    expect(result).toEqualValue({ viewer: { login: 'test-user' } })
+    expect(result).toEqual({ viewer: { login: 'test-user' } })
     expect(calls).toBe(2)
   })
 

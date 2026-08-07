@@ -74,7 +74,7 @@ describe('queueStore.subscribe', () => {
     const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
 
     expect(snapshots.length).toBe(1)
-    expect(snapshots[0]).toEqualValue([])
+    expect(snapshots[0]).toEqual([])
     unsub()
   })
 
@@ -133,7 +133,7 @@ describe('queueStore auto-dismiss', () => {
     await vi.advanceTimersByTimeAsync(3500)
 
     const afterDismiss = snapshots[snapshots.length - 1]
-    expect(afterDismiss).toEqualValue([])
+    expect(afterDismiss).toEqual([])
     unsub()
   })
 
@@ -155,7 +155,7 @@ describe('queueStore auto-dismiss', () => {
 
     const latest = snapshots[snapshots.length - 1]
     expect(latest).toHaveLength(1)
-    expect((latest[0] as { failedItems: unknown[] }).failedItems).toEqualValue([
+    expect((latest[0] as { failedItems: unknown[] }).failedItems).toEqual([
       { id: 'x', title: 'x', error: 'boom' },
     ])
     unsub()
@@ -185,7 +185,7 @@ describe('queueStore auto-dismiss', () => {
     const snapshots: unknown[][] = []
     const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
     const latest = snapshots[snapshots.length - 1] as { retryContext: unknown }[]
-    expect(latest[0].retryContext).toEqualValue({ messageType: 'bulkUpdate', data: { x: 1 } })
+    expect(latest[0].retryContext).toEqual({ messageType: 'bulkUpdate', data: { x: 1 } })
     unsub()
   })
 
@@ -209,7 +209,7 @@ describe('queueStore auto-dismiss', () => {
     const snapshots: unknown[][] = []
     const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
     const latest = snapshots[snapshots.length - 1] as { failedItems: unknown[] }[]
-    expect(latest[0].failedItems).toEqualValue([{ id: 'f1', title: 't1', error: 'e1' }])
+    expect(latest[0].failedItems).toEqual([{ id: 'f1', title: 't1', error: 'e1' }])
     unsub()
   })
 
@@ -258,7 +258,7 @@ describe('queueStore phase derivation', () => {
 
     const entry = snapshots[snapshots.length - 1].find((p: any) => p.processId === pid)
     expect(entry.phase.kind).toBe('in-flight')
-    expect(entry.phase.progress).toEqualValue({ done: 1, total: 4 })
+    expect(entry.phase.progress).toEqual({ done: 1, total: 4 })
     queueStore.dismiss(pid)
     unsub()
   })
@@ -296,7 +296,7 @@ describe('queueStore phase derivation', () => {
 
     const entry = snapshots[snapshots.length - 1].find((p: any) => p.processId === pid)
     expect(entry.phase.kind).toBe('partial')
-    expect(entry.phase.failedItemIds).toEqualValue(['i1'])
+    expect(entry.phase.failedItemIds).toEqual(['i1'])
     queueStore.dismiss(pid)
     unsub()
   })
@@ -346,7 +346,7 @@ describe('queueStore phase derivation', () => {
 
     const entry = snapshots[snapshots.length - 1].find((p: any) => p.processId === pid)
     expect(entry.phase.kind).toBe('partial')
-    expect(entry.phase.retry).toEqualValue({
+    expect(entry.phase.retry).toEqual({
       messageType: 'bulkUpdate',
       data: { projectId: 'x', itemIds: ['i1'] },
     })
@@ -372,7 +372,7 @@ describe('queueStore.attachPhaseHints', () => {
     const unsub = queueStore.subscribe((e) => snapshots.push([...e]))
     const entry = snapshots[snapshots.length - 1].find((p: any) => p.processId === pid)
     expect(entry.phase.kind).toBe('success')
-    expect(entry.phase.reverse).toEqualValue({
+    expect(entry.phase.reverse).toEqual({
       messageType: 'bulkUpdate',
       data: { reopen: true },
       affectedItemIds: ['i1'],

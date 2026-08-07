@@ -79,7 +79,7 @@ describe('gql', () => {
       {},
     )
 
-    expect(result).toEqualValue(expectedData)
+    expect(result).toEqual(expectedData)
   })
 
   it('throws GithubRateLimitError on 403 with x-ratelimit-remaining=0 (after internal retries)', async () => {

@@ -28,7 +28,7 @@ describe('GithubRateLimitError (canonical 429 variant)', () => {
     const b = new GithubRateLimitError({ status: 429, message: 'Too Many', retryAfter: 30 })
 
     expect(Equal.equals(a, b)).toBe(true)
-    expect(a).toEqualValue(b)
+    expect(a).toEqual(b)
   })
 
   it('Equal.equals returns false when message differs', () => {

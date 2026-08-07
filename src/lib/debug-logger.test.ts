@@ -169,6 +169,6 @@ describe('RgpLoggerLive', () => {
     expect(errorSpy).toHaveBeenCalled()
     const calls = errorSpy.mock.calls[0] as unknown[]
     // second arg is the annotations object
-    expect(calls[1]).toEqualValue({ op: 'query', status: 500 })
+    expect(calls[1]).toEqual({ op: 'query', status: 500 })
   })
 })

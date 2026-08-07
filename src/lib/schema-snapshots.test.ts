@@ -16,15 +16,15 @@ describe('MessageSchemas — round-trip encode snapshots', () => {
   it('encodes/decodes getPatStatus output', () => {
     const value = { hasPat: true }
     const encoded = Schema.encodeSync(Messages.getPatStatus.output)(value)
-    expect(encoded).toEqualValue({ hasPat: true })
+    expect(encoded).toEqual({ hasPat: true })
     const decoded = Schema.decodeSync(Messages.getPatStatus.output)(encoded)
-    expect(decoded).toEqualValue(value)
+    expect(decoded).toEqual(value)
   })
 
   it('encodes/decodes validatePat output (success variant)', () => {
     const value = { valid: true as const, user: 'octocat' }
     const encoded = Schema.encodeSync(Messages.validatePat.output)(value)
-    expect(encoded).toEqualValue({ valid: true, user: 'octocat' })
+    expect(encoded).toEqual({ valid: true, user: 'octocat' })
   })
 
   it('encodes/decodes validatePat output (failure variant)', () => {
@@ -34,7 +34,7 @@ describe('MessageSchemas — round-trip encode snapshots', () => {
       errorMessage: 'Bad credentials',
     }
     const encoded = Schema.encodeSync(Messages.validatePat.output)(value)
-    expect(encoded).toEqualValue({
+    expect(encoded).toEqual({
       valid: false,
       errorType: 'expired_or_invalid',
       errorMessage: 'Bad credentials',
@@ -44,7 +44,7 @@ describe('MessageSchemas — round-trip encode snapshots', () => {
   it('decodes valid getItemPreview input', () => {
     const value = { itemId: 'issue:42', owner: 'octocat', number: 1, isOrg: false }
     const decoded = Schema.decodeUnknownSync(Messages.getItemPreview.input)(value)
-    expect(decoded).toEqualValue(value)
+    expect(decoded).toEqual(value)
   })
 
   it('rejects invalid validatePat input (missing token)', () => {
