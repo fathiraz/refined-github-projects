@@ -7,6 +7,7 @@ import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
 import { ensureTippyCss } from '@/lib/tippy-utils'
+import { primerCss } from '@/lib/primer-css-helper'
 
 interface RepoItem {
   id: string
@@ -45,14 +46,7 @@ interface EligibilityRow {
 }
 
 const interactiveButtonSx = {
-  boxShadow: 'none',
-  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-  '@media (prefers-reduced-motion: reduce)': {
-    transition: 'none',
-    '&:hover:not(:disabled)': { transform: 'none' },
-  },
+  ...primerCss.buttonMotion(),
 } as const
 
 // §10.5 — session-scoped recent transfer destinations (most-recent first, cap 5).

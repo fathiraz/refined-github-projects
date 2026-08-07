@@ -14,6 +14,7 @@ import { sendMessage } from '@/lib/messages'
 import type { PatError, PatErrorType } from '@/lib/errors'
 import { patStorage } from '@/lib/storage'
 import { CheckIcon, GearIcon, XIcon } from '@/ui/icons'
+import { primerCss } from '@/lib/primer-css-helper'
 
 const PAT_URL =
   'https://github.com/settings/tokens/new?scopes=project,read:org,repo&description=Refined+GitHub+Projects'
@@ -138,14 +139,7 @@ const cardSx = {
 } as const
 
 const actionButtonSx = {
-  boxShadow: 'none',
-  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-  '@media (prefers-reduced-motion: reduce)': {
-    transition: 'none',
-    '&:hover:not(:disabled)': { transform: 'none' },
-  },
+  ...primerCss.buttonMotion(),
 } as const
 
 export function TokenSetupCard() {

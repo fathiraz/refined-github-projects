@@ -14,6 +14,7 @@ import { sprintConfirmEndStore } from '@/lib/sprint-store'
 import { SprintProgressView } from '@/features/sprint-progress-view'
 import { SettingsView } from '@/features/sprint-settings-view'
 import { EndSprintView } from '@/features/sprint-end-view'
+import { primerCss } from '@/lib/primer-css-helper'
 
 interface Props {
   projectId: string
@@ -149,14 +150,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
             sx={{
               p: '4px',
               color: 'fg.muted',
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
+              ...primerCss.buttonMotion(),
             }}
           >
             <SlidersIcon size={16} />
@@ -176,14 +170,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
             sx={{
               p: '4px',
               color: 'fg.muted',
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
+              ...primerCss.buttonMotion(),
             }}
           >
             <XIcon size={16} />
@@ -259,14 +246,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
                     size="small"
                     onClick={() => setShowSettings(true)}
                     sx={{
-                      boxShadow: 'none',
-                      transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                      '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                      '@media (prefers-reduced-motion: reduce)': {
-                        transition: 'none',
-                        '&:hover:not(:disabled)': { transform: 'none' },
-                      },
+                      ...primerCss.buttonMotion(),
                     }}
                   >
                     Set Up Sprint
@@ -299,14 +279,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
                         disabled={acknowledging}
                         onClick={handleAcknowledge}
                         sx={{
-                          boxShadow: 'none',
-                          transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                          '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                          '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                          '@media (prefers-reduced-motion: reduce)': {
-                            transition: 'none',
-                            '&:hover:not(:disabled)': { transform: 'none' },
-                          },
+                          ...primerCss.buttonMotion(),
                         }}
                       >
                         {acknowledging ? <Spinner size="small" /> : 'Track Sprint'}
@@ -349,14 +322,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
                       size="small"
                       onClick={handleStopTracking}
                       sx={{
-                        boxShadow: 'none',
-                        transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                        '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                        '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                        '@media (prefers-reduced-motion: reduce)': {
-                          transition: 'none',
-                          '&:hover:not(:disabled)': { transform: 'none' },
-                        },
+                        ...primerCss.buttonMotion(),
                       }}
                     >
                       Stop tracking
