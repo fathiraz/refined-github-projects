@@ -1,0 +1,22 @@
+src/lib/messages.ts
+  s_5ec27133517f51::t_485686e745ce39 2-3
+  s_5ec27133517f51::t_9a30a1fb1f6132 213-215,228-230,339
+  s_5ec27133517f51::t_9be8cdf12bb362 456
+  s_5ec27133517f51::t_11c787503d2c5c 199-212,216-227,231-338,340-455
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "bcf9c443fac71ca8c31a4cc4abf8c9845fa2b79c",
+  "prompts": {},
+  "sessions": {
+    "s_5ec27133517f51": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "00d1b49e-fdc5-4ee4-81af-fe3fbf6394db",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
