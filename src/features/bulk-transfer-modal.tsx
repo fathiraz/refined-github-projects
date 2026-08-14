@@ -3,7 +3,7 @@ import Tippy from '@/ui/tooltip'
 import { Box, Button, Checkbox, Flash, FormControl, Text } from '@primer/react'
 import { SearchSelectPanel, type SearchSelectPanelOption } from '@/ui/search-select-panel'
 import { LockIcon, MoveIcon } from '@/ui/icons'
-import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
+import { Z_TOOLTIP } from '@/lib/z-index'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
 import { ensureTippyCss } from '@/lib/tippy-utils'
@@ -261,30 +261,11 @@ export function BulkTransferModal({
 
   return (
     <Box
-      sx={{
-        position: 'fixed',
-        inset: 0,
-        bg: 'rgba(27,31,36,0.5)',
-        zIndex: Z_MODAL,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      sx={primerCss.modalOverlay()}
       onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
       onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
     >
-      <Box
-        sx={{
-          bg: 'canvas.overlay',
-          border: '1px solid',
-          borderColor: 'border.default',
-          borderRadius: 2,
-          width: '100%',
-          maxWidth: 480,
-          overflow: 'hidden',
-          boxShadow: 'none',
-        }}
-      >
+      <Box sx={primerCss.modalPanel({ display: 'block' })}>
         <ModalStepHeader
           title={`Transfer ${count} ${count === 1 ? 'issue' : 'issues'}`}
           icon={<MoveIcon size={16} />}
