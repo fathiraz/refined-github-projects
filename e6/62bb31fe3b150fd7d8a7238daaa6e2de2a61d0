@@ -1,0 +1,159 @@
+src/lib/queue.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 23
+src/background/bulk-update.ts
+  s_f1e44e3c9e8eb5::t_6c875dc2c8d482 27
+  s_f1e44e3c9e8eb5::t_88a7623f051153 39
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 40,276
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 35
+src/background/bulk-rename.ts
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 32,82,114,154,187,261
+  s_f1e44e3c9e8eb5::t_6c875dc2c8d482 21
+  s_f1e44e3c9e8eb5::t_88a7623f051153 31,113,186
+src/background/transfer-eligibility.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 3,5
+src/lib/project-table-dom.ts
+  s_f1e44e3c9e8eb5::t_6c3780414256d2 60
+src/background/sprint-handlers.ts
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 453
+  s_f1e44e3c9e8eb5::t_e6190b56729064 22
+src/background/types.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 70,73,76,79
+src/features/create-issue-field-flyout.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 20
+src/features/bulk-close-modal.tsx
+  s_f1e44e3c9e8eb5::t_e6190b56729064 11
+  s_f1e44e3c9e8eb5::t_b90c376375a677 66
+src/background/relationship-helpers.ts
+  s_f1e44e3c9e8eb5::t_4fb54eee7d9df4 81,85
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 111,124,166,247
+src/features/bulk-delete-modal.tsx
+  s_f1e44e3c9e8eb5::t_b90c376375a677 78
+  s_f1e44e3c9e8eb5::t_4fb54eee7d9df4 85
+  s_f1e44e3c9e8eb5::t_e6190b56729064 8
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 52
+src/features/bulk-transfer-modal.tsx
+  s_f1e44e3c9e8eb5::t_b90c376375a677 296
+  s_f1e44e3c9e8eb5::t_e6190b56729064 11
+src/ui/panel-card.tsx
+  s_f1e44e3c9e8eb5::t_61d374fd38abef 4-6,9-10,13,18-21
+src/background/cache.ts
+  s_f1e44e3c9e8eb5::t_4fb54eee7d9df4 6
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 5,143,147
+src/features/sprint-progress-view.tsx
+  s_f1e44e3c9e8eb5::t_b90c376375a677 114,182
+  s_f1e44e3c9e8eb5::t_e6190b56729064 9
+src/features/bulk-mark-flyout.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 22
+src/lib/graphql-service.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 29
+src/lib/queue-store.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 7,17
+src/ui/bulk-flyout.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 20,78
+src/ui/icons.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 47
+src/lib/create-issue-fields-store.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 6
+src/ui/selection-control.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 7,9
+src/features/bulk-duplicate-utils.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 30
+src/features/bulk-edit-relationship-pane.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 29
+src/lib/relationship-utils.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 3
+src/lib/schemas-decode.ts
+  s_f1e44e3c9e8eb5::t_ca3f29749b02ee 18-19
+src/ui/search-select-panel.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 9
+src/lib/toast-store.ts
+  s_f1e44e3c9e8eb5::t_5ac4dcca8e43d7 4
+  s_f1e44e3c9e8eb5::t_88a7623f051153 59
+  s_f1e44e3c9e8eb5::t_6c875dc2c8d482 3
+src/ui/modal-shell.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 6
+src/lib/format.ts
+  s_f1e44e3c9e8eb5::t_e54e34a40342be 10-20
+  s_f1e44e3c9e8eb5::t_f6b65f8f168e3a 1-9
+src/features/bulk-edit-flyout-helpers.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 13
+src/ui/repo-metadata-select-panel.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 7
+src/features/bulk-actions-utils.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 11
+src/lib/messages.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 61
+src/background/bulk-state.ts
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 37,83,131,173,203,245,273,314,341,379,406,444,471,509
+  s_f1e44e3c9e8eb5::t_88a7623f051153 36,130,202,272,340,405,470
+  s_f1e44e3c9e8eb5::t_6c875dc2c8d482 21
+src/features/bulk-reorder-flyout.tsx
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 130,142,336
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 22
+  s_f1e44e3c9e8eb5::t_450ba130b0f107 20
+src/features/bulk-rename-flyout.tsx
+  s_f1e44e3c9e8eb5::t_450ba130b0f107 20
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 190
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 29
+src/features/table-drag-drop.ts
+  s_f1e44e3c9e8eb5::t_e6190b56729064 15
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 118,236
+src/background/bulk-position.ts
+  s_f1e44e3c9e8eb5::t_4fb54eee7d9df4 26
+  s_f1e44e3c9e8eb5::t_88a7623f051153 25,96
+  s_f1e44e3c9e8eb5::t_6c875dc2c8d482 13
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 67,98
+src/background/create-issue.ts
+  s_f1e44e3c9e8eb5::t_88a7623f051153 84
+  s_f1e44e3c9e8eb5::t_6c875dc2c8d482 13
+src/lib/__tests__/use-bar-keyboard-chords.test.tsx
+  s_f1e44e3c9e8eb5::t_0a02086074ec49 10
+src/features/bulk-duplicate-modal.tsx
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 247,258
+  s_f1e44e3c9e8eb5::t_e6190b56729064 59
+src/ui/status-banner.tsx
+  s_f1e44e3c9e8eb5::t_d077f8c779947b 5-10,13,18-19,23,37
+src/features/bulk-edit-field-row.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 24
+src/features/bulk-random-assign-flyout.tsx
+  s_f1e44e3c9e8eb5::t_450ba130b0f107 34
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 36,42
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 257
+src/features/bulk-edit-flyout.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 31
+src/features/bulk-edit-utils.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 33,51,61,66,103,127,135,140
+src/background/duplicate-handlers.ts
+  s_f1e44e3c9e8eb5::t_a26d629bfdb768 232
+  s_f1e44e3c9e8eb5::t_6c875dc2c8d482 24
+  s_f1e44e3c9e8eb5::t_88a7623f051153 43
+src/features/bulk-edit-value-picker.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 17
+src/features/bulk-rename-utils.ts
+  s_f1e44e3c9e8eb5::t_9ec3ce9bda698f 4
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 55,59
+src/lib/github-project.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 10,16
+src/lib/shadow-ui-factory.tsx
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 16,134
+src/lib/keyboard.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 3
+src/lib/use-bar-keyboard-chords.ts
+  s_f1e44e3c9e8eb5::t_75b6b1e5330883 9,22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "e662bb31fe3b150fd7d8a7238daaa6e2de2a61d0",
+  "prompts": {},
+  "sessions": {
+    "s_f1e44e3c9e8eb5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "798932bb-f1eb-4b14-a942-ca4c29277070",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
