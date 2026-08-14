@@ -30,7 +30,7 @@ export interface ProjectData {
   fields: ProjectField[]
 }
 
-export interface RelationshipSelectionState {
+interface RelationshipSelectionState {
   parent: boolean
   blockedBy: boolean
   blocking: boolean
@@ -48,7 +48,7 @@ export const EDITABLE_PROJECT_FIELD_DATATYPES = new Set([
 ])
 
 /** Issue-level attributes injected as synthetic rows in the field catalog. */
-export const ISSUE_PROPERTY_DATATYPES = new Set([
+const ISSUE_PROPERTY_DATATYPES = new Set([
   'TITLE',
   'BODY',
   'COMMENT',
@@ -58,12 +58,12 @@ export const ISSUE_PROPERTY_DATATYPES = new Set([
 ])
 
 /** All datatypes shown in the Edit fields picker (excludes RELATIONSHIP). */
-export const BULK_EDIT_FALLBACK_DATATYPES = new Set([
+const BULK_EDIT_FALLBACK_DATATYPES = new Set([
   ...EDITABLE_PROJECT_FIELD_DATATYPES,
   ...ISSUE_PROPERTY_DATATYPES,
 ])
 
-export const RELATIONSHIP_OPTIONS: Array<{
+const RELATIONSHIP_OPTIONS: Array<{
   key: RelationshipKey
   label: string
   description: string
@@ -100,7 +100,7 @@ export function relationshipKeyFromFieldId(id: string): RelationshipKey | null {
   return RELATIONSHIP_OPTIONS.some((opt) => opt.key === key) ? key : null
 }
 
-export function isSyntheticIssuePropertyId(id: string): boolean {
+function isSyntheticIssuePropertyId(id: string): boolean {
   return id.startsWith('__') && !isRelationshipFieldId(id)
 }
 
@@ -124,7 +124,7 @@ export function buildFieldCatalog(fields: readonly ProjectField[]): ProjectField
   return [...byId.values()]
 }
 
-export type FieldListBrowsePartition = {
+type FieldListBrowsePartition = {
   mode: 'browse'
   recent: ProjectField[]
   issueProperties: ProjectField[]
@@ -132,12 +132,12 @@ export type FieldListBrowsePartition = {
   relationships: ProjectField[]
 }
 
-export type FieldListSearchPartition = {
+type FieldListSearchPartition = {
   mode: 'search'
   matches: ProjectField[]
 }
 
-export type FieldListPartition = FieldListBrowsePartition | FieldListSearchPartition
+type FieldListPartition = FieldListBrowsePartition | FieldListSearchPartition
 
 export function partitionFieldList(args: {
   fields: readonly ProjectField[]

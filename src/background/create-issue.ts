@@ -10,6 +10,7 @@ import { gql } from '@/lib/graphql-client'
 import { CLONE_ISSUE, ATTACH_TO_PROJECT, UPDATE_PROJECT_FIELD } from '@/lib/graphql-mutations'
 import { GET_REPO_ASSIGNEES, GET_REPO_LABELS } from '@/lib/graphql-queries'
 import { processQueue, sleep } from '@/lib/queue'
+import { newProcessId } from '@/lib/format'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
@@ -80,7 +81,7 @@ async function runCreateIssue(data: CreateIssueWithFieldsMessageData, tabId?: nu
   }
 
   acquireBulk()
-  const processId = `create-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const processId = newProcessId('create')
   const totalSteps = 2 + data.updates.length
   const label = `Create issue · ${data.title}`
 

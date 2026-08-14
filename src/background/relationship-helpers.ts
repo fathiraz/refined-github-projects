@@ -78,15 +78,11 @@ export function mapIssueNodeToRelationshipSearchResult(
   }
 }
 
-export function getIssueFromDependencyEntry(
-  entry: RestIssueDependencyEntry,
-): RestIssuePayload | null {
+function getIssueFromDependencyEntry(entry: RestIssueDependencyEntry): RestIssuePayload | null {
   return entry.issue ?? entry.blocking_issue ?? entry.blocked_issue ?? entry
 }
 
-export function normalizeIssueRelationship(
-  entry: RestIssueDependencyEntry,
-): IssueRelationshipData | null {
+function normalizeIssueRelationship(entry: RestIssueDependencyEntry): IssueRelationshipData | null {
   const issue = getIssueFromDependencyEntry(entry)
   if (!issue || typeof issue.number !== 'number' || typeof issue.title !== 'string') {
     return null
@@ -112,7 +108,7 @@ export function normalizeIssueRelationship(
   }
 }
 
-export function getRelationshipEntries(
+function getRelationshipEntries(
   response: RestIssueDependencyResponse,
   kind: 'blocked_by' | 'blocking',
 ): RestIssueDependencyEntry[] {
@@ -125,7 +121,7 @@ export function getRelationshipEntries(
     : (response.dependencies ?? [])
 }
 
-export async function listIssueRelationships(
+async function listIssueRelationships(
   kind: 'blocked_by' | 'blocking',
   owner: string,
   repo: string,
@@ -167,7 +163,7 @@ export async function listIssueRelationships(
   return relationships
 }
 
-export async function getCurrentParentRelationship(
+async function getCurrentParentRelationship(
   owner: string,
   repo: string,
   issueNumber: number,
@@ -248,7 +244,7 @@ export function dedupeRelationships(issues: IssueRelationshipData[]): IssueRelat
   return [...deduped.values()]
 }
 
-export function formatResolvedIssueLabel(item: ResolvedItem): string {
+function formatResolvedIssueLabel(item: ResolvedItem): string {
   if (item.repoOwner && item.repoName && item.issueNumber) {
     return `${item.repoOwner}/${item.repoName}#${item.issueNumber}`
   }

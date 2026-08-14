@@ -1,6 +1,6 @@
 import { isEditableTarget } from '@/lib/project-table-dom'
 
-export interface ShortcutModifiers {
+interface ShortcutModifiers {
   meta?: boolean
   shift?: boolean
   ctrl?: boolean

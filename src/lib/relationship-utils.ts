@@ -1,6 +1,6 @@
 // shared relationship helpers used by background, features, and ui layers.
 
-export interface RelationshipLike {
+interface RelationshipLike {
   databaseId?: number
   repoOwner: string
   repoName: string

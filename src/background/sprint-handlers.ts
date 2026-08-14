@@ -19,6 +19,7 @@ import { isSprintEndFull, acquireSprintEnd, releaseSprintEnd } from '@/backgroun
 
 import { broadcastQueue } from '@/background/rest-helpers'
 import { getProjectFieldsData } from '@/background/project-helpers'
+import { plural } from '@/lib/format'
 
 export function registerSprintHandlers(): void {
   onMessage('getSprintStatus', async ({ data }) => {
@@ -449,7 +450,7 @@ export function registerSprintHandlers(): void {
           total: tasks.length,
           completed: 0,
           paused: false,
-          status: `Moving ${tasks.length} item${tasks.length !== 1 ? 's' : ''} to next sprint...`,
+          status: `Moving ${plural(tasks.length, 'item')} to next sprint...`,
           processId,
           label,
         },

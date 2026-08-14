@@ -26,7 +26,7 @@ import {
 export type { ParentOperation, ListOperation } from '@/features/bulk-actions-utils'
 export { buildRelationshipsPayload } from '@/features/bulk-actions-utils'
 
-export interface BulkEditRelationshipPaneProps {
+interface BulkEditRelationshipPaneProps {
   relationshipKey: RelationshipKey
   itemIds: readonly string[]
   projectId: string

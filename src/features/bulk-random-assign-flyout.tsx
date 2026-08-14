@@ -31,14 +31,15 @@ import {
   mergePreserveExisting,
   type DistributionStrategy,
 } from '@/features/bulk-random-assign-utils'
+import { plural } from '@/lib/format'
 
-export interface RandomAssignTarget {
+interface RandomAssignTarget {
   id: string
   name: string
   avatarUrl?: string
 }
 
-export interface BulkRandomAssignFlyoutProps {
+interface BulkRandomAssignFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void
@@ -253,7 +254,7 @@ export function BulkRandomAssignFlyout({
       anchorRef={anchorRef as React.RefObject<HTMLElement>}
       open={open}
       onClose={onClose}
-      title={`Random Assign — ${count} item${count !== 1 ? 's' : ''}`}
+      title={`Random Assign — ${plural(count, 'item')}`}
       ariaLabel="Random Assign"
       width={380}
       maxHeight={520}

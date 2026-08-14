@@ -1,5 +1,7 @@
 import { Duration, Effect, Fiber } from 'effect'
 
+import { newProcessId } from '@/lib/format'
+
 export interface ToastEntry {
   id: string
   message: string
@@ -54,7 +56,7 @@ function scheduleDismiss(id: string) {
 
 export const toastStore = {
   show(entry: Omit<ToastEntry, 'id'>): string {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    const id = newProcessId('toast')
     // prepend newest on top; trim to max
     const next = [{ id, ...entry }, ...current]
     if (next.length > MAX_TOASTS) next.splice(MAX_TOASTS)

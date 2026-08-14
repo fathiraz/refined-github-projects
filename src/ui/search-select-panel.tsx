@@ -6,7 +6,7 @@ import { BULK_BAR_PRIMER_PORTAL_NAME } from '@/lib/primer-shadow-dom-compat'
 import { Z_MODAL_PORTAL } from '@/lib/z-index'
 import { primerCss } from '@/lib/primer-css-helper'
 
-export type SearchSelectPanelMessage = {
+type SearchSelectPanelMessage = {
   title: string
   body: string | React.ReactElement
   variant: 'empty' | 'error' | 'warning'

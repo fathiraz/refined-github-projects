@@ -67,16 +67,16 @@ export type FieldsResultProject = {
   }
 }
 
-export interface FieldBase {
+interface FieldBase {
   field: { id: string; name: string; dataType: string }
 }
-export interface TextFieldValue extends FieldBase {
+interface TextFieldValue extends FieldBase {
   text: string
 }
-export interface SingleSelectFieldValue extends FieldBase {
+interface SingleSelectFieldValue extends FieldBase {
   optionId: string
 }
-export interface IterationFieldValue extends FieldBase {
+interface IterationFieldValue extends FieldBase {
   iterationId: string
 }
 export interface NumberFieldValue extends FieldBase {

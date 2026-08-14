@@ -7,13 +7,13 @@ export interface ProjectContext {
   number: number
 }
 
-export interface ProjectFieldOption {
+interface ProjectFieldOption {
   id: string
   name: string
   color?: string
 }
 
-export interface ProjectIteration {
+interface ProjectIteration {
   id: string
   title: string
   startDate: string

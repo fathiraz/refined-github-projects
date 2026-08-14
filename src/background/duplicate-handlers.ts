@@ -21,6 +21,7 @@ import { broadcastQueue, withRateLimitRetry, githubRest } from '@/background/res
 import { formatRelationshipLabel } from '@/background/relationship-helpers'
 import { buildFieldValueFromSource } from '@/background/project-helpers'
 import type { ProjectItemDetails, FieldValue } from '@/background/types'
+import { newProcessId, plural } from '@/lib/format'
 
 // ─── runDeepDuplicate (private) ──────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ async function runDeepDuplicate(
   }
 
   acquireDuplicate()
-  const processId = `dup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const processId = newProcessId('dup')
   logger.log('[rgp:bg] runDeepDuplicate starting', { itemId, processId })
 
   await broadcastQueue(
@@ -228,7 +229,7 @@ async function runDeepDuplicate(
         ? [
             {
               id: 'add-labels',
-              detail: `${labelIds.length} label${labelIds.length !== 1 ? 's' : ''}`,
+              detail: `${plural(labelIds.length, 'label')}`,
               run: async () => {
                 logger.log('[rgp:bg] adding labels', { labelIds, issueId: newIssueId })
                 await withRateLimitRetry(

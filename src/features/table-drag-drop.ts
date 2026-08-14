@@ -12,6 +12,7 @@ import {
 import { INJECTED_ATTR } from '@/lib/project-table-dom'
 import { selectionStore } from '@/lib/selection-store'
 import { sendMessage } from '@/lib/messages'
+import { plural } from '@/lib/format'
 
 const HANDLE_ATTR = 'data-rgp-dnd'
 
@@ -114,7 +115,7 @@ export function injectDragHandles() {
       onGenerateDragPreview({ nativeSetDragImage }) {
         const count = selectionStore.isSelected(domId) ? selectionStore.count() : 1
         const pill = document.createElement('div')
-        pill.textContent = `Moving ${count} item${count !== 1 ? 's' : ''}`
+        pill.textContent = `Moving ${plural(count, 'item')}`
         Object.assign(pill.style, {
           background: '#0969da',
           color: '#fff',
@@ -232,7 +233,7 @@ export function initDragAndDrop(projectId: string, owner: string, number: number
         owner,
         number,
         isOrg,
-        label: `Move · ${selectedDomIds.length} item${selectedDomIds.length !== 1 ? 's' : ''}`,
+        label: `Move · ${plural(selectedDomIds.length, 'item')}`,
       })
     },
   })

@@ -20,7 +20,7 @@ export interface QueueTask {
   run: () => Promise<void>
 }
 
-export interface FailedItem {
+interface FailedItem {
   id: string
   title: string
   error: string

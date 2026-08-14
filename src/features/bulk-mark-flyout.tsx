@@ -19,7 +19,7 @@ import { getItemStateSnapshot, type ItemStateSnapshot } from '@/lib/project-tabl
 
 export type MarkVerb = 'close' | 'reopen' | 'pin' | 'unpin' | 'lock' | 'unlock'
 
-export interface BulkMarkFlyoutProps {
+interface BulkMarkFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void

@@ -44,7 +44,7 @@ import {
  */
 type OcticonSize = number | 'small' | 'medium' | 'large'
 
-export type IconProps = {
+type IconProps = {
   size?: OcticonSize
   color?: string
   children?: React.ReactNode

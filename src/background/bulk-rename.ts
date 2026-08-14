@@ -18,6 +18,7 @@ import { decodeProjectItemDomId } from '@/lib/schemas-decode'
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { broadcastQueue } from '@/background/rest-helpers'
 import { resolveProjectItemIds, getRepositoryId } from '@/background/project-helpers'
+import { newProcessId, plural } from '@/lib/format'
 
 export function registerBulkRenameHandlers(): void {
   onMessage('bulkTransfer', async ({ data, sender }) => {
@@ -27,8 +28,8 @@ export function registerBulkRenameHandlers(): void {
       return
     }
     acquireBulk()
-    const processId = `transfer-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Transfer · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('transfer')
+    const label = `Transfer · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
     try {
       await broadcastQueue(
@@ -78,7 +79,7 @@ export function registerBulkRenameHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Transferring item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Transferring ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Transferring ${plural(resolvedItems.length, 'item')}…`,
               failedItems: state.failedItems,
               processId,
               label,
@@ -109,8 +110,8 @@ export function registerBulkRenameHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `rename-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Rename · ${data.renames.length} item${data.renames.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('rename')
+    const label = `Rename · ${plural(data.renames.length, 'item')}`
     const tabId = sender.tab?.id
 
     try {
@@ -150,7 +151,7 @@ export function registerBulkRenameHandlers(): void {
               status:
                 state.completed < data.renames.length
                   ? `Renaming item ${state.completed + 1} of ${data.renames.length}…`
-                  : `Renaming ${data.renames.length} item${data.renames.length !== 1 ? 's' : ''}…`,
+                  : `Renaming ${plural(data.renames.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -182,8 +183,8 @@ export function registerBulkRenameHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `assign-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Random assign · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('assign')
+    const label = `Random assign · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
 
     try {
@@ -257,7 +258,7 @@ export function registerBulkRenameHandlers(): void {
               status:
                 state.completed < tasks.length
                   ? `Clearing and reassigning item ${state.completed + 1} of ${tasks.length}…`
-                  : `Reassigned ${tasks.length} item${tasks.length !== 1 ? 's' : ''}…`,
+                  : `Reassigned ${plural(tasks.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,

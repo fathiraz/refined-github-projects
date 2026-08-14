@@ -4,7 +4,7 @@ import { onMessage } from '@/lib/messages'
 import { toastStore } from '@/lib/toast-store'
 
 /** Reverse mutation specification — verb handlers attach this so result cards can offer Undo. */
-export interface ReverseOp {
+interface ReverseOp {
   messageType: string
   data: Record<string, unknown>
   /** Item IDs successfully affected by the original op (subset on partial success). */
@@ -14,7 +14,7 @@ export interface ReverseOp {
 }
 
 /** Retry specification — describes how to re-run the failed subset of a partial-success queue entry. */
-export interface RetrySpec {
+interface RetrySpec {
   messageType: string
   data: Record<string, unknown>
 }

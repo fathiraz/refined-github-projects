@@ -3,7 +3,7 @@ import type { BetterSystemStyleObject } from '@primer/react'
 import { Box } from '@primer/react'
 import { primerCss } from '@/lib/primer-css-helper'
 
-export interface ModalShellProps {
+interface ModalShellProps {
   /** Accessible name for the dialog (aria-label). */
   ariaLabel: string
   onClose: () => void

@@ -10,6 +10,7 @@ import { logger } from '@/lib/debug-logger'
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { broadcastQueue, withRateLimitRetry } from '@/background/rest-helpers'
 import { getProjectFieldsData } from '@/background/project-helpers'
+import { newProcessId, plural } from '@/lib/format'
 
 export function registerBulkPositionHandlers(): void {
   onMessage('bulkReorder', async ({ data, sender }) => {
@@ -21,10 +22,8 @@ export function registerBulkPositionHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `reorder-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label =
-      data.label ??
-      `Move · ${data.reorderOps.length} item${data.reorderOps.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('reorder')
+    const label = data.label ?? `Move · ${plural(data.reorderOps.length, 'item')}`
     const tabId = sender.tab?.id
 
     try {
@@ -65,7 +64,7 @@ export function registerBulkPositionHandlers(): void {
               status:
                 state.completed < data.reorderOps.length
                   ? `Moving item ${state.completed + 1} of ${data.reorderOps.length}…`
-                  : `Moving ${data.reorderOps.length} item${data.reorderOps.length !== 1 ? 's' : ''}…`,
+                  : `Moving ${plural(data.reorderOps.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -94,9 +93,9 @@ export function registerBulkPositionHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `reorder-pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    const processId = newProcessId('reorder-pos')
     const count = data.selectedDomIds.length
-    const label = data.label ?? `Move · ${count} item${count !== 1 ? 's' : ''}`
+    const label = data.label ?? `Move · ${plural(count, 'item')}`
     const tabId = sender.tab?.id
 
     try {

@@ -24,6 +24,7 @@ import { takeCachedResolvedItems } from '@/background/cache'
 import { broadcastQueue } from '@/background/rest-helpers'
 import { buildBulkRelationshipTasks } from '@/background/relationship-helpers'
 import { resolveProjectItemIds } from '@/background/project-helpers'
+import { newProcessId, plural } from '@/lib/format'
 
 function formatDetailDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00')
@@ -31,12 +32,12 @@ function formatDetailDate(iso: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-export async function runBulkUpdate(
+async function runBulkUpdate(
   data: BulkUpdateMessageData,
   tabId: number | undefined,
 ): Promise<void> {
-  const processId = `bulk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-  const label = `Bulk update · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+  const processId = newProcessId('bulk')
+  const label = `Bulk update · ${plural(data.itemIds.length, 'item')}`
 
   try {
     await broadcastQueue(
@@ -272,7 +273,7 @@ export async function runBulkUpdate(
             completed: state.completed,
             paused: state.paused,
             retryAfter: state.retryAfter,
-            status: `Updating ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}...`,
+            status: `Updating ${plural(resolvedItems.length, 'item')}...`,
             detail: state.detail,
             processId,
             label,

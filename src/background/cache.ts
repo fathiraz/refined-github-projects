@@ -2,11 +2,8 @@ import type { HierarchyData, ItemPreviewData, SprintProgressData } from '@/lib/m
 import type { FieldsResultProject, ResolvedItem } from '@/background/types'
 import { Duration, Effect, Fiber } from 'effect'
 
-export const RESOLVED_ITEM_CACHE_TTL_MS = 15_000
-export const resolvedItemCache = new Map<
-  string,
-  { resolvedItems: ResolvedItem[]; expiresAt: number }
->()
+const RESOLVED_ITEM_CACHE_TTL_MS = 15_000
+const resolvedItemCache = new Map<string, { resolvedItems: ResolvedItem[]; expiresAt: number }>()
 
 // ===== Effect-based hover tooltip caches (preview + hierarchy) =====
 // cachedWithTTL wraps each fetch Effect and handles TTL automatically.
@@ -143,11 +140,11 @@ export function pruneExpiredCache<T>(cache: Map<string, { data: T; expiresAt: nu
   }
 }
 
-export function createResolvedItemCacheKey(projectId: string, itemIds: string[]): string {
+function createResolvedItemCacheKey(projectId: string, itemIds: string[]): string {
   return `${projectId}::${[...new Set(itemIds)].sort().join('|')}`
 }
 
-export function pruneResolvedItemCache(now = Date.now()): void {
+function pruneResolvedItemCache(now = Date.now()): void {
   for (const [key, entry] of resolvedItemCache.entries()) {
     if (entry.expiresAt <= now) {
       resolvedItemCache.delete(key)

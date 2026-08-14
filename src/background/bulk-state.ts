@@ -18,6 +18,7 @@ import { logger } from '@/lib/debug-logger'
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { broadcastQueue } from '@/background/rest-helpers'
 import { resolveProjectItemIds } from '@/background/project-helpers'
+import { newProcessId, plural } from '@/lib/format'
 
 export function registerBulkStateHandlers(): void {
   onMessage('bulkClose', async ({ data, sender }) => {
@@ -32,8 +33,8 @@ export function registerBulkStateHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `close-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Bulk close · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('close')
+    const label = `Bulk close · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
     let lastFailedTaskIds = new Set<string>()
     let lastCompleted = 0
@@ -79,7 +80,7 @@ export function registerBulkStateHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Closing item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Closing ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Closing ${plural(resolvedItems.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -126,8 +127,8 @@ export function registerBulkStateHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `open-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Bulk open · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('open')
+    const label = `Bulk open · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
 
     try {
@@ -169,7 +170,7 @@ export function registerBulkStateHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Reopening item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Reopening ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Reopening ${plural(resolvedItems.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -198,8 +199,8 @@ export function registerBulkStateHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `delete-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Bulk delete · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('delete')
+    const label = `Bulk delete · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
 
     try {
@@ -241,7 +242,7 @@ export function registerBulkStateHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Removing item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Removing ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Removing ${plural(resolvedItems.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -268,8 +269,8 @@ export function registerBulkStateHandlers(): void {
       return
     }
     acquireBulk()
-    const processId = `lock-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Lock · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('lock')
+    const label = `Lock · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
     try {
       await broadcastQueue(
@@ -310,7 +311,7 @@ export function registerBulkStateHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Locking item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Locking ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Locking ${plural(resolvedItems.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -336,8 +337,8 @@ export function registerBulkStateHandlers(): void {
       return
     }
     acquireBulk()
-    const processId = `unlock-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Unlock · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('unlock')
+    const label = `Unlock · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
     try {
       await broadcastQueue(
@@ -375,7 +376,7 @@ export function registerBulkStateHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Unlocking item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Unlocking ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Unlocking ${plural(resolvedItems.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -401,8 +402,8 @@ export function registerBulkStateHandlers(): void {
       return
     }
     acquireBulk()
-    const processId = `pin-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Pin · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('pin')
+    const label = `Pin · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
     try {
       await broadcastQueue(
@@ -440,7 +441,7 @@ export function registerBulkStateHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Pinning item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Pinning ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Pinning ${plural(resolvedItems.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,
@@ -466,8 +467,8 @@ export function registerBulkStateHandlers(): void {
       return
     }
     acquireBulk()
-    const processId = `unpin-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label = `Unpin · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+    const processId = newProcessId('unpin')
+    const label = `Unpin · ${plural(data.itemIds.length, 'item')}`
     const tabId = sender.tab?.id
     try {
       await broadcastQueue(
@@ -505,7 +506,7 @@ export function registerBulkStateHandlers(): void {
               status:
                 state.completed < resolvedItems.length
                   ? `Unpinning item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Unpinning ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}…`,
+                  : `Unpinning ${plural(resolvedItems.length, 'item')}…`,
               processId,
               label,
               failedItems: state.failedItems,

@@ -1,8 +1,8 @@
 import type { ResolvedItemWithTitle } from '@/background/types'
 
-export type TransferEligibilityReason = 'pull-request' | 'same-repo' | 'unresolved'
+type TransferEligibilityReason = 'pull-request' | 'same-repo' | 'unresolved'
 
-export interface TransferEligibilityRow {
+interface TransferEligibilityRow {
   domId: string
   eligible: boolean
   reason?: TransferEligibilityReason

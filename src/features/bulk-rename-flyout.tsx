@@ -17,6 +17,7 @@ import {
   type RuleState,
   type TitleItem,
 } from '@/features/bulk-rename-utils'
+import { plural } from '@/lib/format'
 
 export interface RenameFlyoutConfirm {
   domId: string
@@ -25,7 +26,7 @@ export interface RenameFlyoutConfirm {
   typename: 'Issue' | 'PullRequest'
 }
 
-export interface BulkRenameFlyoutProps {
+interface BulkRenameFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void
@@ -186,7 +187,7 @@ export function BulkRenameFlyout({
       anchorRef={anchorRef as React.RefObject<HTMLElement>}
       open={open}
       onClose={onClose}
-      title={`Rename — ${count} item${count !== 1 ? 's' : ''}`}
+      title={`Rename — ${plural(count, 'item')}`}
       ariaLabel="Rename titles"
       width={420}
       maxHeight={540}

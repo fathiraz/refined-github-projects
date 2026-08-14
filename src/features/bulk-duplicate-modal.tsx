@@ -56,6 +56,7 @@ import {
 import { RelationshipListEditor } from '@/features/bulk-duplicate-relationship-list'
 
 import { ReviewStep, SelectSectionsStep } from '@/features/bulk-duplicate-steps'
+import { plural } from '@/lib/format'
 
 const getFieldOptionTooltip = (fieldName: string, optionName: string) =>
   `Set ${fieldName} to ${optionName}.`
@@ -243,7 +244,7 @@ export function BulkDuplicateModal({
               label: 'Blocked by',
               group: 'RELATIONSHIPS',
               icon: <AlertIcon size={14} />,
-              badge: `${preview.relationships.blockedBy.length} issue${preview.relationships.blockedBy.length !== 1 ? 's' : ''}`,
+              badge: `${plural(preview.relationships.blockedBy.length, 'issue')}`,
             } satisfies DuplicateSection,
           ]
         : []),
@@ -254,7 +255,7 @@ export function BulkDuplicateModal({
               label: 'Blocking',
               group: 'RELATIONSHIPS',
               icon: <ArrowRightIcon size={14} />,
-              badge: `${preview.relationships.blocking.length} issue${preview.relationships.blocking.length !== 1 ? 's' : ''}`,
+              badge: `${plural(preview.relationships.blocking.length, 'issue')}`,
             } satisfies DuplicateSection,
           ]
         : []),

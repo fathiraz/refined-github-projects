@@ -8,6 +8,7 @@ import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { primerCss } from '@/lib/primer-css-helper'
+import { plural } from '@/lib/format'
 
 interface RepoItem {
   id: string
@@ -292,7 +293,7 @@ export function BulkTransferModal({
 
         <Box sx={{ px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
           <Text as="p" sx={{ m: 0, fontSize: 1, color: 'fg.default' }}>
-            Transfer {count} issue{count !== 1 ? 's' : ''} to another repository.
+            Transfer {plural(count, 'issue')} to another repository.
           </Text>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>

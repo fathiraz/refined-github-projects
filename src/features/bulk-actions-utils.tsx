@@ -8,7 +8,7 @@ import type { RelationshipKey } from '@/features/bulk-edit-utils'
 import { isMac } from '@/lib/keyboard'
 import { Z_MODAL } from '@/lib/z-index'
 
-export function createEmptyRelationshipUpdates(): BulkEditRelationshipsUpdate {
+function createEmptyRelationshipUpdates(): BulkEditRelationshipsUpdate {
   return {
     parent: {
       set: undefined,

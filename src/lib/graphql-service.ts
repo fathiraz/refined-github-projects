@@ -26,7 +26,7 @@ import { Storage } from '@/lib/storage-service'
  *   - 30s timeout per attempt.
  *   - `Effect.withSpan` tracing keyed on the GraphQL operation name.
  */
-export interface GithubGraphQLService {
+interface GithubGraphQLService {
   readonly request: <A, I, R>(
     schema: Schema.Schema<A, I, R>,
     query: string,

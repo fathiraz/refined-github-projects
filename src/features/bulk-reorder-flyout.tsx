@@ -17,8 +17,9 @@ import {
   type OrderedItem,
   type ReorderOp,
 } from '@/features/bulk-move-utils'
+import { plural } from '@/lib/format'
 
-export interface BulkReorderFlyoutProps {
+interface BulkReorderFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void
@@ -126,7 +127,7 @@ export function BulkReorderFlyout({
     fireAndClose({
       ops,
       projectId: resolvedProjectId,
-      label: `Move · ${count} item${count !== 1 ? 's' : ''}`,
+      label: `Move · ${plural(count, 'item')}`,
     })
   }
 
@@ -138,7 +139,7 @@ export function BulkReorderFlyout({
     fireAndClose({
       ops,
       projectId: resolvedProjectId,
-      label: `Move · ${count} item${count !== 1 ? 's' : ''}`,
+      label: `Move · ${plural(count, 'item')}`,
     })
   }
 
@@ -332,7 +333,7 @@ export function BulkReorderFlyout({
       anchorRef={anchorRef as React.RefObject<HTMLElement>}
       open={open}
       onClose={onClose}
-      title={`Reorder — ${count} item${count !== 1 ? 's' : ''}`}
+      title={`Reorder — ${plural(count, 'item')}`}
       ariaLabel="Reorder items"
       width={380}
       maxHeight={540}

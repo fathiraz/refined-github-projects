@@ -6,6 +6,7 @@ import { Z_TOOLTIP } from '@/lib/z-index'
 import { sendMessage, type SprintInfo, type SprintProgressData } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
 import { daysLeft, fmt, iterationEndDate } from '@/lib/sprint-utils'
+import { plural } from '@/lib/format'
 
 function pct(done: number, total: number): number {
   if (total === 0) return 0
@@ -110,7 +111,7 @@ export function SprintProgressView({
           </Text>
         </Box>
         <Label variant={remaining <= 1 ? 'danger' : remaining <= 3 ? 'attention' : 'secondary'}>
-          {remaining} day{remaining !== 1 ? 's' : ''} left
+          {plural(remaining, 'day')} left
         </Label>
       </Box>
 
@@ -178,7 +179,7 @@ export function SprintProgressView({
                   Scope change
                 </Text>
                 <Text sx={{ fontSize: 0, color: 'attention.fg', fontWeight: 'semibold' }}>
-                  +{progress.scopeAddedIssues} Issue{progress.scopeAddedIssues !== 1 ? 's' : ''}
+                  +{plural(progress.scopeAddedIssues, 'Issue')}
                   {progress.hasPointsField && progress.scopeAddedPoints > 0
                     ? ` / +${progress.scopeAddedPoints} Pts`
                     : ''}

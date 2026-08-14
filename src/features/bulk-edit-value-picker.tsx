@@ -14,7 +14,7 @@ import { SearchIcon } from '@/ui/icons'
 import { type ProjectField } from '@/features/bulk-edit-utils'
 import { type FieldValue } from '@/features/bulk-edit-flyout-helpers'
 
-export interface ValuePickerProps {
+interface ValuePickerProps {
   field: ProjectField
   value: FieldValue | null
   onChange: (next: FieldValue) => void

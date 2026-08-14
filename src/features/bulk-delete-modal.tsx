@@ -5,6 +5,7 @@ import { TrashIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { ModalShell } from '@/ui/modal-shell'
 import { primerCss } from '@/lib/primer-css-helper'
+import { plural } from '@/lib/format'
 
 interface Props {
   count: number
@@ -48,7 +49,7 @@ export function BulkDeleteModal({ count, itemTitles, onClose, onConfirm }: Props
     onConfirm()
   }
 
-  const title = `Delete ${count} item${count !== 1 ? 's' : ''}?`
+  const title = `Delete ${plural(count, 'item')}?`
 
   return (
     <ModalShell
@@ -74,15 +75,14 @@ export function BulkDeleteModal({ count, itemTitles, onClose, onConfirm }: Props
             sx={primerCss.buttonMotion()}
             data-testid="rgp-bulk-delete-confirm"
           >
-            Delete {count} item{count !== 1 ? 's' : ''}
+            Delete {plural(count, 'item')}
           </Button>
         </>
       }
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Flash variant="warning">
-          Removes {count} item{count !== 1 ? 's' : ''} from the project board. Underlying issues are
-          not deleted.
+          Removes {plural(count, 'item')} from the project board. Underlying issues are not deleted.
         </Flash>
 
         {titles.length > 0 && (

@@ -21,7 +21,7 @@ export function SectionHeader({ children }: { children: React.ReactNode }) {
   )
 }
 
-export interface FieldRowProps {
+interface FieldRowProps {
   field: ProjectField
   onPick: (field: ProjectField) => void
 }

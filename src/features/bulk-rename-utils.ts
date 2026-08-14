@@ -1,7 +1,7 @@
 // Pure types + rule application for bulk-rename. The flyout supports five
 // rename modes (replace, prefix, suffix, template, number). Each mode has its
 // own state shape; `RuleState` carries enough context to produce a new title
-// given the original via `applyRule()`.
+// given the original via `evaluateRule()`.
 //
 // Tabs:
 //  - replace : optional regex; case-sensitive; multi-line preview safe
@@ -52,11 +52,11 @@ export const DEFAULT_RULE_STATE: RuleState = {
   numberStart: 1,
 }
 
-export interface RuleError {
+interface RuleError {
   message: string
 }
 
-export interface RuleEvaluation {
+interface RuleEvaluation {
   newTitle: string
   /** Per-row error (e.g., regex compilation failure) for diagnostics. */
   error?: RuleError
@@ -139,10 +139,4 @@ export function hasAnyChange(items: readonly TitleItem[], rule: RuleState): bool
     if (evalRes.newTitle !== items[i].title) return true
   }
   return false
-}
-
-/** Legacy applyRule export retained for the dying modal; routes through evaluateRule. */
-export function applyRule(original: string, rule: Partial<RuleState>): string {
-  const merged: RuleState = { ...DEFAULT_RULE_STATE, ...rule, tab: rule.tab ?? 'replace' }
-  return evaluateRule(original, merged, 0).newTitle
 }

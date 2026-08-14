@@ -22,11 +22,6 @@ const AppRuntime = ManagedRuntime.make(AppLayer)
 export const runPromise: typeof AppRuntime.runPromise = (effect, options) =>
   AppRuntime.runPromise(effect, options)
 
-export const runFork: typeof AppRuntime.runFork = (effect, options) =>
-  AppRuntime.runFork(effect, options)
-
-export const runSync: typeof AppRuntime.runSync = (effect) => AppRuntime.runSync(effect)
-
 /**
  * Adapter for `onMessage` handlers — converts an Effect program into a
  * `Promise<A>`. Pretty-prints any defect/failure cause through the logger so

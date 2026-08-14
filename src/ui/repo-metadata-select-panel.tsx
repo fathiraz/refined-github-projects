@@ -4,7 +4,7 @@ import { sendMessage } from '@/lib/messages'
 import { PersonIcon, ShieldIcon } from '@/ui/icons'
 import { SearchSelectPanel, type SearchSelectPanelOption } from '@/ui/search-select-panel'
 
-export type RepoMetadataType = 'ASSIGNEES' | 'LABELS' | 'ISSUE_TYPES'
+type RepoMetadataType = 'ASSIGNEES' | 'LABELS' | 'ISSUE_TYPES'
 
 export type RepoMetadataItem = {
   id: string

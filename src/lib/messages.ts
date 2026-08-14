@@ -58,7 +58,7 @@ export interface IssueSearchResultData extends IssueRelationshipData {
   state?: 'OPEN' | 'CLOSED'
 }
 
-export interface BulkEditRelationshipListUpdate {
+interface BulkEditRelationshipListUpdate {
   add: IssueRelationshipData[]
   remove: IssueRelationshipData[]
   clear: boolean
@@ -195,8 +195,6 @@ export interface HierarchyData {
   blockedBy: IssueRelationshipData[]
   blocking: IssueRelationshipData[]
 }
-
-type FieldMeta = BulkUpdateMessageData['fieldMeta']
 
 interface IterationConfig {
   id: string
