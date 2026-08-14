@@ -1,0 +1,24 @@
+src/background/__tests__/bulk-update-fields.test.ts
+  s_f1e44e3c9e8eb5::t_2d96c9402cd7ac 124-130,156-160
+  s_f1e44e3c9e8eb5::t_af43604ea82fa7 1-123,131-155,161-301
+src/background/bulk-update.ts
+  s_f1e44e3c9e8eb5::t_2d96c9402cd7ac 217-218
+  s_f1e44e3c9e8eb5::t_9201dad6e86621 27,36-126,130-216,219-232,286-289,291-298
+  s_f1e44e3c9e8eb5::t_27194d5ff1421c 127-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "33058c57c41774fba07a1c6402641953429d65ac",
+  "prompts": {},
+  "sessions": {
+    "s_f1e44e3c9e8eb5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "798932bb-f1eb-4b14-a942-ca4c29277070",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
