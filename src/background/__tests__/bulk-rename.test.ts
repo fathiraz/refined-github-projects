@@ -145,18 +145,44 @@ describe('bulkTransfer / bulkRename / bulkRandomAssign — characterization', ()
       targetRepoName: 'api',
     }
 
-    it('resolves the target repository first, under its own status', async () => {
+    it('narrates both preparation steps before resolving items', async () => {
       const { processId } = await runVerb('bulkTransfer', data)
 
       expect(processId).toMatch(/^transfer-\d+-[a-z0-9]+$/)
-      expect(frames()[0]).toMatchObject({
-        total: 2,
-        completed: 0,
-        paused: false,
-        status: 'Resolving target repository...',
-        label: 'Transfer · 2 items',
-      })
+      expect(frames().slice(0, 2)).toEqual([
+        {
+          total: 2,
+          completed: 0,
+          paused: false,
+          status: 'Resolving target repository...',
+          processId,
+          label: 'Transfer · 2 items',
+        },
+        {
+          total: 2,
+          completed: 0,
+          paused: false,
+          status: 'Resolving items...',
+          processId,
+          label: 'Transfer · 2 items',
+        },
+      ])
       expect(hoisted.getRepositoryId).toHaveBeenCalledWith('acme', 'api')
+    })
+
+    it('resolves the repository before it resolves items', async () => {
+      const order: string[] = []
+      hoisted.getRepositoryId.mockImplementation(async () => {
+        order.push('repo')
+        return 'R_target'
+      })
+      hoisted.resolveProjectItemIds.mockImplementation(async () => {
+        order.push('items')
+        return makeItems(2)
+      })
+      await runVerb('bulkTransfer', data)
+
+      expect(order).toEqual(['repo', 'items'])
     })
 
     it('transfers each item to the resolved repository id and paces at 1000ms', async () => {

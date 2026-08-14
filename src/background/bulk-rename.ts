@@ -18,84 +18,32 @@ import { decodeProjectItemDomId } from '@/lib/schemas-decode'
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { broadcastQueue } from '@/background/rest-helpers'
 import { resolveProjectItemIds, getRepositoryId } from '@/background/project-helpers'
+import { runBulkVerb } from '@/background/run-bulk-verb'
 import { newProcessId, plural } from '@/lib/format'
 
 export function registerBulkRenameHandlers(): void {
   onMessage('bulkTransfer', async ({ data, sender }) => {
     logger.log('[rgp:bg] bulkTransfer received', { itemCount: data.itemIds.length })
-    if (isBulkFull()) {
-      console.warn('[rgp:bg] max concurrent bulk reached, rejecting bulkTransfer')
-      return
-    }
-    acquireBulk()
-    const processId = newProcessId('transfer')
-    const label = `Transfer · ${plural(data.itemIds.length, 'item')}`
-    const tabId = sender.tab?.id
-    try {
-      await broadcastQueue(
-        {
-          total: data.itemIds.length,
-          completed: 0,
-          paused: false,
-          status: 'Resolving target repository...',
-          processId,
-          label,
-        },
-        tabId,
-      )
-      const targetRepoId = await getRepositoryId(data.targetRepoOwner, data.targetRepoName)
-      await broadcastQueue(
-        {
-          total: data.itemIds.length,
-          completed: 0,
-          paused: false,
-          status: 'Resolving items...',
-          processId,
-          label,
-        },
-        tabId,
-      )
-      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
-      if (resolvedItems.length === 0) {
-        console.error('[rgp:bg] no valid items resolved for bulkTransfer, aborting')
-        return
-      }
-      const tasks: QueueTask[] = resolvedItems.map(({ domId, issueNodeId }) => ({
-        id: `transfer-${domId}`,
-        run: async () => {
+    await runBulkVerb({
+      idPrefix: 'transfer',
+      label: `Transfer · ${plural(data.itemIds.length, 'item')}`,
+      progressVerb: 'Transferring',
+      itemIds: data.itemIds,
+      projectId: data.projectId,
+      tabId: sender.tab?.id,
+      resolvingStatus: 'Resolving target repository...',
+      prepare: async (setStatus) => {
+        const targetRepoId = await getRepositoryId(data.targetRepoOwner, data.targetRepoName)
+        await setStatus('Resolving items...')
+        return targetRepoId
+      },
+      buildTask:
+        ({ issueNodeId }, targetRepoId) =>
+        async () => {
           await gql(TRANSFER_ISSUE, { issueId: issueNodeId, repositoryId: targetRepoId })
           await sleep(1000)
         },
-      }))
-      await processQueue(
-        tasks,
-        async (state) => {
-          await broadcastQueue(
-            {
-              total: state.total,
-              completed: state.completed,
-              paused: state.paused,
-              retryAfter: state.retryAfter,
-              status:
-                state.completed < resolvedItems.length
-                  ? `Transferring item ${state.completed + 1} of ${resolvedItems.length}…`
-                  : `Transferring ${plural(resolvedItems.length, 'item')}…`,
-              failedItems: state.failedItems,
-              processId,
-              label,
-            },
-            tabId,
-          )
-        },
-        processId,
-      )
-      await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-        tabId,
-      )
-    } finally {
-      releaseBulk()
-    }
+    })
   })
 
   onMessage('bulkRename', async ({ data, sender }) => {
