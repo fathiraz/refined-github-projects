@@ -1,32 +1,27 @@
-type VisibilityListener = (visible: boolean) => void
-let _visible = false
-const _visibilityListeners = new Set<VisibilityListener>()
+// Local on purpose: every other store here carries domain methods around its
+// state, so there is nothing else plain enough to share this with.
+function createValueStore<T>(initial: T) {
+  let current = initial
+  const listeners = new Set<(value: T) => void>()
+
+  return {
+    get: () => current,
+    set: (value: T) => {
+      current = value
+      listeners.forEach((fn) => fn(value))
+    },
+    subscribe: (fn: (value: T) => void) => {
+      listeners.add(fn)
+      return () => listeners.delete(fn)
+    },
+  }
+}
+
+const panelStore = createValueStore(false)
 
 export const sprintPanelStore = {
-  get: () => _visible,
-  set: (v: boolean) => {
-    _visible = v
-    _visibilityListeners.forEach((fn) => fn(v))
-  },
-  toggle: () => sprintPanelStore.set(!_visible),
-  subscribe: (fn: VisibilityListener) => {
-    _visibilityListeners.add(fn)
-    return () => _visibilityListeners.delete(fn)
-  },
+  ...panelStore,
+  toggle: () => panelStore.set(!panelStore.get()),
 }
 
-type ConfirmListener = (v: boolean) => void
-let _pending = false
-const _confirmListeners = new Set<ConfirmListener>()
-
-export const sprintConfirmEndStore = {
-  get: () => _pending,
-  set: (v: boolean) => {
-    _pending = v
-    _confirmListeners.forEach((fn) => fn(v))
-  },
-  subscribe: (fn: ConfirmListener) => {
-    _confirmListeners.add(fn)
-    return () => _confirmListeners.delete(fn)
-  },
-}
+export const sprintConfirmEndStore = createValueStore(false)
