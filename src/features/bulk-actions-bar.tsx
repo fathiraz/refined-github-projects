@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Box, Button, CounterLabel, Text } from '@primer/react'
 import { KebabHorizontalIcon } from '@primer/octicons-react'
 import Tippy from '@/ui/tooltip'
@@ -70,6 +70,22 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     showCloseModal || showDeleteModal || showTransferModal || showDupModal || showHelp
   const anyFlyoutOpen = editFieldsOpen || renameOpen || reorderOpen || randomAssignOpen || markOpen
 
+  // Every overlay is mutually exclusive, and three separate places used to
+  // enumerate all ten setters to dismiss them — one missed line was a stuck
+  // overlay. Closing them is one call now.
+  const closeAllOverlays = useCallback(() => {
+    setShowDupModal(false)
+    setShowCloseModal(false)
+    setShowDeleteModal(false)
+    setShowTransferModal(false)
+    setShowHelp(false)
+    setMarkOpen(false)
+    setEditFieldsOpen(false)
+    setRenameOpen(false)
+    setReorderOpen(false)
+    setRandomAssignOpen(false)
+  }, [])
+
   const resolvedProjectId = projectData?.id || projectId
 
   // selection subscription
@@ -79,19 +95,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       setCount(newCount)
       if (newCount === 0) {
         setMenuOpen(false)
-        setShowDupModal(false)
-        setShowCloseModal(false)
-        setShowDeleteModal(false)
-        setShowTransferModal(false)
-        setShowHelp(false)
-        setMarkOpen(false)
-        setEditFieldsOpen(false)
-        setRenameOpen(false)
-        setReorderOpen(false)
-        setRandomAssignOpen(false)
+        closeAllOverlays()
       }
     })
-  }, [])
+  }, [closeAllOverlays])
 
   // click-outside for action menu
   useEffect(() => {
@@ -132,16 +139,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       allowInEditable: true,
       action: () => {
         if (anyModalOpen || anyFlyoutOpen) {
-          setShowDupModal(false)
-          setShowCloseModal(false)
-          setShowDeleteModal(false)
-          setShowTransferModal(false)
-          setShowHelp(false)
-          setEditFieldsOpen(false)
-          setRenameOpen(false)
-          setReorderOpen(false)
-          setRandomAssignOpen(false)
-          setMarkOpen(false)
+          closeAllOverlays()
         } else if (selectionStore.count() > 0) {
           selectionStore.clear()
         }
