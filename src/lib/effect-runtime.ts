@@ -1,7 +1,7 @@
 import { FetchHttpClient } from '@effect/platform'
-import { Cause, Effect, Layer, ManagedRuntime } from 'effect'
+import { Layer, ManagedRuntime } from 'effect'
 
-import { RgpLoggerLive } from '@/lib/debug-logger'
+import { logger, RgpLoggerLive } from '@/lib/debug-logger'
 import { StorageLive } from '@/lib/storage-service'
 import { GithubGraphQLLive } from '@/lib/graphql-service'
 
@@ -28,17 +28,15 @@ export const runPromise: typeof AppRuntime.runPromise = (effect, options) =>
   AppRuntime.runPromise(effect, options)
 
 /**
- * Adapter for `onMessage` handlers — converts an Effect program into a
- * `Promise<A>`. Pretty-prints any defect/failure cause through the logger so
- * they surface in DevTools instead of being silently swallowed by the
- * messaging library, while still rejecting the promise so the sender sees
- * the failure.
+ * Adapter for `onMessage` handlers. Logs any failure so it surfaces in DevTools
+ * instead of being silently swallowed by the messaging library, while still
+ * rejecting so the sender sees the failure.
  */
-export const runHandler = <A, E>(label: string, effect: Effect.Effect<A, E, never>): Promise<A> =>
-  AppRuntime.runPromise(
-    effect.pipe(
-      Effect.tapErrorCause((cause) =>
-        Effect.logError(`[runHandler:${label}] failed`, Cause.pretty(cause)),
-      ),
-    ),
-  )
+export async function runHandler<A>(label: string, run: () => Promise<A>): Promise<A> {
+  try {
+    return await run()
+  } catch (error) {
+    logger.error(`[runHandler:${label}] failed`, error)
+    throw error
+  }
+}

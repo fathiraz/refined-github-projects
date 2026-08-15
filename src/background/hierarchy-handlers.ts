@@ -1,6 +1,4 @@
 import { onMessage } from '@/lib/messages'
-import { Effect } from 'effect'
-
 import type {
   BulkRelationshipValidationResult,
   HierarchyData,
@@ -226,35 +224,27 @@ export function registerHierarchyHandlers(): void {
   })
 
   onMessage('getItemPreview', ({ data }) =>
-    runHandler(
-      'getItemPreview',
-      Effect.gen(function* () {
-        logger.log('[rgp:bg] getItemPreview received', data)
-        const key = `${data.owner}/${data.number}/${data.itemId}`
-        const response = yield* Effect.promise(() =>
-          getOrCachePreview(key, () => fetchItemPreviewData(data)),
-        )
-        logger.log('[rgp:bg] getItemPreview returning', {
-          fieldsCount: response.fields.length,
-          relationships: {
-            parent: Boolean(response.relationships.parent),
-            blockedBy: response.relationships.blockedBy.length,
-            blocking: response.relationships.blocking.length,
-          },
-        })
-        return response
-      }),
-    ),
+    runHandler('getItemPreview', async () => {
+      logger.log('[rgp:bg] getItemPreview received', data)
+      const key = `${data.owner}/${data.number}/${data.itemId}`
+      const response = await getOrCachePreview(key, () => fetchItemPreviewData(data))
+      logger.log('[rgp:bg] getItemPreview returning', {
+        fieldsCount: response.fields.length,
+        relationships: {
+          parent: Boolean(response.relationships.parent),
+          blockedBy: response.relationships.blockedBy.length,
+          blocking: response.relationships.blocking.length,
+        },
+      })
+      return response
+    }),
   )
 
   onMessage('getHierarchyData', ({ data }) =>
-    runHandler(
-      'getHierarchyData',
-      Effect.gen(function* () {
-        logger.log('[rgp:bg] getHierarchyData received', data)
-        const key = `${data.owner}/${data.number}/${data.itemId}`
-        return yield* Effect.promise(() => getOrCacheHierarchy(key, () => fetchHierarchyData(data)))
-      }),
-    ),
+    runHandler('getHierarchyData', () => {
+      logger.log('[rgp:bg] getHierarchyData received', data)
+      const key = `${data.owner}/${data.number}/${data.itemId}`
+      return getOrCacheHierarchy(key, () => fetchHierarchyData(data))
+    }),
   )
 }

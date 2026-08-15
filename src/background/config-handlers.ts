@@ -1,5 +1,3 @@
-import { Effect } from 'effect'
-
 import { onMessage } from '@/lib/messages'
 import { patStorage, usernameStorage } from '@/lib/storage'
 import { cancelQueue } from '@/lib/queue'
@@ -14,20 +12,14 @@ export function registerConfigHandlers(): void {
   })
 
   onMessage('getPatStatus', () =>
-    runHandler(
-      'getPatStatus',
-      Effect.promise(async () => {
-        const pat = await patStorage.getValue()
-        return { hasPat: Boolean(pat?.trim()) }
-      }),
-    ),
+    runHandler('getPatStatus', async () => {
+      const pat = await patStorage.getValue()
+      return { hasPat: Boolean(pat?.trim()) }
+    }),
   )
 
   onMessage('validatePat', ({ data }) =>
-    runHandler(
-      'validatePat',
-      Effect.promise(() => validatePatAsync(data.token)),
-    ),
+    runHandler('validatePat', () => validatePatAsync(data.token)),
   )
 
   onMessage('cancelProcess', ({ data }) => {
