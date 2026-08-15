@@ -195,7 +195,7 @@ export function BulkRenameFlyout({
       tabs={TABS}
       activeTabId={rule.tab}
       onTabChange={setTab}
-      applyLabel={`Rename ${changedCount} item${changedCount === 1 ? '' : 's'}`}
+      applyLabel={`Rename ${plural(changedCount, 'item')}`}
       applyDisabled={!canApply || changedCount === 0}
       onApply={handleApply}
     >

@@ -389,7 +389,7 @@ function PositionPreview({ allOrdered, selectedMemexIds }: PositionPreviewProps)
   const totalCount = allOrdered.length
   return (
     <Text sx={{ fontSize: 0, color: 'fg.muted' }} data-testid="rgp-reorder-preview-footer">
-      {movingCount} item{movingCount === 1 ? '' : 's'} will move within {totalCount} total
+      {plural(movingCount, 'item')} will move within {totalCount} total
     </Text>
   )
 }

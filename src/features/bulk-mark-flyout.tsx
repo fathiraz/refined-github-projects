@@ -16,6 +16,7 @@ import {
 import { BULK_BAR_PRIMER_PORTAL_NAME } from '@/lib/primer-shadow-dom-compat'
 import { Z_OVERLAY } from '@/lib/z-index'
 import { getItemStateSnapshot, type ItemStateSnapshot } from '@/lib/project-table-dom'
+import { plural } from '@/lib/format'
 import { Kbd } from '@/ui/keyboard-hint'
 
 export type MarkVerb = 'close' | 'reopen' | 'pin' | 'unpin' | 'lock' | 'unlock'
@@ -143,7 +144,7 @@ export function buildRows(state: ItemStateSnapshot): MarkRowSet {
     if (state.openCount > 0) {
       status.push({
         verb: 'close',
-        label: `Close ${state.openCount} ${pluralize('open issue', state.openCount)}`,
+        label: `Close ${plural(state.openCount, 'open issue')}`,
         icon: <CircleSlashIcon size={13} />,
         badge: { bg: 'attention.subtle', color: 'attention.fg' },
         chord: 'C',
@@ -153,7 +154,7 @@ export function buildRows(state: ItemStateSnapshot): MarkRowSet {
     if (state.closedCount > 0) {
       status.push({
         verb: 'reopen',
-        label: `Reopen ${state.closedCount} ${pluralize('closed issue', state.closedCount)}`,
+        label: `Reopen ${plural(state.closedCount, 'closed issue')}`,
         icon: <IssueOpenedIcon size={13} />,
         badge: { bg: 'success.subtle', color: 'success.fg' },
         chord: 'C',
@@ -204,10 +205,6 @@ export function buildRows(state: ItemStateSnapshot): MarkRowSet {
   }
 
   return { status, visibility, conversation }
-}
-
-function pluralize(noun: string, count: number): string {
-  return count === 1 ? noun : `${noun}s`
 }
 
 function renderSection(

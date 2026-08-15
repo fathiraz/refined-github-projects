@@ -1,6 +1,7 @@
 // pure helpers for the sprint settings advanced disclosure (no React, unit-tested).
 
 import type { SprintSettings } from '@/lib/storage'
+import { plural } from '@/lib/format'
 
 /** Whether saved settings already configure any advanced (optional) option. */
 export function hasAdvancedSettings(settings: SprintSettings | null): boolean {
@@ -24,7 +25,7 @@ export function formatAdvancedSettingsHint(args: {
   const parts: string[] = []
   if (args.notStartedOptionName) parts.push(`Not started: ${args.notStartedOptionName}`)
   if (args.excludeCount > 0) {
-    parts.push(`${args.excludeCount} exclusion${args.excludeCount === 1 ? '' : 's'}`)
+    parts.push(plural(args.excludeCount, 'exclusion'))
   }
   if (args.pointsFieldName) parts.push(args.pointsFieldName)
   return parts.length > 0 ? parts.join(' · ') : null

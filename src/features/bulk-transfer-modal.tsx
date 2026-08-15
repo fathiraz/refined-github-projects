@@ -249,14 +249,10 @@ export function BulkTransferModal({
   // pre-flight. Falls back to total `count` until pre-flight resolves so the
   // disabled→enabled transition is not jittery.
   const buttonLabel = useMemo(() => {
-    if (!selectedTarget) {
-      const noun = count === 1 ? 'item' : 'items'
-      return `Transfer ${count} ${noun}`
-    }
-    const noun = eligibleCount === 1 ? 'item' : 'items'
+    if (!selectedTarget) return `Transfer ${plural(count, 'item')}`
     const subsetSuffix =
       eligibleRows && eligibleCount !== count ? ` (${eligibleCount} of ${count})` : ''
-    return `Transfer ${eligibleCount} ${noun}${subsetSuffix} to ${selectedTarget.targetRepoOwner}/${selectedTarget.targetRepoName}`
+    return `Transfer ${plural(eligibleCount, 'item')}${subsetSuffix} to ${selectedTarget.targetRepoOwner}/${selectedTarget.targetRepoName}`
   }, [count, selectedTarget, eligibleCount, eligibleRows])
 
   return (
@@ -267,7 +263,7 @@ export function BulkTransferModal({
     >
       <Box sx={primerCss.modalPanel({ display: 'block' })}>
         <ModalStepHeader
-          title={`Transfer ${count} ${count === 1 ? 'issue' : 'issues'}`}
+          title={`Transfer ${plural(count, 'issue')}`}
           icon={<MoveIcon size={16} />}
           onClose={onClose}
         />
@@ -341,12 +337,11 @@ export function BulkTransferModal({
             <Flash variant="warning" data-testid="rgp-transfer-preflight-warning">
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Text sx={{ fontSize: 1, fontWeight: 'semibold' }}>
-                  {ineligibleRows.length} item{ineligibleRows.length === 1 ? '' : 's'} cannot be
-                  transferred to {selectedTarget.targetRepoOwner}/{selectedTarget.targetRepoName}
+                  {plural(ineligibleRows.length, 'item')} cannot be transferred to{' '}
+                  {selectedTarget.targetRepoOwner}/{selectedTarget.targetRepoName}
                 </Text>
                 <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                  Proceed to transfer the remaining {eligibleCount} eligible item
-                  {eligibleCount === 1 ? '' : 's'}.
+                  Proceed to transfer the remaining {plural(eligibleCount, 'eligible item')}.
                 </Text>
                 <Button
                   variant="invisible"

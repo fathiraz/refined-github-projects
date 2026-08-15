@@ -416,7 +416,7 @@ export function BulkRandomAssignFlyout({
                   )}
                   <Text sx={{ flex: 1, minWidth: 0 }}>@{target?.name ?? id}</Text>
                   <Text sx={{ color: 'fg.muted', flexShrink: 0 }}>
-                    {items.length} {items.length === 1 ? 'item' : 'items'}
+                    {plural(items.length, 'item')}
                   </Text>
                 </Box>
               )

@@ -11,6 +11,7 @@ import {
 import { sendMessage } from '@/lib/messages'
 import { CheckIcon, XIcon } from '@/ui/icons'
 import { Z_OVERLAY } from '@/lib/z-index'
+import { plural } from '@/lib/format'
 import { primerCss } from '@/lib/primer-css-helper'
 
 function phaseTestId(phase: ProcessPhase): string {
@@ -28,8 +29,7 @@ function phaseTestId(phase: ProcessPhase): string {
 
 export function formatTrackerTitle(entry: Pick<ProcessEntry, 'label' | 'total'>): string {
   if (entry.total === 0) return entry.label
-  const noun = entry.total === 1 ? 'item' : 'items'
-  return `${entry.label} · ${entry.total} ${noun}`
+  return `${entry.label} · ${plural(entry.total, 'item')}`
 }
 
 export function ProcessCard({
