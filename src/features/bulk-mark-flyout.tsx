@@ -16,6 +16,7 @@ import {
 import { BULK_BAR_PRIMER_PORTAL_NAME } from '@/lib/primer-shadow-dom-compat'
 import { Z_OVERLAY } from '@/lib/z-index'
 import { getItemStateSnapshot, type ItemStateSnapshot } from '@/lib/project-table-dom'
+import { Kbd } from '@/ui/keyboard-hint'
 
 export type MarkVerb = 'close' | 'reopen' | 'pin' | 'unpin' | 'lock' | 'unlock'
 
@@ -30,22 +31,6 @@ interface BulkMarkFlyoutProps {
   onSelectVerb: (verb: MarkVerb) => void
 }
 
-const KBD_SX = {
-  fontSize: 0,
-  fontFamily: 'inherit',
-  fontWeight: 500,
-  px: '5px',
-  py: '1px',
-  borderRadius: 1,
-  bg: 'canvas.inset',
-  border: '1px solid',
-  borderColor: 'border.default',
-  color: 'fg.muted',
-  cursor: 'default',
-  lineHeight: 1.6,
-  letterSpacing: '0.02em',
-} as const
-
 const BADGE_SX = {
   width: 22,
   height: 22,
@@ -54,14 +39,6 @@ const BADGE_SX = {
   alignItems: 'center',
   justifyContent: 'center',
 } as const
-
-function Kbd({ text }: { text: string }) {
-  return (
-    <Box as="kbd" sx={KBD_SX}>
-      {text}
-    </Box>
-  )
-}
 
 export function BulkMarkFlyout({
   anchorRef,
@@ -257,7 +234,7 @@ function renderSection(
           </ActionList.LeadingVisual>
           {row.label}
           <ActionList.TrailingVisual>
-            <Kbd text={row.chord} />
+            <Kbd>{row.chord}</Kbd>
           </ActionList.TrailingVisual>
         </ActionList.Item>
       ))}

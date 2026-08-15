@@ -13,6 +13,7 @@ import { exportSelectedToCSV } from '@/features/bulk-utils'
 import type { ProjectData, ProjectField } from '@/features/bulk-edit-utils'
 import type { ReorderOp } from '@/features/bulk-move-utils'
 import { ListCheckIcon, TagIcon, XIcon } from '@/ui/icons'
+import { Kbd } from '@/ui/keyboard-hint'
 import { primerCss } from '@/lib/primer-css-helper'
 import { Z_OVERLAY } from '@/lib/z-index'
 import { BulkActionsMenu } from '@/features/bulk-actions-menu'
@@ -694,26 +695,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             </Text>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {(['⌘A', 'Esc'] as const).map((key) => (
-                <Box
-                  key={key}
-                  as="kbd"
-                  sx={{
-                    fontSize: 0,
-                    fontFamily: 'inherit',
-                    fontWeight: 500,
-                    px: '5px',
-                    py: '1px',
-                    borderRadius: 1,
-                    bg: 'canvas.inset',
-                    border: '1px solid',
-                    borderColor: 'border.default',
-                    color: 'fg.muted',
-                    cursor: 'default',
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {key}
-                </Box>
+                <Kbd key={key}>{key}</Kbd>
               ))}
             </Box>
           </Box>
