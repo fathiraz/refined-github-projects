@@ -1,0 +1,30 @@
+src/lib/effect-runtime.ts
+  s_a104ef58ad92e3::t_eaea2a6f8233db 1,8-11
+  s_a104ef58ad92e3::t_02f5f5e8f3332d 12
+.tokensave/config.json
+  s_f1e44e3c9e8eb5::t_25aa0394c10d64 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c93d8e0fc9f662d2e0d3c13d1885b0a26e94dca8",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    },
+    "s_f1e44e3c9e8eb5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "798932bb-f1eb-4b14-a942-ca4c29277070",
+        "model": "unknown"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
