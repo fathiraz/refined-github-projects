@@ -1,0 +1,28 @@
+src/ui/keyboard-hint.tsx
+  s_a104ef58ad92e3::t_8cc68946a1c783 4-28,38
+src/features/bulk-mark-flyout.tsx
+  s_a104ef58ad92e3::t_627d8f18d258cd 19
+  s_a104ef58ad92e3::t_31e6b8b63a3e6d 237
+src/features/bulk-actions-menu.tsx
+  s_a104ef58ad92e3::t_da4bb27cd76657 19
+  s_a104ef58ad92e3::t_4b6440e4304075 78,89,100,111,123,138,164
+src/features/bulk-actions-bar.tsx
+  s_a104ef58ad92e3::t_b27664de0051a6 16
+  s_a104ef58ad92e3::t_072afbf23d8785 698
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f07c46299f22aeff313079052c2bafb8699a0f70",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
