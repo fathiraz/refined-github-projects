@@ -1,0 +1,19 @@
+src/lib/queue.ts
+  s_a104ef58ad92e3::t_720ec079fc98b2 103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "14fdc7ad39e8384245b18baa2646d2cbb3565abd",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
