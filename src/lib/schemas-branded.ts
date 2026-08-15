@@ -7,9 +7,6 @@ import { Schema } from 'effect'
  * (both strings) were swapped at call sites.
  */
 
-export const ProjectId = Schema.String.pipe(Schema.brand('ProjectId'))
-export type ProjectId = Schema.Schema.Type<typeof ProjectId>
-
 export const ProjectItemId = Schema.String.pipe(Schema.brand('ProjectItemId'))
 export type ProjectItemId = Schema.Schema.Type<typeof ProjectItemId>
 
@@ -28,9 +25,6 @@ export type IssueDatabaseId = Schema.Schema.Type<typeof IssueDatabaseId>
 
 export const Pat = Schema.String.pipe(Schema.brand('Pat'))
 export type Pat = Schema.Schema.Type<typeof Pat>
-
-export const Login = Schema.String.pipe(Schema.brand('Login'))
-export type Login = Schema.Schema.Type<typeof Login>
 
 export const RepoOwner = Schema.String.pipe(Schema.brand('RepoOwner'))
 export type RepoOwner = Schema.Schema.Type<typeof RepoOwner>

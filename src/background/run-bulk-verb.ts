@@ -25,7 +25,7 @@ export interface ReverseHint {
   label?: string
 }
 
-export interface BulkVerbOptions<TPrepared = void> {
+interface BulkVerbOptions<TPrepared = void> {
   /** Names the processId and every task id, e.g. `close` -> `close-issue:42`. */
   idPrefix: string
   /** Queue tracker heading, e.g. `Bulk close · 3 items`. */
