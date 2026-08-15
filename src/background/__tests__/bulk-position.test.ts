@@ -50,7 +50,10 @@ vi.mock('@/background/rest-helpers', () => ({
   broadcastQueue: hoisted.broadcastQueue,
   withRateLimitRetry: hoisted.withRateLimitRetry,
 }))
-vi.mock('@/background/project-helpers', () => ({
+// Only the network call is stubbed; `parseIssueDatabaseId` stays real so the
+// dom-id spelling assertions below still exercise the shipped parser.
+vi.mock('@/background/project-helpers', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/background/project-helpers')>()),
   getProjectFieldsData: hoisted.getProjectFieldsData,
 }))
 vi.mock('@/lib/queue', () => ({ processQueue: hoisted.processQueue, sleep: hoisted.sleep }))

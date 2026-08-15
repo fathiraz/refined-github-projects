@@ -10,7 +10,7 @@ import { logger } from '@/lib/debug-logger'
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { broadcastQueue, withRateLimitRetry } from '@/background/rest-helpers'
 import { broadcastDone, runQueueWithProgress, type QueueRun } from '@/background/queue-run'
-import { getProjectFieldsData } from '@/background/project-helpers'
+import { getProjectFieldsData, parseIssueDatabaseId } from '@/background/project-helpers'
 import { newProcessId, plural } from '@/lib/format'
 
 type ReorderOp = { nodeId: string; previousNodeId: string | null }
@@ -128,17 +128,12 @@ export function registerBulkPositionHandlers(): void {
       const contentDbToMemex = new Map(allItems.map((i) => [i.contentDbId, i.memexItemId]))
       const contentDbToNode = new Map(allItems.map((i) => [i.contentDbId, i.nodeId]))
 
-      function parseContentDbId(domId: string): number | null {
-        const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
-        return m ? parseInt(m[1], 10) : null
-      }
-
       const selectedMemexIds = data.selectedDomIds
-        .map((domId) => contentDbToMemex.get(parseContentDbId(domId)!))
+        .map((domId) => contentDbToMemex.get(parseIssueDatabaseId(domId)!))
         .filter((id): id is number => id != null)
 
       const insertAfterContentDbId = data.insertAfterDomId
-        ? parseContentDbId(data.insertAfterDomId)
+        ? parseIssueDatabaseId(data.insertAfterDomId)
         : null
       const insertAfterMemexId: number | '' = insertAfterContentDbId
         ? (contentDbToMemex.get(insertAfterContentDbId) ?? '')
@@ -149,7 +144,7 @@ export function registerBulkPositionHandlers(): void {
       if (data.allDomIds?.length) {
         orderedItems = []
         for (const domId of data.allDomIds) {
-          const contentDbId = parseContentDbId(domId)
+          const contentDbId = parseIssueDatabaseId(domId)
           if (contentDbId == null) continue
           const memexItemId = contentDbToMemex.get(contentDbId)
           const nodeId = contentDbToNode.get(contentDbId)

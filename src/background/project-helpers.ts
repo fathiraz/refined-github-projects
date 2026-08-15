@@ -58,6 +58,83 @@ export function buildFieldValueFromSource(fieldValue: FieldValue): Record<string
   return null
 }
 
+/** The two DOM spellings of an issue reference: `issue:123` and `issue-123`. */
+export function parseIssueDatabaseId(domId: string): number | null {
+  const match = domId.match(/^issue[:-](\d+)$/)
+  return match ? parseInt(match[1], 10) : null
+}
+
+/** Index DOM ids by the database id they carry, warning on anything unparseable. */
+function indexByDatabaseId(domIds: readonly string[]): Map<number, string> {
+  const databaseIdMap = new Map<number, string>()
+  for (const domId of domIds) {
+    const databaseId = parseIssueDatabaseId(domId)
+    if (databaseId === null) {
+      logger.warn('[rgp:bg] could not parse DOM ID:', domId)
+      continue
+    }
+    databaseIdMap.set(databaseId, domId)
+  }
+  return databaseIdMap
+}
+
+/** One page of a project's `items` connection, whatever `content` was selected. */
+interface ItemsPage<TContent> {
+  node: {
+    items: {
+      pageInfo: { hasNextPage: boolean; endCursor: string | null }
+      nodes: { id: string; content: TContent | null }[]
+    }
+  } | null
+}
+
+/**
+ * Walk a project's items until every wanted database id is matched or the pages
+ * run out, handing each match to `collect`. Paging sleeps 1s between requests
+ * for rate-limit safety.
+ */
+async function collectMatchingItems<TContent extends { databaseId: number }, TOut>(
+  query: string,
+  projectId: string,
+  wanted: Map<number, string>,
+  collect: (item: { id: string; content: TContent }, domId: string) => TOut,
+  tabId?: number,
+): Promise<TOut[]> {
+  const results: TOut[] = []
+  const remaining = new Set(wanted.keys())
+  let cursor: string | null = null
+
+  while (remaining.size > 0) {
+    const page: ItemsPage<TContent> = await withRateLimitRetry(
+      () => gql<ItemsPage<TContent>>(query, { projectId, cursor }),
+      tabId,
+    )
+
+    const items = page.node?.items
+    if (!items) {
+      logger.warn('[rgp:bg] project node returned null items')
+      break
+    }
+
+    for (const item of items.nodes) {
+      const databaseId = item.content?.databaseId
+      if (databaseId === undefined || !remaining.has(databaseId)) continue
+      results.push(collect({ id: item.id, content: item.content! }, wanted.get(databaseId)!))
+      remaining.delete(databaseId)
+    }
+
+    if (!items.pageInfo.hasNextPage || remaining.size === 0) break
+    cursor = items.pageInfo.endCursor
+    await sleep(1000)
+  }
+
+  if (remaining.size > 0) {
+    logger.warn('[rgp:bg] could not resolve these database IDs:', [...remaining])
+  }
+
+  return results
+}
+
 /**
  * Convert DOM-extracted item IDs (e.g. "issue:3960969873" from data-hovercard-subject-tag,
  * or "issue-123" from link scraping) to real ProjectV2Item Node IDs.
@@ -70,117 +147,55 @@ export async function resolveProjectItemIds(
   projectId: string,
   tabId?: number,
 ): Promise<ResolvedItem[]> {
-  // parse DOM IDs to extract database IDs
-  const databaseIdMap = new Map<number, string>() // databaseId -> domId
-  for (const domId of domIds) {
-    const colonMatch = domId.match(/^issue:(\d+)$/)
-    if (colonMatch) {
-      databaseIdMap.set(parseInt(colonMatch[1], 10), domId)
-      continue
-    }
-    const dashMatch = domId.match(/^issue-(\d+)$/)
-    if (dashMatch) {
-      databaseIdMap.set(parseInt(dashMatch[1], 10), domId)
-      continue
-    }
-    logger.warn('[rgp:bg] could not parse DOM ID:', domId)
-  }
-
+  const databaseIdMap = indexByDatabaseId(domIds)
   if (databaseIdMap.size === 0) return []
 
   logger.log('[rgp:bg] resolving database IDs:', [...databaseIdMap.keys()])
 
-  // fetch project items with pagination, matching content databaseId
-  interface ProjectItemsResult {
-    node: {
-      items: {
-        pageInfo: { hasNextPage: boolean; endCursor: string | null }
-        nodes: {
-          id: string
-          content: {
-            __typename?: string
-            id: string
-            databaseId: number
-            number?: number
-            parent?: {
-              id: string
-              databaseId: number
-              number: number
-              title: string
-              repository: {
-                owner: { login: string }
-                name: string
-              }
-            } | null
-            repository?: { owner: { login: string }; name: string }
-          } | null
-        }[]
-      }
+  interface ResolutionContent {
+    __typename?: string
+    id: string
+    databaseId: number
+    number?: number
+    parent?: {
+      id: string
+      databaseId: number
+      number: number
+      title: string
+      repository: { owner: { login: string }; name: string }
     } | null
+    repository?: { owner: { login: string }; name: string }
   }
 
-  const results: ResolvedItem[] = []
-  const remaining = new Set(databaseIdMap.keys())
-  let cursor: string | null = null
-
-  // paginate through project items until we find all matches or run out
-  while (remaining.size > 0) {
-    const page = await withRateLimitRetry(
-      () =>
-        gql<ProjectItemsResult>(GET_PROJECT_ITEMS_FOR_RESOLUTION, {
-          projectId,
-          cursor,
-        }),
-      tabId,
-    )
-
-    const items = page.node?.items
-    if (!items) {
-      logger.warn('[rgp:bg] project node returned null items')
-      break
-    }
-
-    for (const item of items.nodes) {
-      if (!item.content?.databaseId) continue
-      const dbId = item.content.databaseId
-      if (remaining.has(dbId)) {
-        const domId = databaseIdMap.get(dbId)!
-        results.push({
-          domId: decodeProjectItemDomId(domId),
-          issueNodeId: decodeIssueNodeId(item.content.id),
-          projectItemId: decodeProjectItemId(item.id),
-          repoOwner: decodeRepoOwner(item.content.repository?.owner?.login || ''),
-          repoName: decodeRepoName(item.content.repository?.name || ''),
-          issueDatabaseId: decodeIssueDatabaseId(item.content.databaseId),
-          issueNumber:
-            item.content.number !== undefined ? decodeIssueNumber(item.content.number) : undefined,
-          currentParent: item.content.parent
-            ? {
-                nodeId: item.content.parent.id,
-                databaseId: item.content.parent.databaseId,
-                number: item.content.parent.number,
-                title: item.content.parent.title,
-                repoOwner: item.content.parent.repository.owner.login,
-                repoName: item.content.parent.repository.name,
-              }
-            : undefined,
-          typename: (item.content as any).__typename as 'Issue' | 'PullRequest' | undefined,
-        })
-        remaining.delete(dbId)
-        logger.log('[rgp:bg] resolved', domId, '->', item.id, 'issueNodeId:', item.content.id)
+  return collectMatchingItems<ResolutionContent, ResolvedItem>(
+    GET_PROJECT_ITEMS_FOR_RESOLUTION,
+    projectId,
+    databaseIdMap,
+    ({ id, content }, domId) => {
+      logger.log('[rgp:bg] resolved', domId, '->', id, 'issueNodeId:', content.id)
+      return {
+        domId: decodeProjectItemDomId(domId),
+        issueNodeId: decodeIssueNodeId(content.id),
+        projectItemId: decodeProjectItemId(id),
+        repoOwner: decodeRepoOwner(content.repository?.owner?.login || ''),
+        repoName: decodeRepoName(content.repository?.name || ''),
+        issueDatabaseId: decodeIssueDatabaseId(content.databaseId),
+        issueNumber: content.number !== undefined ? decodeIssueNumber(content.number) : undefined,
+        currentParent: content.parent
+          ? {
+              nodeId: content.parent.id,
+              databaseId: content.parent.databaseId,
+              number: content.parent.number,
+              title: content.parent.title,
+              repoOwner: content.parent.repository.owner.login,
+              repoName: content.parent.repository.name,
+            }
+          : undefined,
+        typename: content.__typename as 'Issue' | 'PullRequest' | undefined,
       }
-    }
-
-    if (!items.pageInfo.hasNextPage || remaining.size === 0) break
-    cursor = items.pageInfo.endCursor
-    await sleep(1000) // rate limit safety between pages
-  }
-
-  if (remaining.size > 0) {
-    logger.warn('[rgp:bg] could not resolve these database IDs:', [...remaining])
-  }
-
-  return results
+    },
+    tabId,
+  )
 }
 
 export async function getRepositoryId(owner: string, name: string): Promise<string> {
@@ -192,82 +207,29 @@ export async function resolveProjectItemIdsWithTitles(
   domIds: string[],
   projectId: string,
 ): Promise<ResolvedItemWithTitle[]> {
-  const databaseIdMap = new Map<number, string>()
-  for (const domId of domIds) {
-    const colonMatch = domId.match(/^issue:(\d+)$/)
-    if (colonMatch) {
-      databaseIdMap.set(parseInt(colonMatch[1], 10), domId)
-      continue
-    }
-    const dashMatch = domId.match(/^issue-(\d+)$/)
-    if (dashMatch) {
-      databaseIdMap.set(parseInt(dashMatch[1], 10), domId)
-      continue
-    }
-    logger.warn('[rgp:bg] could not parse DOM ID:', domId)
-  }
-
+  const databaseIdMap = indexByDatabaseId(domIds)
   if (databaseIdMap.size === 0) return []
 
-  interface RenameItemsResult {
-    node: {
-      items: {
-        pageInfo: { hasNextPage: boolean; endCursor: string | null }
-        nodes: {
-          id: string
-          content: {
-            __typename: string
-            id: string
-            databaseId: number
-            title: string
-            repository?: { owner: { login: string }; name: string }
-          } | null
-        }[]
-      }
-    } | null
+  interface RenameContent {
+    __typename: string
+    id: string
+    databaseId: number
+    title: string
+    repository?: { owner: { login: string }; name: string }
   }
 
-  const results: ResolvedItemWithTitle[] = []
-  const remaining = new Set(databaseIdMap.keys())
-  let cursor: string | null = null
-
-  while (remaining.size > 0) {
-    const page = await withRateLimitRetry(() =>
-      gql<RenameItemsResult>(GET_PROJECT_ITEMS_FOR_RENAME, { projectId, cursor }),
-    )
-
-    const items = page.node?.items
-    if (!items) {
-      logger.warn('[rgp:bg] project node returned null items')
-      break
-    }
-
-    for (const item of items.nodes) {
-      if (!item.content?.databaseId) continue
-      const dbId = item.content.databaseId
-      if (remaining.has(dbId)) {
-        const domId = databaseIdMap.get(dbId)!
-        results.push({
-          domId: decodeProjectItemDomId(domId),
-          issueNodeId: decodeIssueNodeId(item.content.id),
-          projectItemId: decodeProjectItemId(item.id),
-          repoOwner: decodeRepoOwner(item.content.repository?.owner?.login || ''),
-          repoName: decodeRepoName(item.content.repository?.name || ''),
-          title: item.content.title,
-          typename: item.content.__typename === 'PullRequest' ? 'PullRequest' : 'Issue',
-        })
-        remaining.delete(dbId)
-      }
-    }
-
-    if (!items.pageInfo.hasNextPage || remaining.size === 0) break
-    cursor = items.pageInfo.endCursor
-    await sleep(1000)
-  }
-
-  if (remaining.size > 0) {
-    logger.warn('[rgp:bg] could not resolve these database IDs for rename:', [...remaining])
-  }
-
-  return results
+  return collectMatchingItems<RenameContent, ResolvedItemWithTitle>(
+    GET_PROJECT_ITEMS_FOR_RENAME,
+    projectId,
+    databaseIdMap,
+    ({ id, content }, domId) => ({
+      domId: decodeProjectItemDomId(domId),
+      issueNodeId: decodeIssueNodeId(content.id),
+      projectItemId: decodeProjectItemId(id),
+      repoOwner: decodeRepoOwner(content.repository?.owner?.login || ''),
+      repoName: decodeRepoName(content.repository?.name || ''),
+      title: content.title,
+      typename: content.__typename === 'PullRequest' ? 'PullRequest' : 'Issue',
+    }),
+  )
 }
