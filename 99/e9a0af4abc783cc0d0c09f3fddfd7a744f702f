@@ -1,0 +1,28 @@
+src/background/__tests__/bulk-position.test.ts
+  s_a104ef58ad92e3::t_ce025b08eb7740 53-56
+src/background/project-helpers.ts
+  s_a104ef58ad92e3::t_8cf774e09ec445 210,213-218,221-234
+  s_a104ef58ad92e3::t_8ed690faa2380b 61-69,71-73,76,78-79,81-89,91-104,108-109,120-123,128,138,144,147-148,199
+  s_a104ef58ad92e3::t_112ce46b1a03c8 150-198
+  s_a104ef58ad92e3::t_dc5dcef70852c8 139-143,145-146,149,200
+src/background/bulk-position.ts
+  s_a104ef58ad92e3::t_125a8ac907d545 132,136
+  s_a104ef58ad92e3::t_61411c1c164f5e 147
+  s_a104ef58ad92e3::t_7b7471b4826973 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "99e9a0af4abc783cc0d0c09f3fddfd7a744f702f",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
