@@ -1,0 +1,23 @@
+src/features/keyboard-help-overlay.tsx
+  s_a104ef58ad92e3::t_f5dd80a114bf15 5
+  s_a104ef58ad92e3::t_a2bc4a4d43536a 85
+src/features/bulk-actions-utils.tsx
+  s_a104ef58ad92e3::t_7539193f52bcf5 80
+  s_a104ef58ad92e3::t_b73172a7317dbc 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "187cc6f7e1bad07a46c1e6c853b54dca8fae3134",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
