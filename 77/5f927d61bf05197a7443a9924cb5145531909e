@@ -1,0 +1,49 @@
+src/background/sprint-handlers.ts
+  s_a104ef58ad92e3::t_02a47bd0186151 6,461-463,465
+  s_a104ef58ad92e3::t_1a35586f3fa92a 21
+src/background/bulk-update.ts
+  s_a104ef58ad92e3::t_3a6bb944a15e8a 238-242,251-252
+  s_a104ef58ad92e3::t_1cffedb01da27d 310-317,319,322
+  s_a104ef58ad92e3::t_aca3d1d6482694 18,25
+src/background/bulk-position.ts
+  s_a104ef58ad92e3::t_aeeb69d583f78f 12
+  s_a104ef58ad92e3::t_59c2f2b505d064 87-91
+  s_a104ef58ad92e3::t_6066d2f47aceb8 54-58,61,63,65-70,72
+  s_a104ef58ad92e3::t_0a0ecb649c25dc 201-209,212
+  s_a104ef58ad92e3::t_2ab4752f0ac3b3 16-43
+  s_a104ef58ad92e3::t_d794f68869c29c 6
+src/background/queue-run.ts
+  s_a104ef58ad92e3::t_e385ae18b6214b 1-78
+src/background/bulk-rename.ts
+  s_a104ef58ad92e3::t_daa680ae988d0c 13
+  s_a104ef58ad92e3::t_01fecc0a657a3f 183-188,190
+  s_a104ef58ad92e3::t_ca315afe20b2ba 20
+  s_a104ef58ad92e3::t_bf88c35e4c7f77 62-66,87-88,90,93-98,100
+  s_a104ef58ad92e3::t_c209263b2a6489 118-122,131-132,134,136,146-147,149
+src/background/duplicate-handlers.ts
+  s_a104ef58ad92e3::t_e05a5e172724bd 15,21,45-47,71,78,85,357-362,364
+src/background/create-issue.ts
+  s_a104ef58ad92e3::t_2e02eaebed2bd3 12,19,85-89,93-100,174-177,179-180
+src/background/rest-helpers.ts
+  s_a104ef58ad92e3::t_cdbddee0b884ec 77-85,98
+src/background/run-bulk-verb.ts
+  s_a104ef58ad92e3::t_72d0437785e605 59,63-70
+  s_a104ef58ad92e3::t_c7ca6cd2f4b0e0 15-16
+  s_a104ef58ad92e3::t_26a1cde554f57b 91-96,98,100,102,104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "775f927d61bf05197a7443a9924cb5145531909e",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
