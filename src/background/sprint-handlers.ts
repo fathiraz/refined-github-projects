@@ -3,7 +3,7 @@ import type { SprintInfo, SprintProgressData } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEMS_WITH_FIELDS, GET_SPRINT_PROGRESS_ITEMS } from '@/lib/graphql-queries'
 import { UPDATE_PROJECT_FIELD } from '@/lib/graphql-mutations'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { allSprintSettingsStorage } from '@/lib/storage'
 import { todayUtc, isActive, nearestUpcoming, iterationEndDate } from '@/lib/sprint-utils'
@@ -18,6 +18,7 @@ import {
 import { isSprintEndFull, acquireSprintEnd, releaseSprintEnd } from '@/background/concurrency'
 
 import { broadcastQueue } from '@/background/rest-helpers'
+import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
 import { getProjectFieldsData } from '@/background/project-helpers'
 import { plural } from '@/lib/format'
 
@@ -457,30 +458,11 @@ export function registerSprintHandlers(): void {
         tabId,
       )
 
-      await processQueue(
-        tasks,
-        async (state) => {
-          await broadcastQueue(
-            {
-              total: state.total,
-              completed: state.completed,
-              paused: state.paused,
-              retryAfter: state.retryAfter,
-              status: `Moving ${state.completed + 1} of ${tasks.length}...`,
-              processId,
-              label,
-              failedItems: state.failedItems,
-            },
-            tabId,
-          )
-        },
-        processId,
-      )
+      await runQueueWithProgress(tasks, { processId, label, tabId }, (state) => ({
+        status: `Moving ${state.completed + 1} of ${tasks.length}...`,
+      }))
 
-      await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-        tabId,
-      )
+      await broadcastDone({ processId, label, tabId })
     } finally {
       releaseSprintEnd()
     }

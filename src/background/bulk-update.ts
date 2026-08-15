@@ -15,13 +15,14 @@ import {
   ADD_COMMENT,
   UPDATE_PROJECT_FIELD,
 } from '@/lib/graphql-mutations'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { takeCachedResolvedItems } from '@/background/cache'
 import { broadcastQueue } from '@/background/rest-helpers'
+import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
 import { buildBulkRelationshipTasks } from '@/background/relationship-helpers'
 import { resolveProjectItemIds } from '@/background/project-helpers'
 import type { ResolvedItem } from '@/background/types'
@@ -234,8 +235,11 @@ async function runBulkUpdate(
   data: BulkUpdateMessageData,
   tabId: number | undefined,
 ): Promise<void> {
-  const processId = newProcessId('bulk')
-  const label = `Bulk update · ${plural(data.itemIds.length, 'item')}`
+  const run = {
+    processId: newProcessId('bulk'),
+    label: `Bulk update · ${plural(data.itemIds.length, 'item')}`,
+    tabId,
+  }
 
   try {
     await broadcastQueue(
@@ -244,8 +248,8 @@ async function runBulkUpdate(
         completed: 0,
         paused: false,
         status: 'Resolving items...',
-        processId,
-        label,
+        processId: run.processId,
+        label: run.label,
       },
       tabId,
     )
@@ -303,42 +307,19 @@ async function runBulkUpdate(
       }
     }
 
-    await processQueue(
-      tasks,
-      async (state) => {
-        logger.log('[rgp:bg] queue state broadcast', {
-          completed: state.completed,
-          total: state.total,
-          processId,
-        })
-        await broadcastQueue(
-          {
-            total: state.total,
-            completed: state.completed,
-            paused: state.paused,
-            retryAfter: state.retryAfter,
-            status: `Updating ${plural(resolvedItems.length, 'item')}...`,
-            detail: state.detail,
-            processId,
-            label,
-            failedItems: state.failedItems,
-          },
-          tabId,
-        )
-      },
-      processId,
-    )
+    await runQueueWithProgress(tasks, run, (state) => {
+      logger.log('[rgp:bg] queue state broadcast', {
+        completed: state.completed,
+        total: state.total,
+        processId: run.processId,
+      })
+      return { status: `Updating ${plural(resolvedItems.length, 'item')}...` }
+    })
 
-    await broadcastQueue(
-      { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-      tabId,
-    )
+    await broadcastDone(run)
   } catch (error) {
     console.error('[rgp:bg] bulkUpdate failed', error)
-    await broadcastQueue(
-      { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-      tabId,
-    )
+    await broadcastDone(run)
   }
 }
 

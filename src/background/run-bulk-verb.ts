@@ -9,21 +9,13 @@
 // their own handlers rather than bending this one out of shape.
 
 import { plural, newProcessId } from '@/lib/format'
-import { processQueue } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
-import { broadcastQueue } from '@/background/rest-helpers'
+import { broadcastQueue, type ReverseHint } from '@/background/rest-helpers'
+import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
 import { resolveProjectItemIds } from '@/background/project-helpers'
 import type { ResolvedItem } from '@/background/types'
-
-/** Undo hint offered on the Done! frame. */
-export interface ReverseHint {
-  messageType: string
-  data: Record<string, unknown>
-  affectedItemIds: string[]
-  label?: string
-}
 
 interface BulkVerbOptions<TPrepared = void> {
   /** Names the processId and every task id, e.g. `close` -> `close-issue:42`. */
@@ -64,13 +56,18 @@ export async function runBulkVerb<TPrepared = void>(
   }
 
   acquireBulk()
-  const processId = newProcessId(idPrefix)
-  let lastFailedTaskIds = new Set<string>()
-  let lastCompleted = 0
+  const run = { processId: newProcessId(idPrefix), label, tabId }
 
   const setStatus = (status: string) =>
     broadcastQueue(
-      { total: itemIds.length, completed: 0, paused: false, status, processId, label },
+      {
+        total: itemIds.length,
+        completed: 0,
+        paused: false,
+        status,
+        processId: run.processId,
+        label,
+      },
       tabId,
     )
 
@@ -91,48 +88,20 @@ export async function runBulkVerb<TPrepared = void>(
       run: options.buildTask(item, prepared),
     }))
 
-    await processQueue(
-      tasks,
-      async (state) => {
-        lastFailedTaskIds = new Set((state.failedItems ?? []).map((f) => f.id))
-        lastCompleted = state.completed
-        await broadcastQueue(
-          {
-            total: state.total,
-            completed: state.completed,
-            paused: state.paused,
-            retryAfter: state.retryAfter,
-            status:
-              state.completed < total
-                ? `${progressVerb} item ${state.completed + 1} of ${total}…`
-                : `${progressVerb} ${plural(total, 'item')}…`,
-            processId,
-            label,
-            failedItems: state.failedItems,
-          },
-          tabId,
-        )
-      },
-      processId,
-    )
+    const last = await runQueueWithProgress(tasks, run, (state) => ({
+      status:
+        state.completed < total
+          ? `${progressVerb} item ${state.completed + 1} of ${total}…`
+          : `${progressVerb} ${plural(total, 'item')}…`,
+    }))
 
+    const failedTaskIds = new Set((last.failedItems ?? []).map((f) => f.id))
     const succeededDomIds = resolvedItems
-      .slice(0, lastCompleted)
+      .slice(0, last.completed)
       .map((item) => item.domId)
-      .filter((domId) => !lastFailedTaskIds.has(`${idPrefix}-${domId}`))
+      .filter((domId) => !failedTaskIds.has(`${idPrefix}-${domId}`))
 
-    await broadcastQueue(
-      {
-        total: 0,
-        completed: 0,
-        paused: false,
-        status: 'Done!',
-        processId,
-        label,
-        reverse: options.buildReverse?.(succeededDomIds),
-      },
-      tabId,
-    )
+    await broadcastDone(run, options.buildReverse?.(succeededDomIds))
   } finally {
     releaseBulk()
   }

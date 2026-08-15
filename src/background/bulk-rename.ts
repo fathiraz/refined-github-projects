@@ -10,13 +10,14 @@ import {
   UPDATE_PR_TITLE,
 } from '@/lib/graphql-mutations'
 import { GET_ISSUE_ASSIGNEES } from '@/lib/graphql-queries'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 import { decodeProjectItemDomId } from '@/lib/schemas-decode'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { broadcastQueue } from '@/background/rest-helpers'
+import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
 import { resolveProjectItemIds, getRepositoryId } from '@/background/project-helpers'
 import { runBulkVerb } from '@/background/run-bulk-verb'
 import { newProcessId, plural } from '@/lib/format'
@@ -58,9 +59,11 @@ export function registerBulkRenameHandlers(): void {
     }
 
     acquireBulk()
-    const processId = newProcessId('rename')
-    const label = `Rename · ${plural(data.renames.length, 'item')}`
-    const tabId = sender.tab?.id
+    const run = {
+      processId: newProcessId('rename'),
+      label: `Rename · ${plural(data.renames.length, 'item')}`,
+      tabId: sender.tab?.id,
+    }
 
     try {
       const tasks: QueueTask[] = data.renames.map(({ domId, issueNodeId, newTitle, typename }) => ({
@@ -81,39 +84,20 @@ export function registerBulkRenameHandlers(): void {
           completed: 0,
           paused: false,
           status: 'Renaming items...',
-          processId,
-          label,
+          processId: run.processId,
+          label: run.label,
         },
-        tabId,
+        run.tabId,
       )
 
-      await processQueue(
-        tasks,
-        async (state) => {
-          await broadcastQueue(
-            {
-              total: state.total,
-              completed: state.completed,
-              paused: state.paused,
-              retryAfter: state.retryAfter,
-              status:
-                state.completed < data.renames.length
-                  ? `Renaming item ${state.completed + 1} of ${data.renames.length}…`
-                  : `Renaming ${plural(data.renames.length, 'item')}…`,
-              processId,
-              label,
-              failedItems: state.failedItems,
-            },
-            tabId,
-          )
-        },
-        processId,
-      )
+      await runQueueWithProgress(tasks, run, (state) => ({
+        status:
+          state.completed < data.renames.length
+            ? `Renaming item ${state.completed + 1} of ${data.renames.length}…`
+            : `Renaming ${plural(data.renames.length, 'item')}…`,
+      }))
 
-      await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-        tabId,
-      )
+      await broadcastDone(run)
     } finally {
       releaseBulk()
     }
@@ -131,9 +115,11 @@ export function registerBulkRenameHandlers(): void {
     }
 
     acquireBulk()
-    const processId = newProcessId('assign')
-    const label = `Random assign · ${plural(data.itemIds.length, 'item')}`
-    const tabId = sender.tab?.id
+    const run = {
+      processId: newProcessId('assign'),
+      label: `Random assign · ${plural(data.itemIds.length, 'item')}`,
+      tabId: sender.tab?.id,
+    }
 
     try {
       await broadcastQueue(
@@ -142,12 +128,12 @@ export function registerBulkRenameHandlers(): void {
           completed: 0,
           paused: false,
           status: 'Resolving items...',
-          processId,
-          label,
+          processId: run.processId,
+          label: run.label,
         },
-        tabId,
+        run.tabId,
       )
-      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, tabId)
+      const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, run.tabId)
 
       if (resolvedItems.length === 0) {
         console.error('[rgp:bg] no valid items resolved for bulkRandomAssign, aborting')
@@ -157,10 +143,10 @@ export function registerBulkRenameHandlers(): void {
             completed: 0,
             paused: false,
             status: 'No valid items found',
-            processId,
-            label,
+            processId: run.processId,
+            label: run.label,
           },
-          tabId,
+          run.tabId,
         )
         return
       }
@@ -194,33 +180,14 @@ export function registerBulkRenameHandlers(): void {
         }
       }
 
-      await processQueue(
-        tasks,
-        async (state) => {
-          await broadcastQueue(
-            {
-              total: state.total,
-              completed: state.completed,
-              paused: state.paused,
-              retryAfter: state.retryAfter,
-              status:
-                state.completed < tasks.length
-                  ? `Clearing and reassigning item ${state.completed + 1} of ${tasks.length}…`
-                  : `Reassigned ${plural(tasks.length, 'item')}…`,
-              processId,
-              label,
-              failedItems: state.failedItems,
-            },
-            tabId,
-          )
-        },
-        processId,
-      )
+      await runQueueWithProgress(tasks, run, (state) => ({
+        status:
+          state.completed < tasks.length
+            ? `Clearing and reassigning item ${state.completed + 1} of ${tasks.length}…`
+            : `Reassigned ${plural(tasks.length, 'item')}…`,
+      }))
 
-      await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-        tabId,
-      )
+      await broadcastDone(run)
     } finally {
       releaseBulk()
     }

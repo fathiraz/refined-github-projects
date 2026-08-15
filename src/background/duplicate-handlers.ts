@@ -12,12 +12,13 @@ import {
   ADD_LABELS,
   UPDATE_ISSUE_TYPE,
 } from '@/lib/graphql-mutations'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isDuplicateFull, acquireDuplicate, releaseDuplicate } from '@/background/concurrency'
 import { broadcastQueue, withRateLimitRetry, githubRest } from '@/background/rest-helpers'
+import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
 import { formatRelationshipLabel } from '@/background/relationship-helpers'
 import { buildFieldValueFromSource } from '@/background/project-helpers'
 import type { ProjectItemDetails, FieldValue } from '@/background/types'
@@ -41,6 +42,9 @@ async function runDeepDuplicate(
 
   acquireDuplicate()
   const processId = newProcessId('dup')
+  // Bailing out before the source title is known still has to close the
+  // tracker card, and at that point the only label available is the generic one.
+  const abort = () => broadcastDone({ processId, label: 'Deep duplicate', tabId })
   logger.log('[rgp:bg] runDeepDuplicate starting', { itemId, processId })
 
   await broadcastQueue(
@@ -64,51 +68,21 @@ async function runDeepDuplicate(
       )
     } catch (error) {
       console.error('[rgp:bg] failed to fetch item details', error)
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Done!',
-          processId,
-          label: 'Deep duplicate',
-        },
-        tabId,
-      )
+      await abort()
       return
     }
 
     const source = details.node
     if (!source) {
       console.error('[rgp:bg] item not found')
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Done!',
-          processId,
-          label: 'Deep duplicate',
-        },
-        tabId,
-      )
+      await abort()
       return
     }
 
     const issue = source.content
     if (!issue?.title) {
       console.error('[rgp:bg] item is not a GitHub Issue (Draft/PR)')
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Done!',
-          processId,
-          label: 'Deep duplicate',
-        },
-        tabId,
-      )
+      await abort()
       return
     }
 
@@ -380,31 +354,14 @@ async function runDeepDuplicate(
       })),
     ]
 
-    await processQueue(
-      tasks,
-      async (state) => {
-        await broadcastQueue(
-          {
-            total: totalSteps,
-            completed: 1 + state.completed,
-            paused: state.paused,
-            retryAfter: state.retryAfter,
-            status: state.completed === 0 ? 'Cloning issue...' : 'Applying duplicate plan...',
-            detail: state.detail,
-            processId,
-            label: trackerLabel,
-            failedItems: state.failedItems,
-          },
-          tabId,
-        )
-      },
-      processId,
-    )
+    const run = { processId, label: trackerLabel, tabId }
+    await runQueueWithProgress(tasks, run, (state) => ({
+      total: totalSteps,
+      completed: 1 + state.completed,
+      status: state.completed === 0 ? 'Cloning issue...' : 'Applying duplicate plan...',
+    }))
 
-    await broadcastQueue(
-      { total: 0, completed: 0, paused: false, status: 'Done!', processId, label: trackerLabel },
-      tabId,
-    )
+    await broadcastDone(run)
     logger.log('[rgp:bg] deep duplicate complete', { processId })
   } finally {
     releaseDuplicate()

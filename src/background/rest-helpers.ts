@@ -74,6 +74,15 @@ export async function githubRest<T>(path: string, init: RequestInit = {}): Promi
   return (await res.json()) as T
 }
 
+/** Undo hint offered on the Done! frame. */
+export interface ReverseHint {
+  messageType: string
+  data: Record<string, unknown>
+  affectedItemIds: string[]
+  label?: string
+  undoWindowMs?: number
+}
+
 export async function broadcastQueue(
   state: {
     total: number
@@ -86,13 +95,7 @@ export async function broadcastQueue(
     label?: string
     failedItems?: Array<{ id: string; title: string; error: string }>
     retryContext?: { messageType: string; data: Record<string, unknown> }
-    reverse?: {
-      messageType: string
-      data: Record<string, unknown>
-      affectedItemIds: string[]
-      label?: string
-      undoWindowMs?: number
-    }
+    reverse?: ReverseHint
   },
   tabId?: number,
 ) {
