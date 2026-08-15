@@ -1,0 +1,40 @@
+src/features/sprint-settings-utils.ts
+  s_a104ef58ad92e3::t_00221863a01b06 4
+  s_a104ef58ad92e3::t_2a3462fd4b9bc6 28
+src/features/bulk-edit-relationship-pane.tsx
+  s_a104ef58ad92e3::t_2a3462fd4b9bc6 207-208
+  s_a104ef58ad92e3::t_00221863a01b06 11
+src/features/bulk-rename-flyout.tsx
+  s_a104ef58ad92e3::t_f46c500f1b96e7 198
+src/features/bulk-reorder-flyout.tsx
+  s_a104ef58ad92e3::t_f46c500f1b96e7 392
+src/features/bulk-mark-flyout.tsx
+  s_a104ef58ad92e3::t_e4ee3d8136ec6d 147,157
+  s_a104ef58ad92e3::t_764a47f7767e39 19
+src/features/bulk-random-assign-flyout.tsx
+  s_a104ef58ad92e3::t_2a3462fd4b9bc6 419
+src/features/queue-tracker.tsx
+  s_a104ef58ad92e3::t_f46c500f1b96e7 32
+  s_a104ef58ad92e3::t_00221863a01b06 14
+src/features/bulk-transfer-modal.tsx
+  s_a104ef58ad92e3::t_9415553a9409f9 344
+  s_a104ef58ad92e3::t_8c4da8ed3f329d 340-341
+  s_a104ef58ad92e3::t_d292181ca8f162 266
+  s_a104ef58ad92e3::t_35784900ea9ef1 252,255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9635ecd153b42a28ca1c44bc2651086e3b3289f3",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
