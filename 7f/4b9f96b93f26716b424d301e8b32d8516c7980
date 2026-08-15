@@ -1,0 +1,27 @@
+src/lib/effect-runtime.ts
+  s_a104ef58ad92e3::t_7eac9aaedbe43d 31-33,35-42
+  s_a104ef58ad92e3::t_21328853ae6ef0 2,4
+src/background/field-handlers.ts
+  s_a104ef58ad92e3::t_e1b22f62145a79 311-323
+  s_a104ef58ad92e3::t_70fa67561a242b 299-307
+src/background/config-handlers.ts
+  s_a104ef58ad92e3::t_18db92106cb0a2 15-18,22
+src/background/hierarchy-handlers.ts
+  s_a104ef58ad92e3::t_7c4193e7f64d67 227-240,244-248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "7f4b9f96b93f26716b424d301e8b32d8516c7980",
+  "prompts": {},
+  "sessions": {
+    "s_a104ef58ad92e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6e99e60-2eb5-4abe-a687-7c82732dab21",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
