@@ -158,6 +158,16 @@ export interface SprintInfo {
   endDate: string
 }
 
+/** Result of `getSprintStatus` — the shape both sprint surfaces render from. */
+export interface SprintStatus {
+  hasSettings: boolean
+  activeSprint: SprintInfo | null
+  nearestUpcoming: SprintInfo | null
+  acknowledgedSprint: SprintInfo | null
+  iterationFieldId: string | null
+  settings: SprintSettings | null
+}
+
 export interface SprintProgressData {
   totalIssues: number
   doneIssues: number
@@ -334,14 +344,12 @@ interface ProtocolMap {
     }[]
   }
 
-  getSprintStatus(data: { projectId: string; owner: string; number: number; isOrg: boolean }): {
-    hasSettings: boolean
-    activeSprint: SprintInfo | null
-    nearestUpcoming: SprintInfo | null
-    acknowledgedSprint: SprintInfo | null
-    iterationFieldId: string | null
-    settings: SprintSettings | null
-  }
+  getSprintStatus(data: {
+    projectId: string
+    owner: string
+    number: number
+    isOrg: boolean
+  }): SprintStatus
 
   saveSprintSettings(data: { projectId: string; settings: SprintSettings }): { ok: boolean }
 

@@ -4,8 +4,7 @@ import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Box, Button, Label, Spinner, Text } from '@primer/react'
 import { SlidersIcon } from '@/ui/icons'
 import { sendMessage } from '@/lib/messages'
-import type { SprintInfo } from '@/lib/messages'
-import type { SprintSettings } from '@/lib/storage'
+import type { SprintStatus } from '@/lib/messages'
 import { primerCss } from '@/lib/primer-css-helper'
 import { sprintConfirmEndStore, sprintPanelStore } from '@/lib/sprint-store'
 
@@ -34,15 +33,6 @@ const accentTextButtonSx = {
     transition: 'none',
     '&:hover:not(:disabled)': { transform: 'none' },
   },
-}
-
-interface SprintStatus {
-  hasSettings: boolean
-  activeSprint: SprintInfo | null
-  nearestUpcoming: SprintInfo | null
-  acknowledgedSprint: SprintInfo | null
-  iterationFieldId: string | null
-  settings: SprintSettings | null
 }
 
 function SprintSettingsButton() {

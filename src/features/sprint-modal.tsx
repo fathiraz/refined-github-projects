@@ -7,8 +7,7 @@ import { Z_TOOLTIP } from '@/lib/z-index'
 import { GearIcon, SlidersIcon, SprintIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
-import type { SprintInfo } from '@/lib/messages'
-import type { SprintSettings } from '@/lib/storage'
+import type { SprintStatus } from '@/lib/messages'
 import { fmt, SPRINT_FILTER } from '@/lib/sprint-utils'
 import { sprintConfirmEndStore } from '@/lib/sprint-store'
 import { SprintProgressView } from '@/features/sprint-progress-view'
@@ -26,15 +25,6 @@ interface Props {
 }
 
 type PanelState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
-
-interface SprintStatus {
-  hasSettings: boolean
-  activeSprint: SprintInfo | null
-  nearestUpcoming: SprintInfo | null
-  acknowledgedSprint: SprintInfo | null
-  iterationFieldId: string | null
-  settings: SprintSettings | null
-}
 
 export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose }: Props) {
   ensureTippyCss()
