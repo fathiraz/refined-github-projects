@@ -8,7 +8,6 @@ import {
   Fiber,
   FiberMap,
   Option,
-  Queue,
   Scope,
 } from 'effect'
 
@@ -97,14 +96,11 @@ export async function processQueue(
   const isCancelled = () => processId !== undefined && _cancelledProcesses.has(processId)
 
   const program = Effect.gen(function* () {
-    const q = yield* Queue.unbounded<QueueTask>()
-    yield* Queue.offerAll(q, tasks)
-
     for (let i = 0; i < tasks.length; i++) {
       // bail out if the queue was cancelled between tasks (e.g. from inside
       // the previous task's run callback or from another fiber).
       if (isCancelled()) return
-      const task = yield* Queue.take(q)
+      const task = tasks[i]
       logger.log('[rgp:queue] task start', task.id, `(${i + 1}/${tasks.length})`)
 
       let attempts = 0
