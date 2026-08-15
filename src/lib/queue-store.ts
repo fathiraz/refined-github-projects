@@ -1,5 +1,3 @@
-import { Duration, Effect, Fiber } from 'effect'
-
 import { onMessage } from '@/lib/messages'
 import { toastStore } from '@/lib/toast-store'
 
@@ -55,12 +53,12 @@ interface PhaseHints {
 
 type Listener = (entries: ProcessEntry[]) => void
 
-const DISMISS_DELAY = Duration.millis(3000)
+const DISMISS_DELAY_MS = 3000
 const DEFAULT_UNDO_WINDOW_MS = 10_000
 
 let processes: Map<string, ProcessEntry> = new Map()
 const listeners = new Set<Listener>()
-const dismissTimers = new Map<string, Fiber.RuntimeFiber<void>>()
+const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const phaseHintsMap = new Map<string, PhaseHints>()
 
 function derivePhase(
@@ -149,9 +147,9 @@ function setState(next: Map<string, ProcessEntry>): void {
 }
 
 function clearDismissTimer(id: string): void {
-  const fiber = dismissTimers.get(id)
-  if (fiber !== undefined) {
-    Effect.runFork(Fiber.interrupt(fiber))
+  const timer = dismissTimers.get(id)
+  if (timer !== undefined) {
+    clearTimeout(timer)
     dismissTimers.delete(id)
   }
 }
@@ -166,20 +164,15 @@ function removeProcess(processId: string, opts?: { skipClearTimer?: boolean }): 
   setState(next)
 }
 
-function scheduleDismiss(processId: string, delay: Duration.Duration = DISMISS_DELAY) {
+function scheduleDismiss(processId: string, delayMs: number = DISMISS_DELAY_MS) {
   clearDismissTimer(processId)
-  const fiber = Effect.runFork(
-    Effect.sleep(delay).pipe(
-      Effect.tap(() =>
-        Effect.sync(() => {
-          if (dismissTimers.get(processId) !== fiber) return
-          dismissTimers.delete(processId)
-          removeProcess(processId, { skipClearTimer: true })
-        }),
-      ),
-    ),
+  dismissTimers.set(
+    processId,
+    setTimeout(() => {
+      dismissTimers.delete(processId)
+      removeProcess(processId, { skipClearTimer: true })
+    }, delayMs),
   )
-  dismissTimers.set(processId, fiber)
 }
 
 export const queueStore = {
@@ -277,7 +270,7 @@ onMessage('queueStateUpdate', ({ data }) => {
           hintNow?.reverse !== undefined
             ? (hintNow.undoWindowMs ?? DEFAULT_UNDO_WINDOW_MS)
             : undefined
-        scheduleDismiss(key, dismissMs !== undefined ? Duration.millis(dismissMs) : DISMISS_DELAY)
+        scheduleDismiss(key, dismissMs ?? DISMISS_DELAY_MS)
       }
       // fire completion toast when ALL processes are done
       const allDone = Array.from(processes.values()).every((e) => e.done)

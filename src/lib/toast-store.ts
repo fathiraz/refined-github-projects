@@ -1,5 +1,3 @@
-import { Duration, Effect, Fiber } from 'effect'
-
 import { newProcessId } from '@/lib/format'
 
 export interface ToastEntry {
@@ -10,17 +8,16 @@ export interface ToastEntry {
 }
 
 const MAX_TOASTS = 3
-const AUTO_DISMISS = Duration.millis(5000)
+const AUTO_DISMISS_MS = 5000
 
 type Listener = (entries: ToastEntry[]) => void
 
 let current: ToastEntry[] = []
 const listeners = new Set<Listener>()
 
-// tracks the eviction fiber per toast id. Effect.sleep + Fiber.interrupt keeps
-// dismissal on the Effect runtime (TestClock-friendly) and integrates with
-// structured cancellation.
-const dismissTimers = new Map<string, Fiber.RuntimeFiber<void>>()
+// tracks the eviction timer per toast id, so a manual dismiss cancels the
+// pending auto-dismiss instead of letting it fire against a re-used id.
+const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 function setState(next: ToastEntry[]): void {
   current = next
@@ -29,29 +26,22 @@ function setState(next: ToastEntry[]): void {
 }
 
 function clearDismissTimer(id: string): void {
-  const fiber = dismissTimers.get(id)
-  if (fiber !== undefined) {
-    Effect.runFork(Fiber.interrupt(fiber))
+  const timer = dismissTimers.get(id)
+  if (timer !== undefined) {
+    clearTimeout(timer)
     dismissTimers.delete(id)
   }
 }
 
 function scheduleDismiss(id: string) {
   clearDismissTimer(id)
-  const fiber = Effect.runFork(
-    Effect.sleep(AUTO_DISMISS).pipe(
-      Effect.tap(() =>
-        Effect.sync(() => {
-          // only dismiss if this fiber is still the active one for the id —
-          // a manual dismiss before TTL elapses will have already cleared it.
-          if (dismissTimers.get(id) === fiber) {
-            toastStore.dismiss(id)
-          }
-        }),
-      ),
-    ),
+  dismissTimers.set(
+    id,
+    setTimeout(() => {
+      dismissTimers.delete(id)
+      toastStore.dismiss(id)
+    }, AUTO_DISMISS_MS),
   )
-  dismissTimers.set(id, fiber)
 }
 
 export const toastStore = {
