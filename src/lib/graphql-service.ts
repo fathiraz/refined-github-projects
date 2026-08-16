@@ -9,6 +9,7 @@ import {
   classifyHttpError,
   type GithubError,
 } from '@/lib/errors'
+import { logger } from '@/lib/debug-logger'
 import { Storage } from '@/lib/storage-service'
 
 /**
@@ -65,7 +66,7 @@ const make = Effect.gen(function* () {
     const program = Effect.gen(function* () {
       const pat = yield* storage.getPat
 
-      yield* Effect.logDebug('→ request').pipe(Effect.annotateLogs({ op, vars: variables }))
+      logger.debug('→ request', { op, vars: variables })
 
       const req = HttpClientRequest.post(GITHUB_ENDPOINT).pipe(
         HttpClientRequest.setHeaders({
@@ -93,13 +94,7 @@ const make = Effect.gen(function* () {
           res.headers['x-ratelimit-remaining'] !== undefined
             ? parseHeader(res.headers['x-ratelimit-remaining'])
             : null
-        yield* Effect.logError('HTTP error').pipe(
-          Effect.annotateLogs({
-            op,
-            status: res.status,
-            retryAfter,
-          }),
-        )
+        logger.error('HTTP error', { op, status: res.status, retryAfter })
         return yield* Effect.fail(
           classifyHttpError({
             status: res.status,
@@ -124,13 +119,11 @@ const make = Effect.gen(function* () {
 
       if (json.errors && json.errors.length > 0) {
         if (!options?.silent) {
-          yield* Effect.logError('GraphQL errors').pipe(
-            Effect.annotateLogs({ op, errors: json.errors }),
-          )
+          logger.error('GraphQL errors', { op, errors: json.errors })
           // user data may live in query/variables — keep at debug level so
-          // they're gated by RgpLoggerLive's debug flag.
-          yield* Effect.logDebug('QUERY').pipe(Effect.annotateLogs({ query }))
-          yield* Effect.logDebug('VARIABLES').pipe(Effect.annotateLogs({ variables }))
+          // they're gated by the logger's debug flag.
+          logger.debug('QUERY', { query })
+          logger.debug('VARIABLES', { variables })
         }
         return yield* Effect.fail(new GithubGraphQLError({ message: json.errors[0].message }))
       }
@@ -177,14 +170,14 @@ const make = Effect.gen(function* () {
         while: (e: GithubError) => e._tag === 'GithubRateLimitError',
       }),
       Effect.tapError((e) =>
-        e._tag === 'GithubRateLimitError'
-          ? Effect.logWarning('rate limit exhausted').pipe(
-              Effect.annotateLogs({
-                op,
-                retryAfter: (e as GithubRateLimitError).retryAfter,
-              }),
-            )
-          : Effect.void,
+        Effect.sync(() => {
+          if (e._tag === 'GithubRateLimitError') {
+            logger.warn('rate limit exhausted', {
+              op,
+              retryAfter: (e as GithubRateLimitError).retryAfter,
+            })
+          }
+        }),
       ),
       Effect.withSpan(`gql.${op}`, { attributes: { op } }),
     )

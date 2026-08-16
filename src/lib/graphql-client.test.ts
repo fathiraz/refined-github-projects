@@ -6,18 +6,10 @@ vi.mock('@/lib/storage', () => ({
   debugStorage: { getValue: vi.fn().mockResolvedValue(false), watch: vi.fn() },
 }))
 
-vi.mock('@/lib/debug-logger', async () => {
-  const { Logger } = await import('effect')
-  return {
-    logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
-    initDebugLogger: vi.fn().mockResolvedValue(undefined),
-    // provide an inert layer so client.ts still has a Logger to provide.
-    RgpLoggerLive: Logger.replace(
-      Logger.defaultLogger,
-      Logger.make(() => {}),
-    ),
-  }
-})
+vi.mock('@/lib/debug-logger', () => ({
+  logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
+  initDebugLogger: vi.fn().mockResolvedValue(undefined),
+}))
 
 import { GithubRateLimitError } from '@/lib/errors'
 import { gql } from '@/lib/graphql-client'
