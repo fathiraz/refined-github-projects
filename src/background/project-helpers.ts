@@ -58,24 +58,61 @@ export function buildFieldValueFromSource(fieldValue: FieldValue): Record<string
   return null
 }
 
-/** The two DOM spellings of an issue reference: `issue:123` and `issue-123`. */
-export function parseIssueDatabaseId(domId: string): number | null {
-  const match = domId.match(/^issue[:-](\d+)$/)
-  return match ? parseInt(match[1], 10) : null
+/**
+ * The two DOM spellings of an issue reference. The SEPARATOR says which number
+ * the id carries, and the distinction is load-bearing:
+ *
+ *   `issue:4140984079` — colon, from `data-hovercard-subject-tag` → databaseId
+ *   `issue-58`         — hyphen, scraped from an `/issues/58` href → issue NUMBER
+ *
+ * Both spellings can name the same issue. Matching a hyphen id's number against
+ * a content databaseId therefore never resolves, which is what surfaced as
+ * "Item issue-58 not found in project — it may belong to a different project".
+ */
+export interface IssueRef {
+  kind: 'databaseId' | 'number'
+  value: number
 }
 
-/** Index DOM ids by the database id they carry, warning on anything unparseable. */
-function indexByDatabaseId(domIds: readonly string[]): Map<number, string> {
-  const databaseIdMap = new Map<number, string>()
+export function parseIssueRef(domId: string): IssueRef | null {
+  const match = domId.match(/^issue([:-])(\d+)$/)
+  if (!match) return null
+  return { kind: match[1] === ':' ? 'databaseId' : 'number', value: parseInt(match[2], 10) }
+}
+
+/**
+ * Legacy tolerant parse: returns the numeric part of EITHER spelling without
+ * saying what it means. Only `bulk-position` and `getReorderContext` still use
+ * it, and both then match the result against a content databaseId — so a hyphen
+ * id resolves to nothing there. That is pre-existing and rare (table rows
+ * almost always carry the colon spelling), and fixing it needs `number` added
+ * to GET_PROJECT_ITEMS_FOR_REORDER, so it is deliberately left alone here
+ * rather than changed under an unrelated fix. Prefer `parseIssueRef`.
+ */
+export function parseIssueDatabaseId(domId: string): number | null {
+  const ref = parseIssueRef(domId)
+  return ref ? ref.value : null
+}
+
+/** DOM ids indexed by whichever number they carry, warning on anything unparseable. */
+interface WantedIds {
+  byDatabaseId: Map<number, string>
+  byNumber: Map<number, string>
+  size: number
+}
+
+function indexByRef(domIds: readonly string[]): WantedIds {
+  const byDatabaseId = new Map<number, string>()
+  const byNumber = new Map<number, string>()
   for (const domId of domIds) {
-    const databaseId = parseIssueDatabaseId(domId)
-    if (databaseId === null) {
+    const ref = parseIssueRef(domId)
+    if (!ref) {
       logger.warn('[rgp:bg] could not parse DOM ID:', domId)
       continue
     }
-    databaseIdMap.set(databaseId, domId)
+    ;(ref.kind === 'databaseId' ? byDatabaseId : byNumber).set(ref.value, domId)
   }
-  return databaseIdMap
+  return { byDatabaseId, byNumber, size: byDatabaseId.size + byNumber.size }
 }
 
 /** One page of a project's `items` connection, whatever `content` was selected. */
@@ -89,22 +126,25 @@ interface ItemsPage<TContent> {
 }
 
 /**
- * Walk a project's items until every wanted database id is matched or the pages
- * run out, handing each match to `collect`. Paging sleeps 1s between requests
- * for rate-limit safety.
+ * Walk a project's items until every wanted id is matched or the pages run out,
+ * handing each match to `collect`. An item matches on its content databaseId or
+ * on its issue number, depending on which spelling the caller supplied — see
+ * `parseIssueRef`. Paging sleeps 1s between requests for rate-limit safety.
  */
-async function collectMatchingItems<TContent extends { databaseId: number }, TOut>(
+async function collectMatchingItems<TContent extends { databaseId: number; number?: number }, TOut>(
   query: string,
   projectId: string,
-  wanted: Map<number, string>,
+  wanted: WantedIds,
   collect: (item: { id: string; content: TContent }, domId: string) => TOut,
   tabId?: number,
 ): Promise<TOut[]> {
   const results: TOut[] = []
-  const remaining = new Set(wanted.keys())
+  const remainingDbIds = new Set(wanted.byDatabaseId.keys())
+  const remainingNumbers = new Set(wanted.byNumber.keys())
+  const remaining = () => remainingDbIds.size + remainingNumbers.size
   let cursor: string | null = null
 
-  while (remaining.size > 0) {
+  while (remaining() > 0) {
     const page: ItemsPage<TContent> = await withRateLimitRetry(
       () => gql<ItemsPage<TContent>>(query, { projectId, cursor }),
       tabId,
@@ -117,19 +157,32 @@ async function collectMatchingItems<TContent extends { databaseId: number }, TOu
     }
 
     for (const item of items.nodes) {
-      const databaseId = item.content?.databaseId
-      if (databaseId === undefined || !remaining.has(databaseId)) continue
-      results.push(collect({ id: item.id, content: item.content! }, wanted.get(databaseId)!))
-      remaining.delete(databaseId)
+      const content = item.content
+      if (!content) continue
+
+      // one item can satisfy both spellings when a caller passed each of them
+      if (remainingDbIds.has(content.databaseId)) {
+        results.push(
+          collect({ id: item.id, content }, wanted.byDatabaseId.get(content.databaseId)!),
+        )
+        remainingDbIds.delete(content.databaseId)
+      }
+      if (content.number !== undefined && remainingNumbers.has(content.number)) {
+        results.push(collect({ id: item.id, content }, wanted.byNumber.get(content.number)!))
+        remainingNumbers.delete(content.number)
+      }
     }
 
-    if (!items.pageInfo.hasNextPage || remaining.size === 0) break
+    if (!items.pageInfo.hasNextPage || remaining() === 0) break
     cursor = items.pageInfo.endCursor
     await sleep(1000)
   }
 
-  if (remaining.size > 0) {
-    logger.warn('[rgp:bg] could not resolve these database IDs:', [...remaining])
+  if (remaining() > 0) {
+    logger.warn('[rgp:bg] could not resolve these ids:', [
+      ...[...remainingDbIds].map((id) => `issue:${id}`),
+      ...[...remainingNumbers].map((n) => `issue-${n}`),
+    ])
   }
 
   return results
@@ -147,10 +200,10 @@ export async function resolveProjectItemIds(
   projectId: string,
   tabId?: number,
 ): Promise<ResolvedItem[]> {
-  const databaseIdMap = indexByDatabaseId(domIds)
-  if (databaseIdMap.size === 0) return []
+  const wanted = indexByRef(domIds)
+  if (wanted.size === 0) return []
 
-  logger.log('[rgp:bg] resolving database IDs:', [...databaseIdMap.keys()])
+  logger.log('[rgp:bg] resolving ids:', domIds)
 
   interface ResolutionContent {
     __typename?: string
@@ -170,7 +223,7 @@ export async function resolveProjectItemIds(
   return collectMatchingItems<ResolutionContent, ResolvedItem>(
     GET_PROJECT_ITEMS_FOR_RESOLUTION,
     projectId,
-    databaseIdMap,
+    wanted,
     ({ id, content }, domId) => {
       logger.log('[rgp:bg] resolved', domId, '->', id, 'issueNodeId:', content.id)
       return {
@@ -207,13 +260,15 @@ export async function resolveProjectItemIdsWithTitles(
   domIds: string[],
   projectId: string,
 ): Promise<ResolvedItemWithTitle[]> {
-  const databaseIdMap = indexByDatabaseId(domIds)
-  if (databaseIdMap.size === 0) return []
+  const wanted = indexByRef(domIds)
+  if (wanted.size === 0) return []
 
   interface RenameContent {
     __typename: string
     id: string
     databaseId: number
+    /** Selected so hyphen-spelled ids (`issue-58`) can match — see `parseIssueRef`. */
+    number?: number
     title: string
     repository?: { owner: { login: string }; name: string }
   }
@@ -221,7 +276,7 @@ export async function resolveProjectItemIdsWithTitles(
   return collectMatchingItems<RenameContent, ResolvedItemWithTitle>(
     GET_PROJECT_ITEMS_FOR_RENAME,
     projectId,
-    databaseIdMap,
+    wanted,
     ({ id, content }, domId) => ({
       domId: decodeProjectItemDomId(domId),
       issueNodeId: decodeIssueNodeId(content.id),
