@@ -30,7 +30,6 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.8.1",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
-    "@effect/platform": "^0.96.1",
     "@emotion/is-prop-valid": "^1.4.0",
     "@primer/live-region-element": "0.8.0",
     "@primer/octicons-react": "^19.28.0",
@@ -38,7 +37,6 @@
     "@tippyjs/react": "^4.2.6",
     "@webext-core/messaging": "^3.0.1",
     "driver.js": "^1.4.0",
-    "effect": "^3.21.2",
     "marked": "^18.0.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
