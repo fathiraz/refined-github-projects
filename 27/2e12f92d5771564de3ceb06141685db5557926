@@ -1,0 +1,20 @@
+src/lib/queue.ts
+  s_4bdb13fd3ea22c::t_f6813b9caa1469 25-33,36-43,46-50,52-53,58,90-91,93-96,99,112-113,121-123,126-127,136-137,145-146,159,161-164
+  s_4bdb13fd3ea22c::t_9f2675bd53527b 44-45,51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "272e12f92d5771564de3ceb06141685db5557926",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
