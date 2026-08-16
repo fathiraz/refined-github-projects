@@ -186,3 +186,25 @@ export function isEditableTarget(el: EventTarget | null): boolean {
     return true
   return false
 }
+
+/**
+ * First element matching any of `selectors`, tried in order.
+ *
+ * Selectors are tried one at a time rather than joined with commas so that a
+ * single GitHub-specific selector the browser rejects — `:has()` on an older
+ * engine, say — cannot take the whole list down with it.
+ */
+export function queryFirst<E extends Element = Element>(
+  root: ParentNode,
+  selectors: readonly string[],
+): E | null {
+  for (const sel of selectors) {
+    try {
+      const el = root.querySelector<E>(sel)
+      if (el) return el
+    } catch {
+      // invalid selector in this browser — skip it
+    }
+  }
+  return null
+}

@@ -4,7 +4,7 @@ import { StyleSheetManager } from 'styled-components'
 import isPropValid from '@emotion/is-prop-valid'
 import { ShadowThemeProvider } from '@/ui/shadow-theme-provider'
 import { ProjectContextCard } from '@/features/project-context-card'
-import { INJECTED_ATTR } from '@/lib/project-table-dom'
+import { INJECTED_ATTR, queryFirst } from '@/lib/project-table-dom'
 import type { ProjectContext } from '@/lib/github-project'
 import { logger } from '@/lib/debug-logger'
 
@@ -47,29 +47,9 @@ function findPanelBroad(): Element | null {
   }
 }
 
-function findPanel(): Element | null {
-  for (const sel of PANEL_SELECTORS) {
-    try {
-      const el = document.querySelector(sel)
-      if (el) return el
-    } catch {
-      // selector may not be valid in this browser; skip
-    }
-  }
-  return findPanelBroad()
-}
+const findPanel = (): Element | null => queryFirst(document, PANEL_SELECTORS) ?? findPanelBroad()
 
-function findSidebar(panel: Element): Element | null {
-  for (const sel of SIDEBAR_SELECTORS) {
-    try {
-      const el = panel.querySelector(sel)
-      if (el) return el
-    } catch {
-      // skip
-    }
-  }
-  return null
-}
+const findSidebar = (panel: Element): Element | null => queryFirst(panel, SIDEBAR_SELECTORS)
 
 function extractItemIdFromPanel(panel: Element): string | null {
   // try to read a data-rgp-cb attr from the currently-active table row
