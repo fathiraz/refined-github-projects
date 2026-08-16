@@ -311,10 +311,20 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     setOverlay('editFields')
   }
 
-  async function handleRandomAssign() {
+  /**
+   * Every overflow action opens the same way: dismiss the menu, verify the
+   * token, then raise the overlay. `stage` runs in between for the one action
+   * that needs to prepare state first.
+   */
+  async function openAfterToken(id: OverlayId, stage?: () => void) {
     setMenuOpen(false)
     if (!(await checkToken())) return
-    setOverlay('randomAssign')
+    stage?.()
+    setOverlay(id)
+  }
+
+  function handleRandomAssign() {
+    return openAfterToken('randomAssign')
   }
 
   function handleConfirmRandomAssign(
@@ -351,10 +361,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     handleMarkVerb(verb)
   }
 
-  async function handleTransfer() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setOverlay('transfer')
+  function handleTransfer() {
+    return openAfterToken('transfer')
   }
 
   function handleConfirmTransfer(
@@ -377,13 +385,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     selectionStore.clear()
   }
 
-  async function handleBulkDelete() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    const ids = selectionStore.getAll()
-    const titles = getTitlesForItemIds(ids).map((entry) => entry.title)
-    setDeleteItemTitles(titles)
-    setOverlay('delete')
+  function handleBulkDelete() {
+    return openAfterToken('delete', () => {
+      setDeleteItemTitles(getTitlesForItemIds(selectionStore.getAll()).map((entry) => entry.title))
+    })
   }
 
   function handleConfirmDelete() {
@@ -393,10 +398,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     selectionStore.clear()
   }
 
-  async function handleBulkRename() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setOverlay('rename')
+  function handleBulkRename() {
+    return openAfterToken('rename')
   }
 
   function handleConfirmRename(renames: RenameFlyoutConfirm[]) {
@@ -409,10 +412,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     // §3 selection policy — Rename preserves selection.
   }
 
-  async function handleBulkReorder() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setOverlay('reorder')
+  function handleBulkReorder() {
+    return openAfterToken('reorder')
   }
 
   function handleConfirmReorder(ops: ReorderOp[], reorderProjectId: string, label: string) {
@@ -422,6 +423,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   }
 
   async function handleBulkClose() {
+    // the extra guard runs after the token check, as it always has: the bar
+    // does not render at all with an empty selection, so this is belt-and-braces.
     setMenuOpen(false)
     if (!(await checkToken())) return
     if (selectionStore.count() === 0) return
