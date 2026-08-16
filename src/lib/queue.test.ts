@@ -213,6 +213,57 @@ describe('processQueue', () => {
     expect(pausedState!.retryAfter).toBe(2)
   })
 
+  it('cancellation cuts a rate-limit pause short instead of waiting it out', async () => {
+    // The only guarantee the queue's interruptible sleep uniquely provides:
+    // cancelling while the queue is parked in a 60s rate-limit wait must
+    // abandon the run rather than sit out the wait and re-attempt the task.
+    const processId = 'cancel-during-pause'
+    let attempts = 0
+    const ran: string[] = []
+
+    const tasks: QueueTask[] = [
+      {
+        id: 'throttled',
+        run: async () => {
+          attempts++
+          const err: Error & { status?: number; retryAfter?: number } = new Error('rate limited')
+          err.status = 429
+          err.retryAfter = 60
+          throw err
+        },
+      },
+      {
+        id: 'after',
+        run: async () => {
+          ran.push('after')
+        },
+      },
+    ]
+
+    let cancelled = false
+    const startedAt = Date.now()
+    await runToCompletion(
+      processQueue(
+        tasks,
+        (s) => {
+          if (s.paused && !cancelled) {
+            cancelled = true
+            cancelQueue(processId)
+          }
+        },
+        processId,
+      ),
+    )
+    const elapsed = Date.now() - startedAt
+
+    // the run ends well inside the 60s window it was parked in — that is the
+    // guarantee, and it is what makes the pause interruptible rather than a
+    // wait the user has to sit through.
+    expect(elapsed).toBeLessThan(60_000)
+    expect(attempts).toBe(1)
+    expect(ran).toEqual([])
+  })
+
   it('broadcasts task detail during execution', async () => {
     const tasks: QueueTask[] = [
       { id: 'detailed', detail: 'Setting field → done', run: async () => {} },

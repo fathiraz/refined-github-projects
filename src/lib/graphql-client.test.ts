@@ -103,7 +103,48 @@ describe('gql', () => {
       expect(e.status).toBe(403)
       expect(e.retryAfter).toBe(1)
     }
+    // 1 initial attempt + 2 retries. Pinned so a rewrite of the retry
+    // schedule cannot silently change how hard we hammer a throttled API.
+    expect(mockFetch).toHaveBeenCalledTimes(3)
   }, 30000)
+
+  it('retries a rate-limited request and succeeds on the second attempt', async () => {
+    mockFetch.mockResolvedValueOnce(errorResponse(429, { retryAfter: '1' }))
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: { ok: true } }))
+
+    const result = await gql('query GetViewer { viewer { login } }', {})
+
+    expect(result).toEqual({ ok: true })
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  }, 30000)
+
+  it('times out a hung attempt after 30s as GithubNetworkError, without retrying', async () => {
+    vi.useFakeTimers()
+    try {
+      // never settles — the request has to be abandoned by the timeout, not by
+      // the transport. A timeout is NOT a rate limit, so it must not retry.
+      mockFetch.mockImplementation(() => new Promise(() => {}))
+
+      const pending = gql('query GetViewer { viewer { login } }', {})
+      const assertion = expect(pending).rejects.toMatchObject({ _tag: 'GithubNetworkError' })
+
+      await vi.advanceTimersByTimeAsync(31_000)
+      await assertion
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not retry a 500 — server errors fall outside the retry predicate', async () => {
+    mockFetch.mockResolvedValue(errorResponse(500))
+
+    await expect(gql('query GetViewer { viewer { login } }', {})).rejects.toMatchObject({
+      _tag: 'GithubServerError',
+    })
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
 
   it('throws GithubClientError on 403 permission errors (no rate-limit header) without retry', async () => {
     // permission 403 (token lacks scope, repo locked, ...) -> GithubClientError
