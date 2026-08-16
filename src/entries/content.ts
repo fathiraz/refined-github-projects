@@ -52,7 +52,7 @@ export default defineContentScript({
 
     const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)
-    const cleanupIssueDetail = setupIssueDetailInjector(projectContext)
+    const cleanupIssueDetail = setupIssueDetailInjector(ctx, projectContext)
     const cleanupCreateIssueFields = setupCreateIssueFieldInjector(ctx, getFields)
     const cleanupTableEnhancements = setupTableEnhancements([
       injectSprintHeaders,
