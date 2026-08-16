@@ -1,0 +1,24 @@
+src/features/create-issue-injections.tsx
+  s_4bdb13fd3ea22c::t_1f1345cae7f497 22
+  s_4bdb13fd3ea22c::t_310f6b15d4fea8 84,86,88,91-92
+src/features/issue-detail-injections.tsx
+  s_4bdb13fd3ea22c::t_ec1aa55134fffd 7,50,52
+src/lib/project-table-dom.ts
+  s_4bdb13fd3ea22c::t_bb12a4c38b6bcc 189-210
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "8f08e7d0994fba6dcc723d5c47483a093b3ca47a",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
