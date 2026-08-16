@@ -1,5 +1,6 @@
 import { defineExtensionMessaging } from '@webext-core/messaging'
 import type { PatErrorType } from '@/lib/errors'
+import type { QueueState } from '@/lib/queue'
 import type { ExcludeCondition, SprintSettings } from '@/lib/storage'
 
 export interface IssueRelationshipData {
@@ -211,6 +212,27 @@ interface IterationConfig {
   title: string
   startDate: string
   duration: number
+}
+
+/** Undo hint offered on the Done! frame. */
+export interface ReverseHint {
+  messageType: string
+  data: Record<string, unknown>
+  affectedItemIds: string[]
+  label?: string
+  undoWindowMs?: number
+}
+
+/**
+ * One queue-tracker frame: whatever the queue itself reported, plus the run
+ * that produced it. Declared once here because the sender (`broadcastQueue`)
+ * and the protocol entry are the two ends of the same message.
+ */
+export interface QueueFrame extends QueueState {
+  processId?: string
+  label?: string
+  retryContext?: { messageType: string; data: Record<string, unknown> }
+  reverse?: ReverseHint
 }
 
 /**
@@ -438,25 +460,7 @@ interface ProtocolMap {
 
   cancelProcess(data: { processId: string }): void
 
-  queueStateUpdate(data: {
-    total: number
-    completed: number
-    paused: boolean
-    retryAfter?: number
-    status?: string
-    detail?: string
-    processId?: string
-    label?: string
-    failedItems?: { id: string; title: string; error: string }[]
-    retryContext?: { messageType: string; data: Record<string, unknown> }
-    reverse?: {
-      messageType: string
-      data: Record<string, unknown>
-      affectedItemIds: string[]
-      label?: string
-      undoWindowMs?: number
-    }
-  }): void
+  queueStateUpdate(data: QueueFrame): void
 }
 
 const _messaging = defineExtensionMessaging<ProtocolMap>()
