@@ -50,8 +50,8 @@ vi.mock('@/background/rest-helpers', () => ({
   broadcastQueue: hoisted.broadcastQueue,
   withRateLimitRetry: hoisted.withRateLimitRetry,
 }))
-// Only the network call is stubbed; `parseIssueDatabaseId` stays real so the
-// dom-id spelling assertions below still exercise the shipped parser.
+// Only the network call is stubbed; `createIssueRefIndex` stays real so the
+// dom-id spelling assertions below still exercise the shipped resolver.
 vi.mock('@/background/project-helpers', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/background/project-helpers')>()),
   getProjectFieldsData: hoisted.getProjectFieldsData,
@@ -96,7 +96,9 @@ function frames(): Record<string, unknown>[] {
 }
 
 /** One page of project items, shaped as the reorder query returns them. */
-function itemsPage(items: { id: string; databaseId: number; contentDbId: number }[]) {
+function itemsPage(
+  items: { id: string; databaseId: number; contentDbId: number; contentNumber?: number }[],
+) {
   return {
     node: {
       items: {
@@ -104,7 +106,7 @@ function itemsPage(items: { id: string; databaseId: number; contentDbId: number 
         nodes: items.map((i) => ({
           id: i.id,
           databaseId: i.databaseId,
-          content: { databaseId: i.contentDbId },
+          content: { databaseId: i.contentDbId, number: i.contentNumber },
         })),
       },
     },
@@ -212,11 +214,14 @@ describe('bulk position verbs — characterization', () => {
       insertAfterDomId: null as string | null,
     }
 
+    // contentDbId and contentNumber are deliberately different values: a real
+    // issue's databaseId is ~4 billion while its number is small, and the two
+    // id spellings carry one each.
     const page = () =>
       itemsPage([
-        { id: 'PVTI_10', databaseId: 110, contentDbId: 10 },
-        { id: 'PVTI_20', databaseId: 120, contentDbId: 20 },
-        { id: 'PVTI_30', databaseId: 130, contentDbId: 30 },
+        { id: 'PVTI_10', databaseId: 110, contentDbId: 10, contentNumber: 1 },
+        { id: 'PVTI_20', databaseId: 120, contentDbId: 20, contentNumber: 2 },
+        { id: 'PVTI_30', databaseId: 130, contentDbId: 30, contentNumber: 3 },
       ])
 
     it('short-circuits when bulk is full', async () => {
@@ -261,15 +266,58 @@ describe('bulk position verbs — characterization', () => {
       })
     })
 
-    it('accepts both issue:N and issue-N dom id spellings', async () => {
+    it('resolves the hyphen spelling by issue number', async () => {
       hoisted.gql.mockResolvedValue(page())
+      // issue-2 is issue NUMBER 2, which is the item whose contentDbId is 20
       const { tasks } = await runVerb('bulkReorderByPosition', {
         ...base,
-        selectedDomIds: ['issue-20'],
-        allDomIds: ['issue-10', 'issue-20', 'issue-30'],
+        selectedDomIds: ['issue-2'],
+        allDomIds: ['issue-1', 'issue-2', 'issue-3'],
       })
 
       expect(tasks).toHaveLength(1)
+      await tasks[0].run()
+      expect(hoisted.gql).toHaveBeenLastCalledWith('MUT_POSITION', {
+        input: { projectId: PROJECT_ID, itemId: 'PVTI_20', afterId: undefined },
+      })
+    })
+
+    it('does not resolve a hyphen id against a content databaseId', async () => {
+      hoisted.gql.mockResolvedValue(page())
+      // no item has issue number 20 — the hyphen spelling must not fall back
+      // to matching contentDbId 20, which is what produced wrong-item moves
+      const { tasks } = await runVerb('bulkReorderByPosition', {
+        ...base,
+        selectedDomIds: ['issue-20'],
+        allDomIds: ['issue-20'],
+      })
+
+      expect(tasks).toEqual([])
+    })
+
+    it('resolves a mixed batch of both spellings', async () => {
+      hoisted.gql.mockResolvedValue(page())
+      const { tasks } = await runVerb('bulkReorderByPosition', {
+        ...base,
+        selectedDomIds: ['issue:10', 'issue-3'],
+        allDomIds: ['issue:10', 'issue:20', 'issue-3'],
+      })
+
+      expect(tasks).toHaveLength(2)
+    })
+
+    it('honours an insertion target given in the hyphen spelling', async () => {
+      hoisted.gql.mockResolvedValue(page())
+      const { tasks } = await runVerb('bulkReorderByPosition', {
+        ...base,
+        selectedDomIds: ['issue-1'],
+        insertAfterDomId: 'issue-3',
+      })
+
+      await tasks[0].run()
+      expect(hoisted.gql).toHaveBeenLastCalledWith('MUT_POSITION', {
+        input: { projectId: PROJECT_ID, itemId: 'PVTI_10', afterId: 'PVTI_30' },
+      })
     })
 
     it('throws through to the finally block when the project cannot be found', async () => {

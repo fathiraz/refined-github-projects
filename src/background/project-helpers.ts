@@ -80,18 +80,35 @@ export function parseIssueRef(domId: string): IssueRef | null {
   return { kind: match[1] === ':' ? 'databaseId' : 'number', value: parseInt(match[2], 10) }
 }
 
+/** What a project item offers to be matched on. */
+interface IssueRefKeys {
+  databaseId?: number | null
+  number?: number | null
+}
+
 /**
- * Legacy tolerant parse: returns the numeric part of EITHER spelling without
- * saying what it means. Only `bulk-position` and `getReorderContext` still use
- * it, and both then match the result against a content databaseId — so a hyphen
- * id resolves to nothing there. That is pre-existing and rare (table rows
- * almost always carry the colon spelling), and fixing it needs `number` added
- * to GET_PROJECT_ITEMS_FOR_REORDER, so it is deliberately left alone here
- * rather than changed under an unrelated fix. Prefer `parseIssueRef`.
+ * Lookup that resolves EITHER id spelling to the same entry.
+ *
+ * Items go in indexed twice — once by content databaseId, once by issue number
+ * — because the spelling of the id is the only thing saying which of the two a
+ * caller supplied. Looking a hyphen id up against databaseIds silently finds
+ * either nothing or, worse, an unrelated item that happens to share the number.
  */
-export function parseIssueDatabaseId(domId: string): number | null {
-  const ref = parseIssueRef(domId)
-  return ref ? ref.value : null
+export function createIssueRefIndex<T>() {
+  const byDatabaseId = new Map<number, T>()
+  const byNumber = new Map<number, T>()
+
+  return {
+    add(keys: IssueRefKeys, value: T): void {
+      if (keys.databaseId != null) byDatabaseId.set(keys.databaseId, value)
+      if (keys.number != null) byNumber.set(keys.number, value)
+    },
+    get(domId: string): T | undefined {
+      const ref = parseIssueRef(domId)
+      if (!ref) return undefined
+      return ref.kind === 'databaseId' ? byDatabaseId.get(ref.value) : byNumber.get(ref.value)
+    },
+  }
 }
 
 /** DOM ids indexed by whichever number they carry, warning on anything unparseable. */

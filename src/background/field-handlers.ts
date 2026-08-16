@@ -25,8 +25,8 @@ import {
   dedupeRelationships,
 } from '@/background/relationship-helpers'
 import {
+  createIssueRefIndex,
   getProjectFieldsData,
-  parseIssueDatabaseId,
   resolveProjectItemIds,
   resolveProjectItemIdsWithTitles,
 } from '@/background/project-helpers'
@@ -329,13 +329,6 @@ export function registerFieldHandlers(): void {
     const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
     if (!project) throw new Error('Project not found')
 
-    // build map from content databaseId → domId for selected items
-    const selectedDbIdMap = new Map<number, string>()
-    for (const domId of data.itemIds) {
-      const databaseId = parseIssueDatabaseId(domId)
-      if (databaseId !== null) selectedDbIdMap.set(databaseId, domId)
-    }
-
     // paginate through all project items
     interface ReorderItemsResult {
       node: {
@@ -344,24 +337,17 @@ export function registerFieldHandlers(): void {
           nodes: {
             id: string
             databaseId: number
-            content: { databaseId: number; title: string } | null
+            content: { databaseId: number; number?: number; title: string } | null
           }[]
         }
       } | null
     }
 
-    const allOrderedItems: Array<{ memexItemId: number; nodeId: string; title: string }> = []
-    const selectedItems: Array<{
-      domId: string
-      memexItemId: number
-      nodeId: string
-      title: string
-    }> = []
-    // track contentDbId → entry for DOM-order re-sorting
-    const contentDbIdToEntry = new Map<
-      number,
-      { memexItemId: number; nodeId: string; title: string }
-    >()
+    type OrderedItem = { memexItemId: number; nodeId: string; title: string }
+
+    const allOrderedItems: OrderedItem[] = []
+    // indexed by both numbers an item carries, so either id spelling resolves
+    const byRef = createIssueRefIndex<OrderedItem>()
     let cursor: string | null = null
 
     while (true) {
@@ -372,22 +358,13 @@ export function registerFieldHandlers(): void {
       if (!items) break
 
       for (const item of items.nodes) {
-        const memexItemId = item.databaseId
-        const nodeId = item.id
-        const title = item.content?.title ?? ''
-        const contentDbId = item.content?.databaseId
-        allOrderedItems.push({ memexItemId, nodeId, title })
-        if (contentDbId != null) {
-          contentDbIdToEntry.set(contentDbId, { memexItemId, nodeId, title })
-          if (selectedDbIdMap.has(contentDbId)) {
-            selectedItems.push({
-              domId: selectedDbIdMap.get(contentDbId)!,
-              memexItemId,
-              nodeId,
-              title,
-            })
-          }
+        const entry: OrderedItem = {
+          memexItemId: item.databaseId,
+          nodeId: item.id,
+          title: item.content?.title ?? '',
         }
+        allOrderedItems.push(entry)
+        if (item.content) byRef.add(item.content, entry)
       }
 
       if (!items.pageInfo.hasNextPage) break
@@ -395,13 +372,16 @@ export function registerFieldHandlers(): void {
       await sleep(500)
     }
 
+    const selectedItems = data.itemIds.flatMap((domId) => {
+      const entry = byRef.get(domId)
+      return entry ? [{ domId, ...entry }] : []
+    })
+
     // re-sort allOrderedItems to match DOM visual order when provided
     if (data.allDomIds?.length) {
-      const sorted: Array<{ memexItemId: number; nodeId: string; title: string }> = []
+      const sorted: OrderedItem[] = []
       for (const domId of data.allDomIds) {
-        const databaseId = parseIssueDatabaseId(domId)
-        if (databaseId === null) continue
-        const entry = contentDbIdToEntry.get(databaseId)
+        const entry = byRef.get(domId)
         if (entry) sorted.push(entry)
       }
       // append items not visible in the DOM (filtered/hidden) at the end

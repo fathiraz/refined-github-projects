@@ -10,7 +10,7 @@ import { logger } from '@/lib/debug-logger'
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { broadcastQueue, withRateLimitRetry } from '@/background/rest-helpers'
 import { broadcastDone, runQueueWithProgress, type QueueRun } from '@/background/queue-run'
-import { getProjectFieldsData, parseIssueDatabaseId } from '@/background/project-helpers'
+import { createIssueRefIndex, getProjectFieldsData } from '@/background/project-helpers'
 import { newProcessId, plural } from '@/lib/format'
 
 type ReorderOp = { nodeId: string; previousNodeId: string | null }
@@ -98,12 +98,20 @@ export function registerBulkPositionHandlers(): void {
         node: {
           items: {
             pageInfo: { hasNextPage: boolean; endCursor: string | null }
-            nodes: { id: string; databaseId: number; content: { databaseId: number } | null }[]
+            nodes: {
+              id: string
+              databaseId: number
+              content: { databaseId: number; number?: number } | null
+            }[]
           }
         } | null
       }
 
-      const allItems: Array<{ memexItemId: number; nodeId: string; contentDbId: number }> = []
+      type PosItem = { memexItemId: number; nodeId: string; contentDbId: number }
+
+      const allItems: PosItem[] = []
+      // indexed by both numbers an item carries, so either id spelling resolves
+      const byRef = createIssueRefIndex<PosItem>()
       let cursor: string | null = null
       while (true) {
         const page = await withRateLimitRetry(() =>
@@ -113,11 +121,13 @@ export function registerBulkPositionHandlers(): void {
         if (!items) break
         for (const item of items.nodes) {
           if (item.content?.databaseId) {
-            allItems.push({
+            const entry: PosItem = {
               memexItemId: item.databaseId,
               nodeId: item.id,
               contentDbId: item.content.databaseId,
-            })
+            }
+            allItems.push(entry)
+            byRef.add(item.content, entry)
           }
         }
         if (!items.pageInfo.hasNextPage) break
@@ -125,18 +135,12 @@ export function registerBulkPositionHandlers(): void {
         await sleep(500)
       }
 
-      const contentDbToMemex = new Map(allItems.map((i) => [i.contentDbId, i.memexItemId]))
-      const contentDbToNode = new Map(allItems.map((i) => [i.contentDbId, i.nodeId]))
-
       const selectedMemexIds = data.selectedDomIds
-        .map((domId) => contentDbToMemex.get(parseIssueDatabaseId(domId)!))
+        .map((domId) => byRef.get(domId)?.memexItemId)
         .filter((id): id is number => id != null)
 
-      const insertAfterContentDbId = data.insertAfterDomId
-        ? parseIssueDatabaseId(data.insertAfterDomId)
-        : null
-      const insertAfterMemexId: number | '' = insertAfterContentDbId
-        ? (contentDbToMemex.get(insertAfterContentDbId) ?? '')
+      const insertAfterMemexId: number | '' = data.insertAfterDomId
+        ? (byRef.get(data.insertAfterDomId)?.memexItemId ?? '')
         : ''
 
       // use DOM order as the base ordering when provided (avoids GraphQL insertion-order mismatch)
@@ -144,12 +148,8 @@ export function registerBulkPositionHandlers(): void {
       if (data.allDomIds?.length) {
         orderedItems = []
         for (const domId of data.allDomIds) {
-          const contentDbId = parseIssueDatabaseId(domId)
-          if (contentDbId == null) continue
-          const memexItemId = contentDbToMemex.get(contentDbId)
-          const nodeId = contentDbToNode.get(contentDbId)
-          if (memexItemId != null && nodeId != null)
-            orderedItems.push({ memexItemId, nodeId, contentDbId })
+          const entry = byRef.get(domId)
+          if (entry) orderedItems.push(entry)
         }
         // append items not in DOM (hidden/filtered) at the end
         const inDomSet = new Set(orderedItems.map((i) => i.memexItemId))
