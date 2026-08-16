@@ -1,3 +1,19 @@
+// React 19 compatibility shim for @tippyjs/react. NOT over-engineering — do
+// not "simplify" this to bare <Tippy delay={...}> props.
+//
+// @tippyjs/react 4.2.6 (last released 2021, peer react: ">=16.8") clones the
+// trigger child and calls `preserveRef(children.ref, node)` —
+// dist/tippy-react.esm.js:360 and :517. React 19 removed `element.ref`; a ref
+// now lives at `element.props.ref`. So Tippy's own cloning path silently drops
+// whatever ref the consumer passed, and any tooltipped component whose ref we
+// need — every Primer control anchoring a flyout — loses it.
+//
+// This wrapper therefore never hands `children` to <BaseTippy>. It clones the
+// trigger itself, reads the ref from `children.props.ref`, and drives Tippy in
+// controlled `visible` mode, which is why the show/hide delay scheduling is
+// reimplemented here rather than left to Tippy's `delay` prop.
+//
+// Revisit only if @tippyjs/react ships a React 19 release.
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import BaseTippy, { tippy, useSingleton, type TippyProps } from '@tippyjs/react'
 import { getTippyDelayValue } from '@/lib/tippy-utils'
