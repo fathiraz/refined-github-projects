@@ -440,17 +440,40 @@ export function buildBulkRelationshipTasks(
     })
   }
 
-  if (
-    relationships.blockedBy.clear ||
-    relationships.blockedBy.add.length > 0 ||
-    relationships.blockedBy.remove.length > 0
-  ) {
+  // blocked_by and blocking are the same edge read from the two ends, so the
+  // only thing that differs is which side owns the REST endpoint: blocked_by
+  // hangs off THIS issue and targets the other one; blocking hangs off the
+  // OTHER issue and targets this one. `endpointFor` is that one difference.
+  const DEPENDENCY_KINDS = ['blockedBy', 'blocking'] as const
+
+  for (const kind of DEPENDENCY_KINDS) {
+    const spec = relationships[kind]
+    if (!spec.clear && spec.add.length === 0 && spec.remove.length === 0) continue
+
+    const listKind = kind === 'blockedBy' ? ('blocked_by' as const) : ('blocking' as const)
+
+    /** The `blocked_by` collection to mutate, and the id to put in or take out. */
+    const endpointFor = (issue: IssueRelationshipData) =>
+      kind === 'blockedBy'
+        ? {
+            owner: item.repoOwner,
+            repo: item.repoName,
+            number: issueNumber,
+            target: issue.databaseId,
+          }
+        : {
+            owner: issue.repoOwner,
+            repo: issue.repoName,
+            number: issue.number,
+            target: issueDatabaseId,
+          }
+
     tasks.push({
-      id: `bulk-rel-blocked-by-${item.domId}`,
-      detail: 'Blocked by relationships',
+      id: `bulk-rel-${listKind.replace('_', '-')}-${item.domId}`,
+      detail: kind === 'blockedBy' ? 'Blocked by relationships' : 'Blocking relationships',
       run: async () => {
         const current = await listIssueRelationshipsSafe(
-          'blocked_by',
+          listKind,
           item.repoOwner,
           item.repoName,
           issueNumber,
@@ -458,117 +481,47 @@ export function buildBulkRelationshipTasks(
         )
         const currentByKey = new Map(current.map((issue) => [relationshipKey(issue), issue]))
 
-        const removeBlockedBy = async (issue: IssueRelationshipData) => {
-          if (!issue.databaseId) return
+        const remove = async (issue: IssueRelationshipData) => {
+          const { owner, repo, number, target } = endpointFor(issue)
+          // blocked_by removal addresses the dependency by the other issue's
+          // database id, which an unresolved entry may not carry.
+          if (!target) return
           await withRateLimitRetry(
             () =>
               githubRest(
-                `/repos/${encodeURIComponent(item.repoOwner)}/${encodeURIComponent(item.repoName)}/issues/${issueNumber}/dependencies/blocked_by/${issue.databaseId}`,
-                {
-                  method: 'DELETE',
-                },
+                `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}/dependencies/blocked_by/${target}`,
+                { method: 'DELETE' },
               ),
             tabId,
           )
           await sleep(1000)
         }
 
-        if (relationships.blockedBy.clear) {
+        if (spec.clear) {
           for (const issue of current) {
-            await removeBlockedBy(issue)
+            await remove(issue)
           }
           currentByKey.clear()
         } else {
-          for (const issue of dedupeRelationships(relationships.blockedBy.remove)) {
+          for (const issue of dedupeRelationships(spec.remove)) {
             const existing = currentByKey.get(relationshipKey(issue))
             if (!existing) continue
-            await removeBlockedBy(existing)
+            await remove(existing)
             currentByKey.delete(relationshipKey(existing))
           }
         }
 
-        for (const issue of dedupeRelationships(relationships.blockedBy.add)) {
+        for (const issue of dedupeRelationships(spec.add)) {
           if (!issue.databaseId || issue.databaseId === issueDatabaseId) continue
           const key = relationshipKey(issue)
           if (currentByKey.has(key)) continue
 
+          const { owner, repo, number, target } = endpointFor(issue)
           await withRateLimitRetry(
             () =>
               githubRest(
-                `/repos/${encodeURIComponent(item.repoOwner)}/${encodeURIComponent(item.repoName)}/issues/${issueNumber}/dependencies/blocked_by`,
-                {
-                  method: 'POST',
-                  body: JSON.stringify({ issue_id: issue.databaseId }),
-                },
-              ),
-            tabId,
-          )
-          await sleep(1000)
-          currentByKey.set(key, issue)
-        }
-      },
-    })
-  }
-
-  if (
-    relationships.blocking.clear ||
-    relationships.blocking.add.length > 0 ||
-    relationships.blocking.remove.length > 0
-  ) {
-    tasks.push({
-      id: `bulk-rel-blocking-${item.domId}`,
-      detail: 'Blocking relationships',
-      run: async () => {
-        const current = await listIssueRelationshipsSafe(
-          'blocking',
-          item.repoOwner,
-          item.repoName,
-          issueNumber,
-          tabId,
-        )
-        const currentByKey = new Map(current.map((issue) => [relationshipKey(issue), issue]))
-
-        const removeBlocking = async (issue: IssueRelationshipData) => {
-          await withRateLimitRetry(
-            () =>
-              githubRest(
-                `/repos/${encodeURIComponent(issue.repoOwner)}/${encodeURIComponent(issue.repoName)}/issues/${issue.number}/dependencies/blocked_by/${issueDatabaseId}`,
-                {
-                  method: 'DELETE',
-                },
-              ),
-            tabId,
-          )
-          await sleep(1000)
-        }
-
-        if (relationships.blocking.clear) {
-          for (const issue of current) {
-            await removeBlocking(issue)
-          }
-          currentByKey.clear()
-        } else {
-          for (const issue of dedupeRelationships(relationships.blocking.remove)) {
-            const existing = currentByKey.get(relationshipKey(issue))
-            if (!existing) continue
-            await removeBlocking(existing)
-            currentByKey.delete(relationshipKey(existing))
-          }
-        }
-
-        for (const issue of dedupeRelationships(relationships.blocking.add)) {
-          if (!issue.databaseId || issue.databaseId === issueDatabaseId) continue
-          const key = relationshipKey(issue)
-          if (currentByKey.has(key)) continue
-
-          await withRateLimitRetry(
-            () =>
-              githubRest(
-                `/repos/${encodeURIComponent(issue.repoOwner)}/${encodeURIComponent(issue.repoName)}/issues/${issue.number}/dependencies/blocked_by`,
-                {
-                  method: 'POST',
-                  body: JSON.stringify({ issue_id: issueDatabaseId }),
-                },
+                `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}/dependencies/blocked_by`,
+                { method: 'POST', body: JSON.stringify({ issue_id: target }) },
               ),
             tabId,
           )
