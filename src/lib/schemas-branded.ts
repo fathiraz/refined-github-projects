@@ -1,33 +1,28 @@
-import { Schema } from 'effect'
-
 /**
  * Branded primitives that distinguish otherwise-identical string/number IDs.
- * Raw values cross into branded types only via `Schema.decode(...)`. This
- * eliminates the historical class of bugs where `domId` and `projectItemId`
- * (both strings) were swapped at call sites.
+ * Raw values cross into branded types only via the `decode*` helpers in
+ * `schemas-decode.ts`. This eliminates the historical class of bugs where
+ * `domId` and `projectItemId` (both strings) were swapped at call sites.
+ *
+ * The brand is a phantom property: it exists in the type system and not at
+ * runtime, so a `ProjectItemId` IS a `string` everywhere it is used.
  */
 
-export const ProjectItemId = Schema.String.pipe(Schema.brand('ProjectItemId'))
-export type ProjectItemId = Schema.Schema.Type<typeof ProjectItemId>
+type Brand<T, Tag extends string> = T & { readonly __brand: Tag }
+
+export type ProjectItemId = Brand<string, 'ProjectItemId'>
 
 /** DOM-extracted identifier such as "issue:3960969873". Resolved → ProjectItemId. */
-export const ProjectItemDomId = Schema.String.pipe(Schema.brand('ProjectItemDomId'))
-export type ProjectItemDomId = Schema.Schema.Type<typeof ProjectItemDomId>
+export type ProjectItemDomId = Brand<string, 'ProjectItemDomId'>
 
-export const IssueNodeId = Schema.String.pipe(Schema.brand('IssueNodeId'))
-export type IssueNodeId = Schema.Schema.Type<typeof IssueNodeId>
+export type IssueNodeId = Brand<string, 'IssueNodeId'>
 
-export const IssueNumber = Schema.Number.pipe(Schema.int(), Schema.brand('IssueNumber'))
-export type IssueNumber = Schema.Schema.Type<typeof IssueNumber>
+export type IssueNumber = Brand<number, 'IssueNumber'>
 
-export const IssueDatabaseId = Schema.Number.pipe(Schema.int(), Schema.brand('IssueDatabaseId'))
-export type IssueDatabaseId = Schema.Schema.Type<typeof IssueDatabaseId>
+export type IssueDatabaseId = Brand<number, 'IssueDatabaseId'>
 
-export const Pat = Schema.String.pipe(Schema.brand('Pat'))
-export type Pat = Schema.Schema.Type<typeof Pat>
+export type Pat = Brand<string, 'Pat'>
 
-export const RepoOwner = Schema.String.pipe(Schema.brand('RepoOwner'))
-export type RepoOwner = Schema.Schema.Type<typeof RepoOwner>
+export type RepoOwner = Brand<string, 'RepoOwner'>
 
-export const RepoName = Schema.String.pipe(Schema.brand('RepoName'))
-export type RepoName = Schema.Schema.Type<typeof RepoName>
+export type RepoName = Brand<string, 'RepoName'>
