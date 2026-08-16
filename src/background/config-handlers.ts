@@ -1,10 +1,10 @@
 import { onMessage } from '@/lib/messages'
+import { runHandler } from '@/background/run-handler'
 import { patStorage, usernameStorage } from '@/lib/storage'
 import { cancelQueue } from '@/lib/queue'
 import { VALIDATE_TOKEN } from '@/lib/graphql-queries'
 import type { PatErrorType } from '@/lib/errors'
 import { logger } from '@/lib/debug-logger'
-import { runHandler } from '@/lib/effect-runtime'
 
 export function registerConfigHandlers(): void {
   onMessage('openOptions', () => {

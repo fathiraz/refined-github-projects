@@ -1,4 +1,5 @@
 import { onMessage } from '@/lib/messages'
+import { runHandler } from '@/background/run-handler'
 import { gql } from '@/lib/graphql-client'
 import {
   GET_REPO_ASSIGNEES,
@@ -15,7 +16,6 @@ import {
 } from '@/lib/graphql-queries'
 import { sleep } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
-import { runHandler } from '@/lib/effect-runtime'
 
 import { withRateLimitRetry } from '@/background/rest-helpers'
 import {

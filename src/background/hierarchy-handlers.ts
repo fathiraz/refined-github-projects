@@ -1,4 +1,5 @@
 import { onMessage } from '@/lib/messages'
+import { runHandler } from '@/background/run-handler'
 import type {
   BulkRelationshipValidationResult,
   HierarchyData,
@@ -8,7 +9,6 @@ import type {
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEM_DETAILS } from '@/lib/graphql-queries'
 import { logger } from '@/lib/debug-logger'
-import { runHandler } from '@/lib/effect-runtime'
 
 import type { DateFieldValue, NumberFieldValue, ProjectItemDetails } from '@/background/types'
 

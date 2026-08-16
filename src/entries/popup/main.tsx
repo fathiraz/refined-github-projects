@@ -10,8 +10,6 @@ import { KeyboardHint } from '@/ui/keyboard-hint'
 import { PanelCard } from '@/ui/panel-card'
 import { StatusBanner } from '@/ui/status-banner'
 import { DebugSettingsCard } from '@/features/debug-settings-card'
-// boot the effect runtime once so popup-side stores share it.
-import '@/lib/effect-runtime'
 
 function App() {
   const {

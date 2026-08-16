@@ -5,8 +5,6 @@ import { TokenSetupCard } from '@/features/token-setup'
 import { DebugSettingsCard } from '@/features/debug-settings-card'
 import { AppShell } from '@/ui/app-shell'
 import { CheckIcon } from '@/ui/icons'
-// boot the effect runtime once so options-side stores share it.
-import '@/lib/effect-runtime'
 
 const checklist = [
   'Bulk edit, close, and delete items from the project table',
