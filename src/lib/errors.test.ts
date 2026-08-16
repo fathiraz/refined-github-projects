@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { Equal } from 'effect'
 
 import {
   GithubGraphQLError,
@@ -23,31 +22,29 @@ describe('GithubRateLimitError (canonical 429 variant)', () => {
     expect(err).toBeInstanceOf(Error)
   })
 
-  it('Equal.equals returns true for identical payloads', () => {
+  it('structural equality holds for identical payloads', () => {
     const a = new GithubRateLimitError({ status: 429, message: 'Too Many', retryAfter: 30 })
     const b = new GithubRateLimitError({ status: 429, message: 'Too Many', retryAfter: 30 })
 
-    expect(Equal.equals(a, b)).toBe(true)
+    expect(a).toEqual(b)
     expect(a).toEqual(b)
   })
 
-  it('Equal.equals returns false when message differs', () => {
-    // `message` is part of the TaggedError payload contract, so differing
-    // messages must make the errors unequal. The class constructor redefines
-    // `message` as an enumerable own property specifically so that it
-    // participates in structural equality.
+  it('structural equality fails when message differs', () => {
+    // `message` is part of the payload contract, so differing messages must
+    // make the errors unequal.
     const a = new GithubRateLimitError({ status: 403, message: 'Forbidden', retryAfter: 0 })
     const b = new GithubRateLimitError({ status: 403, message: 'Blocked', retryAfter: 0 })
 
-    expect(Equal.equals(a, b)).toBe(false)
+    expect(a).not.toEqual(b)
     expect(a.message).not.toBe(b.message)
   })
 
-  it('Equal.equals returns false when retryAfter differs', () => {
+  it('structural equality fails when retryAfter differs', () => {
     const a = new GithubRateLimitError({ status: 429, message: 'x', retryAfter: 30 })
     const b = new GithubRateLimitError({ status: 429, message: 'x', retryAfter: 60 })
 
-    expect(Equal.equals(a, b)).toBe(false)
+    expect(a).not.toEqual(b)
   })
 })
 
@@ -60,18 +57,18 @@ describe('GithubGraphQLError', () => {
     expect(err).toBeInstanceOf(Error)
   })
 
-  it('Equal.equals returns true for identical message', () => {
+  it('structural equality holds for identical message', () => {
     const a = new GithubGraphQLError({ message: 'boom' })
     const b = new GithubGraphQLError({ message: 'boom' })
 
-    expect(Equal.equals(a, b)).toBe(true)
+    expect(a).toEqual(b)
   })
 
-  it('Equal.equals returns false when message differs', () => {
+  it('structural equality fails when message differs', () => {
     const a = new GithubGraphQLError({ message: 'one' })
     const b = new GithubGraphQLError({ message: 'two' })
 
-    expect(Equal.equals(a, b)).toBe(false)
+    expect(a).not.toEqual(b)
   })
 })
 
@@ -85,21 +82,21 @@ describe('GithubNetworkError', () => {
     expect(err).toBeInstanceOf(Error)
   })
 
-  it('Equal.equals returns true when causes are the same reference', () => {
+  it('structural equality holds when causes are the same reference', () => {
     const cause = new Error('x')
     const a = new GithubNetworkError({ cause })
     const b = new GithubNetworkError({ cause })
 
-    expect(Equal.equals(a, b)).toBe(true)
+    expect(a).toEqual(b)
   })
 })
 
 describe('cross-tag equality', () => {
-  it('different tag classes are never Equal.equals', () => {
+  it('different tag classes are never structurally equal', () => {
     const http = new GithubServerError({ status: 500, message: 'x' })
     const gql = new GithubGraphQLError({ message: 'x' })
 
-    expect(Equal.equals(http, gql)).toBe(false)
+    expect(http).not.toEqual(gql)
   })
 })
 

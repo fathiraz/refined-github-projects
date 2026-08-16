@@ -236,10 +236,9 @@ describe('gql', () => {
     }
   })
 
-  it('two identical GithubRateLimitError instances are Equal.equals', async () => {
-    const { Equal } = await import('effect')
+  it('two identical GithubRateLimitError instances are structurally equal', () => {
     const a = new GithubRateLimitError({ status: 429, message: 'Rate', retryAfter: 30 })
     const b = new GithubRateLimitError({ status: 429, message: 'Rate', retryAfter: 30 })
-    expect(Equal.equals(a, b)).toBe(true)
+    expect(a).toEqual(b)
   })
 })
