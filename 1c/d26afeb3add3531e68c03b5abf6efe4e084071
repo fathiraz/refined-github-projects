@@ -1,0 +1,23 @@
+src/background/relationship-helpers.ts
+  s_4bdb13fd3ea22c::t_032fa24d4ac477 443-462,464-468,472-473,476,484-488,492-493,500,502,506,509,514,519,523-524
+src/background/__tests__/relationship-tasks.test.ts
+  s_4bdb13fd3ea22c::t_e19ac2d04b56d8 1-47,49-125,130-132,139-200
+  s_4bdb13fd3ea22c::t_032fa24d4ac477 48,133-138
+  s_4bdb13fd3ea22c::t_8be70b437fcca2 126-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "1cd26afeb3add3531e68c03b5abf6efe4e084071",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
