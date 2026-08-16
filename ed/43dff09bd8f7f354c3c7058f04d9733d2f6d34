@@ -1,0 +1,27 @@
+src/background/project-helpers.ts
+  s_4bdb13fd3ea22c::t_b947e102318bd1 270-271
+  s_4bdb13fd3ea22c::t_fd9b3bb3a1b9fc 83-91,94
+  s_4bdb13fd3ea22c::t_c4ec733bb4b9b0 134,165-167,203-204,206,226,263-264,279
+  s_4bdb13fd3ea22c::t_30ebbe63f0d787 61-82,93,95-101,104-106,108-109,113,115
+  s_4bdb13fd3ea22c::t_c6497f1b15675d 129-132,137,142-144,147,160-164,168-173,176,181-185
+src/lib/graphql-queries.ts
+  s_4bdb13fd3ea22c::t_0a8d1fd3ff2a3c 412-413
+src/background/__tests__/resolve-item-ids.test.ts
+  s_4bdb13fd3ea22c::t_4d3b25e74e2ef4 1-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ed43dff09bd8f7f354c3c7058f04d9733d2f6d34",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
