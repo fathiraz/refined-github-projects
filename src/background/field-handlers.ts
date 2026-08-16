@@ -26,6 +26,7 @@ import {
 } from '@/background/relationship-helpers'
 import {
   getProjectFieldsData,
+  parseIssueDatabaseId,
   resolveProjectItemIds,
   resolveProjectItemIdsWithTitles,
 } from '@/background/project-helpers'
@@ -331,8 +332,8 @@ export function registerFieldHandlers(): void {
     // build map from content databaseId → domId for selected items
     const selectedDbIdMap = new Map<number, string>()
     for (const domId of data.itemIds) {
-      const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
-      if (m) selectedDbIdMap.set(parseInt(m[1], 10), domId)
+      const databaseId = parseIssueDatabaseId(domId)
+      if (databaseId !== null) selectedDbIdMap.set(databaseId, domId)
     }
 
     // paginate through all project items
@@ -398,9 +399,9 @@ export function registerFieldHandlers(): void {
     if (data.allDomIds?.length) {
       const sorted: Array<{ memexItemId: number; nodeId: string; title: string }> = []
       for (const domId of data.allDomIds) {
-        const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
-        if (!m) continue
-        const entry = contentDbIdToEntry.get(parseInt(m[1], 10))
+        const databaseId = parseIssueDatabaseId(domId)
+        if (databaseId === null) continue
+        const entry = contentDbIdToEntry.get(databaseId)
         if (entry) sorted.push(entry)
       }
       // append items not visible in the DOM (filtered/hidden) at the end

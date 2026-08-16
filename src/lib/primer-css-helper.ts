@@ -7,17 +7,24 @@ function makePreset(base: BetterSystemStyleObject): PrimerPresetFn {
   return (overrides?: BetterSystemStyleObject) => ({ ...base, ...overrides })
 }
 
+/**
+ * The lift-on-hover motion from the design system. Shared as a plain object so
+ * `chipButton` can extend it — `makePreset` shallow-merges, so composing from
+ * a preset's OUTPUT would let one override silently drop the nested rules.
+ */
+const BUTTON_MOTION = {
+  boxShadow: 'none',
+  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
+  '&:active': { transform: 'translateY(0)', transition: '100ms' },
+  '@media (prefers-reduced-motion: reduce)': {
+    transition: 'none',
+    '&:hover:not(:disabled)': { transform: 'none' },
+  },
+} as const
+
 export const primerCss = {
-  buttonMotion: makePreset({
-    boxShadow: 'none',
-    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-    '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-    '&:active': { transform: 'translateY(0)', transition: '100ms' },
-    '@media (prefers-reduced-motion: reduce)': {
-      transition: 'none',
-      '&:hover:not(:disabled)': { transform: 'none' },
-    },
-  }),
+  buttonMotion: makePreset(BUTTON_MOTION),
 
   flatPanel: makePreset({
     boxShadow: 'none',
@@ -81,16 +88,5 @@ export const primerCss = {
     py: 3,
   }),
 
-  chipButton: makePreset({
-    boxShadow: 'none',
-    display: 'inline-flex',
-    alignItems: 'center',
-    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-    '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-    '&:active': { transform: 'translateY(0)', transition: '100ms' },
-    '@media (prefers-reduced-motion: reduce)': {
-      transition: 'none',
-      '&:hover:not(:disabled)': { transform: 'none' },
-    },
-  }),
+  chipButton: makePreset({ ...BUTTON_MOTION, display: 'inline-flex', alignItems: 'center' }),
 }
