@@ -1,0 +1,32 @@
+src/background/__tests__/bulk-position.test.ts
+  s_4bdb13fd3ea22c::t_9e0200190564c7 99-101,109
+  s_4bdb13fd3ea22c::t_e3ef06416472fb 269,271,274-275,279-320
+  s_4bdb13fd3ea22c::t_ede75feb347740 53-54
+  s_4bdb13fd3ea22c::t_02f6fc8d75683c 217-219,222-224
+src/background/project-helpers.ts
+  s_4bdb13fd3ea22c::t_f40de3fc29345a 83-88,90-95,97-111
+src/background/field-handlers.ts
+  s_4bdb13fd3ea22c::t_c51bc52b5d02df 28
+  s_4bdb13fd3ea22c::t_632c9591bb0998 340,346-350,361-364,366-367,375-379,382,384
+src/background/bulk-position.ts
+  s_4bdb13fd3ea22c::t_30e6971fb05a76 101-105,110-114,124,128-130,139,142-143,151-152
+  s_4bdb13fd3ea22c::t_c9e4b9afc1299e 13
+src/lib/graphql-queries.ts
+  s_4bdb13fd3ea22c::t_2de9be435f4d2f 433-434
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "428b53ad3c6b96188f62437f2e9e4e928808f16a",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
