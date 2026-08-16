@@ -1,0 +1,21 @@
+src/background/rest-helpers.ts
+  s_4bdb13fd3ea22c::t_e25e2d8ea43415 4,78,80
+src/lib/messages.ts
+  s_4bdb13fd3ea22c::t_e25e2d8ea43415 3,217-237,463
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "48d93315961aa51cc5aef216afadcf55d387fe4e",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
