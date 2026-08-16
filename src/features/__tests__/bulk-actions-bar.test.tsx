@@ -12,6 +12,16 @@ import { BaseStyles, ThemeProvider } from '@primer/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
+interface RegisteredShortcut {
+  id: string
+  key: string
+  modifiers: Record<string, boolean>
+  context: string
+  label: string
+  allowInEditable?: boolean
+  action: () => void
+}
+
 const hoisted = vi.hoisted(() => ({
   sendMessage: vi.fn(),
   selection: new Set<string>(),
@@ -292,5 +302,184 @@ describe('BulkActionsBar — overlay state', () => {
     await viaOverflow(m, 'rgp-overflow-rename')
     expect(openOverlays(m)).toEqual(['rename'])
     expect(el(m, 'rgp-bar-overflow-chip').getAttribute('aria-expanded')).toBe('false')
+  })
+})
+
+/** The registered table, minus the closures, in registration order. */
+function registeredTable(): Array<Omit<RegisteredShortcut, 'action'>> {
+  return [...hoisted.shortcuts.values()].map((s) => {
+    const { action: _action, ...rest } = s as unknown as RegisteredShortcut
+    return rest
+  })
+}
+
+describe('BulkActionsBar — registered shortcut table', () => {
+  it('registers the full table for a multi-item selection', () => {
+    renderBar()
+
+    expect(registeredTable()).toEqual([
+      {
+        id: 'escape',
+        key: 'Escape',
+        modifiers: {},
+        context: 'Global',
+        label: 'Close / Deselect',
+        allowInEditable: true,
+      },
+      {
+        id: 'select-all',
+        key: 'a',
+        modifiers: { meta: true },
+        context: 'Global',
+        label: 'Select All',
+      },
+      {
+        id: 'help',
+        key: '?',
+        modifiers: { shift: true },
+        context: 'Global',
+        label: 'Keyboard Shortcuts',
+      },
+      {
+        id: 'focus-actions',
+        key: 'b',
+        modifiers: { meta: true, shift: true },
+        context: 'Global',
+        label: 'Focus Actions Menu',
+      },
+      {
+        id: 'edit-fields',
+        key: 'e',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Edit Fields',
+      },
+      {
+        id: 'random-assign',
+        key: 'a',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Random Assign',
+      },
+      {
+        id: 'close-issues',
+        key: 'x',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Close Issues',
+      },
+      {
+        id: 'reopen-issues',
+        key: 'o',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Reopen Issues',
+      },
+      {
+        id: 'lock-conversations',
+        key: 'l',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Lock Conversations',
+      },
+      {
+        id: 'pin-issues',
+        key: 'f',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Pin Issues',
+      },
+      {
+        id: 'transfer-issues',
+        key: 'm',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Transfer Issues',
+      },
+      {
+        id: 'export-csv',
+        key: 'v',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Export CSV',
+      },
+      {
+        id: 'rename-titles',
+        key: 'r',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Rename Titles',
+      },
+      {
+        id: 'reorder-items',
+        key: 'j',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Reorder Items',
+      },
+      {
+        id: 'delete-items',
+        key: 'Backspace',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Delete Items',
+      },
+      {
+        id: 'quick-edit',
+        key: 'e',
+        modifiers: {},
+        context: 'Table Selection',
+        label: 'Quick Edit',
+      },
+      {
+        id: 'quick-delete',
+        key: 'Delete',
+        modifiers: {},
+        context: 'Table Selection',
+        label: 'Delete Items',
+      },
+    ])
+  })
+
+  it('adds the two single-item duplicate shortcuts only when exactly one item is selected', () => {
+    hoisted.selection.clear()
+    hoisted.selection.add('issue:1')
+    renderBar()
+
+    const single = registeredTable()
+    expect(single.filter((s) => s.id === 'deep-duplicate')).toEqual([
+      {
+        id: 'deep-duplicate',
+        key: 'd',
+        modifiers: { meta: true, shift: true },
+        context: 'Table Selection',
+        label: 'Deep Duplicate',
+      },
+    ])
+    expect(single.filter((s) => s.id === 'quick-duplicate')).toEqual([
+      {
+        id: 'quick-duplicate',
+        key: 'd',
+        modifiers: {},
+        context: 'Table Selection',
+        label: 'Duplicate',
+      },
+    ])
+  })
+
+  it('keeps only escape and select-all while an overlay is open', async () => {
+    const m = renderBar()
+    await click(el(m, 'rgp-bar-mark-chip'))
+
+    // a flyout is open: every selection-scoped shortcut unregisters, and so
+    // does select-all, leaving escape as the only way out.
+    expect(registeredTable().map((s) => s.id)).toEqual(['escape'])
+  })
+
+  it('registers nothing while the selection is empty', () => {
+    hoisted.selection.clear()
+    renderBar()
+
+    expect(registeredTable().map((s) => s.id)).toEqual(['escape', 'select-all'])
   })
 })

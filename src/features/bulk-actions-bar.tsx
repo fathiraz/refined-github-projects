@@ -126,33 +126,38 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   }, [])
 
   // ── Centralized keyboard shortcuts ─────────────────────────
+  // The set is data: which chord, which label, which handler. Only three rows
+  // sit outside the Table Selection group, and only two are conditional, so
+  // the table below is the whole keyboard surface of the bar in one place.
   useEffect(() => {
-    const ids: string[] = []
-    const reg = (def: ShortcutDefinition) => {
-      shortcutRegistry.register(def)
-      ids.push(def.id)
-    }
+    const busy = anyModalOpen || anyFlyoutOpen
 
-    // escape — always available
-    reg({
-      id: 'escape',
-      key: 'Escape',
-      modifiers: {},
-      context: 'Global',
-      label: 'Close / Deselect',
-      allowInEditable: true,
-      action: () => {
-        if (anyModalOpen || anyFlyoutOpen) {
-          closeAllOverlays()
-        } else if (selectionStore.count() > 0) {
-          selectionStore.clear()
-        }
-      },
+    /** Overflow-menu rows close the menu before acting; bar chips do not. */
+    const fromMenu = (run: () => void) => () => {
+      setMenuOpen(false)
+      run()
+    }
+    const openDuplicate = fromMenu(() => {
+      checkToken().then((ok) => ok && setOverlay('duplicate'))
     })
 
-    if (!anyModalOpen && !anyFlyoutOpen) {
-      // select all — works even with zero selection
-      reg({
+    const defs: ShortcutDefinition[] = [
+      {
+        id: 'escape',
+        key: 'Escape',
+        modifiers: {},
+        context: 'Global',
+        label: 'Close / Deselect',
+        allowInEditable: true,
+        action: () => {
+          if (busy) closeAllOverlays()
+          else if (selectionStore.count() > 0) selectionStore.clear()
+        },
+      },
+    ]
+
+    if (!busy) {
+      defs.push({
         id: 'select-all',
         key: 'a',
         modifiers: { meta: true },
@@ -160,190 +165,68 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         label: 'Select All',
         action: () => {
           const allIds = getAllInjectedItemIds()
-          if (allIds.length > 0) {
-            selectionStore.selectBatch(allIds)
-          }
+          if (allIds.length > 0) selectionStore.selectBatch(allIds)
         },
       })
     }
 
-    if (count > 0 && !anyModalOpen && !anyFlyoutOpen) {
-      reg({
-        id: 'help',
-        key: '?',
-        modifiers: { shift: true },
-        context: 'Global',
-        label: 'Keyboard Shortcuts',
-        action: () => setOverlay('help'),
-      })
+    if (count > 0 && !busy) {
+      const CHORD = { meta: true, shift: true }
+      const PLAIN = {}
 
-      reg({
-        id: 'focus-actions',
-        key: 'b',
-        modifiers: { meta: true, shift: true },
-        context: 'Global',
-        label: 'Focus Actions Menu',
-        action: () => {
-          selectionStore.requestFocus()
+      // [modifiers, key, id, label, action] — every row is Table Selection
+      // except the two Global ones pushed just above it.
+      type Row = [ShortcutDefinition['modifiers'], string, string, string, () => void]
+      const rows: Array<Row | null> = [
+        [CHORD, 'e', 'edit-fields', 'Edit Fields', fromMenu(handleEditFields)],
+        [CHORD, 'a', 'random-assign', 'Random Assign', handleRandomAssign],
+        [CHORD, 'x', 'close-issues', 'Close Issues', handleBulkClose],
+        [CHORD, 'o', 'reopen-issues', 'Reopen Issues', () => runMarkVerb('reopen')],
+        [CHORD, 'l', 'lock-conversations', 'Lock Conversations', () => runMarkVerb('lock')],
+        [CHORD, 'f', 'pin-issues', 'Pin Issues', () => runMarkVerb('pin')],
+        [CHORD, 'm', 'transfer-issues', 'Transfer Issues', handleTransfer],
+        [CHORD, 'v', 'export-csv', 'Export CSV', fromMenu(exportSelectedToCSV)],
+        [CHORD, 'r', 'rename-titles', 'Rename Titles', handleBulkRename],
+        [CHORD, 'j', 'reorder-items', 'Reorder Items', handleBulkReorder],
+        [CHORD, 'Backspace', 'delete-items', 'Delete Items', handleBulkDelete],
+        count === 1 ? [CHORD, 'd', 'deep-duplicate', 'Deep Duplicate', openDuplicate] : null,
+        [PLAIN, 'e', 'quick-edit', 'Quick Edit', fromMenu(handleEditFields)],
+        count === 1 ? [PLAIN, 'd', 'quick-duplicate', 'Duplicate', openDuplicate] : null,
+        [PLAIN, 'Delete', 'quick-delete', 'Delete Items', handleBulkDelete],
+      ]
+
+      defs.push(
+        {
+          id: 'help',
+          key: '?',
+          modifiers: { shift: true },
+          context: 'Global',
+          label: 'Keyboard Shortcuts',
+          action: () => setOverlay('help'),
         },
-      })
-
-      reg({
-        id: 'edit-fields',
-        key: 'e',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Edit Fields',
-        action: () => {
-          setMenuOpen(false)
-          handleEditFields()
+        {
+          id: 'focus-actions',
+          key: 'b',
+          modifiers: CHORD,
+          context: 'Global',
+          label: 'Focus Actions Menu',
+          action: () => selectionStore.requestFocus(),
         },
-      })
-
-      reg({
-        id: 'random-assign',
-        key: 'a',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Random Assign',
-        action: handleRandomAssign,
-      })
-
-      reg({
-        id: 'close-issues',
-        key: 'x',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Close Issues',
-        action: () => handleBulkClose(),
-      })
-
-      reg({
-        id: 'reopen-issues',
-        key: 'o',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Reopen Issues',
-        action: () => runMarkVerb('reopen'),
-      })
-
-      reg({
-        id: 'lock-conversations',
-        key: 'l',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Lock Conversations',
-        action: () => runMarkVerb('lock'),
-      })
-
-      reg({
-        id: 'pin-issues',
-        key: 'f',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Pin Issues',
-        action: () => runMarkVerb('pin'),
-      })
-
-      reg({
-        id: 'transfer-issues',
-        key: 'm',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Transfer Issues',
-        action: handleTransfer,
-      })
-
-      reg({
-        id: 'export-csv',
-        key: 'v',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Export CSV',
-        action: () => {
-          setMenuOpen(false)
-          exportSelectedToCSV()
-        },
-      })
-
-      reg({
-        id: 'rename-titles',
-        key: 'r',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Rename Titles',
-        action: handleBulkRename,
-      })
-
-      reg({
-        id: 'reorder-items',
-        key: 'j',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Reorder Items',
-        action: handleBulkReorder,
-      })
-
-      reg({
-        id: 'delete-items',
-        key: 'Backspace',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Delete Items',
-        action: handleBulkDelete,
-      })
-
-      if (count === 1) {
-        reg({
-          id: 'deep-duplicate',
-          key: 'd',
-          modifiers: { meta: true, shift: true },
-          context: 'Table Selection',
-          label: 'Deep Duplicate',
-          action: () => {
-            setMenuOpen(false)
-            checkToken().then((ok) => ok && setOverlay('duplicate'))
-          },
-        })
-      }
-
-      reg({
-        id: 'quick-edit',
-        key: 'e',
-        modifiers: {},
-        context: 'Table Selection',
-        label: 'Quick Edit',
-        action: () => {
-          setMenuOpen(false)
-          handleEditFields()
-        },
-      })
-
-      if (count === 1) {
-        reg({
-          id: 'quick-duplicate',
-          key: 'd',
-          modifiers: {},
-          context: 'Table Selection',
-          label: 'Duplicate',
-          action: () => {
-            setMenuOpen(false)
-            checkToken().then((ok) => ok && setOverlay('duplicate'))
-          },
-        })
-      }
-
-      reg({
-        id: 'quick-delete',
-        key: 'Delete',
-        modifiers: {},
-        context: 'Table Selection',
-        label: 'Delete Items',
-        action: handleBulkDelete,
-      })
+        ...rows
+          .filter((row): row is Row => row !== null)
+          .map(([modifiers, key, id, label, action]) => ({
+            id,
+            key,
+            modifiers,
+            context: 'Table Selection' as const,
+            label,
+            action,
+          })),
+      )
     }
 
-    return () => ids.forEach((id) => shortcutRegistry.unregister(id))
+    defs.forEach((def) => shortcutRegistry.register(def))
+    return () => defs.forEach((def) => shortcutRegistry.unregister(def.id))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, anyModalOpen, anyFlyoutOpen])
 
