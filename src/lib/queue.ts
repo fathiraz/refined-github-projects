@@ -1,16 +1,3 @@
-import {
-  Cause,
-  Chunk,
-  Duration,
-  Effect,
-  Either,
-  Exit,
-  Fiber,
-  FiberMap,
-  Option,
-  Scope,
-} from 'effect'
-
 import { logger } from '@/lib/debug-logger'
 
 export interface QueueTask {
@@ -35,33 +22,40 @@ export interface QueueState {
   failedItems?: FailedItem[]
 }
 
-// FiberMap, scoped to a module-level Scope that lives for the whole
-// execution context (background SW / content script). Replacing the prior
-// `activeFibers: Map + cancelledProcesses: Set` pair with a FiberMap gives:
-//   - Atomic remove + interrupt via `FiberMap.remove(map, processId)`.
-//   - Auto-cleanup when a fiber completes (no manual delete on success path).
-//   - Scope-based mass cancellation if the SW ever needs a graceful teardown.
-const _queueScope = Effect.runSync(Scope.make())
-const _activeFibers = Effect.runSync(
-  Effect.provideService(FiberMap.make<string>(), Scope.Scope, _queueScope),
-)
+// One controller per in-flight run, keyed by processId. Aborting it is what
+// lets `cancelQueue` cut a 60s rate-limit wait short rather than making the
+// user sit through it.
+const _controllers = new Map<string, AbortController>()
 
-// synchronous fast-path flag set to track cancelled process IDs.
-// FiberMap.remove ultimately interrupts the fiber, but interrupt propagation
-// can race with fake-timer-driven sleeps and with cancellations that originate
-// from inside a task's own run() callback. Checking this set explicitly between
-// tasks gives a deterministic guarantee that no further work will be done once
-// `cancelQueue` returns.
+// Synchronous companion to the controllers. Abort delivery is asynchronous,
+// and a cancellation can originate from inside a task's own run() callback,
+// so this set gives a deterministic guarantee that no further task starts
+// once `cancelQueue` has returned.
 const _cancelledProcesses = new Set<string>()
 
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+/**
+ * Resolve after `ms`, or as soon as `signal` aborts — whichever comes first.
+ * Aborting resolves rather than rejects: callers treat a cut-short wait the
+ * same way they treat one that elapsed, and check cancellation separately.
+ */
+export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) return resolve()
+    // `done` closes over `timer`, but only ever runs after it is assigned —
+    // either from the timeout itself or from the abort listener below.
+    const done = () => {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', done)
+      resolve()
+    }
+    const timer = setTimeout(done, ms)
+    signal?.addEventListener('abort', done, { once: true })
+  })
 }
 
 export function cancelQueue(processId: string): void {
   _cancelledProcesses.add(processId)
-  // FiberMap.remove atomically interrupts + removes the entry.
-  Effect.runFork(FiberMap.remove(_activeFibers, processId))
+  _controllers.get(processId)?.abort()
 }
 
 export async function processQueue(
@@ -93,12 +87,16 @@ export async function processQueue(
 
   if (tasks.length === 0) return
 
-  const isCancelled = () => processId !== undefined && _cancelledProcesses.has(processId)
+  const controller = new AbortController()
+  if (processId) _controllers.set(processId, controller)
 
-  const program = Effect.gen(function* () {
+  const isCancelled = () =>
+    controller.signal.aborted || (processId !== undefined && _cancelledProcesses.has(processId))
+
+  try {
     for (let i = 0; i < tasks.length; i++) {
       // bail out if the queue was cancelled between tasks (e.g. from inside
-      // the previous task's run callback or from another fiber).
+      // the previous task's run callback or from another context).
       if (isCancelled()) return
       const task = tasks[i]
       logger.log('[rgp:queue] task start', task.id, `(${i + 1}/${tasks.length})`)
@@ -111,24 +109,22 @@ export async function processQueue(
         localDetail = task.detail
         notify()
 
-        const result = yield* Effect.tryPromise({
-          try: () => task.run(),
-          catch: (err) => err as unknown,
-        }).pipe(Effect.either)
+        try {
+          await task.run()
 
-        if (Either.isRight(result)) {
           localCompleted++
           localDetail = undefined
           notify()
           logger.log('[rgp:queue] task done', task.id)
           if (i < tasks.length - 1) {
             logger.log('[rgp:queue] sleeping 1s before next task')
-            // Sleep is interruptible — cancellation lands here.
-            yield* Effect.sleep(Duration.millis(1000))
+            // Mandatory anti-abuse spacing between content-creating mutations.
+            // Cancellation lands here.
+            await sleep(1000, controller.signal)
           }
           taskDone = true
-        } else {
-          const err = result.left as { _tag?: string; status?: number; retryAfter?: number }
+        } catch (caught) {
+          const err = caught as { _tag?: string; status?: number; retryAfter?: number }
           const isRateLimit =
             err._tag === 'GithubRateLimitError' || err.status === 403 || err.status === 429
           if (isRateLimit && attempts < MAX_ATTEMPTS - 1) {
@@ -137,7 +133,8 @@ export async function processQueue(
             localPaused = true
             localRetryAfter = retryAfter
             notify()
-            yield* Effect.sleep(Duration.millis(retryAfter * 1000))
+            await sleep(retryAfter * 1000, controller.signal)
+            if (isCancelled()) return
             logger.log('[rgp:queue] resuming after rate limit')
             localPaused = false
             localRetryAfter = undefined
@@ -145,9 +142,8 @@ export async function processQueue(
             attempts++
           } else {
             // non-rate-limit error OR max retries exhausted: skip task
-            const errVal = result.left
-            const errorMsg = errVal instanceof Error ? errVal.message : String(errVal)
-            console.error('[rgp:queue] task error (skipping)', task.id, errVal)
+            const errorMsg = caught instanceof Error ? caught.message : String(caught)
+            console.error('[rgp:queue] task error (skipping)', task.id, caught)
             localFailedItems.push({ id: task.id, title: task.detail ?? task.id, error: errorMsg })
             localCompleted++
             localDetail = undefined
@@ -159,39 +155,12 @@ export async function processQueue(
     }
 
     logger.log('[rgp:queue] all tasks done')
-  })
-
-  // fork the program; if a processId is given, register the fiber so that
-  // `cancelQueue(id)` can interrupt it. FiberMap.run automatically removes
-  // the entry when the fiber completes.
-  const fiber = processId
-    ? Effect.runSync(FiberMap.run(_activeFibers, processId, program))
-    : Effect.runFork(program)
-
-  try {
-    // Fiber.await never rejects — returns Exit<E, A>. We inspect it so that
-    // unexpected defects (e.g. thrown errors from notify() / onStateChange)
-    // surface to the caller instead of being silently swallowed. Interrupts
-    // are expected (e.g. cancelQueue) and must still return cleanly.
-    const exit = await Effect.runPromise(Fiber.await(fiber))
-    if (Exit.isFailure(exit)) {
-      const cause = exit.cause
-      if (!Cause.isInterruptedOnly(cause)) {
-        const firstDefect = Chunk.head(Cause.defects(cause))
-        if (Option.isSome(firstDefect)) {
-          const d = firstDefect.value
-          throw d instanceof Error ? d : new Error(String(d))
-        }
-        const firstFailure = Chunk.head(Cause.failures(cause))
-        if (Option.isSome(firstFailure)) {
-          const f: unknown = firstFailure.value
-          throw f instanceof Error ? f : new Error(String(f))
-        }
-      }
-    }
   } finally {
-    // clear the cancellation flag so a subsequent processQueue call with the
+    // clear the cancellation state so a subsequent processQueue call with the
     // same processId starts with a clean slate.
-    if (processId) _cancelledProcesses.delete(processId)
+    if (processId) {
+      _controllers.delete(processId)
+      _cancelledProcesses.delete(processId)
+    }
   }
 }
