@@ -1,0 +1,21 @@
+src/lib/schemas-decode.ts
+  s_4bdb13fd3ea22c::t_337e1659073487 1,17-19,22-24,26-46
+src/lib/schemas-branded.ts
+  s_4bdb13fd3ea22c::t_55ac8f41474a59 3-8,11-13,16,18,20,22,24,26,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "69e5ada6ac3ef4b1400cc7804ff30b2e40ccd28b",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
