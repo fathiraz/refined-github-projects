@@ -1,0 +1,26 @@
+src/lib/graphql-client.test.ts
+  s_4bdb13fd3ea22c::t_d84a4e58ebb818 106-108,111-120,140-147
+  s_4bdb13fd3ea22c::t_154a428b5d6c9f 121-139
+  s_4bdb13fd3ea22c::t_3fefd79ac04ac4 148
+src/lib/queue.test.ts
+  s_4bdb13fd3ea22c::t_d07a0dc096e82c 244,257,259-262
+  s_4bdb13fd3ea22c::t_ddd9330e1275e9 216-243,245-256,258,263-266
+src/lib/schemas-decode.test.ts
+  s_4bdb13fd3ea22c::t_224862032e6113 1-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "753a972e63facd835da4a4f440f26e214450f1a4",
+  "prompts": {},
+  "sessions": {
+    "s_4bdb13fd3ea22c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b43f0e4-3ee5-4747-8e32-91a155959918",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
