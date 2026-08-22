@@ -15,8 +15,8 @@ import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
-import { broadcastQueue, withRateLimitRetry } from '@/background/rest-helpers'
-import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
+import { withRateLimitRetry } from '@/background/rest-helpers'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
 import { getRepositoryId } from '@/background/project-helpers'
 
 // Resolves the dialog's assignee logins / label names to node ids before
@@ -89,17 +89,7 @@ async function runCreateIssue(data: CreateIssueWithFieldsMessageData, tabId?: nu
   }
   const totalSteps = 2 + data.updates.length
 
-  await broadcastQueue(
-    {
-      total: totalSteps,
-      completed: 0,
-      paused: false,
-      status: 'Creating issue…',
-      processId: run.processId,
-      label: run.label,
-    },
-    tabId,
-  )
+  await broadcastStatus(run, totalSteps, 'Creating issue…')
 
   try {
     let newIssueId = ''

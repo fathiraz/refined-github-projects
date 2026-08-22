@@ -18,8 +18,13 @@ import { logger } from '@/lib/debug-logger'
 import { toIssueRelationship } from '@/lib/relationship-utils'
 
 import { isDuplicateFull, acquireDuplicate, releaseDuplicate } from '@/background/concurrency'
-import { broadcastQueue, withRateLimitRetry, githubRest } from '@/background/rest-helpers'
-import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
+import { withRateLimitRetry, githubRest } from '@/background/rest-helpers'
+import {
+  broadcastDone,
+  broadcastStatus,
+  runQueueWithProgress,
+  type QueueRun,
+} from '@/background/queue-run'
 import { formatRelationshipLabel } from '@/background/relationship-helpers'
 import { buildFieldValueFromSource } from '@/background/project-helpers'
 import type { ProjectItemDetails, FieldValue } from '@/background/types'
@@ -45,20 +50,11 @@ async function runDeepDuplicate(
   const processId = newProcessId('dup')
   // Bailing out before the source title is known still has to close the
   // tracker card, and at that point the only label available is the generic one.
-  const abort = () => broadcastDone({ processId, label: 'Deep duplicate', tabId })
+  const genericRun: QueueRun = { processId, label: 'Deep duplicate', tabId }
+  const abort = () => broadcastDone(genericRun)
   logger.log('[rgp:bg] runDeepDuplicate starting', { itemId, processId })
 
-  await broadcastQueue(
-    {
-      total: 2,
-      completed: 0,
-      paused: false,
-      status: 'Fetching item…',
-      processId,
-      label: 'Deep duplicate',
-    },
-    tabId,
-  )
+  await broadcastStatus(genericRun, 2, 'Fetching item…')
 
   try {
     let details: ProjectItemDetails

@@ -18,6 +18,26 @@ export interface QueueRun {
   tabId: number | undefined
 }
 
+/**
+ * A frame for the phases either side of the task queue — resolving ids,
+ * fetching targets, aborting early. `completed` is pinned at 0 because nothing
+ * has been processed yet; `total` is whatever the tracker should show as the
+ * denominator, and 0 when there is nothing to count.
+ */
+export function broadcastStatus(run: QueueRun, total: number, status: string): Promise<void> {
+  return broadcastQueue(
+    {
+      total,
+      completed: 0,
+      paused: false,
+      status,
+      processId: run.processId,
+      label: run.label,
+    },
+    run.tabId,
+  )
+}
+
 /** The terminal frame every verb broadcasts once its queue drains. */
 export function broadcastDone(run: QueueRun, reverse?: ReverseHint): Promise<void> {
   return broadcastQueue(

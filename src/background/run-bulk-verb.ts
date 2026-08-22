@@ -12,8 +12,8 @@ import { plural, newProcessId } from '@/lib/format'
 import type { QueueTask } from '@/lib/queue'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
-import { broadcastQueue, type ReverseHint } from '@/background/rest-helpers'
-import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
+import { type ReverseHint } from '@/background/rest-helpers'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
 import { resolveProjectItemIds } from '@/background/project-helpers'
 import type { ResolvedItem } from '@/background/types'
 
@@ -58,18 +58,7 @@ export async function runBulkVerb<TPrepared = void>(
   acquireBulk()
   const run = { processId: newProcessId(idPrefix), label, tabId }
 
-  const setStatus = (status: string) =>
-    broadcastQueue(
-      {
-        total: itemIds.length,
-        completed: 0,
-        paused: false,
-        status,
-        processId: run.processId,
-        label,
-      },
-      tabId,
-    )
+  const setStatus = (status: string) => broadcastStatus(run, itemIds.length, status)
 
   try {
     await setStatus(options.resolvingStatus ?? 'Resolving items...')

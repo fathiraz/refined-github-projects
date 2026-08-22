@@ -8,8 +8,8 @@ import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
-import { broadcastQueue, withRateLimitRetry } from '@/background/rest-helpers'
-import { broadcastDone, runQueueWithProgress, type QueueRun } from '@/background/queue-run'
+import { withRateLimitRetry } from '@/background/rest-helpers'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
 import { createIssueRefIndex, getProjectFieldsData } from '@/background/project-helpers'
 import { newProcessId, plural } from '@/lib/format'
 
@@ -25,20 +25,6 @@ function positionTasks(ops: ReorderOp[], projectId: string, idPrefix: string): Q
       })
     },
   }))
-}
-
-function broadcastStart(total: number, run: QueueRun): Promise<void> {
-  return broadcastQueue(
-    {
-      total,
-      completed: 0,
-      paused: false,
-      status: 'Moving items...',
-      processId: run.processId,
-      label: run.label,
-    },
-    run.tabId,
-  )
 }
 
 export function registerBulkPositionHandlers(): void {
@@ -60,7 +46,7 @@ export function registerBulkPositionHandlers(): void {
     try {
       const tasks = positionTasks(data.reorderOps, data.projectId, 'reorder')
 
-      await broadcastStart(tasks.length, run)
+      await broadcastStatus(run, tasks.length, 'Moving items...')
 
       await runQueueWithProgress(tasks, run, (state) => ({
         status:
@@ -195,7 +181,7 @@ export function registerBulkPositionHandlers(): void {
 
       const tasks = positionTasks(reorderOps, project.id, 'reorder-pos')
 
-      await broadcastStart(tasks.length, run)
+      await broadcastStatus(run, tasks.length, 'Moving items...')
 
       await runQueueWithProgress(tasks, run, (state) => ({
         status:

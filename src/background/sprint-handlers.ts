@@ -17,8 +17,12 @@ import {
 
 import { isSprintEndFull, acquireSprintEnd, releaseSprintEnd } from '@/background/concurrency'
 
-import { broadcastQueue } from '@/background/rest-helpers'
-import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
+import {
+  broadcastDone,
+  broadcastStatus,
+  runQueueWithProgress,
+  type QueueRun,
+} from '@/background/queue-run'
 import { getProjectFieldsData } from '@/background/project-helpers'
 import { plural } from '@/lib/format'
 
@@ -290,22 +294,14 @@ export function registerSprintHandlers(): void {
     }
 
     acquireSprintEnd()
-    const processId = `sprint-end-${Date.now()}`
-    const label = 'End Sprint'
-    const tabId = sender.tab?.id
+    const run: QueueRun = {
+      processId: `sprint-end-${Date.now()}`,
+      label: 'End Sprint',
+      tabId: sender.tab?.id,
+    }
 
     try {
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Fetching sprint items...',
-          processId,
-          label,
-        },
-        tabId,
-      )
+      await broadcastStatus(run, 0, 'Fetching sprint items...')
 
       // resolve real GraphQL node ID (data.projectId is a URL slug, not a node ID)
       const { project: sprintProject } = await getProjectFieldsData(
@@ -419,17 +415,7 @@ export function registerSprintHandlers(): void {
       })
 
       if (notDoneItems.length === 0) {
-        await broadcastQueue(
-          {
-            total: 0,
-            completed: 0,
-            paused: false,
-            status: 'Done! All items are finished.',
-            processId,
-            label,
-          },
-          tabId,
-        )
+        await broadcastStatus(run, 0, 'Done! All items are finished.')
         return
       }
 
@@ -446,23 +432,17 @@ export function registerSprintHandlers(): void {
         },
       }))
 
-      await broadcastQueue(
-        {
-          total: tasks.length,
-          completed: 0,
-          paused: false,
-          status: `Moving ${plural(tasks.length, 'item')} to next sprint...`,
-          processId,
-          label,
-        },
-        tabId,
+      await broadcastStatus(
+        run,
+        tasks.length,
+        `Moving ${plural(tasks.length, 'item')} to next sprint...`,
       )
 
-      await runQueueWithProgress(tasks, { processId, label, tabId }, (state) => ({
+      await runQueueWithProgress(tasks, run, (state) => ({
         status: `Moving ${state.completed + 1} of ${tasks.length}...`,
       }))
 
-      await broadcastDone({ processId, label, tabId })
+      await broadcastDone(run)
     } finally {
       releaseSprintEnd()
     }

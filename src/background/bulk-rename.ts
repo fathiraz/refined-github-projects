@@ -16,8 +16,7 @@ import { logger } from '@/lib/debug-logger'
 import { decodeProjectItemDomId } from '@/lib/schemas-decode'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
-import { broadcastQueue } from '@/background/rest-helpers'
-import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
 import { resolveProjectItemIds, getRepositoryId } from '@/background/project-helpers'
 import { runBulkVerb } from '@/background/run-bulk-verb'
 import { newProcessId, plural } from '@/lib/format'
@@ -78,17 +77,7 @@ export function registerBulkRenameHandlers(): void {
         },
       }))
 
-      await broadcastQueue(
-        {
-          total: tasks.length,
-          completed: 0,
-          paused: false,
-          status: 'Renaming items...',
-          processId: run.processId,
-          label: run.label,
-        },
-        run.tabId,
-      )
+      await broadcastStatus(run, tasks.length, 'Renaming items...')
 
       await runQueueWithProgress(tasks, run, (state) => ({
         status:
@@ -122,32 +111,12 @@ export function registerBulkRenameHandlers(): void {
     }
 
     try {
-      await broadcastQueue(
-        {
-          total: data.itemIds.length,
-          completed: 0,
-          paused: false,
-          status: 'Resolving items...',
-          processId: run.processId,
-          label: run.label,
-        },
-        run.tabId,
-      )
+      await broadcastStatus(run, data.itemIds.length, 'Resolving items...')
       const resolvedItems = await resolveProjectItemIds(data.itemIds, data.projectId, run.tabId)
 
       if (resolvedItems.length === 0) {
         console.error('[rgp:bg] no valid items resolved for bulkRandomAssign, aborting')
-        await broadcastQueue(
-          {
-            total: 0,
-            completed: 0,
-            paused: false,
-            status: 'No valid items found',
-            processId: run.processId,
-            label: run.label,
-          },
-          run.tabId,
-        )
+        await broadcastStatus(run, 0, 'No valid items found')
         return
       }
 

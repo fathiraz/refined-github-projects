@@ -21,8 +21,7 @@ import { logger } from '@/lib/debug-logger'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { takeCachedResolvedItems } from '@/background/cache'
-import { broadcastQueue } from '@/background/rest-helpers'
-import { broadcastDone, runQueueWithProgress } from '@/background/queue-run'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
 import { buildBulkRelationshipTasks } from '@/background/relationship-helpers'
 import { resolveProjectItemIds } from '@/background/project-helpers'
 import type { ResolvedItem } from '@/background/types'
@@ -242,17 +241,7 @@ async function runBulkUpdate(
   }
 
   try {
-    await broadcastQueue(
-      {
-        total: data.itemIds.length,
-        completed: 0,
-        paused: false,
-        status: 'Resolving items...',
-        processId: run.processId,
-        label: run.label,
-      },
-      tabId,
-    )
+    await broadcastStatus(run, data.itemIds.length, 'Resolving items...')
     const cachedResolvedItems = data.relationships
       ? takeCachedResolvedItems(data.projectId, data.itemIds)
       : undefined
