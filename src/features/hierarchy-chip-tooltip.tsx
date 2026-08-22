@@ -129,7 +129,10 @@ function CardContent({ state }: { state: CardState }) {
   }
 
   const { preview, hierarchy } = state
-  const showProjectBlock = hasProjectBlock(preview, hierarchy)
+  const projectBlockMeta = getProjectBlockMeta(preview, hierarchy)
+  // every field on the meta is either a found field or a boolean, so one truthy
+  // entry means the block has something to show.
+  const showProjectBlock = Object.values(projectBlockMeta).some(Boolean)
   const bodyExcerpt = excerptIssueBody(preview.body)
   const issueUrl = `https://github.com/${preview.repoOwner}/${preview.repoName}/issues/${preview.issueNumber}`
   const repoUrl = `https://github.com/${preview.repoOwner}/${preview.repoName}`
@@ -186,7 +189,7 @@ function CardContent({ state }: { state: CardState }) {
       {showProjectBlock ? (
         <>
           <Box sx={primerCss.divider()} />
-          <ProjectBlock preview={preview} hierarchy={hierarchy} />
+          <ProjectBlock preview={preview} hierarchy={hierarchy} meta={projectBlockMeta} />
         </>
       ) : null}
     </CardShell>
@@ -196,9 +199,11 @@ function CardContent({ state }: { state: CardState }) {
 function ProjectBlock({
   preview,
   hierarchy,
+  meta,
 }: {
   preview: ItemPreviewData
   hierarchy: HierarchyData
+  meta: ReturnType<typeof getProjectBlockMeta>
 }) {
   const {
     statusField,
@@ -210,7 +215,7 @@ function ProjectBlock({
     hasSubIssues,
     hasBlockedBy,
     hasBlocking,
-  } = getProjectBlockMeta(preview, hierarchy)
+  } = meta
 
   const subPct = hasSubIssues
     ? Math.round((hierarchy.completedSubIssues / hierarchy.totalSubIssues) * 100)
@@ -325,22 +330,6 @@ function ProjectBlock({
         </FieldRow>
       ) : null}
     </Box>
-  )
-}
-
-function hasProjectBlock(preview: ItemPreviewData, hierarchy: HierarchyData): boolean {
-  const projectBlockMeta = getProjectBlockMeta(preview, hierarchy)
-
-  return (
-    Boolean(projectBlockMeta.statusField?.optionName) ||
-    Boolean(projectBlockMeta.iterationField?.iterationTitle) ||
-    Boolean(projectBlockMeta.priorityField?.optionName) ||
-    projectBlockMeta.hasAssignees ||
-    projectBlockMeta.hasLabels ||
-    projectBlockMeta.hasParent ||
-    projectBlockMeta.hasSubIssues ||
-    projectBlockMeta.hasBlockedBy ||
-    projectBlockMeta.hasBlocking
   )
 }
 
