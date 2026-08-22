@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Tippy from '@/ui/tooltip'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Box, Button, Flash, Heading, Label, Spinner, Text } from '@primer/react'
@@ -7,7 +7,7 @@ import { Z_TOOLTIP } from '@/lib/z-index'
 import { GearIcon, SlidersIcon, SprintIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
-import type { SprintStatus } from '@/lib/messages'
+import { useSprintStatus } from '@/lib/use-sprint-status'
 import { fmt, SPRINT_FILTER } from '@/lib/sprint-utils'
 import { sprintConfirmEndStore } from '@/lib/sprint-store'
 import { SprintProgressView } from '@/features/sprint-progress-view'
@@ -24,39 +24,19 @@ interface Props {
   onClose: () => void
 }
 
-type PanelState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
-
 export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose }: Props) {
   ensureTippyCss()
 
-  const [state, setState] = useState<PanelState>('loading')
-  const [status, setStatus] = useState<SprintStatus | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    state,
+    status,
+    error,
+    acknowledging,
+    refresh: fetchStatus,
+    acknowledge: handleAcknowledge,
+  } = useSprintStatus({ projectId, owner, isOrg, number })
   const [showSettings, setShowSettings] = useState(false)
   const [confirmingEnd, setConfirmingEnd] = useState(false)
-  const [acknowledging, setAcknowledging] = useState(false)
-
-  const fetchStatus = useCallback(async () => {
-    setState('loading')
-    setError(null)
-    try {
-      const result = await sendMessage('getSprintStatus', { projectId, owner, number, isOrg })
-      setStatus(result)
-      if (!result.hasSettings) setState('not-configured')
-      else if (result.activeSprint) setState('active')
-      else if (result.acknowledgedSprint) setState('acknowledged')
-      else setState('no-active')
-    } catch (e) {
-      console.error('[rgp:sprint] fetchStatus error:', e)
-      setError(String(e))
-      setState('error')
-    }
-  }, [projectId, owner, number, isOrg])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load sprint status when panel deps change
-    void fetchStatus()
-  }, [fetchStatus])
 
   useEffect(() => {
     const unsub = sprintConfirmEndStore.subscribe((pending) => {
@@ -71,20 +51,6 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
   }, [state, showSettings])
 
   if (!visible) return null
-
-  const handleAcknowledge = async () => {
-    if (!status?.nearestUpcoming) return
-    setAcknowledging(true)
-    try {
-      await sendMessage('acknowledgeUpcomingSprint', {
-        projectId,
-        iterationId: status.nearestUpcoming.id,
-      })
-      await fetchStatus()
-    } finally {
-      setAcknowledging(false)
-    }
-  }
 
   const handleStopTracking = async () => {
     if (!status?.settings) return

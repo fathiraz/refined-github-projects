@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React from 'react'
 import Tippy from '@/ui/tooltip'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Box, Button, Label, Spinner, Text } from '@primer/react'
 import { SlidersIcon } from '@/ui/icons'
-import { sendMessage } from '@/lib/messages'
-import type { SprintStatus } from '@/lib/messages'
+import { useSprintStatus } from '@/lib/use-sprint-status'
 import { primerCss } from '@/lib/primer-css-helper'
 import { sprintConfirmEndStore, sprintPanelStore } from '@/lib/sprint-store'
 
@@ -14,8 +13,6 @@ interface Props {
   isOrg: boolean
   number: number
 }
-
-type WidgetState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
 
 const accentTextButtonSx = {
   ...primerCss.buttonMotion(),
@@ -72,50 +69,13 @@ function SprintSettingsButton() {
 
 export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number }: Props) {
   ensureTippyCss()
-  const [state, setState] = useState<WidgetState>('loading')
-  const [status, setStatus] = useState<SprintStatus | null>(null)
-  const [acknowledging, setAcknowledging] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchStatus = useCallback(async () => {
-    setState('loading')
-    setError(null)
-    try {
-      const result = await sendMessage('getSprintStatus', { projectId, owner, number, isOrg })
-      setStatus(result)
-      if (!result.hasSettings) {
-        setState('not-configured')
-      } else if (result.activeSprint) {
-        setState('active')
-      } else if (result.acknowledgedSprint) {
-        setState('acknowledged')
-      } else {
-        setState('no-active')
-      }
-    } catch (e) {
-      setError(String(e))
-      setState('error')
-    }
-  }, [projectId, owner, number, isOrg])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load widget status when project context changes
-    void fetchStatus()
-  }, [fetchStatus])
-
-  const handleAcknowledge = async () => {
-    if (!status?.nearestUpcoming) return
-    setAcknowledging(true)
-    try {
-      await sendMessage('acknowledgeUpcomingSprint', {
-        projectId,
-        iterationId: status.nearestUpcoming.id,
-      })
-      await fetchStatus()
-    } finally {
-      setAcknowledging(false)
-    }
-  }
+  const {
+    state,
+    status,
+    error,
+    acknowledging,
+    acknowledge: handleAcknowledge,
+  } = useSprintStatus({ projectId, owner, isOrg, number })
 
   const normalizedError = (error ?? 'Unable to load sprint status').replace(/^Error:\s*/, '').trim()
   const displayError =
