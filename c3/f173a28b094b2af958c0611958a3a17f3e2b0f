@@ -1,0 +1,19 @@
+src/background/project-helpers.ts
+  s_eb20219a3760a4::t_c59065d20e964b 72,77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "c3f173a28b094b2af958c0611958a3a17f3e2b0f",
+  "prompts": {},
+  "sessions": {
+    "s_eb20219a3760a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3159c222-5b9e-42a1-8b6a-a5ed79d8f827",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
