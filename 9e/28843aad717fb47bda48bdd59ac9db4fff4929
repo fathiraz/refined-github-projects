@@ -1,0 +1,32 @@
+src/lib/sprint-utils.test.ts
+  s_acfeefe55ba0ff::t_f4d249a30b0bb0 1,5-7
+  s_acfeefe55ba0ff::t_d666c85056ba2e 55-116
+src/lib/sprint-utils.ts
+  s_acfeefe55ba0ff::t_864ecb942699d4 36-46
+src/features/sprint-end-view.tsx
+  s_acfeefe55ba0ff::t_3521839b8e0f9c 12
+  s_acfeefe55ba0ff::t_d702b407cd5378 155
+src/features/sprint-modal.tsx
+  s_acfeefe55ba0ff::t_56057367b258ce 260
+  s_acfeefe55ba0ff::t_9a593a1af79918 11
+  s_acfeefe55ba0ff::t_d81e402a903c4b 77
+src/features/sprint-progress-view.tsx
+  s_acfeefe55ba0ff::t_73b74ab511cc2e 110
+  s_acfeefe55ba0ff::t_c67ed3f341155f 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "9e28843aad717fb47bda48bdd59ac9db4fff4929",
+  "prompts": {},
+  "sessions": {
+    "s_acfeefe55ba0ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cf343853-6fb6-41f9-ad2f-38c0d4ef19dd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
