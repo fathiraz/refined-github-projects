@@ -1,0 +1,260 @@
+---
+name: refined-github-projects-conventions
+description: Development conventions and patterns for refined-github-projects. TypeScript React project with conventional commits.
+---
+
+# Refined Github Projects Conventions
+
+> Generated from [fathiraz/refined-github-projects](https://github.com/fathiraz/refined-github-projects) on 2026-08-22
+
+## Overview
+
+This skill teaches Claude the development patterns and conventions used in refined-github-projects.
+
+## Tech Stack
+
+- **Primary Language**: TypeScript
+- **Framework**: React
+- **Architecture**: type-based module organization
+- **Test Location**: colocated
+- **Test Framework**: vitest
+
+## When to Use This Skill
+
+Activate this skill when:
+- Making changes to this repository
+- Adding new features following established patterns
+- Writing tests that match project conventions
+- Creating commits with proper message format
+
+## Commit Conventions
+
+Follow these commit message conventions based on 62 analyzed commits.
+
+### Commit Style: Conventional Commits
+
+### Prefixes Used
+
+- `refactor`
+- `chore`
+- `test`
+- `docs`
+- `fix`
+
+### Message Guidelines
+
+- Average message length: ~63 characters
+- Keep first line concise and descriptive
+- Use imperative mood ("Add feature" not "Added feature")
+
+
+*Commit message example*
+
+```text
+chore: remove unreferenced code and dead exports
+```
+
+*Commit message example*
+
+```text
+refactor: collapse duplicated icon and button-motion declarations
+```
+
+*Commit message example*
+
+```text
+test: replace the custom toEqualValue matcher with vitest's toEqual
+```
+
+*Commit message example*
+
+```text
+docs(tooltip): record why the Tippy wrapper cannot be simplified
+```
+
+*Commit message example*
+
+```text
+fix(resolve): match hyphen-spelled item ids by issue number
+```
+
+*Commit message example*
+
+```text
+refactor: inline single-caller Effect service wrappers
+```
+
+*Commit message example*
+
+```text
+refactor: replace derived message schemas with a hand-written ProtocolMap
+```
+
+*Commit message example*
+
+```text
+chore: drop unused dependencies
+```
+
+## Architecture
+
+### Project Structure: Monorepo
+
+This project uses **type-based** module organization.
+
+### Source Layout
+
+```
+src/
+├── assets/
+├── background/
+├── entries/
+├── features/
+├── lib/
+├── ui/
+```
+
+### Configuration Files
+
+- `.github/workflows/coverage.yml`
+- `package.json`
+- `vitest.config.ts`
+
+### Guidelines
+
+- Group code by type (components, services, utils)
+- Keep related functionality in the same type folder
+- Avoid circular dependencies between type folders
+
+## Code Style
+
+### Language: TypeScript
+
+### Naming Conventions
+
+| Element | Convention |
+|---------|------------|
+| Files | kebab-case |
+| Functions | camelCase |
+| Classes | PascalCase |
+| Constants | SCREAMING_SNAKE_CASE |
+
+### Import Style: Path Aliases (@/, ~/)
+
+### Export Style: Named Exports
+
+
+*Preferred import style*
+
+```typescript
+// Use path aliases for imports
+import { Button } from '@/components/Button'
+import { useAuth } from '@/hooks/useAuth'
+import { api } from '@/lib/api'
+```
+
+*Preferred export style*
+
+```typescript
+// Use named exports
+export function calculateTotal() { ... }
+export const TAX_RATE = 0.1
+export interface Order { ... }
+```
+
+## Testing
+
+### Test Framework: vitest
+
+### File Pattern: `*.test.ts`
+
+### Test Types
+
+- **Unit tests**: Test individual functions and components in isolation
+- **Integration tests**: Test interactions between multiple components/services
+
+### Mocking: vi.mock
+
+### Coverage
+
+This project has coverage reporting configured. Aim for 80%+ coverage.
+
+
+*Test file structure*
+
+```typescript
+import { describe, it, expect } from 'vitest'
+
+describe('MyFunction', () => {
+  it('should return expected result', () => {
+    const result = myFunction(input)
+    expect(result).toBe(expected)
+  })
+})
+```
+
+## Error Handling
+
+### Error Handling Style: Try-Catch Blocks
+
+
+*Standard error handling pattern*
+
+```typescript
+try {
+  const result = await riskyOperation()
+  return result
+} catch (error) {
+  console.error('Operation failed:', error)
+  throw new Error('User-friendly message')
+}
+```
+
+## Common Workflows
+
+These workflows were detected from analyzing commit patterns.
+
+### Refactoring
+
+Code refactoring and cleanup workflow
+
+**Frequency**: ~22 times per month
+
+**Steps**:
+1. Ensure tests pass before refactor
+2. Refactor code structure
+3. Verify tests still pass
+
+**Files typically involved**:
+- `src/**/*`
+
+**Example commit sequence**:
+```
+refactor: collapse duplicated icon and button-motion declarations
+test: replace the custom toEqualValue matcher with vitest's toEqual
+refactor: inline single-caller Effect service wrappers
+```
+
+
+## Best Practices
+
+Based on analysis of the codebase, follow these practices:
+
+### Do
+
+- Use conventional commit format (feat:, fix:, etc.)
+- Write tests using vitest
+- Follow *.test.ts naming pattern
+- Use kebab-case for file names
+- Prefer named exports
+
+### Don't
+
+- Don't use long relative imports (use aliases)
+- Don't write vague commit messages
+- Don't skip tests for new features
+- Don't deviate from established patterns without discussion
+
+---
+
+*This skill was auto-generated by [ECC Tools](https://ecc.tools). Review and customize as needed for your team.*
