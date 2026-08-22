@@ -69,12 +69,12 @@ export function buildFieldValueFromSource(fieldValue: FieldValue): Record<string
  * a content databaseId therefore never resolves, which is what surfaced as
  * "Item issue-58 not found in project — it may belong to a different project".
  */
-export interface IssueRef {
+interface IssueRef {
   kind: 'databaseId' | 'number'
   value: number
 }
 
-export function parseIssueRef(domId: string): IssueRef | null {
+function parseIssueRef(domId: string): IssueRef | null {
   const match = domId.match(/^issue([:-])(\d+)$/)
   if (!match) return null
   return { kind: match[1] === ':' ? 'databaseId' : 'number', value: parseInt(match[2], 10) }

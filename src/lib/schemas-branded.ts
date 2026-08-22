@@ -21,8 +21,6 @@ export type IssueNumber = Brand<number, 'IssueNumber'>
 
 export type IssueDatabaseId = Brand<number, 'IssueDatabaseId'>
 
-export type Pat = Brand<string, 'Pat'>
-
 export type RepoOwner = Brand<string, 'RepoOwner'>
 
 export type RepoName = Brand<string, 'RepoName'>
