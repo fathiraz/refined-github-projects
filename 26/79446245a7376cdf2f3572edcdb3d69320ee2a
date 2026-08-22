@@ -1,0 +1,28 @@
+src/lib/queue-store.test.ts
+  s_eb20219a3760a4::t_9ea890cc373f62 132
+src/lib/graphql-client.test.ts
+  s_eb20219a3760a4::t_9b6042f187a9d0 78-82
+src/background/concurrency.ts
+  s_eb20219a3760a4::t_57a7990c594cc5 4-6
+src/lib/format.ts
+  s_eb20219a3760a4::t_9e4f373707f94c 15-17
+src/lib/toast-store.test.ts
+  s_eb20219a3760a4::t_c595ea6c4c6b1a 114
+  s_eb20219a3760a4::t_b06b7b566d05de 138-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "2679446245a7376cdf2f3572edcdb3d69320ee2a",
+  "prompts": {},
+  "sessions": {
+    "s_eb20219a3760a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3159c222-5b9e-42a1-8b6a-a5ed79d8f827",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
