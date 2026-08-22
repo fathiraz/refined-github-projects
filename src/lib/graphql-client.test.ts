@@ -75,11 +75,11 @@ describe('gql', () => {
   })
 
   it('throws GithubRateLimitError on 403 with x-ratelimit-remaining=0 (after internal retries)', async () => {
-    // GithubGraphQL retries rate-limit failures up to 2 extra times — return
-    // 403 for every attempt so the call surfaces the failure. Use retryAfter=1
-    // to keep the test fast: the service honors retryAfter via Effect.sleep
-    // between attempts (verified separately) so a large value would balloon
-    // the wall-clock duration.
+    // `gql` retries rate-limit failures up to 2 extra times — return 403 for
+    // every attempt so the call surfaces the failure. Use retryAfter=1 to keep
+    // the test fast: the client awaits `sleep(retryAfter)` between attempts
+    // (verified separately) so a large value would balloon the wall-clock
+    // duration.
     for (let i = 0; i < 3; i++) {
       mockFetch.mockResolvedValueOnce(
         errorResponse(403, { retryAfter: '1', rateLimitRemaining: '0' }),

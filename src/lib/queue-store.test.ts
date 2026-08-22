@@ -129,7 +129,7 @@ describe('queueStore auto-dismiss', () => {
     const immediatelyAfterDone = snapshots[snapshots.length - 1]
     expect(immediatelyAfterDone).toHaveLength(1)
 
-    // `Async` form is required because Effect.sleep yields through microtasks.
+    // `Async` form so any microtasks queued by the timer callback flush too.
     await vi.advanceTimersByTimeAsync(3500)
 
     const afterDismiss = snapshots[snapshots.length - 1]

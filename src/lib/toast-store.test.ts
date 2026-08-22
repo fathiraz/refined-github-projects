@@ -111,7 +111,7 @@ describe('toastStore', () => {
     expect(entries[entries.length - 1].filter((t) => t.id === id)).toHaveLength(2)
 
     // advance to auto-dismiss — only one timer should fire because line 24 cleared the first.
-    // `Async` form is required because Effect.sleep yields through microtasks.
+    // `Async` form so any microtasks queued by the timer callback flush too.
     await vi.advanceTimersByTimeAsync(6000)
 
     // only one dismiss occurred, so one toast with that id should remain
@@ -135,8 +135,8 @@ describe('toastStore', () => {
     const beforeDismiss = entries[entries.length - 1]
     expect(beforeDismiss.find((t) => t.id === id)).toBeDefined()
 
-    // advance past auto-dismiss timeout (`Async` form is required because
-    // Effect.sleep yields through microtasks).
+    // advance past auto-dismiss timeout (`Async` form so any microtasks queued
+    // by the timer callback flush too).
     await vi.advanceTimersByTimeAsync(6000)
 
     const afterDismiss = entries[entries.length - 1]

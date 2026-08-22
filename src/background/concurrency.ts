@@ -1,14 +1,9 @@
 // ─── Concurrency guards ───────────────────────────────────────────────────────
 //
 // the imperative API (`isXFull`, `acquireX`, `releaseX`) is the sole mechanism
-// enforcing in-process concurrency limits today. Each handler short-circuits
-// (rather than awaiting) when its counter is full.
-//
-// TODO(effect-ts-first phase 7): replace these counters with `Effect.Semaphore`
-// + `Effect.withPermits` so handlers can await a permit instead of being
-// silently rejected. Until that wiring lands, do not export an unused
-// semaphore from this module — it would only cause drift between the comment
-// and the actual call sites.
+// enforcing in-process concurrency limits. Each handler short-circuits (rather
+// than awaiting) when its counter is full, so a rejected request reports back
+// immediately instead of queueing behind work the user cannot see.
 
 const MAX_CONCURRENT_DUPLICATES = 3
 const MAX_CONCURRENT_BULK = 3

@@ -11,12 +11,6 @@ const resolvedItemCache = new Map<string, { resolvedItems: ResolvedItem[]; expir
 // read rather than scheduled, which is why there are no timers to cancel: a
 // stale entry is simply replaced by the next reader. Entries are capped
 // oldest-first so a long session over many distinct rows stays bounded.
-//
-// This previously scheduled eviction on Effect fibers, tracked in a sibling
-// fiber Map so that re-insertions could interrupt the stale timer. The comment
-// justified the machinery as TestClock-friendly; no test ever used TestClock
-// here, and the plain Map + timestamp pattern was already in this same file
-// twice for the fields and sprint-progress caches.
 
 const HOVER_TTL_MS = 60_000
 const MAX_HOVER_ENTRIES = 500
