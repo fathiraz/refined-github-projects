@@ -44,6 +44,14 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
     (instance: Instance) => {
       if (pendingRef.current) return
       const loadingStartedAt = Date.now()
+      // hold the skeleton to its minimum so a fast response doesn't flash it.
+      const holdSkeleton = () => {
+        const remainingMs = MIN_LOADING_SKELETON_MS - (Date.now() - loadingStartedAt)
+        if (remainingMs <= 0) return Promise.resolve()
+        return new Promise<void>((resolve) => {
+          window.setTimeout(resolve, remainingMs)
+        })
+      }
       pendingRef.current = Promise.all([
         sendMessage('getItemPreview', {
           itemId,
@@ -59,25 +67,13 @@ export function RowHoverCard({ itemId, projectContext, titleCell }: RowHoverCard
         }),
       ])
         .then(async ([preview, hierarchy]) => {
-          const loadingElapsedMs = Date.now() - loadingStartedAt
-          const loadingRemainingMs = MIN_LOADING_SKELETON_MS - loadingElapsedMs
-          if (loadingRemainingMs > 0) {
-            await new Promise<void>((resolve) => {
-              window.setTimeout(resolve, loadingRemainingMs)
-            })
-          }
+          await holdSkeleton()
           hasFetchedRef.current = true
           setState({ status: 'ready', preview, hierarchy })
           if (instance.state.isVisible) instance.popperInstance?.update()
         })
         .catch(async () => {
-          const loadingElapsedMs = Date.now() - loadingStartedAt
-          const loadingRemainingMs = MIN_LOADING_SKELETON_MS - loadingElapsedMs
-          if (loadingRemainingMs > 0) {
-            await new Promise<void>((resolve) => {
-              window.setTimeout(resolve, loadingRemainingMs)
-            })
-          }
+          await holdSkeleton()
           setState({ status: 'error' })
         })
         .finally(() => {
