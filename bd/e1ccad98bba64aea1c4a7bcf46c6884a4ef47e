@@ -1,0 +1,27 @@
+src/lib/use-sprint-status.ts
+  s_eb20219a3760a4::t_855f2051f339dd 1-70
+src/features/sprint-modal.tsx
+  s_eb20219a3760a4::t_28693bb92caf29 10
+  s_eb20219a3760a4::t_76934d127ac57f 1
+  s_eb20219a3760a4::t_c95c0a932a6043 30-37
+src/features/sprint-table-widget.tsx
+  s_eb20219a3760a4::t_c3ada8463d9164 6
+  s_eb20219a3760a4::t_de64291e5ea47b 72-78
+  s_eb20219a3760a4::t_e1878f7f9ed1a8 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "bde1ccad98bba64aea1c4a7bcf46c6884a4ef47e",
+  "prompts": {},
+  "sessions": {
+    "s_eb20219a3760a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3159c222-5b9e-42a1-8b6a-a5ed79d8f827",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
