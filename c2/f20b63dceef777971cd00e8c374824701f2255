@@ -1,0 +1,45 @@
+src/background/bulk-rename.ts
+  s_acfeefe55ba0ff::t_b57a1f18d3b421 114,119
+  s_acfeefe55ba0ff::t_1c47f25a084c88 80
+  s_acfeefe55ba0ff::t_089937e7f94934 19
+src/background/queue-run.ts
+  s_acfeefe55ba0ff::t_da6ead4a4b25ad 21-40
+src/background/bulk-update.ts
+  s_acfeefe55ba0ff::t_fe7a82107694ba 244
+  s_acfeefe55ba0ff::t_135d3481c4af44 24
+src/background/run-bulk-verb.ts
+  s_acfeefe55ba0ff::t_7349337b1e7a6a 15
+  s_acfeefe55ba0ff::t_14525dcc298c85 61
+  s_acfeefe55ba0ff::t_0a91e3134825ac 16
+src/background/duplicate-handlers.ts
+  s_acfeefe55ba0ff::t_a3584f845e936f 21-27
+  s_acfeefe55ba0ff::t_c05b81d7258c9e 53-54,57
+src/background/bulk-position.ts
+  s_acfeefe55ba0ff::t_7349337b1e7a6a 11
+  s_acfeefe55ba0ff::t_37899a43b32808 49,184
+  s_acfeefe55ba0ff::t_fb41f902aa0577 12
+src/background/create-issue.ts
+  s_acfeefe55ba0ff::t_13474f9130957c 92
+  s_acfeefe55ba0ff::t_7349337b1e7a6a 18
+  s_acfeefe55ba0ff::t_d99881b70dcb14 19
+src/background/sprint-handlers.ts
+  s_acfeefe55ba0ff::t_be58c2363414b5 299
+  s_acfeefe55ba0ff::t_c3ff31c85ca7c3 435
+  s_acfeefe55ba0ff::t_4ba093e69975ec 20-25,297-298,300-301,304,418,436-438,441,445
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "c2f20b63dceef777971cd00e8c374824701f2255",
+  "prompts": {},
+  "sessions": {
+    "s_acfeefe55ba0ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cf343853-6fb6-41f9-ad2f-38c0d4ef19dd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
