@@ -1,11 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Box, Button, Flash, FormControl, Heading, Link, Text, TextInput } from '@primer/react'
+import { Box, Button, FormControl, Heading, Text, TextInput } from '@primer/react'
 import { sendMessage } from '@/lib/messages'
-import { useTokenSetup } from '@/features/token-setup'
+import { PatErrorFlash, patInputSx, useTokenSetup } from '@/features/token-setup'
 import { usernameStorage } from '@/lib/storage'
 import { AppShell } from '@/ui/app-shell'
-import { EyeIcon, EyeOffIcon, XIcon } from '@/ui/icons'
+import { EyeIcon, EyeOffIcon } from '@/ui/icons'
 import { KeyboardHint } from '@/ui/keyboard-hint'
 import { PanelCard } from '@/ui/panel-card'
 import { StatusBanner } from '@/ui/status-banner'
@@ -87,36 +87,7 @@ function App() {
               </StatusBanner>
             )}
 
-            {error && (
-              <Flash variant="danger" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                <Box sx={{ flex: 1 }}>
-                  <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px', fontSize: 1 }}>
-                    {error.title}
-                  </Text>
-                  <Text as="p" sx={{ m: 0, fontSize: 0, color: 'fg.default' }}>
-                    {error.message}
-                  </Text>
-                  {error.actionLabel && error.actionHref && (
-                    <Link
-                      href={error.actionHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      sx={{ fontSize: 0, mt: 1, display: 'inline-block' }}
-                    >
-                      {error.actionLabel} →
-                    </Link>
-                  )}
-                </Box>
-                <Button
-                  variant="invisible"
-                  aria-label="Dismiss"
-                  onClick={() => setError(null)}
-                  sx={{ color: 'fg.muted', p: 1, flexShrink: 0, boxShadow: 'none' }}
-                >
-                  <XIcon size={14} />
-                </Button>
-              </Flash>
-            )}
+            {error && <PatErrorFlash error={error} onDismiss={() => setError(null)} dense />}
 
             <FormControl>
               <FormControl.Label sx={{ fontWeight: 'bold', fontSize: 1 }}>
@@ -138,15 +109,7 @@ function App() {
                     icon={showPat ? EyeOffIcon : EyeIcon}
                   />
                 }
-                sx={{
-                  bg: 'canvas.default',
-                  borderColor: error ? 'danger.emphasis' : 'border.default',
-                  boxShadow: 'none',
-                  '&:focus-within': {
-                    boxShadow: 'none',
-                    borderColor: error ? 'danger.emphasis' : 'accent.emphasis',
-                  },
-                }}
+                sx={patInputSx(Boolean(error))}
               />
               <FormControl.Caption>
                 Stored in your browser only. Never sent to any server.

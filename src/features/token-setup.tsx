@@ -142,6 +142,72 @@ const actionButtonSx = {
   ...primerCss.buttonMotion(),
 } as const
 
+/**
+ * Flat token input, red-bordered while `error` is set. Shared so the popup and
+ * the options card cannot drift on which state colours the border.
+ */
+export function patInputSx(error: boolean) {
+  const borderColor = error ? 'danger.emphasis' : undefined
+  return {
+    bg: 'canvas.default',
+    borderColor: borderColor ?? 'border.default',
+    boxShadow: 'none',
+    '&:focus-within': {
+      boxShadow: 'none',
+      borderColor: borderColor ?? 'accent.emphasis',
+    },
+  } as const
+}
+
+/**
+ * The PAT validation failure banner. `dense` is the popup's tighter type scale;
+ * the options card renders one size up.
+ */
+export function PatErrorFlash({
+  error,
+  onDismiss,
+  dense = false,
+}: {
+  error: PatError
+  onDismiss: () => void
+  dense?: boolean
+}) {
+  const bodyFontSize = dense ? 0 : 1
+  return (
+    <Flash variant="danger" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+      <Box sx={{ flex: 1 }}>
+        <Text
+          as="p"
+          sx={{ fontWeight: 'semibold', m: 0, mb: '2px', ...(dense && { fontSize: 1 }) }}
+        >
+          {error.title}
+        </Text>
+        <Text as="p" sx={{ m: 0, fontSize: bodyFontSize, ...(dense && { color: 'fg.default' }) }}>
+          {error.message}
+        </Text>
+        {error.actionLabel && error.actionHref && (
+          <Link
+            href={error.actionHref}
+            target="_blank"
+            rel="noreferrer"
+            sx={{ fontSize: bodyFontSize, mt: 1, display: 'inline-block' }}
+          >
+            {error.actionLabel} →
+          </Link>
+        )}
+      </Box>
+      <Button
+        variant="invisible"
+        aria-label="Dismiss"
+        onClick={onDismiss}
+        sx={{ ...actionButtonSx, color: 'fg.muted', p: 1, flexShrink: 0 }}
+      >
+        <XIcon size={14} />
+      </Button>
+    </Flash>
+  )
+}
+
 export function TokenSetupCard() {
   const {
     token,
@@ -212,36 +278,7 @@ export function TokenSetupCard() {
           </Flash>
         )}
 
-        {error && (
-          <Flash variant="danger" sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-            <Box sx={{ flex: 1 }}>
-              <Text as="p" sx={{ fontWeight: 'semibold', m: 0, mb: '2px' }}>
-                {error.title}
-              </Text>
-              <Text as="p" sx={{ m: 0, fontSize: 1 }}>
-                {error.message}
-              </Text>
-              {error.actionLabel && error.actionHref && (
-                <Link
-                  href={error.actionHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  sx={{ fontSize: 1, mt: 1, display: 'inline-block' }}
-                >
-                  {error.actionLabel} →
-                </Link>
-              )}
-            </Box>
-            <Button
-              variant="invisible"
-              aria-label="Dismiss"
-              onClick={() => setError(null)}
-              sx={{ ...actionButtonSx, color: 'fg.muted', p: 1, flexShrink: 0 }}
-            >
-              <XIcon size={14} />
-            </Button>
-          </Flash>
-        )}
+        {error && <PatErrorFlash error={error} onDismiss={() => setError(null)} />}
 
         <Box
           sx={{
@@ -262,15 +299,7 @@ export function TokenSetupCard() {
               }}
               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
               aria-describedby="rgp-scopes-list"
-              sx={{
-                bg: 'canvas.default',
-                borderColor: error ? 'danger.emphasis' : 'border.default',
-                boxShadow: 'none',
-                '&:focus-within': {
-                  boxShadow: 'none',
-                  borderColor: error ? 'danger.emphasis' : 'accent.emphasis',
-                },
-              }}
+              sx={patInputSx(Boolean(error))}
             />
             <FormControl.Caption>
               Stored in your browser only. Never sent to any server.
