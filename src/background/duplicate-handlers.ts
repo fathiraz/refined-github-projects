@@ -1,7 +1,7 @@
 // ─── Duplicate handlers ───────────────────────────────────────────────────────
 
 import { onMessage } from '@/lib/messages'
-import type { DuplicateItemPlan, IssueRelationshipData } from '@/lib/messages'
+import type { DuplicateItemPlan } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEM_DETAILS } from '@/lib/graphql-queries'
 import {
@@ -15,6 +15,7 @@ import {
 import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
+import { toIssueRelationship } from '@/lib/relationship-utils'
 
 import { isDuplicateFull, acquireDuplicate, releaseDuplicate } from '@/background/concurrency'
 import { broadcastQueue, withRateLimitRetry, githubRest } from '@/background/rest-helpers'
@@ -92,16 +93,7 @@ async function runDeepDuplicate(
       (fieldValue): fieldValue is FieldValue =>
         !!fieldValue.field && supportedFieldTypes.has(fieldValue.field.dataType),
     )
-    const sourceParent: IssueRelationshipData | undefined = issue.parent
-      ? {
-          nodeId: issue.parent.id,
-          databaseId: issue.parent.databaseId,
-          number: issue.parent.number,
-          title: issue.parent.title,
-          repoOwner: issue.parent.repository.owner.login,
-          repoName: issue.parent.repository.name,
-        }
-      : undefined
+    const sourceParent = toIssueRelationship(issue.parent)
 
     const enabledFieldPlans = plan?.fieldValues
       ? plan.fieldValues.filter((field) => field.enabled)

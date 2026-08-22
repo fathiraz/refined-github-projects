@@ -3,12 +3,12 @@ import { runHandler } from '@/background/run-handler'
 import type {
   BulkRelationshipValidationResult,
   HierarchyData,
-  IssueRelationshipData,
   ItemPreviewData,
 } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEM_DETAILS } from '@/lib/graphql-queries'
 import { logger } from '@/lib/debug-logger'
+import { toIssueRelationship } from '@/lib/relationship-utils'
 
 import type { DateFieldValue, NumberFieldValue, ProjectItemDetails } from '@/background/types'
 
@@ -111,16 +111,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
     fields.push(entry)
   }
 
-  const parentRelationship = issue.parent
-    ? {
-        nodeId: issue.parent.id,
-        databaseId: issue.parent.databaseId,
-        number: issue.parent.number,
-        title: issue.parent.title,
-        repoOwner: issue.parent.repository.owner.login,
-        repoName: issue.parent.repository.name,
-      }
-    : undefined
+  const parentRelationship = toIssueRelationship(issue.parent)
 
   return {
     resolvedItemId,
@@ -188,16 +179,7 @@ async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData>
     ),
   ])
 
-  const parent: IssueRelationshipData | undefined = issue.parent
-    ? {
-        nodeId: issue.parent.id,
-        databaseId: issue.parent.databaseId,
-        number: issue.parent.number,
-        title: issue.parent.title,
-        repoOwner: issue.parent.repository.owner.login,
-        repoName: issue.parent.repository.name,
-      }
-    : undefined
+  const parent = toIssueRelationship(issue.parent)
 
   return {
     resolvedItemId,
