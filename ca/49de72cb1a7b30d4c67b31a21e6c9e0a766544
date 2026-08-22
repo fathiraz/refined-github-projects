@@ -1,0 +1,28 @@
+src/background/duplicate-handlers.ts
+  s_eb20219a3760a4::t_95454b7259c711 18
+  s_eb20219a3760a4::t_e8be2eb8e7190d 96
+  s_eb20219a3760a4::t_bfc4b607bed49b 4
+src/lib/relationship-utils.ts
+  s_eb20219a3760a4::t_ebc8e437d6b5ba 21-44
+  s_eb20219a3760a4::t_34916a0dd4f5f8 3-4
+src/background/hierarchy-handlers.ts
+  s_eb20219a3760a4::t_d649f96409d9d6 114
+  s_eb20219a3760a4::t_178604d28ef31d 11
+  s_eb20219a3760a4::t_30fe7c78c792d7 182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "ca49de72cb1a7b30d4c67b31a21e6c9e0a766544",
+  "prompts": {},
+  "sessions": {
+    "s_eb20219a3760a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3159c222-5b9e-42a1-8b6a-a5ed79d8f827",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
