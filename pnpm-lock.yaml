@@ -17,9 +17,6 @@ importers:
       '@emotion/is-prop-valid':
         specifier: ^1.4.0
         version: 1.4.0
-      '@primer/live-region-element':
-        specifier: 0.8.0
-        version: 0.8.0
       '@primer/octicons-react':
         specifier: ^19.28.0
         version: 19.28.0(react@19.2.6)
@@ -500,9 +497,6 @@ packages:
 
   '@primer/live-region-element@0.7.2':
     resolution: {integrity: sha512-wdxCHfcJzE1IPPjZNFR4RTwRcSWb7TN0fRdMH5HcxphLEnuZBWy0TAxk3xPA+/6lwiN3uEJ+ZWV4UF/glXh43A==}
-
-  '@primer/live-region-element@0.8.0':
-    resolution: {integrity: sha512-DIp04IeZvZ+gwCUcBchIvRwJA2PikP/6hnFhcLKgwttcg5OYjBH9t0cZjLnv10Aq1jN0rAFFG+WPMd3bw4hXcA==}
 
   '@primer/octicons-react@19.28.0':
     resolution: {integrity: sha512-Xe3ZS/NtxRK/QXMlqh6Xn49nM4153VXgPQcwyIx6r2McZKkrAhP7xPe7yLhfx3X34rnxj6yimCnX7kswV30Vqw==}
@@ -3177,10 +3171,6 @@ snapshots:
   '@primer/behaviors@1.10.3': {}
 
   '@primer/live-region-element@0.7.2':
-    dependencies:
-      '@lit-labs/ssr-dom-shim': 1.6.0
-
-  '@primer/live-region-element@0.8.0':
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.6.0
 
