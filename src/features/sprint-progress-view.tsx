@@ -5,7 +5,7 @@ import Tippy from '@/ui/tooltip'
 import { Z_TOOLTIP } from '@/lib/z-index'
 import { sendMessage, type SprintInfo, type SprintProgressData } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
-import { daysLeft, fmt, iterationEndDate } from '@/lib/sprint-utils'
+import { daysLeft, fmtRange, iterationEndDate } from '@/lib/sprint-utils'
 import { plural } from '@/lib/format'
 
 function pct(done: number, total: number): number {
@@ -107,7 +107,7 @@ export function SprintProgressView({
             {activeSprint.title}
           </Text>
           <Text sx={{ fontSize: 0, color: 'fg.muted', display: 'block', mt: '2px' }}>
-            {fmt(activeSprint.startDate)} – {fmt(endDate)}
+            {fmtRange(activeSprint.startDate, endDate)}
           </Text>
         </Box>
         <Label variant={remaining <= 1 ? 'danger' : remaining <= 3 ? 'attention' : 'secondary'}>

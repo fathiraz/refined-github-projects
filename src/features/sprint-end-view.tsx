@@ -9,7 +9,7 @@ import { sendMessage } from '@/lib/messages'
 import type { SprintInfo } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
 import {
-  fmt,
+  fmtRange,
   iterationEndDate,
   nextAfter,
   type FieldNode,
@@ -152,7 +152,7 @@ export function EndSprintView({
             >
               {futureIterations.map((iter) => (
                 <Select.Option key={iter.id} value={iter.id}>
-                  {iter.title} ({fmt(iter.startDate)} – {fmt(iter.endDate)})
+                  {iter.title} ({fmtRange(iter.startDate, iter.endDate)})
                 </Select.Option>
               ))}
             </Select>

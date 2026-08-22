@@ -8,7 +8,7 @@ import { GearIcon, SlidersIcon, SprintIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
 import { useSprintStatus } from '@/lib/use-sprint-status'
-import { fmt, SPRINT_FILTER } from '@/lib/sprint-utils'
+import { fmt, fmtRange, SPRINT_FILTER } from '@/lib/sprint-utils'
 import { sprintConfirmEndStore } from '@/lib/sprint-store'
 import { SprintProgressView } from '@/features/sprint-progress-view'
 import { SettingsView } from '@/features/sprint-settings-view'
@@ -74,7 +74,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
     <ModalStepHeader
       title="End Sprint"
       icon={<SprintIcon size={16} />}
-      subtitle={`${status.activeSprint.title} · ${fmt(status.activeSprint.startDate)} – ${fmt(status.activeSprint.endDate)}`}
+      subtitle={`${status.activeSprint.title} · ${fmtRange(status.activeSprint.startDate, status.activeSprint.endDate)}`}
       onBack={() => setConfirmingEnd(false)}
       onClose={onClose}
     />
@@ -257,7 +257,7 @@ export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose 
                   <Label variant="attention">Upcoming</Label>
                 </Box>
                 <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                  {fmt(currentSprint.startDate)} – {fmt(currentSprint.endDate)}
+                  {fmtRange(currentSprint.startDate, currentSprint.endDate)}
                 </Text>
                 <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
                   Filter{' '}

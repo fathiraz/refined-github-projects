@@ -33,6 +33,17 @@ export function fmt(iso: string): string {
   })
 }
 
+/**
+ * A sprint's date range the way GitHub prints it. `iterationEndDate` is
+ * exclusive — `isActive`, `nextAfter` and `daysLeft` all rely on that — so the
+ * last day shown is one day before it.
+ */
+export function fmtRange(startDate: string, exclusiveEndDate: string): string {
+  const lastDay = utcMidnight(exclusiveEndDate)
+  lastDay.setUTCDate(lastDay.getUTCDate() - 1)
+  return `${fmt(startDate)} – ${fmt(lastDay.toISOString().slice(0, 10))}`
+}
+
 export function daysLeft(endDate: string): number {
   const remainingMs = utcMidnight(endDate).getTime() - utcMidnight(todayUtc()).getTime()
   return Math.max(0, Math.ceil(remainingMs / 86_400_000))
