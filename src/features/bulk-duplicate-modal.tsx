@@ -19,7 +19,6 @@ import {
   ShieldIcon,
   TagIcon,
   TextLineIcon,
-  XIcon,
 } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { primerCss } from '@/lib/primer-css-helper'
@@ -50,7 +49,7 @@ import {
   type SectionId,
   type Step,
 } from '@/features/bulk-duplicate-utils'
-import { RelationshipListEditor } from '@/features/bulk-duplicate-relationship-list'
+import { IssueRefRow, RelationshipListEditor } from '@/features/bulk-duplicate-relationship-list'
 import {
   OptionChip,
   SectionLabel,
@@ -585,40 +584,11 @@ export function BulkDuplicateModal({
           <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
             The duplicate will be linked as a sub-issue of this parent.
           </Text>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 3,
-              px: 3,
-              py: 2,
-              border: '1px solid',
-              borderColor: 'border.default',
-              borderRadius: 2,
-              bg: 'canvas.default',
-            }}
-          >
-            <Box
-              sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}
-            >
-              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
-                {preview.relationships.parent.title}
-              </Text>
-              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                {formatIssueReference(preview.relationships.parent)}
-              </Text>
-            </Box>
-            <Button
-              variant="invisible"
-              size="small"
-              aria-label="Remove parent relationship"
-              onClick={() => dismissSection(PARENT_SECTION_ID)}
-              sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted', ...buttonMotionSx }}
-            >
-              <XIcon size={14} />
-            </Button>
-          </Box>
+          <IssueRefRow
+            issue={preview.relationships.parent}
+            removeLabel="Remove parent relationship"
+            onRemove={() => dismissSection(PARENT_SECTION_ID)}
+          />
         </Box>
       )
     }
