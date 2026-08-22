@@ -23,7 +23,7 @@ export const DELETE_TYPED_CONFIRM_PHRASE = 'delete'
 export const DELETE_PREVIEW_CAP = 5
 
 export function BulkDeleteModal({ count, itemTitles, onClose, onConfirm }: Props) {
-  const titles = itemTitles ?? []
+  const titles = useMemo(() => itemTitles ?? [], [itemTitles])
   const [showAll, setShowAll] = useState(false)
   const [confirmInput, setConfirmInput] = useState('')
 

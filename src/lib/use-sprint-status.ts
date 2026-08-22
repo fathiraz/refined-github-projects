@@ -3,13 +3,7 @@ import { sendMessage } from '@/lib/messages'
 import type { SprintStatus } from '@/lib/messages'
 
 /** The states both sprint surfaces render from. */
-export type SprintState =
-  | 'loading'
-  | 'not-configured'
-  | 'no-active'
-  | 'acknowledged'
-  | 'active'
-  | 'error'
+type SprintState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
 
 interface ProjectRef {
   projectId: string

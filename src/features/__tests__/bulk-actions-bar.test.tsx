@@ -259,7 +259,7 @@ describe('BulkActionsBar — overlay state', () => {
     ['randomAssign', async (m: MountResult) => viaOverflow(m, 'rgp-overflow-random-assign')],
     ['transfer', async (m: MountResult) => viaOverflow(m, 'rgp-overflow-transfer')],
     ['delete', async (m: MountResult) => viaOverflow(m, 'rgp-overflow-delete')],
-    ['help', async (m: MountResult) => act(async () => hoisted.shortcuts.get('help')!.action())],
+    ['help', async (_m: MountResult) => act(async () => hoisted.shortcuts.get('help')!.action())],
   ])('dismisses %s on Escape', async (id, open) => {
     const m = renderBar()
     await open(m)

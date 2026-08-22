@@ -44,7 +44,6 @@ import {
   LABELS_SECTION_ID,
   MAX_CONCURRENT_DUPLICATES,
   PARENT_SECTION_ID,
-  prefixLabelIcon,
   TITLE_SECTION_ID,
   type DuplicateSection,
   type EditableField,
