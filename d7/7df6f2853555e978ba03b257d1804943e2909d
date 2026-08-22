@@ -1,0 +1,21 @@
+AGENTS.md
+  s_acfeefe55ba0ff::t_3d7bfd5acf429c 19-20
+src/lib/z-index.ts
+  s_acfeefe55ba0ff::t_ce6988dc22149c 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "d77df6f2853555e978ba03b257d1804943e2909d",
+  "prompts": {},
+  "sessions": {
+    "s_acfeefe55ba0ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cf343853-6fb6-41f9-ad2f-38c0d4ef19dd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
