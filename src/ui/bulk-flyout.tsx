@@ -17,7 +17,7 @@ const FLYOUT_SHELL_SX = {
   overflow: 'hidden',
 } as const
 
-export type BulkFlyoutFooter = 'apply-cancel' | null
+type BulkFlyoutFooter = 'apply-cancel' | null
 
 export interface BulkFlyoutTab {
   id: string
@@ -75,7 +75,7 @@ interface DrilldownProps extends CommonProps {
   children?: React.ReactNode
 }
 
-export type BulkFlyoutProps = SimpleProps | TabbedProps | DrilldownProps
+type BulkFlyoutProps = SimpleProps | TabbedProps | DrilldownProps
 
 const FLYOUT_KEYFRAMES_ID = 'rgp-flyout-keyframes'
 

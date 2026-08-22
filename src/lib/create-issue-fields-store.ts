@@ -3,7 +3,7 @@ import type { FieldValue } from '@/features/bulk-edit-flyout-helpers'
 
 type Listener = () => void
 
-export interface StagedField {
+interface StagedField {
   field: ProjectField
   value: FieldValue
 }

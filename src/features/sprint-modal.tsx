@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Tippy from '@/ui/tooltip'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Box, Button, Flash, Heading, Label, Spinner, Text } from '@primer/react'
@@ -7,75 +7,36 @@ import { Z_TOOLTIP } from '@/lib/z-index'
 import { GearIcon, SlidersIcon, SprintIcon, XIcon } from '@/ui/icons'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
-import type { SprintInfo } from '@/lib/messages'
-import type { SprintSettings } from '@/lib/storage'
-import { fmt, SPRINT_FILTER } from '@/lib/sprint-utils'
-import type { ProjectData } from '@/lib/github-project'
+import { useSprintStatus } from '@/lib/use-sprint-status'
+import { fmt, fmtRange, SPRINT_FILTER } from '@/lib/sprint-utils'
 import { sprintConfirmEndStore } from '@/lib/sprint-store'
 import { SprintProgressView } from '@/features/sprint-progress-view'
 import { SettingsView } from '@/features/sprint-settings-view'
 import { EndSprintView } from '@/features/sprint-end-view'
+import { primerCss } from '@/lib/primer-css-helper'
 
 interface Props {
   projectId: string
   owner: string
   isOrg: boolean
   number: number
-  getFields: () => Promise<ProjectData>
   visible: boolean
   onClose: () => void
 }
 
-type PanelState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
-
-interface SprintStatus {
-  hasSettings: boolean
-  activeSprint: SprintInfo | null
-  nearestUpcoming: SprintInfo | null
-  acknowledgedSprint: SprintInfo | null
-  iterationFieldId: string | null
-  settings: SprintSettings | null
-}
-
-export function SprintPanel({
-  projectId,
-  owner,
-  isOrg,
-  number,
-  getFields,
-  visible,
-  onClose,
-}: Props) {
+export function SprintPanel({ projectId, owner, isOrg, number, visible, onClose }: Props) {
   ensureTippyCss()
 
-  const [state, setState] = useState<PanelState>('loading')
-  const [status, setStatus] = useState<SprintStatus | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    state,
+    status,
+    error,
+    acknowledging,
+    refresh: fetchStatus,
+    acknowledge: handleAcknowledge,
+  } = useSprintStatus({ projectId, owner, isOrg, number })
   const [showSettings, setShowSettings] = useState(false)
   const [confirmingEnd, setConfirmingEnd] = useState(false)
-  const [acknowledging, setAcknowledging] = useState(false)
-
-  const fetchStatus = useCallback(async () => {
-    setState('loading')
-    setError(null)
-    try {
-      const result = await sendMessage('getSprintStatus', { projectId, owner, number, isOrg })
-      setStatus(result)
-      if (!result.hasSettings) setState('not-configured')
-      else if (result.activeSprint) setState('active')
-      else if (result.acknowledgedSprint) setState('acknowledged')
-      else setState('no-active')
-    } catch (e) {
-      console.error('[rgp:sprint] fetchStatus error:', e)
-      setError(String(e))
-      setState('error')
-    }
-  }, [projectId, owner, number, isOrg])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load sprint status when panel deps change
-    void fetchStatus()
-  }, [fetchStatus])
 
   useEffect(() => {
     const unsub = sprintConfirmEndStore.subscribe((pending) => {
@@ -90,20 +51,6 @@ export function SprintPanel({
   }, [state, showSettings])
 
   if (!visible) return null
-
-  const handleAcknowledge = async () => {
-    if (!status?.nearestUpcoming) return
-    setAcknowledging(true)
-    try {
-      await sendMessage('acknowledgeUpcomingSprint', {
-        projectId,
-        iterationId: status.nearestUpcoming.id,
-      })
-      await fetchStatus()
-    } finally {
-      setAcknowledging(false)
-    }
-  }
 
   const handleStopTracking = async () => {
     if (!status?.settings) return
@@ -127,7 +74,7 @@ export function SprintPanel({
     <ModalStepHeader
       title="End Sprint"
       icon={<SprintIcon size={16} />}
-      subtitle={`${status.activeSprint.title} · ${fmt(status.activeSprint.startDate)} – ${fmt(status.activeSprint.endDate)}`}
+      subtitle={`${status.activeSprint.title} · ${fmtRange(status.activeSprint.startDate, status.activeSprint.endDate)}`}
       onBack={() => setConfirmingEnd(false)}
       onClose={onClose}
     />
@@ -159,14 +106,7 @@ export function SprintPanel({
             sx={{
               p: '4px',
               color: 'fg.muted',
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
+              ...primerCss.buttonMotion(),
             }}
           >
             <SlidersIcon size={16} />
@@ -186,14 +126,7 @@ export function SprintPanel({
             sx={{
               p: '4px',
               color: 'fg.muted',
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
+              ...primerCss.buttonMotion(),
             }}
           >
             <XIcon size={16} />
@@ -217,7 +150,6 @@ export function SprintPanel({
             owner={owner}
             isOrg={isOrg}
             number={number}
-            getFields={getFields}
             currentSettings={status?.settings ?? null}
             onSaved={async () => {
               setShowSettings(false)
@@ -270,14 +202,7 @@ export function SprintPanel({
                     size="small"
                     onClick={() => setShowSettings(true)}
                     sx={{
-                      boxShadow: 'none',
-                      transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                      '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                      '@media (prefers-reduced-motion: reduce)': {
-                        transition: 'none',
-                        '&:hover:not(:disabled)': { transform: 'none' },
-                      },
+                      ...primerCss.buttonMotion(),
                     }}
                   >
                     Set Up Sprint
@@ -310,14 +235,7 @@ export function SprintPanel({
                         disabled={acknowledging}
                         onClick={handleAcknowledge}
                         sx={{
-                          boxShadow: 'none',
-                          transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                          '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                          '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                          '@media (prefers-reduced-motion: reduce)': {
-                            transition: 'none',
-                            '&:hover:not(:disabled)': { transform: 'none' },
-                          },
+                          ...primerCss.buttonMotion(),
                         }}
                       >
                         {acknowledging ? <Spinner size="small" /> : 'Track Sprint'}
@@ -339,7 +257,7 @@ export function SprintPanel({
                   <Label variant="attention">Upcoming</Label>
                 </Box>
                 <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                  {fmt(currentSprint.startDate)} – {fmt(currentSprint.endDate)}
+                  {fmtRange(currentSprint.startDate, currentSprint.endDate)}
                 </Text>
                 <Text sx={{ fontSize: 0, color: 'fg.subtle' }}>
                   Filter{' '}
@@ -360,14 +278,7 @@ export function SprintPanel({
                       size="small"
                       onClick={handleStopTracking}
                       sx={{
-                        boxShadow: 'none',
-                        transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                        '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                        '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                        '@media (prefers-reduced-motion: reduce)': {
-                          transition: 'none',
-                          '&:hover:not(:disabled)': { transform: 'none' },
-                        },
+                        ...primerCss.buttonMotion(),
                       }}
                     >
                       Stop tracking

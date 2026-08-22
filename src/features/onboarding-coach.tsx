@@ -14,6 +14,7 @@ import { StatusBanner } from '@/ui/status-banner'
 import { Z_OVERLAY } from '@/lib/z-index'
 // override: strips non-conformant shadows and border-radius from driver.js
 import { DRIVER_CSS_OVERRIDES } from '@/lib/driver-overrides'
+import { primerCss } from '@/lib/primer-css-helper'
 
 export function OnboardingCoach() {
   const [hasToken, setHasToken] = useState<boolean | null>(null)
@@ -183,14 +184,7 @@ export function OnboardingCoach() {
               size="small"
               onClick={startTour}
               sx={{
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
+                ...primerCss.buttonMotion(),
               }}
             >
               Take a quick tour
@@ -201,14 +195,7 @@ export function OnboardingCoach() {
               onClick={dismiss}
               sx={{
                 color: 'fg.muted',
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
+                ...primerCss.buttonMotion(),
               }}
             >
               Skip

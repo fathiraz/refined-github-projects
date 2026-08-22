@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react'
 import { Box, Flash, Radio, RadioGroup, SegmentedControl, Text } from '@primer/react'
+import { plural } from '@/lib/format'
 import { IssueRelationshipSelectPanel } from '@/ui/issue-relationship-select-panel'
 import type { IssueRelationshipItem } from '@/ui/issue-relationship-select-panel'
 import {
@@ -26,7 +27,7 @@ import {
 export type { ParentOperation, ListOperation } from '@/features/bulk-actions-utils'
 export { buildRelationshipsPayload } from '@/features/bulk-actions-utils'
 
-export interface BulkEditRelationshipPaneProps {
+interface BulkEditRelationshipPaneProps {
   relationshipKey: RelationshipKey
   itemIds: readonly string[]
   projectId: string
@@ -203,8 +204,8 @@ export const BulkEditRelationshipPane = forwardRef<
       )}
       {prSkipCount > 0 && validationErrors.length === 0 && (
         <Flash variant="default" data-testid="rgp-edit-relationship-pr-skip">
-          {prSkipCount} pull request{prSkipCount === 1 ? '' : 's'} in the selection will be skipped.
-          Relationship updates apply to issues only; you can proceed with the issue subset.
+          {plural(prSkipCount, 'pull request')} in the selection will be skipped. Relationship
+          updates apply to issues only; you can proceed with the issue subset.
         </Flash>
       )}
 

@@ -33,7 +33,6 @@ import { sendMessage } from '@/lib/messages'
 import type { ExcludeCondition, SprintSettings } from '@/lib/storage'
 import { injectSprintFilter, SPRINT_FILTER, type FieldNode } from '@/lib/sprint-utils'
 import { formatAdvancedSettingsHint, hasAdvancedSettings } from '@/features/sprint-settings-utils'
-import type { ProjectData } from '@/lib/github-project'
 
 const labelIconBoxSx = {
   color: 'fg.muted',
@@ -79,7 +78,6 @@ interface SettingsViewProps {
   owner: string
   isOrg: boolean
   number: number
-  getFields: () => Promise<ProjectData>
   currentSettings: SprintSettings | null
   onSaved: () => void
 }
@@ -89,7 +87,6 @@ export function SettingsView({
   owner,
   isOrg,
   number,
-  getFields: _getFields,
   currentSettings,
   onSaved,
 }: SettingsViewProps) {

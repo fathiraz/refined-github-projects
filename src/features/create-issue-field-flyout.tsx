@@ -17,7 +17,7 @@ import { createIssueFieldsStore } from '@/lib/create-issue-fields-store'
 
 const chipSx = primerCss.chipButton()
 
-export interface CreateIssueFieldsChipProps {
+interface CreateIssueFieldsChipProps {
   getFields: () => Promise<ProjectData>
 }
 

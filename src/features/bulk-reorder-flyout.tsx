@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ActionList, Box, Spinner, Text, TextInput } from '@primer/react'
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from '@primer/octicons-react'
 import { SearchIcon } from '@/ui/icons'
+import { SectionHeader } from '@/features/bulk-edit-field-row'
 import { BulkFlyout, type BulkFlyoutPane, useDrilldownPane } from '@/ui/bulk-flyout'
 import { sendMessage } from '@/lib/messages'
 import {
@@ -17,8 +18,9 @@ import {
   type OrderedItem,
   type ReorderOp,
 } from '@/features/bulk-move-utils'
+import { plural } from '@/lib/format'
 
-export interface BulkReorderFlyoutProps {
+interface BulkReorderFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void
@@ -126,7 +128,7 @@ export function BulkReorderFlyout({
     fireAndClose({
       ops,
       projectId: resolvedProjectId,
-      label: `Move · ${count} item${count !== 1 ? 's' : ''}`,
+      label: `Move · ${plural(count, 'item')}`,
     })
   }
 
@@ -138,7 +140,7 @@ export function BulkReorderFlyout({
     fireAndClose({
       ops,
       projectId: resolvedProjectId,
-      label: `Move · ${count} item${count !== 1 ? 's' : ''}`,
+      label: `Move · ${plural(count, 'item')}`,
     })
   }
 
@@ -275,38 +277,11 @@ export function BulkReorderFlyout({
         >
           {!query && recentList.length > 0 && (
             <Box>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  fontSize: 0,
-                  fontWeight: 'semibold',
-                  color: 'fg.muted',
-                  bg: 'canvas.subtle',
-                  borderBottom: '1px solid',
-                  borderColor: 'border.muted',
-                }}
-              >
-                Recent targets
-              </Box>
+              <SectionHeader>Recent targets</SectionHeader>
               {recentList.map((item) => (
                 <TargetRow key={`recent-${item.memexItemId}`} item={item} onPick={applyCustom} />
               ))}
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  fontSize: 0,
-                  fontWeight: 'semibold',
-                  color: 'fg.muted',
-                  bg: 'canvas.subtle',
-                  borderTop: '1px solid',
-                  borderColor: 'border.muted',
-                  borderBottom: '1px solid',
-                }}
-              >
-                All items
-              </Box>
+              <SectionHeader sx={{ borderTop: '1px solid' }}>All items</SectionHeader>
             </Box>
           )}
           {filteredTargets.length === 0 ? (
@@ -332,7 +307,7 @@ export function BulkReorderFlyout({
       anchorRef={anchorRef as React.RefObject<HTMLElement>}
       open={open}
       onClose={onClose}
-      title={`Reorder — ${count} item${count !== 1 ? 's' : ''}`}
+      title={`Reorder — ${plural(count, 'item')}`}
       ariaLabel="Reorder items"
       width={380}
       maxHeight={540}
@@ -388,7 +363,7 @@ function PositionPreview({ allOrdered, selectedMemexIds }: PositionPreviewProps)
   const totalCount = allOrdered.length
   return (
     <Text sx={{ fontSize: 0, color: 'fg.muted' }} data-testid="rgp-reorder-preview-footer">
-      {movingCount} item{movingCount === 1 ? '' : 's'} will move within {totalCount} total
+      {plural(movingCount, 'item')} will move within {totalCount} total
     </Text>
   )
 }

@@ -6,18 +6,10 @@ vi.mock('@/lib/storage', () => ({
   debugStorage: { getValue: vi.fn().mockResolvedValue(false), watch: vi.fn() },
 }))
 
-vi.mock('@/lib/debug-logger', async () => {
-  const { Logger } = await import('effect')
-  return {
-    logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
-    initDebugLogger: vi.fn().mockResolvedValue(undefined),
-    // provide an inert layer so client.ts still has a Logger to provide.
-    RgpLoggerLive: Logger.replace(
-      Logger.defaultLogger,
-      Logger.make(() => {}),
-    ),
-  }
-})
+vi.mock('@/lib/debug-logger', () => ({
+  logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), verbose: vi.fn() },
+  initDebugLogger: vi.fn().mockResolvedValue(undefined),
+}))
 
 import { GithubRateLimitError } from '@/lib/errors'
 import { gql } from '@/lib/graphql-client'
@@ -79,15 +71,15 @@ describe('gql', () => {
       {},
     )
 
-    expect(result).toEqualValue(expectedData)
+    expect(result).toEqual(expectedData)
   })
 
   it('throws GithubRateLimitError on 403 with x-ratelimit-remaining=0 (after internal retries)', async () => {
-    // GithubGraphQL retries rate-limit failures up to 2 extra times — return
-    // 403 for every attempt so the call surfaces the failure. Use retryAfter=1
-    // to keep the test fast: the service honors retryAfter via Effect.sleep
-    // between attempts (verified separately) so a large value would balloon
-    // the wall-clock duration.
+    // `gql` retries rate-limit failures up to 2 extra times — return 403 for
+    // every attempt so the call surfaces the failure. Use retryAfter=1 to keep
+    // the test fast: the client awaits `sleep(retryAfter)` between attempts
+    // (verified separately) so a large value would balloon the wall-clock
+    // duration.
     for (let i = 0; i < 3; i++) {
       mockFetch.mockResolvedValueOnce(
         errorResponse(403, { retryAfter: '1', rateLimitRemaining: '0' }),
@@ -103,7 +95,48 @@ describe('gql', () => {
       expect(e.status).toBe(403)
       expect(e.retryAfter).toBe(1)
     }
+    // 1 initial attempt + 2 retries. Pinned so a rewrite of the retry
+    // schedule cannot silently change how hard we hammer a throttled API.
+    expect(mockFetch).toHaveBeenCalledTimes(3)
   }, 30000)
+
+  it('retries a rate-limited request and succeeds on the second attempt', async () => {
+    mockFetch.mockResolvedValueOnce(errorResponse(429, { retryAfter: '1' }))
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: { ok: true } }))
+
+    const result = await gql('query GetViewer { viewer { login } }', {})
+
+    expect(result).toEqual({ ok: true })
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  }, 30000)
+
+  it('times out a hung attempt after 30s as GithubNetworkError, without retrying', async () => {
+    vi.useFakeTimers()
+    try {
+      // never settles — the request has to be abandoned by the timeout, not by
+      // the transport. A timeout is NOT a rate limit, so it must not retry.
+      mockFetch.mockImplementation(() => new Promise(() => {}))
+
+      const pending = gql('query GetViewer { viewer { login } }', {})
+      const assertion = expect(pending).rejects.toMatchObject({ _tag: 'GithubNetworkError' })
+
+      await vi.advanceTimersByTimeAsync(31_000)
+      await assertion
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not retry a 500 — server errors fall outside the retry predicate', async () => {
+    mockFetch.mockResolvedValue(errorResponse(500))
+
+    await expect(gql('query GetViewer { viewer { login } }', {})).rejects.toMatchObject({
+      _tag: 'GithubServerError',
+    })
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
 
   it('throws GithubClientError on 403 permission errors (no rate-limit header) without retry', async () => {
     // permission 403 (token lacks scope, repo locked, ...) -> GithubClientError
@@ -203,10 +236,9 @@ describe('gql', () => {
     }
   })
 
-  it('two identical GithubRateLimitError instances are Equal.equals', async () => {
-    const { Equal } = await import('effect')
+  it('two identical GithubRateLimitError instances are structurally equal', () => {
     const a = new GithubRateLimitError({ status: 429, message: 'Rate', retryAfter: 30 })
     const b = new GithubRateLimitError({ status: 429, message: 'Rate', retryAfter: 30 })
-    expect(Equal.equals(a, b)).toBe(true)
+    expect(a).toEqual(b)
   })
 })

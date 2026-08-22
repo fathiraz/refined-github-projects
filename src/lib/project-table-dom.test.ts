@@ -83,11 +83,11 @@ describe('getAllInjectedItemIds', () => {
     const ids = getAllInjectedItemIds()
     // branded primitives erase to plain strings at runtime, so deep-equal
     // comparison against the underlying string array remains valid.
-    expect([...ids] as string[]).toEqualValue(['id-1', 'id-2'])
+    expect([...ids] as string[]).toEqual(['id-1', 'id-2'])
   })
 
   it('returns empty array when no injected rows', () => {
-    expect(getAllInjectedItemIds()).toEqualValue([])
+    expect(getAllInjectedItemIds()).toEqual([])
   })
 
   it('skips rows with value "1"', () => {
@@ -96,7 +96,7 @@ describe('getAllInjectedItemIds', () => {
     row.setAttribute(INJECTED_ATTR, '1')
     document.body.appendChild(row)
 
-    expect(getAllInjectedItemIds()).toEqualValue([])
+    expect(getAllInjectedItemIds()).toEqual([])
   })
 })
 

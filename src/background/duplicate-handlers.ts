@@ -1,7 +1,7 @@
 // ─── Duplicate handlers ───────────────────────────────────────────────────────
 
 import { onMessage } from '@/lib/messages'
-import type { DuplicateItemPlan, IssueRelationshipData } from '@/lib/messages'
+import type { DuplicateItemPlan } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEM_DETAILS } from '@/lib/graphql-queries'
 import {
@@ -12,15 +12,23 @@ import {
   ADD_LABELS,
   UPDATE_ISSUE_TYPE,
 } from '@/lib/graphql-mutations'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
+import { toIssueRelationship } from '@/lib/relationship-utils'
 
 import { isDuplicateFull, acquireDuplicate, releaseDuplicate } from '@/background/concurrency'
-import { broadcastQueue, withRateLimitRetry, githubRest } from '@/background/rest-helpers'
+import { withRateLimitRetry, githubRest } from '@/background/rest-helpers'
+import {
+  broadcastDone,
+  broadcastStatus,
+  runQueueWithProgress,
+  type QueueRun,
+} from '@/background/queue-run'
 import { formatRelationshipLabel } from '@/background/relationship-helpers'
 import { buildFieldValueFromSource } from '@/background/project-helpers'
 import type { ProjectItemDetails, FieldValue } from '@/background/types'
+import { newProcessId, plural } from '@/lib/format'
 
 // ─── runDeepDuplicate (private) ──────────────────────────────────────────────
 
@@ -39,20 +47,14 @@ async function runDeepDuplicate(
   }
 
   acquireDuplicate()
-  const processId = `dup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const processId = newProcessId('dup')
+  // Bailing out before the source title is known still has to close the
+  // tracker card, and at that point the only label available is the generic one.
+  const genericRun: QueueRun = { processId, label: 'Deep duplicate', tabId }
+  const abort = () => broadcastDone(genericRun)
   logger.log('[rgp:bg] runDeepDuplicate starting', { itemId, processId })
 
-  await broadcastQueue(
-    {
-      total: 2,
-      completed: 0,
-      paused: false,
-      status: 'Fetching item…',
-      processId,
-      label: 'Deep duplicate',
-    },
-    tabId,
-  )
+  await broadcastStatus(genericRun, 2, 'Fetching item…')
 
   try {
     let details: ProjectItemDetails
@@ -63,51 +65,21 @@ async function runDeepDuplicate(
       )
     } catch (error) {
       console.error('[rgp:bg] failed to fetch item details', error)
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Done!',
-          processId,
-          label: 'Deep duplicate',
-        },
-        tabId,
-      )
+      await abort()
       return
     }
 
     const source = details.node
     if (!source) {
       console.error('[rgp:bg] item not found')
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Done!',
-          processId,
-          label: 'Deep duplicate',
-        },
-        tabId,
-      )
+      await abort()
       return
     }
 
     const issue = source.content
     if (!issue?.title) {
       console.error('[rgp:bg] item is not a GitHub Issue (Draft/PR)')
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Done!',
-          processId,
-          label: 'Deep duplicate',
-        },
-        tabId,
-      )
+      await abort()
       return
     }
 
@@ -117,16 +89,7 @@ async function runDeepDuplicate(
       (fieldValue): fieldValue is FieldValue =>
         !!fieldValue.field && supportedFieldTypes.has(fieldValue.field.dataType),
     )
-    const sourceParent: IssueRelationshipData | undefined = issue.parent
-      ? {
-          nodeId: issue.parent.id,
-          databaseId: issue.parent.databaseId,
-          number: issue.parent.number,
-          title: issue.parent.title,
-          repoOwner: issue.parent.repository.owner.login,
-          repoName: issue.parent.repository.name,
-        }
-      : undefined
+    const sourceParent = toIssueRelationship(issue.parent)
 
     const enabledFieldPlans = plan?.fieldValues
       ? plan.fieldValues.filter((field) => field.enabled)
@@ -228,7 +191,7 @@ async function runDeepDuplicate(
         ? [
             {
               id: 'add-labels',
-              detail: `${labelIds.length} label${labelIds.length !== 1 ? 's' : ''}`,
+              detail: `${plural(labelIds.length, 'label')}`,
               run: async () => {
                 logger.log('[rgp:bg] adding labels', { labelIds, issueId: newIssueId })
                 await withRateLimitRetry(
@@ -379,31 +342,14 @@ async function runDeepDuplicate(
       })),
     ]
 
-    await processQueue(
-      tasks,
-      async (state) => {
-        await broadcastQueue(
-          {
-            total: totalSteps,
-            completed: 1 + state.completed,
-            paused: state.paused,
-            retryAfter: state.retryAfter,
-            status: state.completed === 0 ? 'Cloning issue...' : 'Applying duplicate plan...',
-            detail: state.detail,
-            processId,
-            label: trackerLabel,
-            failedItems: state.failedItems,
-          },
-          tabId,
-        )
-      },
-      processId,
-    )
+    const run = { processId, label: trackerLabel, tabId }
+    await runQueueWithProgress(tasks, run, (state) => ({
+      total: totalSteps,
+      completed: 1 + state.completed,
+      status: state.completed === 0 ? 'Cloning issue...' : 'Applying duplicate plan...',
+    }))
 
-    await broadcastQueue(
-      { total: 0, completed: 0, paused: false, status: 'Done!', processId, label: trackerLabel },
-      tabId,
-    )
+    await broadcastDone(run)
     logger.log('[rgp:bg] deep duplicate complete', { processId })
   } finally {
     releaseDuplicate()

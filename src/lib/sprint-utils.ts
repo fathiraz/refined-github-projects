@@ -15,23 +15,38 @@ export interface FieldNode {
   }
 }
 
+/** A `YYYY-MM-DD` sprint date as a Date fixed at UTC midnight. */
+function utcMidnight(iso: string): Date {
+  return new Date(`${iso}T00:00:00Z`)
+}
+
+/** Earliest iteration matching `pick`, or null. ISO dates sort lexicographically. */
+function earliestBy(iters: Iteration[], pick: (iter: Iteration) => boolean): Iteration | null {
+  return iters.filter(pick).sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null
+}
+
 export function fmt(iso: string): string {
-  return new Date(iso + 'T00:00:00Z').toLocaleDateString(undefined, {
+  return utcMidnight(iso).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     timeZone: 'UTC',
   })
 }
 
+/**
+ * A sprint's date range the way GitHub prints it. `iterationEndDate` is
+ * exclusive — `isActive`, `nextAfter` and `daysLeft` all rely on that — so the
+ * last day shown is one day before it.
+ */
+export function fmtRange(startDate: string, exclusiveEndDate: string): string {
+  const lastDay = utcMidnight(exclusiveEndDate)
+  lastDay.setUTCDate(lastDay.getUTCDate() - 1)
+  return `${fmt(startDate)} – ${fmt(lastDay.toISOString().slice(0, 10))}`
+}
+
 export function daysLeft(endDate: string): number {
-  const today = new Date().toISOString().slice(0, 10)
-  return Math.max(
-    0,
-    Math.ceil(
-      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) /
-        86_400_000,
-    ),
-  )
+  const remainingMs = utcMidnight(endDate).getTime() - utcMidnight(todayUtc()).getTime()
+  return Math.max(0, Math.ceil(remainingMs / 86_400_000))
 }
 
 export function todayUtc(): string {
@@ -39,7 +54,7 @@ export function todayUtc(): string {
 }
 
 export function iterationEndDate(iter: Iteration): string {
-  const d = new Date(iter.startDate + 'T00:00:00Z')
+  const d = utcMidnight(iter.startDate)
   d.setUTCDate(d.getUTCDate() + iter.duration)
   return d.toISOString().slice(0, 10)
 }
@@ -49,19 +64,11 @@ export function isActive(iter: Iteration, today: string): boolean {
 }
 
 export function nearestUpcoming(iters: Iteration[], today: string): Iteration | null {
-  return (
-    iters
-      .filter((iter) => iter.startDate > today)
-      .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null
-  )
+  return earliestBy(iters, (iter) => iter.startDate > today)
 }
 
 export function nextAfter(iters: Iteration[], activeEndDate: string): Iteration | null {
-  return (
-    iters
-      .filter((iter) => iter.startDate >= activeEndDate)
-      .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null
-  )
+  return earliestBy(iters, (iter) => iter.startDate >= activeEndDate)
 }
 
 export const SPRINT_FILTER = '-sprint:<@current'

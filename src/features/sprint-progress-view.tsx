@@ -5,28 +5,8 @@ import Tippy from '@/ui/tooltip'
 import { Z_TOOLTIP } from '@/lib/z-index'
 import { sendMessage, type SprintInfo, type SprintProgressData } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
-import { iterationEndDate } from '@/lib/sprint-utils'
-
-// ── Helpers ──────────────────────────────────────────────────
-
-function fmt(iso: string): string {
-  return new Date(iso + 'T00:00:00Z').toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
-}
-
-function daysLeft(endDate: string): number {
-  const today = new Date().toISOString().slice(0, 10)
-  return Math.max(
-    0,
-    Math.ceil(
-      (new Date(endDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) /
-        86_400_000,
-    ),
-  )
-}
+import { daysLeft, fmtRange, iterationEndDate } from '@/lib/sprint-utils'
+import { plural } from '@/lib/format'
 
 function pct(done: number, total: number): number {
   if (total === 0) return 0
@@ -127,11 +107,11 @@ export function SprintProgressView({
             {activeSprint.title}
           </Text>
           <Text sx={{ fontSize: 0, color: 'fg.muted', display: 'block', mt: '2px' }}>
-            {fmt(activeSprint.startDate)} – {fmt(endDate)}
+            {fmtRange(activeSprint.startDate, endDate)}
           </Text>
         </Box>
         <Label variant={remaining <= 1 ? 'danger' : remaining <= 3 ? 'attention' : 'secondary'}>
-          {remaining} day{remaining !== 1 ? 's' : ''} left
+          {plural(remaining, 'day')} left
         </Label>
       </Box>
 
@@ -199,7 +179,7 @@ export function SprintProgressView({
                   Scope change
                 </Text>
                 <Text sx={{ fontSize: 0, color: 'attention.fg', fontWeight: 'semibold' }}>
-                  +{progress.scopeAddedIssues} Issue{progress.scopeAddedIssues !== 1 ? 's' : ''}
+                  +{plural(progress.scopeAddedIssues, 'Issue')}
                   {progress.hasPointsField && progress.scopeAddedPoints > 0
                     ? ` / +${progress.scopeAddedPoints} Pts`
                     : ''}

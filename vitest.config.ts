@@ -9,8 +9,10 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
+    // the suite runs 40+ files in parallel workers; a Primer-heavy render can
+    // spend >5s waiting on CPU even though its own work takes ~500ms.
+    testTimeout: 15000,
     include: ['src/**/*.test.{ts,tsx}'],
-    setupFiles: ['./src/lib/vitest.setup.ts'],
     server: {
       deps: {
         inline: [/@primer\/react/, /@primer\/octicons-react/, /@primer\/live-region-element/],

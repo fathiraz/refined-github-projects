@@ -1,4 +1,5 @@
 import { onMessage } from '@/lib/messages'
+import { runHandler } from '@/background/run-handler'
 import { gql } from '@/lib/graphql-client'
 import {
   GET_REPO_ASSIGNEES,
@@ -13,11 +14,8 @@ import {
   GET_REPOSITORY_ISSUE_BY_NUMBER,
   GET_REPOSITORY_RECENT_OPEN_ISSUES,
 } from '@/lib/graphql-queries'
-import { Effect } from 'effect'
-
 import { sleep } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
-import { runHandler } from '@/lib/effect-runtime'
 
 import { withRateLimitRetry } from '@/background/rest-helpers'
 import {
@@ -27,6 +25,7 @@ import {
   dedupeRelationships,
 } from '@/background/relationship-helpers'
 import {
+  createIssueRefIndex,
   getProjectFieldsData,
   resolveProjectItemIds,
   resolveProjectItemIdsWithTitles,
@@ -35,8 +34,6 @@ import {
   classifyTransferEligibilityRows,
   unresolvedTransferEligibilityRows,
 } from '@/background/transfer-eligibility'
-import { ProjectService } from '@/background/project-service'
-import { provideBackground } from '@/background/runtime-ext'
 
 import type {
   IssueTypeNode,
@@ -300,63 +297,37 @@ export function registerFieldHandlers(): void {
   })
 
   onMessage('getProjectFields', ({ data }) =>
-    runHandler(
-      'getProjectFields',
-      provideBackground(
-        Effect.gen(function* () {
-          logger.log('[rgp:bg] getProjectFields received', data)
-          const projectService = yield* ProjectService
-          const { project } = yield* projectService.getProjectFieldsData(
-            data.owner,
-            data.number,
-            data.isOrg,
-          )
-          return {
-            id: project?.id || '',
-            title: project?.title || 'Project',
-            fields: project?.fields.nodes.filter(Boolean) || [],
-          }
-        }),
-      ),
-    ),
+    runHandler('getProjectFields', async () => {
+      logger.log('[rgp:bg] getProjectFields received', data)
+      const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
+      return {
+        id: project?.id || '',
+        title: project?.title || 'Project',
+        fields: project?.fields.nodes.filter(Boolean) || [],
+      }
+    }),
   )
 
   onMessage('getItemTitles', ({ data }) =>
-    runHandler(
-      'getItemTitles',
-      provideBackground(
-        Effect.gen(function* () {
-          logger.log('[rgp:bg] getItemTitles received', {
-            itemCount: data.itemIds.length,
-            projectId: data.projectId,
-          })
-          const projectService = yield* ProjectService
-          const resolved = yield* projectService.resolveProjectItemIdsWithTitles(
-            data.itemIds,
-            data.projectId,
-          )
-          return resolved.map((r) => ({
-            domId: r.domId,
-            issueNodeId: r.issueNodeId,
-            title: r.title,
-            typename: r.typename,
-          }))
-        }),
-      ),
-    ),
+    runHandler('getItemTitles', async () => {
+      logger.log('[rgp:bg] getItemTitles received', {
+        itemCount: data.itemIds.length,
+        projectId: data.projectId,
+      })
+      const resolved = await resolveProjectItemIdsWithTitles(data.itemIds, data.projectId)
+      return resolved.map((r) => ({
+        domId: r.domId,
+        issueNodeId: r.issueNodeId,
+        title: r.title,
+        typename: r.typename,
+      }))
+    }),
   )
 
   onMessage('getReorderContext', async ({ data }) => {
     logger.log('[rgp:bg] getReorderContext received', { itemCount: data.itemIds.length })
     const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
     if (!project) throw new Error('Project not found')
-
-    // build map from content databaseId → domId for selected items
-    const selectedDbIdMap = new Map<number, string>()
-    for (const domId of data.itemIds) {
-      const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
-      if (m) selectedDbIdMap.set(parseInt(m[1], 10), domId)
-    }
 
     // paginate through all project items
     interface ReorderItemsResult {
@@ -366,24 +337,17 @@ export function registerFieldHandlers(): void {
           nodes: {
             id: string
             databaseId: number
-            content: { databaseId: number; title: string } | null
+            content: { databaseId: number; number?: number; title: string } | null
           }[]
         }
       } | null
     }
 
-    const allOrderedItems: Array<{ memexItemId: number; nodeId: string; title: string }> = []
-    const selectedItems: Array<{
-      domId: string
-      memexItemId: number
-      nodeId: string
-      title: string
-    }> = []
-    // track contentDbId → entry for DOM-order re-sorting
-    const contentDbIdToEntry = new Map<
-      number,
-      { memexItemId: number; nodeId: string; title: string }
-    >()
+    type OrderedItem = { memexItemId: number; nodeId: string; title: string }
+
+    const allOrderedItems: OrderedItem[] = []
+    // indexed by both numbers an item carries, so either id spelling resolves
+    const byRef = createIssueRefIndex<OrderedItem>()
     let cursor: string | null = null
 
     while (true) {
@@ -394,22 +358,13 @@ export function registerFieldHandlers(): void {
       if (!items) break
 
       for (const item of items.nodes) {
-        const memexItemId = item.databaseId
-        const nodeId = item.id
-        const title = item.content?.title ?? ''
-        const contentDbId = item.content?.databaseId
-        allOrderedItems.push({ memexItemId, nodeId, title })
-        if (contentDbId != null) {
-          contentDbIdToEntry.set(contentDbId, { memexItemId, nodeId, title })
-          if (selectedDbIdMap.has(contentDbId)) {
-            selectedItems.push({
-              domId: selectedDbIdMap.get(contentDbId)!,
-              memexItemId,
-              nodeId,
-              title,
-            })
-          }
+        const entry: OrderedItem = {
+          memexItemId: item.databaseId,
+          nodeId: item.id,
+          title: item.content?.title ?? '',
         }
+        allOrderedItems.push(entry)
+        if (item.content) byRef.add(item.content, entry)
       }
 
       if (!items.pageInfo.hasNextPage) break
@@ -417,13 +372,16 @@ export function registerFieldHandlers(): void {
       await sleep(500)
     }
 
+    const selectedItems = data.itemIds.flatMap((domId) => {
+      const entry = byRef.get(domId)
+      return entry ? [{ domId, ...entry }] : []
+    })
+
     // re-sort allOrderedItems to match DOM visual order when provided
     if (data.allDomIds?.length) {
-      const sorted: Array<{ memexItemId: number; nodeId: string; title: string }> = []
+      const sorted: OrderedItem[] = []
       for (const domId of data.allDomIds) {
-        const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
-        if (!m) continue
-        const entry = contentDbIdToEntry.get(parseInt(m[1], 10))
+        const entry = byRef.get(domId)
         if (entry) sorted.push(entry)
       }
       // append items not visible in the DOM (filtered/hidden) at the end

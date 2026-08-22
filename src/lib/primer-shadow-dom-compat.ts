@@ -230,10 +230,3 @@ function patchOverlayContains(
     return false
   }
 }
-
-/**
- * Clear the tracked mousedown state.
- */
-export function clearMousedownPath(): void {
-  clearTrackedMousedown()
-}

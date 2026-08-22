@@ -4,7 +4,7 @@ import { sendMessage } from '@/lib/messages'
 import { PersonIcon, ShieldIcon } from '@/ui/icons'
 import { SearchSelectPanel, type SearchSelectPanelOption } from '@/ui/search-select-panel'
 
-export type RepoMetadataType = 'ASSIGNEES' | 'LABELS' | 'ISSUE_TYPES'
+type RepoMetadataType = 'ASSIGNEES' | 'LABELS' | 'ISSUE_TYPES'
 
 export type RepoMetadataItem = {
   id: string
@@ -77,74 +77,46 @@ function metadataToLeadingVisual(item: RepoMetadataItem, type: RepoMetadataType)
   )
 }
 
-function getPanelTitle(type: RepoMetadataType): string {
-  switch (type) {
-    case 'LABELS':
-      return 'Select labels'
-    case 'ISSUE_TYPES':
-      return 'Select issue type'
-    default:
-      return 'Select assignees'
-  }
+interface MetadataCopy {
+  title: string
+  hint: string
+  filterPlaceholder: string
+  errorTitle: string
+  emptyTitle: string
+  /** Shown only when the filter box is empty; a non-empty filter always says "Try a different search." */
+  emptyBody: string
 }
 
-function getPanelHint(type: RepoMetadataType): string {
-  switch (type) {
-    case 'LABELS':
-      return 'Use labels to organize issues and pull requests.'
-    case 'ISSUE_TYPES':
-      return 'Pick the GitHub issue type to apply to selected items.'
-    default:
-      return 'Pick assignees from the repository collaborators you can assign.'
-  }
-}
-
-function getFilterPlaceholder(type: RepoMetadataType): string {
-  switch (type) {
-    case 'LABELS':
-      return 'Find a label'
-    case 'ISSUE_TYPES':
-      return 'Find an issue type'
-    default:
-      return 'Find a user'
-  }
-}
-
-function getErrorTitle(type: RepoMetadataType): string {
-  switch (type) {
-    case 'LABELS':
-      return 'Could not load labels'
-    case 'ISSUE_TYPES':
-      return 'Could not load issue types'
-    default:
-      return 'Could not load assignees'
-  }
-}
-
-function getEmptyState(type: RepoMetadataType, filterQuery: string) {
-  if (type === 'LABELS') {
-    return {
-      title: 'No labels found',
-      body: filterQuery.trim() ? 'Try a different search.' : 'This repository has no labels yet.',
-      variant: 'empty' as const,
-    }
-  }
-
-  if (type === 'ISSUE_TYPES') {
-    return {
-      title: 'No issue types found',
-      body: filterQuery.trim()
-        ? 'Try a different search.'
-        : 'This repository has no issue types available.',
-      variant: 'empty' as const,
-    }
-  }
-
-  return {
-    title: 'No assignees found',
-    body: filterQuery.trim() ? 'Try a different search.' : 'No users match your search.',
-    variant: 'empty' as const,
-  }
+/**
+ * One row per metadata type. This replaced five parallel `switch (type)`
+ * functions whose only job was to pick a string — the copy for a type now
+ * reads top-to-bottom instead of being scattered across five branches.
+ */
+const METADATA_COPY: Record<RepoMetadataType, MetadataCopy> = {
+  ASSIGNEES: {
+    title: 'Select assignees',
+    hint: 'Pick assignees from the repository collaborators you can assign.',
+    filterPlaceholder: 'Find a user',
+    errorTitle: 'Could not load assignees',
+    emptyTitle: 'No assignees found',
+    emptyBody: 'No users match your search.',
+  },
+  LABELS: {
+    title: 'Select labels',
+    hint: 'Use labels to organize issues and pull requests.',
+    filterPlaceholder: 'Find a label',
+    errorTitle: 'Could not load labels',
+    emptyTitle: 'No labels found',
+    emptyBody: 'This repository has no labels yet.',
+  },
+  ISSUE_TYPES: {
+    title: 'Select issue type',
+    hint: 'Pick the GitHub issue type to apply to selected items.',
+    filterPlaceholder: 'Find an issue type',
+    errorTitle: 'Could not load issue types',
+    emptyTitle: 'No issue types found',
+    emptyBody: 'This repository has no issue types available.',
+  },
 }
 
 export function RepoMetadataSelectPanel({
@@ -157,8 +129,7 @@ export function RepoMetadataSelectPanel({
   disabled = false,
   singleSelect = false,
 }: RepoMetadataSelectPanelProps) {
-  const panelTitle = getPanelTitle(type)
-  const filterPlaceholder = getFilterPlaceholder(type)
+  const copy = METADATA_COPY[type]
 
   const searchMetadata = useCallback(
     (query: string) => {
@@ -188,17 +159,21 @@ export function RepoMetadataSelectPanel({
     search: searchMetadata,
     mapItem,
     placeholder,
-    title: panelTitle,
-    subtitle: getPanelHint(type),
-    placeholderText: filterPlaceholder,
-    inputLabel: filterPlaceholder,
+    title: copy.title,
+    subtitle: copy.hint,
+    placeholderText: copy.filterPlaceholder,
+    inputLabel: copy.filterPlaceholder,
     disabled: disabled || !repoName,
     width: 'large' as const,
     searchErrorMessage: 'Could not load results. Check your token and try again.',
-    errorTitle: getErrorTitle(type),
+    errorTitle: copy.errorTitle,
     selectedPlacement: 'selected-first' as const,
-    anchorAriaLabel: panelTitle,
-    emptyState: ({ filterQuery }: { filterQuery: string }) => getEmptyState(type, filterQuery),
+    anchorAriaLabel: copy.title,
+    emptyState: ({ filterQuery }: { filterQuery: string }) => ({
+      title: copy.emptyTitle,
+      body: filterQuery.trim() ? 'Try a different search.' : copy.emptyBody,
+      variant: 'empty' as const,
+    }),
   }
 
   if (singleSelect) {

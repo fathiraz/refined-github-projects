@@ -1,13 +1,13 @@
 import { initDebugLogger } from '@/lib/debug-logger'
-// importing the runtime ensures the ManagedRuntime is created exactly once at
-// SW startup, before any onMessage handler runs.
-import '@/lib/effect-runtime'
 import { registerConfigHandlers } from '@/background/config-handlers'
 import { registerFieldHandlers } from '@/background/field-handlers'
 import { registerHierarchyHandlers } from '@/background/hierarchy-handlers'
 import { registerSprintHandlers } from '@/background/sprint-handlers'
 import { registerDuplicateHandlers } from '@/background/duplicate-handlers'
-import { registerBulkHandlers } from '@/background/bulk-handlers'
+import { registerBulkUpdateHandler } from '@/background/bulk-update'
+import { registerBulkStateHandlers } from '@/background/bulk-state'
+import { registerBulkRenameHandlers } from '@/background/bulk-rename'
+import { registerBulkPositionHandlers } from '@/background/bulk-position'
 import { registerCreateIssueHandler } from '@/background/create-issue'
 
 export default defineBackground(() => {
@@ -24,6 +24,9 @@ export default defineBackground(() => {
   registerHierarchyHandlers()
   registerSprintHandlers()
   registerDuplicateHandlers()
-  registerBulkHandlers()
+  registerBulkUpdateHandler()
+  registerBulkStateHandlers()
+  registerBulkRenameHandlers()
+  registerBulkPositionHandlers()
   registerCreateIssueHandler()
 })

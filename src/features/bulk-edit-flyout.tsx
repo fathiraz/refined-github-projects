@@ -28,7 +28,7 @@ import {
   type BulkEditRelationshipPaneHandle,
 } from '@/features/bulk-edit-relationship-pane'
 
-export interface BulkEditFlyoutProps {
+interface BulkEditFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void

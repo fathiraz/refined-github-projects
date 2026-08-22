@@ -1,7 +1,27 @@
 import React from 'react'
 import { Box, Button, Heading, Text } from '@primer/react'
 import { XIcon } from '@/ui/icons'
-import { StepIndicator } from '@/ui/step-indicator'
+import { primerCss } from '@/lib/primer-css-helper'
+
+function StepIndicator({ current, total }: { current: number; total: number }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {Array.from({ length: total }, (_, i) => (
+        <Box
+          key={i}
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bg: i < current ? 'accent.emphasis' : 'border.default',
+            transition: 'background-color 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+          }}
+        />
+      ))}
+    </Box>
+  )
+}
 
 type ModalStepHeaderProps =
   | {
@@ -55,13 +75,7 @@ export function ModalStepHeader({
             boxShadow: 'none',
             px: 2,
             flexShrink: 0,
-            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-            '&:active': { transform: 'translateY(0)', transition: '100ms' },
-            '@media (prefers-reduced-motion: reduce)': {
-              transition: 'none',
-              '&:hover:not(:disabled)': { transform: 'none' },
-            },
+            ...primerCss.buttonMotion(),
           }}
         >
           ←
@@ -102,14 +116,7 @@ export function ModalStepHeader({
             p: '4px',
             minWidth: 'unset',
             color: 'fg.muted',
-            boxShadow: 'none',
-            transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-            '&:active': { transform: 'translateY(0)', transition: '100ms' },
-            '@media (prefers-reduced-motion: reduce)': {
-              transition: 'none',
-              '&:hover:not(:disabled)': { transform: 'none' },
-            },
+            ...primerCss.buttonMotion(),
           }}
         >
           <XIcon size={16} />

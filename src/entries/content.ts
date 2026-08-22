@@ -13,9 +13,6 @@ import { setupIssueDetailInjector } from '@/features/issue-detail-injections'
 import { setupCreateIssueFieldInjector } from '@/features/create-issue-injections'
 import { selectionStore } from '@/lib/selection-store'
 import { logger, initDebugLogger } from '@/lib/debug-logger'
-// eager-load the ManagedRuntime so the content script shares one runtime
-// instance across all stores/services it touches.
-import '@/lib/effect-runtime'
 import { extractProjectContext, fetchProjectFields } from '@/lib/github-project'
 
 export default defineContentScript({
@@ -53,9 +50,9 @@ export default defineContentScript({
       projectContext.isOrg,
     )
 
-    const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext, getFields)
+    const injectSprintHeaders = createSprintHeaderInjector(ctx, projectContext)
     const injectHierarchyChips = createHierarchyChipInjector(projectContext)
-    const cleanupIssueDetail = setupIssueDetailInjector(projectContext)
+    const cleanupIssueDetail = setupIssueDetailInjector(ctx, projectContext)
     const cleanupCreateIssueFields = setupCreateIssueFieldInjector(ctx, getFields)
     const cleanupTableEnhancements = setupTableEnhancements([
       injectSprintHeaders,

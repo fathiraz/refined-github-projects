@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Box, Button, CounterLabel, Text } from '@primer/react'
 import { KebabHorizontalIcon } from '@primer/octicons-react'
 import Tippy from '@/ui/tooltip'
@@ -13,6 +13,7 @@ import { exportSelectedToCSV } from '@/features/bulk-utils'
 import type { ProjectData, ProjectField } from '@/features/bulk-edit-utils'
 import type { ReorderOp } from '@/features/bulk-move-utils'
 import { ListCheckIcon, TagIcon, XIcon } from '@/ui/icons'
+import { Kbd } from '@/ui/keyboard-hint'
 import { primerCss } from '@/lib/primer-css-helper'
 import { Z_OVERLAY } from '@/lib/z-index'
 import { BulkActionsMenu } from '@/features/bulk-actions-menu'
@@ -27,6 +28,29 @@ import type { DistributionStrategy } from '@/features/bulk-random-assign-utils'
 export type { ReorderOp } from '@/features/bulk-move-utils'
 
 const RECENT_FIELDS_CAP = 3
+
+/** The ten overlays the bar can put up, only ever one at a time. */
+type OverlayId =
+  | 'mark'
+  | 'editFields'
+  | 'rename'
+  | 'reorder'
+  | 'randomAssign'
+  | 'close'
+  | 'delete'
+  | 'transfer'
+  | 'duplicate'
+  | 'help'
+
+/** Modals take over the screen; flyouts hang off a bar chip. Shortcuts differ per group. */
+const MODAL_OVERLAYS = new Set<OverlayId>(['close', 'delete', 'transfer', 'duplicate', 'help'])
+const FLYOUT_OVERLAYS = new Set<OverlayId>([
+  'mark',
+  'editFields',
+  'rename',
+  'reorder',
+  'randomAssign',
+])
 
 /** Shared chip styling for the three top-level inline actions on the bar. */
 const chipSx = primerCss.chipButton()
@@ -46,7 +70,6 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const [firstRepoName, setFirstRepoName] = useState('')
   const [tokenStatusError, setTokenStatusError] = useState<string | null>(null)
 
-  const [showDupModal, setShowDupModal] = useState(false)
   const actionsButtonRef = useRef<HTMLButtonElement | null>(null)
   const editFieldsChipRef = useRef<HTMLButtonElement | null>(null)
   const markChipRef = useRef<HTMLButtonElement | null>(null)
@@ -55,20 +78,17 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   const recentFieldIdsRef = useRef<string[]>([])
 
   const [menuOpen, setMenuOpen] = useState(false)
-  const [markOpen, setMarkOpen] = useState(false)
-  const [editFieldsOpen, setEditFieldsOpen] = useState(false)
-  const [renameOpen, setRenameOpen] = useState(false)
-  const [reorderOpen, setReorderOpen] = useState(false)
-  const [randomAssignOpen, setRandomAssignOpen] = useState(false)
-  const [showCloseModal, setShowCloseModal] = useState(false)
+  // The ten overlays are mutually exclusive, so one slot holds whichever is up.
+  // Ten booleans meant three places had to enumerate ten setters to dismiss
+  // them, and one missed line was a stuck overlay. The overflow menu is NOT one
+  // of these — it coexists with the bar and closes on its own outside-click.
+  const [overlay, setOverlay] = useState<OverlayId | null>(null)
   const [closeReason, setCloseReason] = useState<'COMPLETED' | 'NOT_PLANNED'>('COMPLETED')
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteItemTitles, setDeleteItemTitles] = useState<string[]>([])
-  const [showTransferModal, setShowTransferModal] = useState(false)
-  const [showHelp, setShowHelp] = useState(false)
-  const anyModalOpen =
-    showCloseModal || showDeleteModal || showTransferModal || showDupModal || showHelp
-  const anyFlyoutOpen = editFieldsOpen || renameOpen || reorderOpen || randomAssignOpen || markOpen
+  const anyModalOpen = overlay !== null && MODAL_OVERLAYS.has(overlay)
+  const anyFlyoutOpen = overlay !== null && FLYOUT_OVERLAYS.has(overlay)
+
+  const closeAllOverlays = useCallback(() => setOverlay(null), [])
 
   const resolvedProjectId = projectData?.id || projectId
 
@@ -79,19 +99,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
       setCount(newCount)
       if (newCount === 0) {
         setMenuOpen(false)
-        setShowDupModal(false)
-        setShowCloseModal(false)
-        setShowDeleteModal(false)
-        setShowTransferModal(false)
-        setShowHelp(false)
-        setMarkOpen(false)
-        setEditFieldsOpen(false)
-        setRenameOpen(false)
-        setReorderOpen(false)
-        setRandomAssignOpen(false)
+        closeAllOverlays()
       }
     })
-  }, [])
+  }, [closeAllOverlays])
 
   // click-outside for action menu
   useEffect(() => {
@@ -115,42 +126,38 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   }, [])
 
   // ── Centralized keyboard shortcuts ─────────────────────────
+  // The set is data: which chord, which label, which handler. Only three rows
+  // sit outside the Table Selection group, and only two are conditional, so
+  // the table below is the whole keyboard surface of the bar in one place.
   useEffect(() => {
-    const ids: string[] = []
-    const reg = (def: ShortcutDefinition) => {
-      shortcutRegistry.register(def)
-      ids.push(def.id)
-    }
+    const busy = anyModalOpen || anyFlyoutOpen
 
-    // escape — always available
-    reg({
-      id: 'escape',
-      key: 'Escape',
-      modifiers: {},
-      context: 'Global',
-      label: 'Close / Deselect',
-      allowInEditable: true,
-      action: () => {
-        if (anyModalOpen || anyFlyoutOpen) {
-          setShowDupModal(false)
-          setShowCloseModal(false)
-          setShowDeleteModal(false)
-          setShowTransferModal(false)
-          setShowHelp(false)
-          setEditFieldsOpen(false)
-          setRenameOpen(false)
-          setReorderOpen(false)
-          setRandomAssignOpen(false)
-          setMarkOpen(false)
-        } else if (selectionStore.count() > 0) {
-          selectionStore.clear()
-        }
-      },
+    /** Overflow-menu rows close the menu before acting; bar chips do not. */
+    const fromMenu = (run: () => void) => () => {
+      setMenuOpen(false)
+      run()
+    }
+    const openDuplicate = fromMenu(() => {
+      checkToken().then((ok) => ok && setOverlay('duplicate'))
     })
 
-    if (!anyModalOpen && !anyFlyoutOpen) {
-      // select all — works even with zero selection
-      reg({
+    const defs: ShortcutDefinition[] = [
+      {
+        id: 'escape',
+        key: 'Escape',
+        modifiers: {},
+        context: 'Global',
+        label: 'Close / Deselect',
+        allowInEditable: true,
+        action: () => {
+          if (busy) closeAllOverlays()
+          else if (selectionStore.count() > 0) selectionStore.clear()
+        },
+      },
+    ]
+
+    if (!busy) {
+      defs.push({
         id: 'select-all',
         key: 'a',
         modifiers: { meta: true },
@@ -158,190 +165,68 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         label: 'Select All',
         action: () => {
           const allIds = getAllInjectedItemIds()
-          if (allIds.length > 0) {
-            selectionStore.selectBatch(allIds)
-          }
+          if (allIds.length > 0) selectionStore.selectBatch(allIds)
         },
       })
     }
 
-    if (count > 0 && !anyModalOpen && !anyFlyoutOpen) {
-      reg({
-        id: 'help',
-        key: '?',
-        modifiers: { shift: true },
-        context: 'Global',
-        label: 'Keyboard Shortcuts',
-        action: () => setShowHelp(true),
-      })
+    if (count > 0 && !busy) {
+      const CHORD = { meta: true, shift: true }
+      const PLAIN = {}
 
-      reg({
-        id: 'focus-actions',
-        key: 'b',
-        modifiers: { meta: true, shift: true },
-        context: 'Global',
-        label: 'Focus Actions Menu',
-        action: () => {
-          selectionStore.requestFocus()
+      // [modifiers, key, id, label, action] — every row is Table Selection
+      // except the two Global ones pushed just above it.
+      type Row = [ShortcutDefinition['modifiers'], string, string, string, () => void]
+      const rows: Array<Row | null> = [
+        [CHORD, 'e', 'edit-fields', 'Edit Fields', fromMenu(handleEditFields)],
+        [CHORD, 'a', 'random-assign', 'Random Assign', handleRandomAssign],
+        [CHORD, 'x', 'close-issues', 'Close Issues', handleBulkClose],
+        [CHORD, 'o', 'reopen-issues', 'Reopen Issues', () => runMarkVerb('reopen')],
+        [CHORD, 'l', 'lock-conversations', 'Lock Conversations', () => runMarkVerb('lock')],
+        [CHORD, 'f', 'pin-issues', 'Pin Issues', () => runMarkVerb('pin')],
+        [CHORD, 'm', 'transfer-issues', 'Transfer Issues', handleTransfer],
+        [CHORD, 'v', 'export-csv', 'Export CSV', fromMenu(exportSelectedToCSV)],
+        [CHORD, 'r', 'rename-titles', 'Rename Titles', handleBulkRename],
+        [CHORD, 'j', 'reorder-items', 'Reorder Items', handleBulkReorder],
+        [CHORD, 'Backspace', 'delete-items', 'Delete Items', handleBulkDelete],
+        count === 1 ? [CHORD, 'd', 'deep-duplicate', 'Deep Duplicate', openDuplicate] : null,
+        [PLAIN, 'e', 'quick-edit', 'Quick Edit', fromMenu(handleEditFields)],
+        count === 1 ? [PLAIN, 'd', 'quick-duplicate', 'Duplicate', openDuplicate] : null,
+        [PLAIN, 'Delete', 'quick-delete', 'Delete Items', handleBulkDelete],
+      ]
+
+      defs.push(
+        {
+          id: 'help',
+          key: '?',
+          modifiers: { shift: true },
+          context: 'Global',
+          label: 'Keyboard Shortcuts',
+          action: () => setOverlay('help'),
         },
-      })
-
-      reg({
-        id: 'edit-fields',
-        key: 'e',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Edit Fields',
-        action: () => {
-          setMenuOpen(false)
-          handleEditFields()
+        {
+          id: 'focus-actions',
+          key: 'b',
+          modifiers: CHORD,
+          context: 'Global',
+          label: 'Focus Actions Menu',
+          action: () => selectionStore.requestFocus(),
         },
-      })
-
-      reg({
-        id: 'random-assign',
-        key: 'a',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Random Assign',
-        action: handleRandomAssign,
-      })
-
-      reg({
-        id: 'close-issues',
-        key: 'x',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Close Issues',
-        action: () => handleBulkClose(),
-      })
-
-      reg({
-        id: 'reopen-issues',
-        key: 'o',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Reopen Issues',
-        action: () => runMarkVerb('reopen'),
-      })
-
-      reg({
-        id: 'lock-conversations',
-        key: 'l',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Lock Conversations',
-        action: () => runMarkVerb('lock'),
-      })
-
-      reg({
-        id: 'pin-issues',
-        key: 'f',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Pin Issues',
-        action: () => runMarkVerb('pin'),
-      })
-
-      reg({
-        id: 'transfer-issues',
-        key: 'm',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Transfer Issues',
-        action: handleTransfer,
-      })
-
-      reg({
-        id: 'export-csv',
-        key: 'v',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Export CSV',
-        action: () => {
-          setMenuOpen(false)
-          exportSelectedToCSV()
-        },
-      })
-
-      reg({
-        id: 'rename-titles',
-        key: 'r',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Rename Titles',
-        action: handleBulkRename,
-      })
-
-      reg({
-        id: 'reorder-items',
-        key: 'j',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Reorder Items',
-        action: handleBulkReorder,
-      })
-
-      reg({
-        id: 'delete-items',
-        key: 'Backspace',
-        modifiers: { meta: true, shift: true },
-        context: 'Table Selection',
-        label: 'Delete Items',
-        action: handleBulkDelete,
-      })
-
-      if (count === 1) {
-        reg({
-          id: 'deep-duplicate',
-          key: 'd',
-          modifiers: { meta: true, shift: true },
-          context: 'Table Selection',
-          label: 'Deep Duplicate',
-          action: () => {
-            setMenuOpen(false)
-            checkToken().then((ok) => ok && setShowDupModal(true))
-          },
-        })
-      }
-
-      reg({
-        id: 'quick-edit',
-        key: 'e',
-        modifiers: {},
-        context: 'Table Selection',
-        label: 'Quick Edit',
-        action: () => {
-          setMenuOpen(false)
-          handleEditFields()
-        },
-      })
-
-      if (count === 1) {
-        reg({
-          id: 'quick-duplicate',
-          key: 'd',
-          modifiers: {},
-          context: 'Table Selection',
-          label: 'Duplicate',
-          action: () => {
-            setMenuOpen(false)
-            checkToken().then((ok) => ok && setShowDupModal(true))
-          },
-        })
-      }
-
-      reg({
-        id: 'quick-delete',
-        key: 'Delete',
-        modifiers: {},
-        context: 'Table Selection',
-        label: 'Delete Items',
-        action: handleBulkDelete,
-      })
+        ...rows
+          .filter((row): row is Row => row !== null)
+          .map(([modifiers, key, id, label, action]) => ({
+            id,
+            key,
+            modifiers,
+            context: 'Table Selection' as const,
+            label,
+            action,
+          })),
+      )
     }
 
-    return () => ids.forEach((id) => shortcutRegistry.unregister(id))
+    defs.forEach((def) => shortcutRegistry.register(def))
+    return () => defs.forEach((def) => shortcutRegistry.unregister(def.id))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, anyModalOpen, anyFlyoutOpen])
 
@@ -423,13 +308,23 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
   async function handleEditFields() {
     if (queueStore.getActiveCount() >= 3) return
     if (!(await checkToken())) return
-    setEditFieldsOpen(true)
+    setOverlay('editFields')
   }
 
-  async function handleRandomAssign() {
+  /**
+   * Every overflow action opens the same way: dismiss the menu, verify the
+   * token, then raise the overlay. `stage` runs in between for the one action
+   * that needs to prepare state first.
+   */
+  async function openAfterToken(id: OverlayId, stage?: () => void) {
     setMenuOpen(false)
     if (!(await checkToken())) return
-    setRandomAssignOpen(true)
+    stage?.()
+    setOverlay(id)
+  }
+
+  function handleRandomAssign() {
+    return openAfterToken('randomAssign')
   }
 
   function handleConfirmRandomAssign(
@@ -466,10 +361,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     handleMarkVerb(verb)
   }
 
-  async function handleTransfer() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setShowTransferModal(true)
+  function handleTransfer() {
+    return openAfterToken('transfer')
   }
 
   function handleConfirmTransfer(
@@ -482,7 +375,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     // selection (pre-flight may have been skipped or failed).
     const itemIds =
       eligibleItemIds && eligibleItemIds.length > 0 ? [...eligibleItemIds] : selectionStore.getAll()
-    setShowTransferModal(false)
+    setOverlay(null)
     sendMessage('bulkTransfer', {
       itemIds,
       projectId: resolvedProjectId,
@@ -492,30 +385,25 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     selectionStore.clear()
   }
 
-  async function handleBulkDelete() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    const ids = selectionStore.getAll()
-    const titles = getTitlesForItemIds(ids).map((entry) => entry.title)
-    setDeleteItemTitles(titles)
-    setShowDeleteModal(true)
+  function handleBulkDelete() {
+    return openAfterToken('delete', () => {
+      setDeleteItemTitles(getTitlesForItemIds(selectionStore.getAll()).map((entry) => entry.title))
+    })
   }
 
   function handleConfirmDelete() {
     const itemIds = selectionStore.getAll()
-    setShowDeleteModal(false)
+    setOverlay(null)
     sendMessage('bulkDelete', { itemIds, projectId: resolvedProjectId })
     selectionStore.clear()
   }
 
-  async function handleBulkRename() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setRenameOpen(true)
+  function handleBulkRename() {
+    return openAfterToken('rename')
   }
 
   function handleConfirmRename(renames: RenameFlyoutConfirm[]) {
-    setRenameOpen(false)
+    setOverlay(null)
     sendMessage('bulkRename', {
       itemIds: selectionStore.getAll(),
       projectId: resolvedProjectId,
@@ -524,34 +412,34 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     // §3 selection policy — Rename preserves selection.
   }
 
-  async function handleBulkReorder() {
-    setMenuOpen(false)
-    if (!(await checkToken())) return
-    setReorderOpen(true)
+  function handleBulkReorder() {
+    return openAfterToken('reorder')
   }
 
   function handleConfirmReorder(ops: ReorderOp[], reorderProjectId: string, label: string) {
-    setReorderOpen(false)
+    setOverlay(null)
     sendMessage('bulkReorder', { projectId: reorderProjectId, reorderOps: ops, label })
     // §3 selection policy — Reorder preserves selection.
   }
 
   async function handleBulkClose() {
+    // the extra guard runs after the token check, as it always has: the bar
+    // does not render at all with an empty selection, so this is belt-and-braces.
     setMenuOpen(false)
     if (!(await checkToken())) return
     if (selectionStore.count() === 0) return
-    setShowCloseModal(true)
+    setOverlay('close')
   }
 
   function handleConfirmClose() {
     const itemIds = selectionStore.getAll()
-    setShowCloseModal(false)
+    setOverlay(null)
     sendMessage('bulkClose', { itemIds, projectId: resolvedProjectId, reason: closeReason })
     selectionStore.clear()
   }
 
   function handleMarkVerb(verb: MarkVerb) {
-    setMarkOpen(false)
+    setOverlay(null)
     const itemIds = selectionStore.getAll()
     switch (verb) {
       case 'close':
@@ -586,7 +474,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     R: { action: () => handleBulkRename() },
     O: { action: () => handleBulkReorder() },
     A: { action: () => handleRandomAssign() },
-    M: { action: () => setMarkOpen((open) => !open) },
+    M: { action: () => setOverlay((o) => (o === 'mark' ? null : 'mark')) },
     C: { action: () => handleBulkClose() },
     P: { action: () => runMarkVerb('pin') },
     L: { action: () => runMarkVerb('lock') },
@@ -594,13 +482,13 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
     D: {
       action: () => {
         if (count === 1) {
-          checkToken().then((ok) => ok && setShowDupModal(true))
+          checkToken().then((ok) => ok && setOverlay('duplicate'))
         } else {
           handleBulkDelete()
         }
       },
     },
-    '?': { action: () => setShowHelp(true) },
+    '?': { action: () => setOverlay('help') },
   }
   useBarKeyboardChords(barRef, barChords)
 
@@ -614,25 +502,25 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
         owner={owner}
         isOrg={isOrg}
         number={number}
-        showCloseModal={showCloseModal}
+        showCloseModal={overlay === 'close'}
         closeReason={closeReason}
         onChangeCloseReason={setCloseReason}
-        onCloseCloseModal={() => setShowCloseModal(false)}
+        onCloseCloseModal={() => setOverlay(null)}
         onConfirmClose={handleConfirmClose}
-        showDeleteModal={showDeleteModal}
+        showDeleteModal={overlay === 'delete'}
         deleteItemTitles={deleteItemTitles}
-        onCloseDeleteModal={() => setShowDeleteModal(false)}
+        onCloseDeleteModal={() => setOverlay(null)}
         onConfirmDelete={handleConfirmDelete}
-        showTransferModal={showTransferModal}
-        onCloseTransferModal={() => setShowTransferModal(false)}
+        showTransferModal={overlay === 'transfer'}
+        onCloseTransferModal={() => setOverlay(null)}
         onConfirmTransfer={handleConfirmTransfer}
-        showDupModal={showDupModal}
+        showDupModal={overlay === 'duplicate'}
         onCloseDupModal={() => {
           // §11.8 — Duplicate preserves selection.
-          setShowDupModal(false)
+          setOverlay(null)
         }}
-        showHelp={showHelp}
-        onCloseHelp={() => setShowHelp(false)}
+        showHelp={overlay === 'help'}
+        onCloseHelp={() => setOverlay(null)}
       />
 
       {/* ── persistent bottom bar ── */}
@@ -696,26 +584,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             </Text>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {(['⌘A', 'Esc'] as const).map((key) => (
-                <Box
-                  key={key}
-                  as="kbd"
-                  sx={{
-                    fontSize: 0,
-                    fontFamily: 'inherit',
-                    fontWeight: 500,
-                    px: '5px',
-                    py: '1px',
-                    borderRadius: 1,
-                    bg: 'canvas.inset',
-                    border: '1px solid',
-                    borderColor: 'border.default',
-                    color: 'fg.muted',
-                    cursor: 'default',
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {key}
-                </Box>
+                <Kbd key={key}>{key}</Kbd>
               ))}
             </Box>
           </Box>
@@ -730,7 +599,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             onClick={() => handleEditFields()}
             aria-keyshortcuts="E"
             aria-haspopup="dialog"
-            aria-expanded={editFieldsOpen}
+            aria-expanded={overlay === 'editFields'}
             data-testid="rgp-bar-edit-fields-chip"
             sx={chipSx}
           >
@@ -744,10 +613,10 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
             ref={markChipRef}
             variant="default"
             size="small"
-            onClick={() => setMarkOpen((o) => !o)}
+            onClick={() => setOverlay((o) => (o === 'mark' ? null : 'mark'))}
             aria-keyshortcuts="M"
             aria-haspopup="dialog"
-            aria-expanded={markOpen}
+            aria-expanded={overlay === 'mark'}
             data-testid="rgp-bar-mark-chip"
             sx={chipSx}
           >
@@ -775,7 +644,7 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
               <BulkActionsMenu
                 count={count}
                 onRandomAssign={handleRandomAssign}
-                onDeepDuplicate={() => checkToken().then((ok) => ok && setShowDupModal(true))}
+                onDeepDuplicate={() => checkToken().then((ok) => ok && setOverlay('duplicate'))}
                 onRename={handleBulkRename}
                 onReorder={handleBulkReorder}
                 onTransfer={handleTransfer}
@@ -786,16 +655,16 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
 
           <BulkMarkFlyout
             anchorRef={markChipRef}
-            open={markOpen}
-            onClose={() => setMarkOpen(false)}
+            open={overlay === 'mark'}
+            onClose={() => setOverlay(null)}
             itemIds={selectionStore.getAll()}
             onSelectVerb={handleMarkVerb}
           />
 
           <BulkEditFlyout
             anchorRef={editFieldsChipRef}
-            open={editFieldsOpen}
-            onClose={() => setEditFieldsOpen(false)}
+            open={overlay === 'editFields'}
+            onClose={() => setOverlay(null)}
             owner={owner}
             isOrg={isOrg}
             projectId={resolvedProjectId}
@@ -808,8 +677,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
 
           <BulkRenameFlyout
             anchorRef={actionsButtonRef}
-            open={renameOpen}
-            onClose={() => setRenameOpen(false)}
+            open={overlay === 'rename'}
+            onClose={() => setOverlay(null)}
             projectId={resolvedProjectId}
             itemIds={selectionStore.getAll()}
             count={count}
@@ -818,8 +687,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
 
           <BulkReorderFlyout
             anchorRef={actionsButtonRef}
-            open={reorderOpen}
-            onClose={() => setReorderOpen(false)}
+            open={overlay === 'reorder'}
+            onClose={() => setOverlay(null)}
             projectId={resolvedProjectId}
             itemIds={selectionStore.getAll()}
             count={count}
@@ -831,8 +700,8 @@ export function BulkActionsBar({ projectId, owner, isOrg, number, getFields }: P
 
           <BulkRandomAssignFlyout
             anchorRef={actionsButtonRef}
-            open={randomAssignOpen}
-            onClose={() => setRandomAssignOpen(false)}
+            open={overlay === 'randomAssign'}
+            onClose={() => setOverlay(null)}
             owner={owner}
             repoName={firstRepoName}
             projectNumber={number}

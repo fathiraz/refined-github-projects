@@ -1,5 +1,7 @@
 import { defineExtensionMessaging } from '@webext-core/messaging'
-import type { ProtocolMapFromSchemas } from '@/lib/schemas-messages'
+import type { PatErrorType } from '@/lib/errors'
+import type { QueueState } from '@/lib/queue'
+import type { ExcludeCondition, SprintSettings } from '@/lib/storage'
 
 export interface IssueRelationshipData {
   nodeId?: string
@@ -57,7 +59,7 @@ export interface IssueSearchResultData extends IssueRelationshipData {
   state?: 'OPEN' | 'CLOSED'
 }
 
-export interface BulkEditRelationshipListUpdate {
+interface BulkEditRelationshipListUpdate {
   add: IssueRelationshipData[]
   remove: IssueRelationshipData[]
   clear: boolean
@@ -157,6 +159,16 @@ export interface SprintInfo {
   endDate: string
 }
 
+/** Result of `getSprintStatus` — the shape both sprint surfaces render from. */
+export interface SprintStatus {
+  hasSettings: boolean
+  activeSprint: SprintInfo | null
+  nearestUpcoming: SprintInfo | null
+  acknowledgedSprint: SprintInfo | null
+  iterationFieldId: string | null
+  settings: SprintSettings | null
+}
+
 export interface SprintProgressData {
   totalIssues: number
   doneIssues: number
@@ -195,14 +207,263 @@ export interface HierarchyData {
   blocking: IssueRelationshipData[]
 }
 
-export interface BulkRandomAssignData {
-  itemIds: string[]
-  projectId: string
-  assignments: Array<{ itemId: string; assigneeIds: string[] }>
-  strategy: 'balanced' | 'random' | 'round-robin'
+interface IterationConfig {
+  id: string
+  title: string
+  startDate: string
+  duration: number
 }
 
-const _messaging = defineExtensionMessaging<ProtocolMapFromSchemas>()
+/** Undo hint offered on the Done! frame. */
+export interface ReverseHint {
+  messageType: string
+  data: Record<string, unknown>
+  affectedItemIds: string[]
+  label?: string
+  undoWindowMs?: number
+}
+
+/**
+ * One queue-tracker frame: whatever the queue itself reported, plus the run
+ * that produced it. Declared once here because the sender (`broadcastQueue`)
+ * and the protocol entry are the two ends of the same message.
+ */
+export interface QueueFrame extends QueueState {
+  processId?: string
+  label?: string
+  retryContext?: { messageType: string; data: Record<string, unknown> }
+  reverse?: ReverseHint
+}
+
+/**
+ * The background ↔ UI message contract. Every `sendMessage` / `onMessage` pair
+ * is typed from this one declaration.
+ */
+interface ProtocolMap {
+  duplicateItem(data: { itemId: string; projectId: string; plan?: DuplicateItemPlan }): {
+    accepted: boolean
+  }
+
+  getItemPreview(data: {
+    itemId: string
+    owner: string
+    number: number
+    isOrg: boolean
+  }): ItemPreviewData
+
+  openOptions(data: {}): void
+
+  getPatStatus(data: {}): { hasPat: boolean }
+
+  validatePat(data: {
+    token: string
+  }):
+    | { valid: true; user: string }
+    | { valid: false; errorType?: PatErrorType; errorMessage?: string }
+
+  searchRepoMetadata(data: {
+    owner: string
+    name: string
+    q: string
+    type: 'ASSIGNEES' | 'LABELS' | 'MILESTONES' | 'ISSUE_TYPES'
+  }): {
+    id: string
+    name: string
+    color?: string
+    avatarUrl?: string
+    description?: string
+  }[]
+
+  searchRelationshipIssues(data: {
+    q: string
+    owner?: string
+    repoName?: string
+  }): IssueSearchResultData[]
+
+  validateBulkRelationshipUpdates(data: {
+    itemIds: string[]
+    projectId: string
+    relationships: BulkEditRelationshipsUpdate
+  }): BulkRelationshipValidationResult
+
+  searchTransferTargets(data: {
+    owner: string
+    q: string
+    firstItemId?: string
+    projectId?: string
+    scope?: 'owner-only' | 'all'
+    includeIneligible?: boolean
+  }): {
+    id: string
+    name: string
+    nameWithOwner: string
+    isPrivate: boolean
+    description: string | null
+    eligibility?: 'ok' | 'archived' | 'issues-disabled'
+  }[]
+
+  validateTransferEligibility(data: {
+    itemIds: string[]
+    projectId: string
+    targetRepoOwner: string
+    targetRepoName: string
+  }): {
+    domId: string
+    eligible: boolean
+    reason?: 'pull-request' | 'same-repo' | 'unresolved'
+    title?: string
+  }[]
+
+  bulkUpdate(data: BulkUpdateMessageData): BulkUpdateDispatchResult
+
+  createIssueWithFields(data: CreateIssueWithFieldsMessageData): BulkUpdateDispatchResult
+
+  bulkClose(data: {
+    itemIds: string[]
+    projectId: string
+    reason: 'COMPLETED' | 'NOT_PLANNED'
+  }): void
+
+  bulkRandomAssign(data: {
+    itemIds: string[]
+    projectId: string
+    assignments: { itemId: string; assigneeIds: string[] }[]
+    strategy: 'balanced' | 'random' | 'round-robin'
+  }): void
+
+  bulkOpen(data: { itemIds: string[]; projectId: string }): void
+
+  bulkTransfer(data: {
+    itemIds: string[]
+    projectId: string
+    targetRepoOwner: string
+    targetRepoName: string
+  }): void
+
+  bulkLock(data: {
+    itemIds: string[]
+    projectId: string
+    lockReason: 'OFF_TOPIC' | 'TOO_HEATED' | 'RESOLVED' | 'SPAM' | null
+  }): void
+
+  bulkUnlock(data: { itemIds: string[]; projectId: string }): void
+
+  bulkPin(data: { itemIds: string[]; projectId: string }): void
+
+  bulkUnpin(data: { itemIds: string[]; projectId: string }): void
+
+  bulkDelete(data: { itemIds: string[]; projectId: string }): void
+
+  getProjectFields(data: { owner: string; number: number; isOrg: boolean }): {
+    id: string
+    title: string
+    fields: {
+      id: string
+      name: string
+      dataType: string
+      options?: { id: string; name: string; color?: string }[]
+      configuration?: { iterations: IterationConfig[] }
+    }[]
+  }
+
+  getSprintStatus(data: {
+    projectId: string
+    owner: string
+    number: number
+    isOrg: boolean
+  }): SprintStatus
+
+  saveSprintSettings(data: { projectId: string; settings: SprintSettings }): { ok: boolean }
+
+  acknowledgeUpcomingSprint(data: { projectId: string; iterationId: string }): { ok: boolean }
+
+  getSprintProgress(data: {
+    projectId: string
+    owner: string
+    number: number
+    isOrg: boolean
+    iterationId: string
+    sprintStartDate: string
+    settings: SprintSettings
+  }): SprintProgressData
+
+  endSprint(data: {
+    projectId: string
+    owner: string
+    number: number
+    isOrg: boolean
+    sprintFieldId: string
+    activeIterationId: string
+    nextIterationId: string
+    doneFieldId: string
+    doneFieldType: 'SINGLE_SELECT' | 'TEXT'
+    doneOptionId: string
+    doneOptionValue: string
+    notStartedOptionId?: string
+    excludeConditions: ExcludeCondition[]
+  }): void | { error: string }
+
+  getItemTitles(data: { itemIds: string[]; projectId: string }): {
+    domId: string
+    issueNodeId: string
+    title: string
+    typename: 'Issue' | 'PullRequest'
+  }[]
+
+  bulkRename(data: {
+    itemIds: string[]
+    projectId: string
+    renames: {
+      domId: string
+      issueNodeId: string
+      newTitle: string
+      typename: 'Issue' | 'PullRequest'
+    }[]
+  }): void
+
+  getReorderContext(data: {
+    itemIds: string[]
+    projectId: string
+    owner: string
+    number: number
+    isOrg: boolean
+    allDomIds?: string[]
+  }): {
+    projectId: string
+    allOrderedItems: { memexItemId: number; nodeId: string; title: string }[]
+    selectedItems: { domId: string; memexItemId: number; nodeId: string; title: string }[]
+  }
+
+  bulkReorder(data: {
+    projectId: string
+    reorderOps: { nodeId: string; previousNodeId: string | null }[]
+    label?: string
+  }): void
+
+  bulkReorderByPosition(data: {
+    selectedDomIds: string[]
+    insertAfterDomId: string
+    projectId: string
+    owner: string
+    number: number
+    isOrg: boolean
+    label?: string
+    allDomIds?: string[]
+  }): void
+
+  getHierarchyData(data: {
+    itemId: string
+    owner: string
+    number: number
+    isOrg: boolean
+  }): HierarchyData
+
+  cancelProcess(data: { processId: string }): void
+
+  queueStateUpdate(data: QueueFrame): void
+}
+
+const _messaging = defineExtensionMessaging<ProtocolMap>()
 export const onMessage = _messaging.onMessage
 
 // wrap sendMessage with SW reconnect retry logic

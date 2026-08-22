@@ -13,6 +13,52 @@ import {
   prefixLabelIcon,
 } from '@/features/bulk-duplicate-utils'
 
+/**
+ * One issue reference with a remove button — the card shape shared by the
+ * blocked-by/blocking rows below and the duplicate modal's Parent section, so
+ * the two cannot drift apart.
+ */
+export function IssueRefRow({
+  issue,
+  removeLabel,
+  onRemove,
+}: {
+  issue: IssueRelationshipData
+  removeLabel: string
+  onRemove: () => void
+}) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: 3,
+        px: 3,
+        py: 2,
+        border: '1px solid',
+        borderColor: 'border.default',
+        borderRadius: 2,
+        bg: 'canvas.default',
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}>
+        <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>{issue.title}</Text>
+        <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{formatIssueReference(issue)}</Text>
+      </Box>
+      <Button
+        variant="invisible"
+        size="small"
+        aria-label={removeLabel}
+        onClick={onRemove}
+        sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted', ...buttonMotionSx }}
+      >
+        <XIcon size={14} />
+      </Button>
+    </Box>
+  )
+}
+
 export function RelationshipListEditor({
   label,
   icon,
@@ -57,39 +103,12 @@ export function RelationshipListEditor({
       <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{description}</Text>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {issues.map((issue) => (
-          <Box
+          <IssueRefRow
             key={relationshipKey(issue)}
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 3,
-              px: 3,
-              py: 2,
-              border: '1px solid',
-              borderColor: 'border.default',
-              borderRadius: 2,
-              bg: 'canvas.default',
-            }}
-          >
-            <Box
-              sx={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}
-            >
-              <Text sx={{ fontSize: 1, fontWeight: 'bold', color: 'fg.default' }}>
-                {issue.title}
-              </Text>
-              <Text sx={{ fontSize: 0, color: 'fg.muted' }}>{formatIssueReference(issue)}</Text>
-            </Box>
-            <Button
-              variant="invisible"
-              size="small"
-              aria-label={`Remove ${formatIssueReference(issue)} from ${label}`}
-              onClick={() => onRemoveIssue(issue)}
-              sx={{ p: '4px', minWidth: 'unset', color: 'fg.muted', ...buttonMotionSx }}
-            >
-              <XIcon size={14} />
-            </Button>
-          </Box>
+            issue={issue}
+            removeLabel={`Remove ${formatIssueReference(issue)} from ${label}`}
+            onRemove={() => onRemoveIssue(issue)}
+          />
         ))}
       </Box>
     </Box>

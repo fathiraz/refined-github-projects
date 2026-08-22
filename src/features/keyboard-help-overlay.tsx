@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Box, Button, Heading, Text } from '@primer/react'
 import { XIcon } from '@primer/octicons-react'
 import { shortcutRegistry, formatShortcut, type ShortcutDefinition } from '@/lib/keyboard'
-import { Z_MODAL } from '@/lib/z-index'
+import { primerCss } from '@/lib/primer-css-helper'
 
 interface KeyboardHelpOverlayProps {
   onClose: () => void
@@ -82,17 +82,7 @@ export function KeyboardHelpOverlay({ onClose }: KeyboardHelpOverlayProps) {
   ]
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        inset: 0,
-        bg: 'rgba(27,31,36,0.5)',
-        zIndex: Z_MODAL,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <Box sx={primerCss.modalOverlay()}>
       <Box
         role="dialog"
         aria-modal="true"

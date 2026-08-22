@@ -9,12 +9,14 @@ import type { CreateIssueWithFieldsMessageData } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { CLONE_ISSUE, ATTACH_TO_PROJECT, UPDATE_PROJECT_FIELD } from '@/lib/graphql-mutations'
 import { GET_REPO_ASSIGNEES, GET_REPO_LABELS } from '@/lib/graphql-queries'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
+import { newProcessId } from '@/lib/format'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
-import { broadcastQueue, withRateLimitRetry } from '@/background/rest-helpers'
+import { withRateLimitRetry } from '@/background/rest-helpers'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
 import { getRepositoryId } from '@/background/project-helpers'
 
 // Resolves the dialog's assignee logins / label names to node ids before
@@ -80,14 +82,14 @@ async function runCreateIssue(data: CreateIssueWithFieldsMessageData, tabId?: nu
   }
 
   acquireBulk()
-  const processId = `create-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-  const totalSteps = 2 + data.updates.length
-  const label = `Create issue · ${data.title}`
-
-  await broadcastQueue(
-    { total: totalSteps, completed: 0, paused: false, status: 'Creating issue…', processId, label },
+  const run = {
+    processId: newProcessId('create'),
+    label: `Create issue · ${data.title}`,
     tabId,
-  )
+  }
+  const totalSteps = 2 + data.updates.length
+
+  await broadcastStatus(run, totalSteps, 'Creating issue…')
 
   try {
     let newIssueId = ''
@@ -159,32 +161,13 @@ async function runCreateIssue(data: CreateIssueWithFieldsMessageData, tabId?: nu
       })),
     ]
 
-    await processQueue(
-      tasks,
-      async (state) => {
-        await broadcastQueue(
-          {
-            total: totalSteps,
-            completed: state.completed,
-            paused: state.paused,
-            retryAfter: state.retryAfter,
-            status: state.completed === 0 ? 'Creating issue…' : 'Applying custom fields…',
-            detail: state.detail,
-            processId,
-            label,
-            failedItems: state.failedItems,
-          },
-          tabId,
-        )
-      },
-      processId,
-    )
+    await runQueueWithProgress(tasks, run, (state) => ({
+      total: totalSteps,
+      status: state.completed === 0 ? 'Creating issue…' : 'Applying custom fields…',
+    }))
 
-    await broadcastQueue(
-      { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-      tabId,
-    )
-    logger.log('[rgp:bg] create-issue complete', { processId })
+    await broadcastDone(run)
+    logger.log('[rgp:bg] create-issue complete', { processId: run.processId })
   } finally {
     releaseBulk()
   }

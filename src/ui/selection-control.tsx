@@ -4,9 +4,9 @@ import { getSelectionSnapshot, selectionStore } from '@/lib/selection-store'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import Tippy from '@/ui/tooltip'
 
-export type SelectionVariant = 'row' | 'group' | 'header'
+type SelectionVariant = 'row' | 'group' | 'header'
 
-export interface SelectionControlProps {
+interface SelectionControlProps {
   checked: boolean
   indeterminate?: boolean
   label: string

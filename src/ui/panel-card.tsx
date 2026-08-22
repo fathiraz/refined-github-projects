@@ -1,49 +1,25 @@
 import React from 'react'
 import { Box } from '@primer/react'
 
+const PADDING = { small: 3, medium: 4, large: 5 } as const
+const SURFACE = { elevated: 'canvas.overlay', inset: 'canvas.inset' } as const
+
 interface PanelCardProps {
   children: React.ReactNode
-  variant?: 'default' | 'elevated' | 'inset'
-  padding?: 'none' | 'small' | 'medium' | 'large'
-  className?: string
+  variant: keyof typeof SURFACE
+  padding: keyof typeof PADDING
 }
 
-export function PanelCard({
-  children,
-  variant = 'default',
-  padding = 'medium',
-  className,
-}: PanelCardProps) {
-  const paddingMap = { none: 0, small: 3, medium: 4, large: 5 }
-  const variantStyles = {
-    default: {
-      bg: 'canvas.default',
-      borderColor: 'border.default',
-      borderWidth: 1,
-      borderStyle: 'solid',
-    },
-    elevated: {
-      bg: 'canvas.overlay',
-      borderColor: 'border.default',
-      borderWidth: 1,
-      borderStyle: 'solid',
-    },
-    inset: {
-      bg: 'canvas.inset',
-      borderColor: 'border.default',
-      borderWidth: 1,
-      borderStyle: 'solid',
-    },
-  }
-
+export function PanelCard({ children, variant, padding }: PanelCardProps) {
   return (
     <Box
-      className={className}
       sx={{
         borderRadius: 2,
-        p: paddingMap[padding],
+        p: PADDING[padding],
+        bg: SURFACE[variant],
+        border: '1px solid',
+        borderColor: 'border.default',
         transition: 'all 180ms cubic-bezier(0.4, 0, 0.2, 1)',
-        ...variantStyles[variant],
       }}
     >
       {children}

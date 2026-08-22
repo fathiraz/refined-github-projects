@@ -2,7 +2,14 @@ import React from 'react'
 import { ActionList, Box } from '@primer/react'
 import { getFieldIcon, type ProjectField } from '@/features/bulk-edit-utils'
 
-export function SectionHeader({ children }: { children: React.ReactNode }) {
+/** Sticky group label above a list of rows. `sx` adds to the base, e.g. a borderTop. */
+export function SectionHeader({
+  children,
+  sx,
+}: {
+  children: React.ReactNode
+  sx?: Record<string, unknown>
+}) {
   return (
     <Box
       sx={{
@@ -14,6 +21,7 @@ export function SectionHeader({ children }: { children: React.ReactNode }) {
         bg: 'canvas.subtle',
         borderBottom: '1px solid',
         borderColor: 'border.muted',
+        ...sx,
       }}
     >
       {children}
@@ -21,7 +29,7 @@ export function SectionHeader({ children }: { children: React.ReactNode }) {
   )
 }
 
-export interface FieldRowProps {
+interface FieldRowProps {
   field: ProjectField
   onPick: (field: ProjectField) => void
 }

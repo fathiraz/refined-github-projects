@@ -3,13 +3,29 @@
 import { onMessage } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEMS_FOR_REORDER, UPDATE_PROJECT_ITEM_POSITION } from '@/lib/graphql-queries'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
-import { broadcastQueue, withRateLimitRetry } from '@/background/rest-helpers'
-import { getProjectFieldsData } from '@/background/project-helpers'
+import { withRateLimitRetry } from '@/background/rest-helpers'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
+import { createIssueRefIndex, getProjectFieldsData } from '@/background/project-helpers'
+import { newProcessId, plural } from '@/lib/format'
+
+type ReorderOp = { nodeId: string; previousNodeId: string | null }
+
+/** One position mutation per op. Both reorder handlers issue exactly these. */
+function positionTasks(ops: ReorderOp[], projectId: string, idPrefix: string): QueueTask[] {
+  return ops.map((op, i) => ({
+    id: `${idPrefix}-${i}`,
+    run: async () => {
+      await gql(UPDATE_PROJECT_ITEM_POSITION, {
+        input: { projectId, itemId: op.nodeId, afterId: op.previousNodeId ?? undefined },
+      })
+    },
+  }))
+}
 
 export function registerBulkPositionHandlers(): void {
   onMessage('bulkReorder', async ({ data, sender }) => {
@@ -21,65 +37,25 @@ export function registerBulkPositionHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `reorder-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const label =
-      data.label ??
-      `Move · ${data.reorderOps.length} item${data.reorderOps.length !== 1 ? 's' : ''}`
-    const tabId = sender.tab?.id
+    const run = {
+      processId: newProcessId('reorder'),
+      label: data.label ?? `Move · ${plural(data.reorderOps.length, 'item')}`,
+      tabId: sender.tab?.id,
+    }
 
     try {
-      const tasks: QueueTask[] = data.reorderOps.map((op, i) => ({
-        id: `reorder-${i}`,
-        run: async () => {
-          await gql(UPDATE_PROJECT_ITEM_POSITION, {
-            input: {
-              projectId: data.projectId,
-              itemId: op.nodeId,
-              afterId: op.previousNodeId ?? undefined,
-            },
-          })
-        },
+      const tasks = positionTasks(data.reorderOps, data.projectId, 'reorder')
+
+      await broadcastStatus(run, tasks.length, 'Moving items...')
+
+      await runQueueWithProgress(tasks, run, (state) => ({
+        status:
+          state.completed < data.reorderOps.length
+            ? `Moving item ${state.completed + 1} of ${data.reorderOps.length}…`
+            : `Moving ${plural(data.reorderOps.length, 'item')}…`,
       }))
 
-      await broadcastQueue(
-        {
-          total: tasks.length,
-          completed: 0,
-          paused: false,
-          status: 'Moving items...',
-          processId,
-          label,
-        },
-        tabId,
-      )
-
-      await processQueue(
-        tasks,
-        async (state) => {
-          await broadcastQueue(
-            {
-              total: state.total,
-              completed: state.completed,
-              paused: state.paused,
-              retryAfter: state.retryAfter,
-              status:
-                state.completed < data.reorderOps.length
-                  ? `Moving item ${state.completed + 1} of ${data.reorderOps.length}…`
-                  : `Moving ${data.reorderOps.length} item${data.reorderOps.length !== 1 ? 's' : ''}…`,
-              processId,
-              label,
-              failedItems: state.failedItems,
-            },
-            tabId,
-          )
-        },
-        processId,
-      )
-
-      await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-        tabId,
-      )
+      await broadcastDone(run)
     } finally {
       releaseBulk()
     }
@@ -94,10 +70,11 @@ export function registerBulkPositionHandlers(): void {
     }
 
     acquireBulk()
-    const processId = `reorder-pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    const count = data.selectedDomIds.length
-    const label = data.label ?? `Move · ${count} item${count !== 1 ? 's' : ''}`
-    const tabId = sender.tab?.id
+    const run = {
+      processId: newProcessId('reorder-pos'),
+      label: data.label ?? `Move · ${plural(data.selectedDomIds.length, 'item')}`,
+      tabId: sender.tab?.id,
+    }
 
     try {
       const { project } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
@@ -107,12 +84,20 @@ export function registerBulkPositionHandlers(): void {
         node: {
           items: {
             pageInfo: { hasNextPage: boolean; endCursor: string | null }
-            nodes: { id: string; databaseId: number; content: { databaseId: number } | null }[]
+            nodes: {
+              id: string
+              databaseId: number
+              content: { databaseId: number; number?: number } | null
+            }[]
           }
         } | null
       }
 
-      const allItems: Array<{ memexItemId: number; nodeId: string; contentDbId: number }> = []
+      type PosItem = { memexItemId: number; nodeId: string; contentDbId: number }
+
+      const allItems: PosItem[] = []
+      // indexed by both numbers an item carries, so either id spelling resolves
+      const byRef = createIssueRefIndex<PosItem>()
       let cursor: string | null = null
       while (true) {
         const page = await withRateLimitRetry(() =>
@@ -122,11 +107,13 @@ export function registerBulkPositionHandlers(): void {
         if (!items) break
         for (const item of items.nodes) {
           if (item.content?.databaseId) {
-            allItems.push({
+            const entry: PosItem = {
               memexItemId: item.databaseId,
               nodeId: item.id,
               contentDbId: item.content.databaseId,
-            })
+            }
+            allItems.push(entry)
+            byRef.add(item.content, entry)
           }
         }
         if (!items.pageInfo.hasNextPage) break
@@ -134,23 +121,12 @@ export function registerBulkPositionHandlers(): void {
         await sleep(500)
       }
 
-      const contentDbToMemex = new Map(allItems.map((i) => [i.contentDbId, i.memexItemId]))
-      const contentDbToNode = new Map(allItems.map((i) => [i.contentDbId, i.nodeId]))
-
-      function parseContentDbId(domId: string): number | null {
-        const m = domId.match(/^issue:(\d+)$/) || domId.match(/^issue-(\d+)$/)
-        return m ? parseInt(m[1], 10) : null
-      }
-
       const selectedMemexIds = data.selectedDomIds
-        .map((domId) => contentDbToMemex.get(parseContentDbId(domId)!))
+        .map((domId) => byRef.get(domId)?.memexItemId)
         .filter((id): id is number => id != null)
 
-      const insertAfterContentDbId = data.insertAfterDomId
-        ? parseContentDbId(data.insertAfterDomId)
-        : null
-      const insertAfterMemexId: number | '' = insertAfterContentDbId
-        ? (contentDbToMemex.get(insertAfterContentDbId) ?? '')
+      const insertAfterMemexId: number | '' = data.insertAfterDomId
+        ? (byRef.get(data.insertAfterDomId)?.memexItemId ?? '')
         : ''
 
       // use DOM order as the base ordering when provided (avoids GraphQL insertion-order mismatch)
@@ -158,12 +134,8 @@ export function registerBulkPositionHandlers(): void {
       if (data.allDomIds?.length) {
         orderedItems = []
         for (const domId of data.allDomIds) {
-          const contentDbId = parseContentDbId(domId)
-          if (contentDbId == null) continue
-          const memexItemId = contentDbToMemex.get(contentDbId)
-          const nodeId = contentDbToNode.get(contentDbId)
-          if (memexItemId != null && nodeId != null)
-            orderedItems.push({ memexItemId, nodeId, contentDbId })
+          const entry = byRef.get(domId)
+          if (entry) orderedItems.push(entry)
         }
         // append items not in DOM (hidden/filtered) at the end
         const inDomSet = new Set(orderedItems.map((i) => i.memexItemId))
@@ -207,56 +179,18 @@ export function registerBulkPositionHandlers(): void {
         [],
       )
 
-      const tasks: QueueTask[] = reorderOps.map((op, i) => ({
-        id: `reorder-pos-${i}`,
-        run: async () => {
-          await gql(UPDATE_PROJECT_ITEM_POSITION, {
-            input: {
-              projectId: project.id,
-              itemId: op.nodeId,
-              afterId: op.previousNodeId ?? undefined,
-            },
-          })
-        },
+      const tasks = positionTasks(reorderOps, project.id, 'reorder-pos')
+
+      await broadcastStatus(run, tasks.length, 'Moving items...')
+
+      await runQueueWithProgress(tasks, run, (state) => ({
+        status:
+          state.completed < reorderOps.length
+            ? `Moving item ${state.completed + 1} of ${reorderOps.length}…`
+            : `Moved ${reorderOps.length} items`,
       }))
 
-      await broadcastQueue(
-        {
-          total: tasks.length,
-          completed: 0,
-          paused: false,
-          status: 'Moving items...',
-          processId,
-          label,
-        },
-        tabId,
-      )
-      await processQueue(
-        tasks,
-        async (state) => {
-          await broadcastQueue(
-            {
-              total: state.total,
-              completed: state.completed,
-              paused: state.paused,
-              retryAfter: state.retryAfter,
-              status:
-                state.completed < reorderOps.length
-                  ? `Moving item ${state.completed + 1} of ${reorderOps.length}…`
-                  : `Moved ${reorderOps.length} items`,
-              processId,
-              label,
-              failedItems: state.failedItems,
-            },
-            tabId,
-          )
-        },
-        processId,
-      )
-      await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-        tabId,
-      )
+      await broadcastDone(run)
     } finally {
       releaseBulk()
     }

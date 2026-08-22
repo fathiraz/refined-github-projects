@@ -7,7 +7,7 @@ vi.mock('@/lib/debug-logger', () => ({
   },
 }))
 
-import { installPrimerShadowDomCompat, clearMousedownPath } from '@/lib/primer-shadow-dom-compat'
+import { installPrimerShadowDomCompat } from '@/lib/primer-shadow-dom-compat'
 
 describe('installPrimerShadowDomCompat', () => {
   let shadowHost: HTMLElement
@@ -163,11 +163,5 @@ describe('installPrimerShadowDomCompat', () => {
     child.dispatchEvent(mousedown)
 
     expect(parent.contains(shadowHost as unknown as Node)).toBe(true)
-  })
-})
-
-describe('clearMousedownPath', () => {
-  it('does not throw', () => {
-    expect(() => clearMousedownPath()).not.toThrow()
   })
 })

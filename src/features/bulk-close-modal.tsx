@@ -8,6 +8,7 @@ import { ModalShell } from '@/ui/modal-shell'
 import { primerCss } from '@/lib/primer-css-helper'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Z_TOOLTIP } from '@/lib/z-index'
+import { plural } from '@/lib/format'
 
 interface Props {
   count: number
@@ -62,7 +63,7 @@ export function BulkCloseModal({ count, closeReason, onChangeReason, onClose, on
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Text as="p" sx={{ m: 0, mb: 1, fontSize: 1, color: 'fg.muted' }}>
-          Choose how to close {count} issue{count !== 1 ? 's' : ''}:
+          Choose how to close {plural(count, 'issue')}:
         </Text>
         {REASONS.map(({ id, label, sublabel }) => {
           const isSelected = closeReason === id

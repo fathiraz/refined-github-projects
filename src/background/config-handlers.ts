@@ -1,12 +1,10 @@
-import { Effect } from 'effect'
-
 import { onMessage } from '@/lib/messages'
+import { runHandler } from '@/background/run-handler'
 import { patStorage, usernameStorage } from '@/lib/storage'
 import { cancelQueue } from '@/lib/queue'
 import { VALIDATE_TOKEN } from '@/lib/graphql-queries'
 import type { PatErrorType } from '@/lib/errors'
 import { logger } from '@/lib/debug-logger'
-import { runHandler } from '@/lib/effect-runtime'
 
 export function registerConfigHandlers(): void {
   onMessage('openOptions', () => {
@@ -14,26 +12,14 @@ export function registerConfigHandlers(): void {
   })
 
   onMessage('getPatStatus', () =>
-    runHandler(
-      'getPatStatus',
-      Effect.tryPromise({
-        try: async () => {
-          const pat = await patStorage.getValue()
-          return { hasPat: Boolean(pat?.trim()) }
-        },
-        catch: (err) => err as unknown,
-      }).pipe(Effect.orDie),
-    ),
+    runHandler('getPatStatus', async () => {
+      const pat = await patStorage.getValue()
+      return { hasPat: Boolean(pat?.trim()) }
+    }),
   )
 
   onMessage('validatePat', ({ data }) =>
-    runHandler(
-      'validatePat',
-      Effect.tryPromise({
-        try: () => validatePatAsync(data.token),
-        catch: (err) => err as unknown,
-      }).pipe(Effect.orDie),
-    ),
+    runHandler('validatePat', () => validatePatAsync(data.token)),
   )
 
   onMessage('cancelProcess', ({ data }) => {

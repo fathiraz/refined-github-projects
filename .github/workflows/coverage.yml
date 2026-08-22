@@ -63,7 +63,7 @@ jobs:
           thresholds: '50 75'
 
       - name: Update README badge + summary
-        run: node scripts/update-coverage-badge.mjs --from-summary --from-markdown code-coverage-results.md
+        run: node scripts/update-coverage-badge.mjs --from-markdown code-coverage-results.md
 
       - name: Commit updated README
         uses: stefanzweifel/git-auto-commit-action@v6

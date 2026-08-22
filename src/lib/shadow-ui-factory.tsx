@@ -13,7 +13,7 @@ import {
 } from '@/lib/primer-shadow-dom-compat'
 import { Z_MODAL_PORTAL } from '@/lib/z-index'
 
-export interface FeatureUiOptions {
+interface FeatureUiOptions {
   /** Feature name, used as ErrorBoundary name and WXT UI name (prefixed with 'rgp-') */
   name: string
   /** React element to render inside the shadow DOM */
@@ -131,7 +131,7 @@ export async function createFeatureUi(
   }
 }
 
-export interface LightDomUiOptions {
+interface LightDomUiOptions {
   /** Feature name, used as ErrorBoundary name and as a data attribute on the host */
   name: string
   /** React element to render directly into the light DOM */

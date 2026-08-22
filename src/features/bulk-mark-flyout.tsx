@@ -16,10 +16,12 @@ import {
 import { BULK_BAR_PRIMER_PORTAL_NAME } from '@/lib/primer-shadow-dom-compat'
 import { Z_OVERLAY } from '@/lib/z-index'
 import { getItemStateSnapshot, type ItemStateSnapshot } from '@/lib/project-table-dom'
+import { plural } from '@/lib/format'
+import { Kbd } from '@/ui/keyboard-hint'
 
 export type MarkVerb = 'close' | 'reopen' | 'pin' | 'unpin' | 'lock' | 'unlock'
 
-export interface BulkMarkFlyoutProps {
+interface BulkMarkFlyoutProps {
   anchorRef: React.RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void
@@ -30,22 +32,6 @@ export interface BulkMarkFlyoutProps {
   onSelectVerb: (verb: MarkVerb) => void
 }
 
-const KBD_SX = {
-  fontSize: 0,
-  fontFamily: 'inherit',
-  fontWeight: 500,
-  px: '5px',
-  py: '1px',
-  borderRadius: 1,
-  bg: 'canvas.inset',
-  border: '1px solid',
-  borderColor: 'border.default',
-  color: 'fg.muted',
-  cursor: 'default',
-  lineHeight: 1.6,
-  letterSpacing: '0.02em',
-} as const
-
 const BADGE_SX = {
   width: 22,
   height: 22,
@@ -54,14 +40,6 @@ const BADGE_SX = {
   alignItems: 'center',
   justifyContent: 'center',
 } as const
-
-function Kbd({ text }: { text: string }) {
-  return (
-    <Box as="kbd" sx={KBD_SX}>
-      {text}
-    </Box>
-  )
-}
 
 export function BulkMarkFlyout({
   anchorRef,
@@ -166,7 +144,7 @@ export function buildRows(state: ItemStateSnapshot): MarkRowSet {
     if (state.openCount > 0) {
       status.push({
         verb: 'close',
-        label: `Close ${state.openCount} ${pluralize('open issue', state.openCount)}`,
+        label: `Close ${plural(state.openCount, 'open issue')}`,
         icon: <CircleSlashIcon size={13} />,
         badge: { bg: 'attention.subtle', color: 'attention.fg' },
         chord: 'C',
@@ -176,7 +154,7 @@ export function buildRows(state: ItemStateSnapshot): MarkRowSet {
     if (state.closedCount > 0) {
       status.push({
         verb: 'reopen',
-        label: `Reopen ${state.closedCount} ${pluralize('closed issue', state.closedCount)}`,
+        label: `Reopen ${plural(state.closedCount, 'closed issue')}`,
         icon: <IssueOpenedIcon size={13} />,
         badge: { bg: 'success.subtle', color: 'success.fg' },
         chord: 'C',
@@ -229,10 +207,6 @@ export function buildRows(state: ItemStateSnapshot): MarkRowSet {
   return { status, visibility, conversation }
 }
 
-function pluralize(noun: string, count: number): string {
-  return count === 1 ? noun : `${noun}s`
-}
-
 function renderSection(
   heading: string,
   rows: MarkRow[],
@@ -257,7 +231,7 @@ function renderSection(
           </ActionList.LeadingVisual>
           {row.label}
           <ActionList.TrailingVisual>
-            <Kbd text={row.chord} />
+            <Kbd>{row.chord}</Kbd>
           </ActionList.TrailingVisual>
         </ActionList.Item>
       ))}

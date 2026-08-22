@@ -7,11 +7,7 @@ vi.mock('@/lib/debug-logger', () => ({
   initDebugLogger: async () => {},
 }))
 
-import {
-  resolveDChord,
-  useBarKeyboardChords,
-  type BarChordMap,
-} from '@/lib/use-bar-keyboard-chords'
+import { useBarKeyboardChords, type BarChordMap } from '@/lib/use-bar-keyboard-chords'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 interface HarnessProps {
@@ -130,15 +126,5 @@ describe('useBarKeyboardChords', () => {
     const bar = container.querySelector('[data-testid="bar"]') as HTMLElement
     pressKey(bar, 'E', true)
     expect(onEdit).not.toHaveBeenCalled()
-  })
-})
-
-describe('resolveDChord', () => {
-  it("disambiguates to 'duplicate' when count === 1", () => {
-    expect(resolveDChord(1)).toBe('duplicate')
-  })
-  it("disambiguates to 'delete' when count > 1", () => {
-    expect(resolveDChord(2)).toBe('delete')
-    expect(resolveDChord(100)).toBe('delete')
   })
 })

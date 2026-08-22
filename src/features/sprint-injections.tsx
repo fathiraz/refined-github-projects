@@ -5,7 +5,7 @@ import { SprintGroupHeaderWidget } from '@/features/sprint-table-widget'
 import { createLightDomUi, type FeatureUi } from '@/lib/shadow-ui-factory'
 import { sprintPanelStore } from '@/lib/sprint-store'
 import { ensureTippyCss, getTippyDelayValue } from '@/lib/tippy-utils'
-import type { ProjectContext, ProjectData } from '@/lib/github-project'
+import type { ProjectContext } from '@/lib/github-project'
 
 const SPRINT_HDR_ATTR = 'data-rgp-sprint-hdr'
 const STATUS_BAR_BUTTON_ATTR = 'data-rgp-sprint-btn'
@@ -21,7 +21,6 @@ let hideTooltipTimeout: number | null = null
 export function createSprintHeaderInjector(
   ctx: ContentScriptContext,
   projectContext: ProjectContext,
-  getFields: () => Promise<ProjectData>,
 ) {
   const mountedWidgets = new Map<HTMLElement, FeatureUi>()
 
@@ -54,7 +53,6 @@ export function createSprintHeaderInjector(
             owner={projectContext.owner}
             isOrg={projectContext.isOrg}
             number={projectContext.number}
-            getFields={getFields}
           />
         ),
       })

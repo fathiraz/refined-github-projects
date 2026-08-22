@@ -1,12 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React from 'react'
 import Tippy from '@/ui/tooltip'
 import { ensureTippyCss } from '@/lib/tippy-utils'
 import { Box, Button, Label, Spinner, Text } from '@primer/react'
 import { SlidersIcon } from '@/ui/icons'
-import { sendMessage } from '@/lib/messages'
-import type { SprintInfo } from '@/lib/messages'
-import type { SprintSettings } from '@/lib/storage'
-import type { ProjectData } from '@/lib/github-project'
+import { useSprintStatus } from '@/lib/use-sprint-status'
 import { primerCss } from '@/lib/primer-css-helper'
 import { sprintConfirmEndStore, sprintPanelStore } from '@/lib/sprint-store'
 
@@ -15,10 +12,7 @@ interface Props {
   owner: string
   isOrg: boolean
   number: number
-  getFields: () => Promise<ProjectData>
 }
-
-type WidgetState = 'loading' | 'not-configured' | 'no-active' | 'acknowledged' | 'active' | 'error'
 
 const accentTextButtonSx = {
   ...primerCss.buttonMotion(),
@@ -38,67 +32,50 @@ const accentTextButtonSx = {
   },
 }
 
-interface SprintStatus {
-  hasSettings: boolean
-  activeSprint: SprintInfo | null
-  nearestUpcoming: SprintInfo | null
-  acknowledgedSprint: SprintInfo | null
-  iterationFieldId: string | null
-  settings: SprintSettings | null
+function SprintSettingsButton() {
+  return (
+    <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
+      <Button
+        variant="invisible"
+        aria-label="Sprint settings"
+        onClick={() => sprintPanelStore.set(true)}
+        sx={{
+          color: 'fg.muted',
+          p: '3px',
+          height: 'auto',
+          minWidth: 0,
+          lineHeight: 1,
+          border: 'none',
+          borderRadius: 1,
+          boxShadow: 'none',
+          transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover:not(:disabled)': {
+            transform: 'translateY(-1px)',
+            color: 'fg.default',
+            bg: 'canvas.subtle',
+          },
+          '&:active': { transform: 'translateY(0)', transition: '100ms' },
+          '@media (prefers-reduced-motion: reduce)': {
+            transition: 'none',
+            '&:hover:not(:disabled)': { transform: 'none' },
+          },
+        }}
+      >
+        <SlidersIcon size={14} />
+      </Button>
+    </Tippy>
+  )
 }
 
-export function SprintGroupHeaderWidget({
-  projectId,
-  owner,
-  isOrg,
-  number,
-  getFields: _getFields,
-}: Props) {
+export function SprintGroupHeaderWidget({ projectId, owner, isOrg, number }: Props) {
   ensureTippyCss()
-  const [state, setState] = useState<WidgetState>('loading')
-  const [status, setStatus] = useState<SprintStatus | null>(null)
-  const [acknowledging, setAcknowledging] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchStatus = useCallback(async () => {
-    setState('loading')
-    setError(null)
-    try {
-      const result = await sendMessage('getSprintStatus', { projectId, owner, number, isOrg })
-      setStatus(result)
-      if (!result.hasSettings) {
-        setState('not-configured')
-      } else if (result.activeSprint) {
-        setState('active')
-      } else if (result.acknowledgedSprint) {
-        setState('acknowledged')
-      } else {
-        setState('no-active')
-      }
-    } catch (e) {
-      setError(String(e))
-      setState('error')
-    }
-  }, [projectId, owner, number, isOrg])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load widget status when project context changes
-    void fetchStatus()
-  }, [fetchStatus])
-
-  const handleAcknowledge = async () => {
-    if (!status?.nearestUpcoming) return
-    setAcknowledging(true)
-    try {
-      await sendMessage('acknowledgeUpcomingSprint', {
-        projectId,
-        iterationId: status.nearestUpcoming.id,
-      })
-      await fetchStatus()
-    } finally {
-      setAcknowledging(false)
-    }
-  }
+  const {
+    state,
+    status,
+    error,
+    acknowledging,
+    acknowledge: handleAcknowledge,
+  } = useSprintStatus({ projectId, owner, isOrg, number })
 
   const normalizedError = (error ?? 'Unable to load sprint status').replace(/^Error:\s*/, '').trim()
   const displayError =
@@ -170,36 +147,7 @@ export function SprintGroupHeaderWidget({
               </Button>
             </Tippy>
           )}
-          <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
-            <Button
-              variant="invisible"
-              aria-label="Sprint settings"
-              onClick={() => sprintPanelStore.set(true)}
-              sx={{
-                color: 'fg.muted',
-                p: '3px',
-                height: 'auto',
-                minWidth: 0,
-                lineHeight: 1,
-                border: 'none',
-                borderRadius: 1,
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': {
-                  transform: 'translateY(-1px)',
-                  color: 'fg.default',
-                  bg: 'canvas.subtle',
-                },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
-              }}
-            >
-              <SlidersIcon size={14} />
-            </Button>
-          </Tippy>
+          <SprintSettingsButton />
         </>
       )}
 
@@ -235,36 +183,7 @@ export function SprintGroupHeaderWidget({
               End Sprint
             </Button>
           </Tippy>
-          <Tippy content="Sprint settings" placement="top" delay={[400, 0]}>
-            <Button
-              variant="invisible"
-              aria-label="Sprint settings"
-              onClick={() => sprintPanelStore.set(true)}
-              sx={{
-                color: 'fg.muted',
-                p: '3px',
-                height: 'auto',
-                minWidth: 0,
-                lineHeight: 1,
-                border: 'none',
-                borderRadius: 1,
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': {
-                  transform: 'translateY(-1px)',
-                  color: 'fg.default',
-                  bg: 'canvas.subtle',
-                },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
-              }}
-            >
-              <SlidersIcon size={14} />
-            </Button>
-          </Tippy>
+          <SprintSettingsButton />
         </>
       )}
     </Box>

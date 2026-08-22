@@ -1,22 +1,18 @@
 import { onMessage } from '@/lib/messages'
-import { Effect } from 'effect'
-
+import { runHandler } from '@/background/run-handler'
 import type {
   BulkRelationshipValidationResult,
   HierarchyData,
-  IssueRelationshipData,
   ItemPreviewData,
 } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEM_DETAILS } from '@/lib/graphql-queries'
 import { logger } from '@/lib/debug-logger'
-import { runHandler } from '@/lib/effect-runtime'
+import { toIssueRelationship } from '@/lib/relationship-utils'
 
 import type { DateFieldValue, NumberFieldValue, ProjectItemDetails } from '@/background/types'
 
-import { cacheResolvedItems } from '@/background/cache'
-import { HierarchyCache, PreviewCache } from '@/background/cache-service'
-import { provideBackground } from '@/background/runtime-ext'
+import { cacheResolvedItems, getOrCacheHierarchy, getOrCachePreview } from '@/background/cache'
 
 import { withRateLimitRetry } from '@/background/rest-helpers'
 import {
@@ -33,6 +29,29 @@ type ItemLookupInput = {
   isOrg: boolean
 }
 
+/**
+ * A DOM item id (`issue:<databaseId>` in either spelling) → the real
+ * ProjectV2Item node id. Both lookups below resolve through here so they cannot
+ * disagree about which ids are resolvable — the divergence that produced the
+ * hyphen-spelling bugs this branch already had to fix twice.
+ */
+async function resolveItemNodeId(itemId: string, projectId: string | undefined): Promise<string> {
+  if (!projectId) throw new Error('Could not fetch project fields — cannot resolve item ID')
+  const resolved = await resolveProjectItemIds([itemId], projectId)
+  if (resolved.length === 0)
+    throw new Error(`Item ${itemId} not found in project — it may belong to a different project`)
+  return resolved[0].projectItemId
+}
+
+/** Both dependency directions for one issue. Reads, so safe to run together. */
+function loadBlockingPair(issue: ProjectItemDetails['node']['content']) {
+  const { owner, name } = issue.repository
+  return Promise.all([
+    listIssueRelationshipsSafe('blocked_by', owner.login, name, issue.number),
+    listIssueRelationshipsSafe('blocking', owner.login, name, issue.number),
+  ])
+}
+
 async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewData> {
   // 1. Fetch project field definitions first — also gives us the real projectV2.id
   const { project: projectV2 } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
@@ -41,13 +60,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
   // 2. Resolve DOM itemId (e.g. "issue:3960969873") → real ProjectV2Item node ID
   let resolvedItemId = data.itemId
   if (/^issue[:-]\d+$/.test(data.itemId)) {
-    if (!projectV2?.id) throw new Error('Could not fetch project fields — cannot resolve item ID')
-    const resolved = await resolveProjectItemIds([data.itemId], projectV2.id)
-    if (resolved.length === 0)
-      throw new Error(
-        `Item ${data.itemId} not found in project — it may belong to a different project`,
-      )
-    resolvedItemId = resolved[0].projectItemId
+    resolvedItemId = await resolveItemNodeId(data.itemId, projectV2?.id)
   }
 
   // 3. Fetch item details with the correct node ID
@@ -58,20 +71,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
   if (!source) throw new Error('Project item not found — ID resolution may have failed')
   const issue = source.content
   if (!issue?.title) throw new Error('Item is not a supported type (must be a GitHub Issue)')
-  const [blockedBy, blocking] = await Promise.all([
-    listIssueRelationshipsSafe(
-      'blocked_by',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
-    listIssueRelationshipsSafe(
-      'blocking',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
-  ])
+  const [blockedBy, blocking] = await loadBlockingPair(issue)
 
   // 4. Correlate field values with definitions
   const fields: ItemPreviewData['fields'] = []
@@ -115,16 +115,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
     fields.push(entry)
   }
 
-  const parentRelationship = issue.parent
-    ? {
-        nodeId: issue.parent.id,
-        databaseId: issue.parent.databaseId,
-        number: issue.parent.number,
-        title: issue.parent.title,
-        repoOwner: issue.parent.repository.owner.login,
-        repoName: issue.parent.repository.name,
-      }
-    : undefined
+  const parentRelationship = toIssueRelationship(issue.parent)
 
   return {
     resolvedItemId,
@@ -157,13 +148,7 @@ async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData>
   let resolvedItemId = data.itemId
   if (/^issue[:-]\d+$/.test(data.itemId)) {
     const { project: projectV2 } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
-    if (!projectV2?.id) throw new Error('Could not fetch project fields — cannot resolve item ID')
-    const resolved = await resolveProjectItemIds([data.itemId], projectV2.id)
-    if (resolved.length === 0)
-      throw new Error(
-        `Item ${data.itemId} not found in project — it may belong to a different project`,
-      )
-    resolvedItemId = resolved[0].projectItemId
+    resolvedItemId = await resolveItemNodeId(data.itemId, projectV2?.id)
   }
 
   // fetch item details for parent relationship (GraphQL)
@@ -176,32 +161,12 @@ async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData>
   if (!issue?.title) throw new Error('Item is not a supported type')
 
   // fetch sub-issues, blockedBy, blocking concurrently (all GETs — safe to parallelize)
-  const [subIssues, blockedBy, blocking] = await Promise.all([
+  const [subIssues, [blockedBy, blocking]] = await Promise.all([
     listSubIssuesSafe(issue.repository.owner.login, issue.repository.name, issue.number),
-    listIssueRelationshipsSafe(
-      'blocked_by',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
-    listIssueRelationshipsSafe(
-      'blocking',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
+    loadBlockingPair(issue),
   ])
 
-  const parent: IssueRelationshipData | undefined = issue.parent
-    ? {
-        nodeId: issue.parent.id,
-        databaseId: issue.parent.databaseId,
-        number: issue.parent.number,
-        title: issue.parent.title,
-        repoOwner: issue.parent.repository.owner.login,
-        repoName: issue.parent.repository.name,
-      }
-    : undefined
+  const parent = toIssueRelationship(issue.parent)
 
   return {
     resolvedItemId,
@@ -228,39 +193,27 @@ export function registerHierarchyHandlers(): void {
   })
 
   onMessage('getItemPreview', ({ data }) =>
-    runHandler(
-      'getItemPreview',
-      provideBackground(
-        Effect.gen(function* () {
-          logger.log('[rgp:bg] getItemPreview received', data)
-          const previewCache = yield* PreviewCache
-          const key = `${data.owner}/${data.number}/${data.itemId}`
-          const response = yield* previewCache.get(key, () => fetchItemPreviewData(data))
-          logger.log('[rgp:bg] getItemPreview returning', {
-            fieldsCount: response.fields.length,
-            relationships: {
-              parent: Boolean(response.relationships.parent),
-              blockedBy: response.relationships.blockedBy.length,
-              blocking: response.relationships.blocking.length,
-            },
-          })
-          return response
-        }),
-      ),
-    ),
+    runHandler('getItemPreview', async () => {
+      logger.log('[rgp:bg] getItemPreview received', data)
+      const key = `${data.owner}/${data.number}/${data.itemId}`
+      const response = await getOrCachePreview(key, () => fetchItemPreviewData(data))
+      logger.log('[rgp:bg] getItemPreview returning', {
+        fieldsCount: response.fields.length,
+        relationships: {
+          parent: Boolean(response.relationships.parent),
+          blockedBy: response.relationships.blockedBy.length,
+          blocking: response.relationships.blocking.length,
+        },
+      })
+      return response
+    }),
   )
 
   onMessage('getHierarchyData', ({ data }) =>
-    runHandler(
-      'getHierarchyData',
-      provideBackground(
-        Effect.gen(function* () {
-          logger.log('[rgp:bg] getHierarchyData received', data)
-          const hierarchyCache = yield* HierarchyCache
-          const key = `${data.owner}/${data.number}/${data.itemId}`
-          return yield* hierarchyCache.get(key, () => fetchHierarchyData(data))
-        }),
-      ),
-    ),
+    runHandler('getHierarchyData', () => {
+      logger.log('[rgp:bg] getHierarchyData received', data)
+      const key = `${data.owner}/${data.number}/${data.itemId}`
+      return getOrCacheHierarchy(key, () => fetchHierarchyData(data))
+    }),
   )
 }

@@ -1,14 +1,15 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { StyleSheetManager } from 'styled-components'
-import isPropValid from '@emotion/is-prop-valid'
-import { ShadowThemeProvider } from '@/ui/shadow-theme-provider'
+import type { ContentScriptContext } from 'wxt/utils/content-script-context'
+import { Box } from '@primer/react'
 import { ProjectContextCard } from '@/features/project-context-card'
-import { INJECTED_ATTR } from '@/lib/project-table-dom'
+import { createLightDomUi, type FeatureUi } from '@/lib/shadow-ui-factory'
+import { INJECTED_ATTR, queryFirst } from '@/lib/project-table-dom'
 import type { ProjectContext } from '@/lib/github-project'
 import { logger } from '@/lib/debug-logger'
 
-const HOST_ID = 'rgp-project-context-host'
+/** Set by createLightDomUi on its host, and how we detect an existing mount. */
+const HOST_ATTR = 'data-rgp-light-dom'
+const UI_NAME = 'project-context'
 
 /** Selectors tried in order to find the issue detail slide-out panel */
 const PANEL_SELECTORS = [
@@ -47,29 +48,9 @@ function findPanelBroad(): Element | null {
   }
 }
 
-function findPanel(): Element | null {
-  for (const sel of PANEL_SELECTORS) {
-    try {
-      const el = document.querySelector(sel)
-      if (el) return el
-    } catch {
-      // selector may not be valid in this browser; skip
-    }
-  }
-  return findPanelBroad()
-}
+const findPanel = (): Element | null => queryFirst(document, PANEL_SELECTORS) ?? findPanelBroad()
 
-function findSidebar(panel: Element): Element | null {
-  for (const sel of SIDEBAR_SELECTORS) {
-    try {
-      const el = panel.querySelector(sel)
-      if (el) return el
-    } catch {
-      // skip
-    }
-  }
-  return null
-}
+const findSidebar = (panel: Element): Element | null => queryFirst(panel, SIDEBAR_SELECTORS)
 
 function extractItemIdFromPanel(panel: Element): string | null {
   // try to read a data-rgp-cb attr from the currently-active table row
@@ -92,9 +73,13 @@ function extractItemIdFromPanel(panel: Element): string | null {
 }
 
 let currentPanel: Element | null = null
-let currentRoot: ReturnType<typeof ReactDOM.createRoot> | null = null
+let currentUi: FeatureUi | null = null
 
-function mountCard(panel: Element, projectContext: ProjectContext): void {
+function mountCard(
+  ctx: ContentScriptContext,
+  panel: Element,
+  projectContext: ProjectContext,
+): void {
   const itemId = extractItemIdFromPanel(panel)
   if (!itemId) {
     logger.log('[rgp:cs] issue-detail: could not extract item ID from panel')
@@ -108,34 +93,35 @@ function mountCard(panel: Element, projectContext: ProjectContext): void {
   }
 
   // avoid double-mounting
-  if (sidebar.querySelector(`#${HOST_ID}`)) return
+  if (sidebar.querySelector(`[${HOST_ATTR}="${UI_NAME}"]`)) return
 
-  const host = document.createElement('div')
-  host.id = HOST_ID
-  host.style.cssText = 'margin-bottom: 16px;'
-  sidebar.prepend(host)
-
-  currentRoot = ReactDOM.createRoot(host)
-  currentRoot.render(
-    <StyleSheetManager shouldForwardProp={isPropValid}>
-      <ShadowThemeProvider>
+  // light DOM, not shadow: the card sits inside GitHub's own sidebar and
+  // inherits its layout. createLightDomUi brings the StyleSheetManager,
+  // ThemeProvider and ErrorBoundary this used to assemble by hand.
+  currentUi = createLightDomUi(ctx, {
+    name: UI_NAME,
+    anchor: sidebar,
+    append: 'first',
+    component: (
+      <Box sx={{ mb: 3 }}>
         <ProjectContextCard itemId={itemId} projectContext={projectContext} />
-      </ShadowThemeProvider>
-    </StyleSheetManager>,
-  )
+      </Box>
+    ),
+  })
+  currentUi.mount()
   logger.log('[rgp:cs] issue-detail: mounted ProjectContextCard for', itemId)
 }
 
 function unmountCard(): void {
-  if (currentRoot) {
-    currentRoot.unmount()
-    currentRoot = null
-  }
-  document.getElementById(HOST_ID)?.remove()
+  currentUi?.destroy()
+  currentUi = null
   currentPanel = null
 }
 
-export function setupIssueDetailInjector(projectContext: ProjectContext): () => void {
+export function setupIssueDetailInjector(
+  ctx: ContentScriptContext,
+  projectContext: ProjectContext,
+): () => void {
   let rafId: number | null = null
 
   const scheduleCheck = () => {
@@ -153,7 +139,7 @@ export function setupIssueDetailInjector(projectContext: ProjectContext): () => 
       // new panel appeared
       unmountCard()
       currentPanel = panel
-      mountCard(panel, projectContext)
+      mountCard(ctx, panel, projectContext)
     } else if (!panel && currentPanel) {
       // panel closed
       unmountCard()

@@ -19,6 +19,7 @@ import {
   serializeValue,
 } from '@/features/bulk-edit-flyout-helpers'
 import { sendMessage } from '@/lib/messages'
+import { queryFirst } from '@/lib/project-table-dom'
 import { queueStore } from '@/lib/queue-store'
 import { toastStore } from '@/lib/toast-store'
 import { logger } from '@/lib/debug-logger'
@@ -80,40 +81,15 @@ const OMNIBAR_WATCH_MS = 15000
 const REPO_HEADING_SELECTORS = ['h1']
 const REPO_HEADING_PATTERN = /in\s+([^/\s]+)\/([^/\s]+)\s*$/i
 
-function findDialog(): Element | null {
-  for (const sel of MODAL_SELECTORS) {
-    try {
-      const el = document.querySelector(sel)
-      if (el) return el
-    } catch {
-      // selector may not be valid in this browser; skip
-    }
-  }
-  return null
-}
+const findDialog = (): Element | null => queryFirst(document, MODAL_SELECTORS)
 
-function findFooter(dialog: Element): Element | null {
-  for (const sel of FOOTER_SELECTORS) {
-    try {
-      const el = dialog.querySelector(sel)
-      if (el) return el
-    } catch {
-      // skip
-    }
-  }
-  return null
-}
+const findFooter = (dialog: Element): Element | null => queryFirst(dialog, FOOTER_SELECTORS)
 
-function readInput(
+const readInput = (
   dialog: Element,
   selectors: string[],
-): HTMLInputElement | HTMLTextAreaElement | null {
-  for (const sel of selectors) {
-    const el = dialog.querySelector<HTMLInputElement | HTMLTextAreaElement>(sel)
-    if (el) return el
-  }
-  return null
-}
+): HTMLInputElement | HTMLTextAreaElement | null =>
+  queryFirst<HTMLInputElement | HTMLTextAreaElement>(dialog, selectors)
 
 function readTitle(dialog: Element): string {
   return readInput(dialog, TITLE_INPUT_SELECTORS)?.value.trim() ?? ''

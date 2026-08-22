@@ -54,27 +54,10 @@ export function getAllInjectedItemIds(): ProjectItemDomId[] {
 }
 
 /**
- * Collect item IDs from GitHub's native rows, keyed off `data-hovercard-subject-tag`.
- * Present the moment GitHub renders a row — no dependency on RGP's own
- * `data-rgp-cb` injection, which is stamped asynchronously and separately.
- * Used by the create-issue capture watcher, which must see a brand-new row
- * before injection stamps it.
- */
-export function getAllNativeItemIds(): ProjectItemDomId[] {
-  const rows = document.querySelectorAll<HTMLElement>('[role="row"][data-hovercard-subject-tag]')
-  const ids: ProjectItemDomId[] = []
-  for (const row of rows) {
-    const id = extractItemId(row)
-    if (id) ids.push(id)
-  }
-  return ids
-}
-
-/**
  * Read the displayed title for a given row. Falls back to the row's primary
  * link text. Returns `null` if neither can be located.
  */
-export function extractItemTitle(row: Element): string | null {
+function extractItemTitle(row: Element): string | null {
   const link = row.querySelector<HTMLAnchorElement>(
     'a[href*="/issues/"], a[href*="/pull/"], a[data-testid="issue-title-link"]',
   )
@@ -202,4 +185,26 @@ export function isEditableTarget(el: EventTarget | null): boolean {
   if ((el as Element).closest?.('[role="textbox"], [role="combobox"], [role="searchbox"]'))
     return true
   return false
+}
+
+/**
+ * First element matching any of `selectors`, tried in order.
+ *
+ * Selectors are tried one at a time rather than joined with commas so that a
+ * single GitHub-specific selector the browser rejects — `:has()` on an older
+ * engine, say — cannot take the whole list down with it.
+ */
+export function queryFirst<E extends Element = Element>(
+  root: ParentNode,
+  selectors: readonly string[],
+): E | null {
+  for (const sel of selectors) {
+    try {
+      const el = root.querySelector<E>(sel)
+      if (el) return el
+    } catch {
+      // invalid selector in this browser — skip it
+    }
+  }
+  return null
 }

@@ -15,15 +15,17 @@ import {
   ADD_COMMENT,
   UPDATE_PROJECT_FIELD,
 } from '@/lib/graphql-mutations'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { logger } from '@/lib/debug-logger'
 
 import { isBulkFull, acquireBulk, releaseBulk } from '@/background/concurrency'
 import { takeCachedResolvedItems } from '@/background/cache'
-import { broadcastQueue } from '@/background/rest-helpers'
+import { broadcastDone, broadcastStatus, runQueueWithProgress } from '@/background/queue-run'
 import { buildBulkRelationshipTasks } from '@/background/relationship-helpers'
 import { resolveProjectItemIds } from '@/background/project-helpers'
+import type { ResolvedItem } from '@/background/types'
+import { newProcessId, plural } from '@/lib/format'
 
 function formatDetailDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00')
@@ -31,25 +33,215 @@ function formatDetailDate(iso: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-export async function runBulkUpdate(
+function truncate(text: string, max: number): string {
+  return text.length > max ? text.slice(0, max) + '…' : text
+}
+
+/**
+ * What the content script actually puts in `update.value`, which the message
+ * contract types as `unknown`. Declared once so this file narrows at a single
+ * documented boundary instead of casting in every branch.
+ */
+interface BulkFieldValue {
+  dataType?: string
+  text?: string
+  date?: string
+  number?: number
+  singleSelectOptionId?: string
+  iterationId?: string
+  array?: { id: string; login?: string; name?: string; title?: string }[]
+}
+
+type FieldMeta = NonNullable<BulkUpdateMessageData['fieldMeta']>[string]
+
+interface UpdateContext {
+  value: BulkFieldValue
+  fieldId: string
+  fieldLabel: string
+  meta: FieldMeta | undefined
+  item: ResolvedItem
+  projectId: string
+}
+
+interface UpdateKind {
+  /** The line shown under the progress bar while this update runs. */
+  detail: (ctx: UpdateContext) => string
+  /** Omit to fall through to the project-custom-field mutation. */
+  run?: (ctx: UpdateContext) => Promise<void>
+}
+
+/** Set a project custom field — the fallback for every dataType without a `run`. */
+async function setProjectField({ value, fieldId, item, projectId }: UpdateContext): Promise<void> {
+  let valueOpt: Record<string, unknown> = {}
+  if (value.singleSelectOptionId) valueOpt = { singleSelectOptionId: value.singleSelectOptionId }
+  else if (value.iterationId) valueOpt = { iterationId: value.iterationId }
+  else if (value.date !== undefined) valueOpt = { date: value.date }
+  else if (value.number !== undefined && value.number !== null) valueOpt = { number: value.number }
+  else if (value.text !== undefined) valueOpt = { text: value.text }
+
+  await gql(UPDATE_PROJECT_FIELD, {
+    projectId,
+    itemId: item.projectItemId,
+    fieldId,
+    value: valueOpt,
+  })
+}
+
+/**
+ * One row per dataType, replacing the two parallel nine-way switches this
+ * handler used to carry — one to build the progress detail, one to build the
+ * mutation. Keeping them together is what stops the two drifting apart.
+ */
+const UPDATE_KINDS: Record<string, UpdateKind> = {
+  ASSIGNEES: {
+    detail: ({ value }) => {
+      const logins = (value.array ?? []).map((a) => a.login).filter(Boolean)
+      return logins.length > 0
+        ? `Adding assignees: ${logins.map((l) => '@' + l).join(', ')}`
+        : 'Adding assignees'
+    },
+    run: async ({ value, item }) => {
+      if (!value.array?.length) return
+      const assigneeIds = value.array.map((a) => a.id)
+      logger.log('[rgp:bg] Adding assignees:', assigneeIds, 'to issue:', item.issueNodeId)
+      await gql(ADD_ASSIGNEES, { assignableId: item.issueNodeId, assigneeIds })
+      await sleep(1000)
+    },
+  },
+
+  LABELS: {
+    detail: ({ value }) => {
+      const names = (value.array ?? []).map((l) => l.name).filter(Boolean)
+      return names.length > 0 ? `Adding labels: ${names.join(', ')}` : 'Adding labels'
+    },
+    run: async ({ value, item }) => {
+      if (!value.array?.length) return
+      const labelIds = value.array.map((l) => l.id)
+      logger.log('[rgp:bg] Adding labels:', labelIds, 'to issue:', item.issueNodeId)
+      await gql(ADD_LABELS, { labelableId: item.issueNodeId, labelIds })
+      await sleep(1000)
+    },
+  },
+
+  MILESTONE: {
+    detail: ({ value }) => {
+      // milestones arrive under `title` from search and `name` from the picker
+      const name = value.array?.[0]?.title ?? value.array?.[0]?.name ?? ''
+      return name ? `Setting milestone → ${name}` : 'Setting milestone'
+    },
+    run: async ({ value, item }) => {
+      if (!value.array?.length) return
+      const milestoneId = value.array[0].id
+      logger.log('[rgp:bg] Setting milestone:', milestoneId, 'on issue:', item.issueNodeId)
+      await gql(UPDATE_ISSUE_MILESTONE, { issueId: item.issueNodeId, milestoneId })
+      await sleep(1000)
+    },
+  },
+
+  ISSUE_TYPE: {
+    detail: ({ value }) => {
+      const name = value.array?.[0]?.name ?? ''
+      return name ? `Setting issue type → ${name}` : 'Setting issue type'
+    },
+    run: async ({ value, item }) => {
+      if (!value.array?.length) return
+      const issueTypeId = value.array[0].id
+      logger.log('[rgp:bg] Setting issue type:', issueTypeId, 'on issue:', item.issueNodeId)
+      await gql(UPDATE_ISSUE_TYPE, { issueId: item.issueNodeId, issueTypeId })
+      await sleep(1000)
+    },
+  },
+
+  TITLE: {
+    detail: ({ value }) => {
+      const trimmed = value.text?.trim() ?? ''
+      return trimmed ? `Changing title → "${truncate(trimmed, 40)}"` : 'Updating title'
+    },
+    run: async ({ value, item }) => {
+      const title = value.text?.trim()
+      if (!title) return
+      if (item.typename === 'PullRequest') {
+        await gql(UPDATE_PR_TITLE, { prId: item.issueNodeId, title })
+      } else {
+        await gql(UPDATE_ISSUE_TITLE, { issueId: item.issueNodeId, title })
+      }
+      await sleep(1000)
+    },
+  },
+
+  BODY: {
+    detail: () => 'Updating body',
+    run: async ({ value, item }) => {
+      const body = value.text
+      if (body === undefined) return
+      if (item.typename === 'PullRequest') {
+        await gql(UPDATE_PR_BODY, { prId: item.issueNodeId, body })
+      } else {
+        await gql(UPDATE_ISSUE_BODY, { issueId: item.issueNodeId, body })
+      }
+      await sleep(1000)
+    },
+  },
+
+  COMMENT: {
+    detail: () => 'Adding comment',
+    run: async ({ value, item }) => {
+      const body = value.text?.trim()
+      if (!body) return
+      await gql(ADD_COMMENT, { subjectId: item.issueNodeId, body })
+      await sleep(1000)
+    },
+  },
+
+  // The next two set a project custom field like any other, but name their
+  // chosen option in the progress detail, so they override `detail` only.
+  SINGLE_SELECT: {
+    detail: ({ value, meta, fieldLabel }) => {
+      const name = meta?.options?.find((o) => o.id === value.singleSelectOptionId)?.name
+      return name ? `${fieldLabel} → ${name}` : `${fieldLabel} → (option)`
+    },
+  },
+
+  ITERATION: {
+    detail: ({ value, meta, fieldLabel }) => {
+      const title = meta?.iterations?.find((i) => i.id === value.iterationId)?.title
+      return title ? `${fieldLabel} → ${title}` : `${fieldLabel} → (iteration)`
+    },
+  },
+}
+
+/** Text, number and date custom fields, which carry no dataType-specific row. */
+const DEFAULT_KIND: UpdateKind = {
+  detail: ({ value, fieldLabel }) => {
+    if (value.text !== undefined) return `${fieldLabel} → "${truncate(value.text, 30)}"`
+    if (value.number !== undefined && value.number !== null)
+      return `${fieldLabel} → ${value.number}`
+    if (value.date !== undefined) return `${fieldLabel} → ${formatDetailDate(value.date)}`
+    return `Updating ${fieldLabel}`
+  },
+}
+
+function buildFieldTask(ctx: UpdateContext, domId: string): QueueTask {
+  const kind = UPDATE_KINDS[ctx.value.dataType ?? ''] ?? DEFAULT_KIND
+  return {
+    id: `bulk-${domId}-${ctx.fieldId}`,
+    detail: kind.detail(ctx),
+    run: () => (kind.run ?? setProjectField)(ctx),
+  }
+}
+
+async function runBulkUpdate(
   data: BulkUpdateMessageData,
   tabId: number | undefined,
 ): Promise<void> {
-  const processId = `bulk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-  const label = `Bulk update · ${data.itemIds.length} item${data.itemIds.length !== 1 ? 's' : ''}`
+  const run = {
+    processId: newProcessId('bulk'),
+    label: `Bulk update · ${plural(data.itemIds.length, 'item')}`,
+    tabId,
+  }
 
   try {
-    await broadcastQueue(
-      {
-        total: data.itemIds.length,
-        completed: 0,
-        paused: false,
-        status: 'Resolving items...',
-        processId,
-        label,
-      },
-      tabId,
-    )
+    await broadcastStatus(run, data.itemIds.length, 'Resolving items...')
     const cachedResolvedItems = data.relationships
       ? takeCachedResolvedItems(data.projectId, data.itemIds)
       : undefined
@@ -82,175 +274,21 @@ export async function runBulkUpdate(
     const tasks: QueueTask[] = []
 
     for (const item of resolvedItems) {
-      const { domId, projectItemId, issueNodeId, typename } = item
       for (const update of data.updates) {
-        const { dataType, singleSelectOptionId, iterationId, array } = update.value as any
-
         const meta = data.fieldMeta?.[update.fieldId]
-        const fieldLabel = meta?.name ?? 'Field'
-
-        let detail: string
-        if (dataType === 'ASSIGNEES') {
-          const logins: string[] = (array ?? []).map((a: any) => a.login).filter(Boolean)
-          detail =
-            logins.length > 0
-              ? `Adding assignees: ${logins.map((l: string) => '@' + l).join(', ')}`
-              : 'Adding assignees'
-        } else if (dataType === 'LABELS') {
-          const names: string[] = (array ?? []).map((l: any) => l.name).filter(Boolean)
-          detail = names.length > 0 ? `Adding labels: ${names.join(', ')}` : 'Adding labels'
-        } else if (dataType === 'MILESTONE') {
-          const milestoneName: string =
-            (array as any)?.[0]?.title ?? (array as any)?.[0]?.name ?? ''
-          detail = milestoneName ? `Setting milestone → ${milestoneName}` : 'Setting milestone'
-        } else if (dataType === 'ISSUE_TYPE') {
-          const issueTypeName: string = (array as any)?.[0]?.name ?? ''
-          detail = issueTypeName ? `Setting issue type → ${issueTypeName}` : 'Setting issue type'
-        } else if (dataType === 'TITLE') {
-          const { text } = update.value as any
-          const trimmed: string = text?.trim() ?? ''
-          detail = trimmed
-            ? `Changing title → "${trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed}"`
-            : 'Updating title'
-        } else if (dataType === 'BODY') {
-          detail = 'Updating body'
-        } else if (dataType === 'COMMENT') {
-          detail = 'Adding comment'
-        } else if (dataType === 'SINGLE_SELECT') {
-          const optName = meta?.options?.find(
-            (o: { id: string; name: string }) => o.id === singleSelectOptionId,
-          )?.name
-          detail = optName ? `${fieldLabel} → ${optName}` : `${fieldLabel} → (option)`
-        } else if (dataType === 'ITERATION') {
-          const iterTitle = meta?.iterations?.find(
-            (i: { id: string; title: string }) => i.id === iterationId,
-          )?.title
-          detail = iterTitle ? `${fieldLabel} → ${iterTitle}` : `${fieldLabel} → (iteration)`
-        } else {
-          const { text, date, number: num } = update.value as any
-          if (text !== undefined) {
-            const preview: string =
-              (text as string).length > 30 ? (text as string).slice(0, 30) + '…' : text
-            detail = `${fieldLabel} → "${preview}"`
-          } else if (num !== undefined && num !== null) {
-            detail = `${fieldLabel} → ${num}`
-          } else if (date !== undefined) {
-            detail = `${fieldLabel} → ${formatDetailDate(date as string)}`
-          } else {
-            detail = `Updating ${fieldLabel}`
-          }
-        }
-
-        tasks.push({
-          id: `bulk-${domId}-${update.fieldId}`,
-          detail,
-          run: async () => {
-            if (dataType === 'ASSIGNEES') {
-              if (array?.length > 0) {
-                const assigneeIds = array.map((a: { id: string }) => a.id)
-                logger.log('[rgp:bg] Adding assignees:', assigneeIds, 'to issue:', issueNodeId)
-                await gql(ADD_ASSIGNEES, {
-                  assignableId: issueNodeId,
-                  assigneeIds,
-                })
-                await sleep(1000)
-              }
-              return
-            }
-
-            if (dataType === 'LABELS') {
-              if (array?.length > 0) {
-                const labelIds = array.map((l: { id: string }) => l.id)
-                logger.log('[rgp:bg] Adding labels:', labelIds, 'to issue:', issueNodeId)
-                await gql(ADD_LABELS, {
-                  labelableId: issueNodeId,
-                  labelIds,
-                })
-                await sleep(1000)
-              }
-              return
-            }
-
-            if (dataType === 'MILESTONE') {
-              if (array?.length > 0) {
-                const milestoneId = array[0].id
-                logger.log('[rgp:bg] Setting milestone:', milestoneId, 'on issue:', issueNodeId)
-                await gql(UPDATE_ISSUE_MILESTONE, {
-                  issueId: issueNodeId,
-                  milestoneId,
-                })
-                await sleep(1000)
-              }
-              return
-            }
-
-            if (dataType === 'ISSUE_TYPE') {
-              if (array?.length > 0) {
-                const issueTypeId = array[0].id
-                logger.log('[rgp:bg] Setting issue type:', issueTypeId, 'on issue:', issueNodeId)
-                await gql(UPDATE_ISSUE_TYPE, {
-                  issueId: issueNodeId,
-                  issueTypeId,
-                })
-                await sleep(1000)
-              }
-              return
-            }
-
-            if (dataType === 'TITLE') {
-              const { text } = update.value as any
-              if (text?.trim()) {
-                if (typename === 'PullRequest') {
-                  await gql(UPDATE_PR_TITLE, { prId: issueNodeId, title: text.trim() })
-                } else {
-                  await gql(UPDATE_ISSUE_TITLE, { issueId: issueNodeId, title: text.trim() })
-                }
-                await sleep(1000)
-              }
-              return
-            }
-
-            if (dataType === 'BODY') {
-              const { text } = update.value as any
-              if (text !== undefined) {
-                if (typename === 'PullRequest') {
-                  await gql(UPDATE_PR_BODY, { prId: issueNodeId, body: text })
-                } else {
-                  await gql(UPDATE_ISSUE_BODY, { issueId: issueNodeId, body: text })
-                }
-                await sleep(1000)
-              }
-              return
-            }
-
-            if (dataType === 'COMMENT') {
-              const { text } = update.value as any
-              if (text?.trim()) {
-                await gql(ADD_COMMENT, { subjectId: issueNodeId, body: text.trim() })
-                await sleep(1000)
-              }
-              return
-            }
-
-            // default project custom fields
-            let valueOpt: any = {}
-            if (singleSelectOptionId) valueOpt = { singleSelectOptionId }
-            else if (iterationId) valueOpt = { iterationId }
-            else {
-              const { text, date, number: num } = update.value as any
-              if (date !== undefined) valueOpt = { date }
-              else if (num !== undefined && num !== null) valueOpt = { number: num }
-              else if (text !== undefined) valueOpt = { text }
-            }
-
-            await gql(UPDATE_PROJECT_FIELD, {
-              projectId: data.projectId,
-              itemId: projectItemId,
+        tasks.push(
+          buildFieldTask(
+            {
+              value: update.value as BulkFieldValue,
               fieldId: update.fieldId,
-              value: valueOpt,
-            })
-          },
-        })
+              fieldLabel: meta?.name ?? 'Field',
+              meta,
+              item,
+              projectId: data.projectId,
+            },
+            item.domId,
+          ),
+        )
       }
 
       if (data.relationships) {
@@ -258,42 +296,19 @@ export async function runBulkUpdate(
       }
     }
 
-    await processQueue(
-      tasks,
-      async (state) => {
-        logger.log('[rgp:bg] queue state broadcast', {
-          completed: state.completed,
-          total: state.total,
-          processId,
-        })
-        await broadcastQueue(
-          {
-            total: state.total,
-            completed: state.completed,
-            paused: state.paused,
-            retryAfter: state.retryAfter,
-            status: `Updating ${resolvedItems.length} item${resolvedItems.length !== 1 ? 's' : ''}...`,
-            detail: state.detail,
-            processId,
-            label,
-            failedItems: state.failedItems,
-          },
-          tabId,
-        )
-      },
-      processId,
-    )
+    await runQueueWithProgress(tasks, run, (state) => {
+      logger.log('[rgp:bg] queue state broadcast', {
+        completed: state.completed,
+        total: state.total,
+        processId: run.processId,
+      })
+      return { status: `Updating ${plural(resolvedItems.length, 'item')}...` }
+    })
 
-    await broadcastQueue(
-      { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-      tabId,
-    )
+    await broadcastDone(run)
   } catch (error) {
     console.error('[rgp:bg] bulkUpdate failed', error)
-    await broadcastQueue(
-      { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-      tabId,
-    )
+    await broadcastDone(run)
   }
 }
 

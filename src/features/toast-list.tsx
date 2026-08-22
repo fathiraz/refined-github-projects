@@ -3,6 +3,7 @@ import { Box, Button, Flash, Text } from '@primer/react'
 import { toastStore, type ToastEntry } from '@/lib/toast-store'
 import { AlertIcon, CheckIcon, InfoIcon, XIcon } from '@/ui/icons'
 import { Z_OVERLAY } from '@/lib/z-index'
+import { primerCss } from '@/lib/primer-css-helper'
 
 const FLASH_VARIANT: Record<ToastEntry['type'], 'success' | 'warning' | 'danger' | 'default'> = {
   success: 'success',
@@ -78,14 +79,7 @@ function ToastCard({ toast }: { toast: ToastEntry }) {
                 fontSize: 0,
                 fontWeight: 'bold',
                 color: 'accent.fg',
-                boxShadow: 'none',
-                transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)', transition: '100ms' },
-                '@media (prefers-reduced-motion: reduce)': {
-                  transition: 'none',
-                  '&:hover:not(:disabled)': { transform: 'none' },
-                },
+                ...primerCss.buttonMotion(),
               }}
             >
               {toast.action.label}
@@ -100,14 +94,7 @@ function ToastCard({ toast }: { toast: ToastEntry }) {
               p: '2px',
               minWidth: 'unset',
               color: 'fg.muted',
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
+              ...primerCss.buttonMotion(),
             }}
           >
             <XIcon size={13} />

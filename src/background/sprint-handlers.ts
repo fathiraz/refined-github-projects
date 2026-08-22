@@ -3,7 +3,7 @@ import type { SprintInfo, SprintProgressData } from '@/lib/messages'
 import { gql } from '@/lib/graphql-client'
 import { GET_PROJECT_ITEMS_WITH_FIELDS, GET_SPRINT_PROGRESS_ITEMS } from '@/lib/graphql-queries'
 import { UPDATE_PROJECT_FIELD } from '@/lib/graphql-mutations'
-import { processQueue, sleep } from '@/lib/queue'
+import { sleep } from '@/lib/queue'
 import type { QueueTask } from '@/lib/queue'
 import { allSprintSettingsStorage } from '@/lib/storage'
 import { todayUtc, isActive, nearestUpcoming, iterationEndDate } from '@/lib/sprint-utils'
@@ -17,8 +17,14 @@ import {
 
 import { isSprintEndFull, acquireSprintEnd, releaseSprintEnd } from '@/background/concurrency'
 
-import { broadcastQueue } from '@/background/rest-helpers'
+import {
+  broadcastDone,
+  broadcastStatus,
+  runQueueWithProgress,
+  type QueueRun,
+} from '@/background/queue-run'
 import { getProjectFieldsData } from '@/background/project-helpers'
+import { plural } from '@/lib/format'
 
 export function registerSprintHandlers(): void {
   onMessage('getSprintStatus', async ({ data }) => {
@@ -288,22 +294,14 @@ export function registerSprintHandlers(): void {
     }
 
     acquireSprintEnd()
-    const processId = `sprint-end-${Date.now()}`
-    const label = 'End Sprint'
-    const tabId = sender.tab?.id
+    const run: QueueRun = {
+      processId: `sprint-end-${Date.now()}`,
+      label: 'End Sprint',
+      tabId: sender.tab?.id,
+    }
 
     try {
-      await broadcastQueue(
-        {
-          total: 0,
-          completed: 0,
-          paused: false,
-          status: 'Fetching sprint items...',
-          processId,
-          label,
-        },
-        tabId,
-      )
+      await broadcastStatus(run, 0, 'Fetching sprint items...')
 
       // resolve real GraphQL node ID (data.projectId is a URL slug, not a node ID)
       const { project: sprintProject } = await getProjectFieldsData(
@@ -417,17 +415,7 @@ export function registerSprintHandlers(): void {
       })
 
       if (notDoneItems.length === 0) {
-        await broadcastQueue(
-          {
-            total: 0,
-            completed: 0,
-            paused: false,
-            status: 'Done! All items are finished.',
-            processId,
-            label,
-          },
-          tabId,
-        )
+        await broadcastStatus(run, 0, 'Done! All items are finished.')
         return
       }
 
@@ -444,42 +432,17 @@ export function registerSprintHandlers(): void {
         },
       }))
 
-      await broadcastQueue(
-        {
-          total: tasks.length,
-          completed: 0,
-          paused: false,
-          status: `Moving ${tasks.length} item${tasks.length !== 1 ? 's' : ''} to next sprint...`,
-          processId,
-          label,
-        },
-        tabId,
+      await broadcastStatus(
+        run,
+        tasks.length,
+        `Moving ${plural(tasks.length, 'item')} to next sprint...`,
       )
 
-      await processQueue(
-        tasks,
-        async (state) => {
-          await broadcastQueue(
-            {
-              total: state.total,
-              completed: state.completed,
-              paused: state.paused,
-              retryAfter: state.retryAfter,
-              status: `Moving ${state.completed + 1} of ${tasks.length}...`,
-              processId,
-              label,
-              failedItems: state.failedItems,
-            },
-            tabId,
-          )
-        },
-        processId,
-      )
+      await runQueueWithProgress(tasks, run, (state) => ({
+        status: `Moving ${state.completed + 1} of ${tasks.length}...`,
+      }))
 
-      await broadcastQueue(
-        { total: 0, completed: 0, paused: false, status: 'Done!', processId, label },
-        tabId,
-      )
+      await broadcastDone(run)
     } finally {
       releaseSprintEnd()
     }

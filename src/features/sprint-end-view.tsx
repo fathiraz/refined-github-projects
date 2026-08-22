@@ -9,12 +9,13 @@ import { sendMessage } from '@/lib/messages'
 import type { SprintInfo } from '@/lib/messages'
 import type { SprintSettings } from '@/lib/storage'
 import {
-  fmt,
+  fmtRange,
   iterationEndDate,
   nextAfter,
   type FieldNode,
   type Iteration,
 } from '@/lib/sprint-utils'
+import { primerCss } from '@/lib/primer-css-helper'
 
 const labelIconBoxSx = {
   color: 'fg.muted',
@@ -151,7 +152,7 @@ export function EndSprintView({
             >
               {futureIterations.map((iter) => (
                 <Select.Option key={iter.id} value={iter.id}>
-                  {iter.title} ({fmt(iter.startDate)} – {fmt(iter.endDate)})
+                  {iter.title} ({fmtRange(iter.startDate, iter.endDate)})
                 </Select.Option>
               ))}
             </Select>
@@ -183,14 +184,7 @@ export function EndSprintView({
             disabled={!loaded || hasNoFuture || !selectedIterationId || ending}
             onClick={handleEnd}
             sx={{
-              boxShadow: 'none',
-              transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-              '&:active': { transform: 'translateY(0)', transition: '100ms' },
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                '&:hover:not(:disabled)': { transform: 'none' },
-              },
+              ...primerCss.buttonMotion(),
             }}
           >
             {ending ? 'Ending…' : 'End Sprint →'}

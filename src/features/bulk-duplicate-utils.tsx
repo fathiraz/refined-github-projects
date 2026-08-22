@@ -27,7 +27,7 @@ import {
  */
 export type Step = 'LOADING' | 'SELECT' | 'REVIEW' | 'ERROR'
 export type EditableField = ItemPreviewData['fields'][number]
-export type SectionGroup = 'CONTENT' | 'METADATA' | 'PROJECT_FIELDS' | 'RELATIONSHIPS'
+type SectionGroup = 'CONTENT' | 'METADATA' | 'PROJECT_FIELDS' | 'RELATIONSHIPS'
 export type SectionId =
   | 'TITLE'
   | 'BODY'

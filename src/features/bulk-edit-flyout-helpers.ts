@@ -10,7 +10,7 @@ export const BULK_EDIT_CONCURRENT_MESSAGE =
   '3 processes are already running. Wait for one to finish before starting another.'
 export const BULK_EDIT_DISPATCH_FAILED_MESSAGE = 'Could not start the bulk update. Try again.'
 
-export type SubmitBulkFieldUpdateResult = { ok: true } | { ok: false; message: string }
+type SubmitBulkFieldUpdateResult = { ok: true } | { ok: false; message: string }
 
 export type FieldValue =
   | { kind: 'cleared' }

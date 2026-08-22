@@ -16,6 +16,7 @@ import {
   PersonIcon,
   TrashIcon,
 } from '@/ui/icons'
+import { Kbd } from '@/ui/keyboard-hint'
 
 interface Props {
   count: number
@@ -26,22 +27,6 @@ interface Props {
   onDeepDuplicate: () => void
   onDelete: () => void
 }
-
-const kbdSx = {
-  fontSize: 0,
-  fontFamily: 'inherit',
-  fontWeight: 500,
-  px: '5px',
-  py: '1px',
-  borderRadius: 1,
-  bg: 'canvas.inset',
-  border: '1px solid',
-  borderColor: 'border.default',
-  color: 'fg.muted',
-  cursor: 'default',
-  lineHeight: 1.6,
-  letterSpacing: '0.02em',
-} as const
 
 function badgeSx(bg: string, color: string) {
   return {
@@ -54,14 +39,6 @@ function badgeSx(bg: string, color: string) {
     alignItems: 'center',
     justifyContent: 'center',
   } as const
-}
-
-function Kbd({ text }: { text: string }) {
-  return (
-    <Box as="kbd" sx={kbdSx}>
-      {text}
-    </Box>
-  )
 }
 
 export function BulkActionsMenu({
@@ -98,7 +75,7 @@ export function BulkActionsMenu({
           </ActionList.LeadingVisual>
           Rename titles
           <ActionList.TrailingVisual>
-            <Kbd text="R" />
+            <Kbd>R</Kbd>
           </ActionList.TrailingVisual>
         </ActionList.Item>
         <ActionList.Item onSelect={onReorder} data-testid="rgp-overflow-reorder">
@@ -109,7 +86,7 @@ export function BulkActionsMenu({
           </ActionList.LeadingVisual>
           Reorder items
           <ActionList.TrailingVisual>
-            <Kbd text="O" />
+            <Kbd>O</Kbd>
           </ActionList.TrailingVisual>
         </ActionList.Item>
         <ActionList.Item onSelect={onRandomAssign} data-testid="rgp-overflow-random-assign">
@@ -120,7 +97,7 @@ export function BulkActionsMenu({
           </ActionList.LeadingVisual>
           Random Assign (beta)
           <ActionList.TrailingVisual>
-            <Kbd text="A" />
+            <Kbd>A</Kbd>
           </ActionList.TrailingVisual>
         </ActionList.Item>
         <ActionList.Item onSelect={onTransfer} data-testid="rgp-overflow-transfer">
@@ -131,7 +108,7 @@ export function BulkActionsMenu({
           </ActionList.LeadingVisual>
           Transfer issues
           <ActionList.TrailingVisual>
-            <Kbd text="T" />
+            <Kbd>T</Kbd>
           </ActionList.TrailingVisual>
         </ActionList.Item>
         {count === 1 && (
@@ -143,7 +120,7 @@ export function BulkActionsMenu({
             </ActionList.LeadingVisual>
             Deep duplicate
             <ActionList.TrailingVisual>
-              <Kbd text="D" />
+              <Kbd>D</Kbd>
             </ActionList.TrailingVisual>
           </ActionList.Item>
         )}
@@ -158,7 +135,7 @@ export function BulkActionsMenu({
           </ActionList.LeadingVisual>
           Export CSV
           <ActionList.TrailingVisual>
-            <Kbd text={shortcut('V')} />
+            <Kbd>{shortcut('V')}</Kbd>
           </ActionList.TrailingVisual>
         </ActionList.Item>
         <ActionList.Divider />
@@ -184,7 +161,7 @@ export function BulkActionsMenu({
             >
               admin
             </Box>
-            {count !== 1 && <Kbd text="D" />}
+            {count !== 1 && <Kbd>D</Kbd>}
           </ActionList.TrailingVisual>
         </ActionList.Item>
       </ActionList>

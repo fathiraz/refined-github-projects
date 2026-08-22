@@ -6,7 +6,7 @@ import { isEditableTarget } from '@/lib/project-table-dom'
  * Single-character bar-focus chord identifiers. These map 1:1 to bulk verbs;
  * `'?'` opens the keyboard help overlay.
  */
-export type BarChordKey =
+type BarChordKey =
   | 'E' // Edit fields
   | 'R' // Rename
   | 'O' // Reorder
@@ -19,7 +19,7 @@ export type BarChordKey =
   | 'D' // Delete (count > 1) or Duplicate (count === 1)
   | '?'
 
-export interface BarChordHandler {
+interface BarChordHandler {
   /**
    * Optional availability gate. When this returns `false` the chord is a
    * silent no-op (matches the C/P/L "unavailable" semantics).
@@ -101,13 +101,4 @@ function resolveChordKey(event: KeyboardEvent): BarChordKey | null {
     return upper
   }
   return null
-}
-
-/**
- * Disambiguate the `D` chord:
- *   - `count === 1` → Duplicate
- *   - `count > 1`   → Delete
- */
-export function resolveDChord(count: number): 'duplicate' | 'delete' {
-  return count === 1 ? 'duplicate' : 'delete'
 }

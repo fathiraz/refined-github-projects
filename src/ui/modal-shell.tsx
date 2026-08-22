@@ -3,7 +3,7 @@ import type { BetterSystemStyleObject } from '@primer/react'
 import { Box } from '@primer/react'
 import { primerCss } from '@/lib/primer-css-helper'
 
-export interface ModalShellProps {
+interface ModalShellProps {
   /** Accessible name for the dialog (aria-label). */
   ariaLabel: string
   onClose: () => void
@@ -73,9 +73,7 @@ export function ModalShell({
       >
         {header}
         <Box sx={primerCss.contentArea()}>{children}</Box>
-        {footer && (
-          <Box sx={{ ...primerCss.footerBorder(), ...primerCss.footerLayout() }}>{footer}</Box>
-        )}
+        {footer && <Box sx={{ ...primerCss.divider(), ...primerCss.footerLayout() }}>{footer}</Box>}
       </Box>
     </Box>
   )

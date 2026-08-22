@@ -409,8 +409,8 @@ export const GET_PROJECT_ITEMS_FOR_RENAME = `
             id
             content {
               __typename
-              ... on Issue { id databaseId title }
-              ... on PullRequest { id databaseId title }
+              ... on Issue { id databaseId number title }
+              ... on PullRequest { id databaseId number title }
             }
           }
         }
@@ -430,8 +430,8 @@ export const GET_PROJECT_ITEMS_FOR_REORDER = `
             databaseId
             content {
               __typename
-              ... on Issue { id databaseId title }
-              ... on PullRequest { id databaseId title }
+              ... on Issue { id databaseId number title }
+              ... on PullRequest { id databaseId number title }
             }
           }
         }

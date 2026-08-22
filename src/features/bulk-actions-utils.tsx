@@ -6,9 +6,9 @@ import { Box, Spinner } from '@primer/react'
 import type { BulkEditRelationshipsUpdate, IssueSearchResultData } from '@/lib/messages'
 import type { RelationshipKey } from '@/features/bulk-edit-utils'
 import { isMac } from '@/lib/keyboard'
-import { Z_MODAL } from '@/lib/z-index'
+import { primerCss } from '@/lib/primer-css-helper'
 
-export function createEmptyRelationshipUpdates(): BulkEditRelationshipsUpdate {
+function createEmptyRelationshipUpdates(): BulkEditRelationshipsUpdate {
   return {
     parent: {
       set: undefined,
@@ -77,17 +77,7 @@ export function shortcut(key: string) {
 
 export function ModalLoadingFallback() {
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        inset: 0,
-        bg: 'rgba(27,31,36,0.5)',
-        zIndex: Z_MODAL,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <Box sx={primerCss.modalOverlay()}>
       <Spinner size="large" />
     </Box>
   )

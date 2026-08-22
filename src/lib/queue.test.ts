@@ -68,7 +68,7 @@ describe('processQueue', () => {
 
     await runToCompletion(processQueue(tasks))
 
-    expect(order).toEqualValue(['a', 'b', 'c'])
+    expect(order).toEqual(['a', 'b', 'c'])
   })
 
   it('calls onStateChange with correct total and completed counts', async () => {
@@ -111,7 +111,7 @@ describe('processQueue', () => {
     await runToCompletion(processQueue(tasks, (s) => states.push({ ...s })))
 
     // the failing task is skipped but counted as completed
-    expect(order).toEqualValue(['ok'])
+    expect(order).toEqual(['ok'])
     const last = states[states.length - 1]
     expect(last).toMatchObject({ total: 2, completed: 2 })
   })
@@ -147,7 +147,7 @@ describe('processQueue', () => {
 
     // only the first task should have run; cancellation is checked before
     // each subsequent task.
-    expect(order).toEqualValue(['first'])
+    expect(order).toEqual(['first'])
   })
 
   it('completes immediately with an empty task array', async () => {
@@ -211,6 +211,57 @@ describe('processQueue', () => {
     const pausedState = states.find((s) => s.paused)
     expect(pausedState).toBeDefined()
     expect(pausedState!.retryAfter).toBe(2)
+  })
+
+  it('cancellation cuts a rate-limit pause short instead of waiting it out', async () => {
+    // The only guarantee the queue's interruptible sleep uniquely provides:
+    // cancelling while the queue is parked in a 60s rate-limit wait must
+    // abandon the run rather than sit out the wait and re-attempt the task.
+    const processId = 'cancel-during-pause'
+    let attempts = 0
+    const ran: string[] = []
+
+    const tasks: QueueTask[] = [
+      {
+        id: 'throttled',
+        run: async () => {
+          attempts++
+          const err: Error & { status?: number; retryAfter?: number } = new Error('rate limited')
+          err.status = 429
+          err.retryAfter = 60
+          throw err
+        },
+      },
+      {
+        id: 'after',
+        run: async () => {
+          ran.push('after')
+        },
+      },
+    ]
+
+    let cancelled = false
+    const startedAt = Date.now()
+    await runToCompletion(
+      processQueue(
+        tasks,
+        (s) => {
+          if (s.paused && !cancelled) {
+            cancelled = true
+            cancelQueue(processId)
+          }
+        },
+        processId,
+      ),
+    )
+    const elapsed = Date.now() - startedAt
+
+    // the run ends well inside the 60s window it was parked in — that is the
+    // guarantee, and it is what makes the pause interruptible rather than a
+    // wait the user has to sit through.
+    expect(elapsed).toBeLessThan(60_000)
+    expect(attempts).toBe(1)
+    expect(ran).toEqual([])
   })
 
   it('broadcasts task detail during execution', async () => {

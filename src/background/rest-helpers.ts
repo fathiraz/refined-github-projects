@@ -1,6 +1,7 @@
 // REST helpers + rate-limit retry + queue broadcast.
 
 import { sendMessage } from '@/lib/messages'
+import type { QueueFrame } from '@/lib/messages'
 import { sleep } from '@/lib/queue'
 import { patStorage } from '@/lib/storage'
 import { logger } from '@/lib/debug-logger'
@@ -74,28 +75,9 @@ export async function githubRest<T>(path: string, init: RequestInit = {}): Promi
   return (await res.json()) as T
 }
 
-export async function broadcastQueue(
-  state: {
-    total: number
-    completed: number
-    paused: boolean
-    retryAfter?: number
-    status?: string
-    detail?: string
-    processId?: string
-    label?: string
-    failedItems?: Array<{ id: string; title: string; error: string }>
-    retryContext?: { messageType: string; data: Record<string, unknown> }
-    reverse?: {
-      messageType: string
-      data: Record<string, unknown>
-      affectedItemIds: string[]
-      label?: string
-      undoWindowMs?: number
-    }
-  },
-  tabId?: number,
-) {
+export type { ReverseHint } from '@/lib/messages'
+
+export async function broadcastQueue(state: QueueFrame, tabId?: number) {
   try {
     await sendMessage('queueStateUpdate', state, tabId)
   } catch (err) {

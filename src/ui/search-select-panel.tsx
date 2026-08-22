@@ -4,8 +4,9 @@ import type { SelectPanelItemInput, SelectPanelItemProps } from '@primer/react'
 import { TriangleDownIcon } from '@primer/octicons-react'
 import { BULK_BAR_PRIMER_PORTAL_NAME } from '@/lib/primer-shadow-dom-compat'
 import { Z_MODAL_PORTAL } from '@/lib/z-index'
+import { primerCss } from '@/lib/primer-css-helper'
 
-export type SearchSelectPanelMessage = {
+type SearchSelectPanelMessage = {
   title: string
   body: string | React.ReactElement
   variant: 'empty' | 'error' | 'warning'
@@ -20,25 +21,11 @@ export type SearchSelectPanelOption<T> = {
 
 type SearchSelectPanelWidth = 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge' | 'auto'
 type SelectedPlacement = 'selected-first' | 'selected-first-when-filter-empty' | 'results-only'
-type SelectPanelGesture =
-  | 'anchor-click'
-  | 'anchor-key-press'
-  | 'click-outside'
-  | 'escape'
-  | 'selection'
-  | 'cancel'
-
 const anchorButtonSx = {
   boxShadow: 'none',
   width: '100%',
   justifyContent: 'space-between',
-  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-  '@media (prefers-reduced-motion: reduce)': {
-    transition: 'none',
-    '&:hover:not(:disabled)': { transform: 'none' },
-  },
+  ...primerCss.buttonMotion(),
 } as const
 
 interface CommonProps<T> {
@@ -57,7 +44,6 @@ interface CommonProps<T> {
   selectedPlacement?: SelectedPlacement
   anchorAriaLabel?: string
   portalContainerName?: string
-  debugName?: string
 }
 
 interface MultiProps<T> extends CommonProps<T> {
@@ -73,23 +59,6 @@ interface SingleProps<T> extends CommonProps<T> {
 function mapSelectedValues<T>(selected: T[] | T | undefined): T[] {
   if (Array.isArray(selected)) return selected
   return selected ? [selected] : []
-}
-
-function summarizeDebugValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(summarizeDebugValue)
-
-  if (value && typeof value === 'object') {
-    const record = value as Record<string, unknown>
-    const summary: Record<string, unknown> = {}
-
-    for (const key of ['id', 'name', 'text', 'description', 'nameWithOwner']) {
-      if (key in record) summary[key] = record[key]
-    }
-
-    if (Object.keys(summary).length > 0) return summary
-  }
-
-  return value
 }
 
 export function SearchSelectPanel<T>(props: MultiProps<T>): React.ReactElement
@@ -111,7 +80,6 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
     selectedPlacement = 'selected-first',
     anchorAriaLabel,
     portalContainerName = BULK_BAR_PRIMER_PORTAL_NAME,
-    debugName,
   } = props
 
   const [filterQuery, setFilterQuery] = useState('')
@@ -120,20 +88,6 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const requestGen = useRef(0)
-
-  const log = useCallback(
-    (message: string, payload?: unknown) => {
-      if (!debugName) return
-
-      if (typeof payload === 'undefined') {
-        console.log(`[${debugName}] ${message}`)
-        return
-      }
-
-      console.log(`[${debugName}] ${message}`, payload)
-    },
-    [debugName],
-  )
 
   const isMultiSelect = Array.isArray(props.selected)
   const selectedValues = useMemo(() => mapSelectedValues(props.selected), [props.selected])
@@ -213,27 +167,19 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
     }
   }, [fetchError, fetching, panelItems.length])
 
-  const handleOpenChange = useCallback(
-    (open: boolean, gesture?: SelectPanelGesture) => {
-      log('onOpenChange', { open, gesture })
-      setPanelOpen(open)
+  const handleOpenChange = useCallback((open: boolean) => {
+    setPanelOpen(open)
 
-      if (!open) {
-        requestGen.current += 1
-        setFilterQuery('')
-        setFetchError(null)
-      }
-    },
-    [log],
-  )
+    if (!open) {
+      requestGen.current += 1
+      setFilterQuery('')
+      setFetchError(null)
+    }
+  }, [])
 
-  const handleFilterChange = useCallback(
-    (nextFilterQuery: string) => {
-      log('onFilterChange', { filterQuery: nextFilterQuery })
-      setFilterQuery(nextFilterQuery)
-    },
-    [log],
-  )
+  const handleFilterChange = useCallback((nextFilterQuery: string) => {
+    setFilterQuery(nextFilterQuery)
+  }, [])
 
   useEffect(() => {
     if (!panelOpen || disabled) return
@@ -242,23 +188,17 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
     const delay = trimmedQuery === '' ? 0 : 300
     const gen = ++requestGen.current
     const timeoutId = window.setTimeout(() => {
-      log('search:start', { filterQuery: trimmedQuery, requestGen: gen, delay })
       setFetching(true)
       setFetchError(null)
 
       search(trimmedQuery)
         .then((items) => {
           if (requestGen.current !== gen) return
-          log('search:success', {
-            filterQuery: trimmedQuery,
-            requestGen: gen,
-            resultCount: items.length,
-          })
           setResults(items)
         })
         .catch((error) => {
           if (requestGen.current !== gen) return
-          console.error(`[${debugName ?? 'SearchSelectPanel'}] search:error`, {
+          console.error('[SearchSelectPanel] search:error', {
             filterQuery: trimmedQuery,
             requestGen: gen,
             error,
@@ -268,24 +208,22 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
         })
         .finally(() => {
           if (requestGen.current !== gen) return
-          log('search:complete', { filterQuery: trimmedQuery, requestGen: gen })
           setFetching(false)
         })
     }, delay)
 
     return () => window.clearTimeout(timeoutId)
-  }, [debugName, disabled, filterQuery, log, panelOpen, search, searchErrorMessage])
+  }, [disabled, filterQuery, panelOpen, search, searchErrorMessage])
 
   useEffect(() => {
     if (!disabled) return
 
-    log('panel:disabled-reset')
     requestGen.current += 1
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset panel state when the control is disabled
     setPanelOpen(false)
     setFilterQuery('')
     setFetchError(null)
-  }, [disabled, log])
+  }, [disabled])
 
   const renderAnchor = useCallback(
     ({ children, ...anchorProps }: React.ComponentProps<typeof Button>) => (
@@ -366,11 +304,6 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
               .map((item) => getOptionValue(item.id))
               .filter((item): item is T => typeof item !== 'undefined')
 
-            log('onSelectedChange:multi', {
-              rawItems: items.map((item) => ({ id: item.id, text: item.text })),
-              resolvedItems: summarizeDebugValue(nextSelected),
-            })
-
             multiProps.onSelectedChange(nextSelected)
           }}
         />
@@ -387,13 +320,6 @@ export function SearchSelectPanel<T>(props: MultiProps<T> | SingleProps<T>) {
         selected={selectedPanelItems[0]}
         onSelectedChange={(item: SelectPanelItemInput | undefined) => {
           const nextSelected = getOptionValue(item?.id)
-
-          log('onSelectedChange:single', {
-            rawItem: item
-              ? { id: item.id, text: item.text, description: item.description }
-              : undefined,
-            resolvedItem: summarizeDebugValue(nextSelected),
-          })
 
           singleProps.onSelectedChange(nextSelected)
         }}

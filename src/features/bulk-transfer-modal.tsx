@@ -3,10 +3,12 @@ import Tippy from '@/ui/tooltip'
 import { Box, Button, Checkbox, Flash, FormControl, Text } from '@primer/react'
 import { SearchSelectPanel, type SearchSelectPanelOption } from '@/ui/search-select-panel'
 import { LockIcon, MoveIcon } from '@/ui/icons'
-import { Z_MODAL, Z_TOOLTIP } from '@/lib/z-index'
+import { Z_TOOLTIP } from '@/lib/z-index'
 import { ModalStepHeader } from '@/ui/modal-step-header'
 import { sendMessage } from '@/lib/messages'
 import { ensureTippyCss } from '@/lib/tippy-utils'
+import { primerCss } from '@/lib/primer-css-helper'
+import { plural } from '@/lib/format'
 
 interface RepoItem {
   id: string
@@ -45,14 +47,7 @@ interface EligibilityRow {
 }
 
 const interactiveButtonSx = {
-  boxShadow: 'none',
-  transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover:not(:disabled)': { transform: 'translateY(-1px)' },
-  '&:active': { transform: 'translateY(0)', transition: '100ms' },
-  '@media (prefers-reduced-motion: reduce)': {
-    transition: 'none',
-    '&:hover:not(:disabled)': { transform: 'none' },
-  },
+  ...primerCss.buttonMotion(),
 } as const
 
 // §10.5 — session-scoped recent transfer destinations (most-recent first, cap 5).
@@ -254,51 +249,28 @@ export function BulkTransferModal({
   // pre-flight. Falls back to total `count` until pre-flight resolves so the
   // disabled→enabled transition is not jittery.
   const buttonLabel = useMemo(() => {
-    if (!selectedTarget) {
-      const noun = count === 1 ? 'item' : 'items'
-      return `Transfer ${count} ${noun}`
-    }
-    const noun = eligibleCount === 1 ? 'item' : 'items'
+    if (!selectedTarget) return `Transfer ${plural(count, 'item')}`
     const subsetSuffix =
       eligibleRows && eligibleCount !== count ? ` (${eligibleCount} of ${count})` : ''
-    return `Transfer ${eligibleCount} ${noun}${subsetSuffix} to ${selectedTarget.targetRepoOwner}/${selectedTarget.targetRepoName}`
+    return `Transfer ${plural(eligibleCount, 'item')}${subsetSuffix} to ${selectedTarget.targetRepoOwner}/${selectedTarget.targetRepoName}`
   }, [count, selectedTarget, eligibleCount, eligibleRows])
 
   return (
     <Box
-      sx={{
-        position: 'fixed',
-        inset: 0,
-        bg: 'rgba(27,31,36,0.5)',
-        zIndex: Z_MODAL,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      sx={primerCss.modalOverlay()}
       onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
       onKeyUp={(e: React.KeyboardEvent) => e.stopPropagation()}
     >
-      <Box
-        sx={{
-          bg: 'canvas.overlay',
-          border: '1px solid',
-          borderColor: 'border.default',
-          borderRadius: 2,
-          width: '100%',
-          maxWidth: 480,
-          overflow: 'hidden',
-          boxShadow: 'none',
-        }}
-      >
+      <Box sx={primerCss.modalPanel({ display: 'block' })}>
         <ModalStepHeader
-          title={`Transfer ${count} ${count === 1 ? 'issue' : 'issues'}`}
+          title={`Transfer ${plural(count, 'issue')}`}
           icon={<MoveIcon size={16} />}
           onClose={onClose}
         />
 
         <Box sx={{ px: 4, py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
           <Text as="p" sx={{ m: 0, fontSize: 1, color: 'fg.default' }}>
-            Transfer {count} issue{count !== 1 ? 's' : ''} to another repository.
+            Transfer {plural(count, 'issue')} to another repository.
           </Text>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
@@ -330,7 +302,6 @@ export function BulkTransferModal({
                 errorTitle="Could not load repositories"
                 selectedPlacement="selected-first-when-filter-empty"
                 anchorAriaLabel="Select a repository"
-                debugName="TransferSelectPanel"
                 emptyState={({ filterQuery }) => ({
                   title: 'No repositories found',
                   body: filterQuery.trim()
@@ -366,12 +337,11 @@ export function BulkTransferModal({
             <Flash variant="warning" data-testid="rgp-transfer-preflight-warning">
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Text sx={{ fontSize: 1, fontWeight: 'semibold' }}>
-                  {ineligibleRows.length} item{ineligibleRows.length === 1 ? '' : 's'} cannot be
-                  transferred to {selectedTarget.targetRepoOwner}/{selectedTarget.targetRepoName}
+                  {plural(ineligibleRows.length, 'item')} cannot be transferred to{' '}
+                  {selectedTarget.targetRepoOwner}/{selectedTarget.targetRepoName}
                 </Text>
                 <Text sx={{ fontSize: 0, color: 'fg.muted' }}>
-                  Proceed to transfer the remaining {eligibleCount} eligible item
-                  {eligibleCount === 1 ? '' : 's'}.
+                  Proceed to transfer the remaining {plural(eligibleCount, 'eligible item')}.
                 </Text>
                 <Button
                   variant="invisible"
