@@ -29,6 +29,29 @@ type ItemLookupInput = {
   isOrg: boolean
 }
 
+/**
+ * A DOM item id (`issue:<databaseId>` in either spelling) → the real
+ * ProjectV2Item node id. Both lookups below resolve through here so they cannot
+ * disagree about which ids are resolvable — the divergence that produced the
+ * hyphen-spelling bugs this branch already had to fix twice.
+ */
+async function resolveItemNodeId(itemId: string, projectId: string | undefined): Promise<string> {
+  if (!projectId) throw new Error('Could not fetch project fields — cannot resolve item ID')
+  const resolved = await resolveProjectItemIds([itemId], projectId)
+  if (resolved.length === 0)
+    throw new Error(`Item ${itemId} not found in project — it may belong to a different project`)
+  return resolved[0].projectItemId
+}
+
+/** Both dependency directions for one issue. Reads, so safe to run together. */
+function loadBlockingPair(issue: ProjectItemDetails['node']['content']) {
+  const { owner, name } = issue.repository
+  return Promise.all([
+    listIssueRelationshipsSafe('blocked_by', owner.login, name, issue.number),
+    listIssueRelationshipsSafe('blocking', owner.login, name, issue.number),
+  ])
+}
+
 async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewData> {
   // 1. Fetch project field definitions first — also gives us the real projectV2.id
   const { project: projectV2 } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
@@ -37,13 +60,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
   // 2. Resolve DOM itemId (e.g. "issue:3960969873") → real ProjectV2Item node ID
   let resolvedItemId = data.itemId
   if (/^issue[:-]\d+$/.test(data.itemId)) {
-    if (!projectV2?.id) throw new Error('Could not fetch project fields — cannot resolve item ID')
-    const resolved = await resolveProjectItemIds([data.itemId], projectV2.id)
-    if (resolved.length === 0)
-      throw new Error(
-        `Item ${data.itemId} not found in project — it may belong to a different project`,
-      )
-    resolvedItemId = resolved[0].projectItemId
+    resolvedItemId = await resolveItemNodeId(data.itemId, projectV2?.id)
   }
 
   // 3. Fetch item details with the correct node ID
@@ -54,20 +71,7 @@ async function fetchItemPreviewData(data: ItemLookupInput): Promise<ItemPreviewD
   if (!source) throw new Error('Project item not found — ID resolution may have failed')
   const issue = source.content
   if (!issue?.title) throw new Error('Item is not a supported type (must be a GitHub Issue)')
-  const [blockedBy, blocking] = await Promise.all([
-    listIssueRelationshipsSafe(
-      'blocked_by',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
-    listIssueRelationshipsSafe(
-      'blocking',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
-  ])
+  const [blockedBy, blocking] = await loadBlockingPair(issue)
 
   // 4. Correlate field values with definitions
   const fields: ItemPreviewData['fields'] = []
@@ -144,13 +148,7 @@ async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData>
   let resolvedItemId = data.itemId
   if (/^issue[:-]\d+$/.test(data.itemId)) {
     const { project: projectV2 } = await getProjectFieldsData(data.owner, data.number, data.isOrg)
-    if (!projectV2?.id) throw new Error('Could not fetch project fields — cannot resolve item ID')
-    const resolved = await resolveProjectItemIds([data.itemId], projectV2.id)
-    if (resolved.length === 0)
-      throw new Error(
-        `Item ${data.itemId} not found in project — it may belong to a different project`,
-      )
-    resolvedItemId = resolved[0].projectItemId
+    resolvedItemId = await resolveItemNodeId(data.itemId, projectV2?.id)
   }
 
   // fetch item details for parent relationship (GraphQL)
@@ -163,20 +161,9 @@ async function fetchHierarchyData(data: ItemLookupInput): Promise<HierarchyData>
   if (!issue?.title) throw new Error('Item is not a supported type')
 
   // fetch sub-issues, blockedBy, blocking concurrently (all GETs — safe to parallelize)
-  const [subIssues, blockedBy, blocking] = await Promise.all([
+  const [subIssues, [blockedBy, blocking]] = await Promise.all([
     listSubIssuesSafe(issue.repository.owner.login, issue.repository.name, issue.number),
-    listIssueRelationshipsSafe(
-      'blocked_by',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
-    listIssueRelationshipsSafe(
-      'blocking',
-      issue.repository.owner.login,
-      issue.repository.name,
-      issue.number,
-    ),
+    loadBlockingPair(issue),
   ])
 
   const parent = toIssueRelationship(issue.parent)
