@@ -1,0 +1,21 @@
+src/features/hierarchy-chip-tooltip.tsx
+  s_eb20219a3760a4::t_adaa031baafd0b 47-54
+  s_eb20219a3760a4::t_b1100fe50d0ba4 70
+  s_eb20219a3760a4::t_19ba30d1bc7f69 76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "0a75acf3fdac87fea6456a827ccdaf8e4919422e",
+  "prompts": {},
+  "sessions": {
+    "s_eb20219a3760a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3159c222-5b9e-42a1-8b6a-a5ed79d8f827",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Fathiraz Arthuro <arthurofathiraz@gmail.com>"
+    }
+  }
+}
